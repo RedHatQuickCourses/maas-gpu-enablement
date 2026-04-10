@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Lab: Deploying the Grafana Operator and Setting Up Access :: Nvidia Accelerator Configuration for Scale</title>
+    <link rel="prev" href="s2-expose-metrics-lab.html">
+    <link rel="next" href="s4-dashboards-lab.html">
+    <meta name="generator" content="Antora 3.1.3">
+    <link rel="stylesheet" href="../../../_/css/site.css">
+    <script>var uiRootPath = '../../../_'</script>
+  </head>
+  <body class="article">
+<header class="header">
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="https://www.redhat.com" target="_blank"><img src="../../../_/img/redhat-logo.png" height="40px" alt="Red Hat"></a>
+      <a class="navbar-item" style="font-size: 24px; color: white" href="../../..">Nvidia Accelerator Configuration for Scale</a>
+      <button class="navbar-burger" data-target="topbar-nav">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+    <div id="topbar-nav" class="navbar-menu">
+      <div class="navbar-end">
+        <a class="navbar-item" href="https://github.com/RedHatQuickCourses/REPLACEREPONAME/issues" target="_blank">Report Issues</a>
+      </div>
+    </div>
+  </nav>
+</header>
+<div class="body">
+<div class="nav-container" data-component="maas-gpu-enablement" data-version="1">
+  <aside class="nav">
+    <div class="panels">
+<div class="nav-panel-menu is-active" data-panel="menu">
+  <nav class="nav-menu">
+    <h3 class="title"><a href="../index.html">Nvidia Accelerator Configuration for Scale</a></h3>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../index.html">Home</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../LABENV/index.html">Lab Environment</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../ch1-gpu-operator/index.html">Understand and Install Foundational Operators</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch1-gpu-operator/s1-hardware-stack.html">Deconstructing the Hardware Stack</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch1-gpu-operator/s2-deploy-operators-lab.html">Lab: Deploying the Base Stack</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../ch2-mig/index.html">Configure Multi-Instance GPU (MIG) for MaaS</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch2-mig/s1-mig-overview.html">Maximizing GPU ROI with Multi-Instance GPU</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch2-mig/s2-mig-slicing-lab.html">Lab: MIG Slicing Configuration</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="index.html">Monitor GPU Telemetry and Health</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="s1-observability-stack.html">The MaaS Observability Stack</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="s2-expose-metrics-lab.html">Lab: Exposing GPU Metrics</a>
+  </li>
+  <li class="nav-item is-current-page" data-depth="2">
+    <a class="nav-link" href="s3-grafana-setup-lab.html">Lab: Deploying the Grafana Operator and Setting Up Access</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="s4-dashboards-lab.html">Lab: Visualizing GPU Hardware</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+</ul>
+  </nav>
+</div>
+<div class="nav-panel-explore" data-panel="explore">
+  <div class="context">
+    <span class="title">Nvidia Accelerator Configuration for Scale</span>
+    <span class="version">1</span>
+  </div>
+  <ul class="components">
+    <li class="component is-current">
+      <a class="title" href="../index.html">Nvidia Accelerator Configuration for Scale</a>
+      <ul class="versions">
+        <li class="version is-current is-latest">
+          <a href="../index.html">1</a>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</div>
+    </div>
+  </aside>
+</div>
+<main class="article">
+<div class="toolbar" role="navigation">
+<button class="nav-toggle"></button>
+  <a href="../index.html" class="home-link"></a>
+<nav class="breadcrumbs" aria-label="breadcrumbs">
+  <ul>
+    <li><a href="../index.html">Nvidia Accelerator Configuration for Scale</a></li>
+    <li><a href="index.html">Monitor GPU Telemetry and Health</a></li>
+    <li><a href="s3-grafana-setup-lab.html">Lab: Deploying the Grafana Operator and Setting Up Access</a></li>
+  </ul>
+</nav>
+</div>
+  <div class="content">
+<aside class="toc sidebar" data-title="Contents" data-levels="2">
+  <div class="toc-menu"></div>
+</aside>
+<article class="doc">
+<h1 class="page">Lab: Deploying the Grafana Operator and Setting Up Access</h1>
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p><em>Estimated reading time: <strong>25 minutes</strong>.</em></p>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1">Objective</dt>
+<dd>
+<p>Install the Grafana Operator from OperatorHub, create a Grafana instance Custom Resource, and set up secure access to cluster metrics by creating a ServiceAccount with cluster-monitoring-view permissions and configuring a GrafanaDatasource pointing to the Thanos Querier endpoint.</p>
+</dd>
+</dl>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_before_you_begin"><a class="anchor" href="#_before_you_begin"></a>Before you begin</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>This lab requires:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Completed GPU metric exposure from the previous lab</p>
+</li>
+<li>
+<p>Cluster administrator privileges</p>
+</li>
+<li>
+<p>User-workload monitoring enabled and operational</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_instructions"><a class="anchor" href="#_instructions"></a>Instructions</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_1_install_the_grafana_operator"><a class="anchor" href="#_1_install_the_grafana_operator"></a>1. Install the Grafana Operator</h3>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Create a namespace for Grafana</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">$ <strong>oc create namespace grafana</strong>
+namespace/grafana created</code></pre>
+</div>
+</div>
+</li>
+<li>
+<p>Install the Grafana Operator from OperatorHub</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">$ <strong>cat &lt;&lt;EOF | oc apply -f -</strong>
+<strong>apiVersion: operators.coreos.com/v1</strong>
+<strong>kind: OperatorGroup</strong>
+<strong>metadata:</strong>
+*  name: grafana-operator-group*
+*  namespace: grafana*
+<strong>spec:</strong>
+*  targetNamespaces:*
+*  - grafana*
+<strong>---</strong>
+<strong>apiVersion: operators.coreos.com/v1alpha1</strong>
+<strong>kind: Subscription</strong>
+<strong>metadata:</strong>
+*  name: grafana-operator*
+*  namespace: grafana*
+<strong>spec:</strong>
+*  channel: v5*
+*  name: grafana-operator*
+*  source: community-operators*
+*  sourceNamespace: openshift-marketplace*
+*  installPlanApproval: Automatic*
+<strong>EOF</strong>
+operatorgroup.operators.coreos.com/grafana-operator-group created
+subscription.operators.coreos.com/grafana-operator created</code></pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>This lab uses the community Grafana Operator. For production deployments, consider using the Red Hat-supported Grafana Operator if available in your catalog.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</li>
+<li>
+<p>Verify operator installation</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">$ <strong>oc get csv -n grafana</strong>
+NAME                      DISPLAY            VERSION   REPLACES   PHASE
+grafana-operator.v5.6.0   Grafana Operator   5.6.0                <strong>Succeeded</strong></code></pre>
+</div>
+</div>
+</li>
+<li>
+<p>Wait for the operator pod to be ready</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">$ <strong>oc get pods -n grafana</strong>
+NAME                                READY   STATUS    RESTARTS   AGE
+grafana-operator-xxxxx              1/1     Running   0          2m</code></pre>
+</div>
+</div>
+</li>
+</ol>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_2_create_a_grafana_instance"><a class="anchor" href="#_2_create_a_grafana_instance"></a>2. Create a Grafana Instance</h3>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Deploy a Grafana instance</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">$ <strong>cat &lt;&lt;EOF | oc apply -f -</strong>
+<strong>apiVersion: grafana.integreatly.org/v1beta1</strong>
+<strong>kind: Grafana</strong>
+<strong>metadata:</strong>
+*  name: grafana*
+*  namespace: grafana*
+*  labels:*
+*    dashboards: "grafana"*
+<strong>spec:</strong>
+*  config:*
+*    log:*
+*      mode: "console"*
+*      level: "warn"*
+*    auth:*
+*      disable_login_form: false*
+*    security:*
+*      admin_user: admin*
+*      admin_password: redhat123  # Change in production!*
+*  route:*
+*    spec:*
+*      port:*
+*        targetPort: grafana-http*
+*      tls:*
+*        termination: edge*
+*        insecureEdgeTerminationPolicy: Redirect*
+<strong>EOF</strong>
+grafana.grafana.integreatly.org/grafana created</code></pre>
+</div>
+</div>
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-warning" title="Warning"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>Change the admin password to a secure value for production deployments. Consider integrating with OpenShift OAuth for authentication instead of using basic auth.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</li>
+<li>
+<p>Wait for Grafana pod deployment</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">$ <strong>oc get pods -n grafana -l app=grafana</strong>
+NAME                       READY   STATUS    RESTARTS   AGE
+grafana-deployment-xxxxx   1/1     Running   0          1m</code></pre>
+</div>
+</div>
+</li>
+<li>
+<p>Get the Grafana route URL</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">$ <strong>oc get route grafana-route -n grafana</strong>
+NAME             HOST/PORT
+grafana-route    grafana-route-grafana.apps.cluster.example.com</code></pre>
+</div>
+</div>
+</li>
+<li>
+<p>Test access to Grafana</p>
+<div class="paragraph">
+<p>Open the route URL in your browser and log in with:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Username: <code>admin</code></p>
+</li>
+<li>
+<p>Password: <code>redhat123</code> (or your configured password)</p>
+</li>
+</ul>
+</div>
+</li>
+</ol>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_3_create_serviceaccount_for_metrics_access"><a class="anchor" href="#_3_create_serviceaccount_for_metrics_access"></a>3. Create ServiceAccount for Metrics Access</h3>
+<div class="paragraph">
+<p>To securely query OpenShift&#8217;s Prometheus/Thanos, create a dedicated ServiceAccount with appropriate permissions.</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Create a ServiceAccount for Grafana</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">$ <strong>oc create serviceaccount grafana-sa -n grafana</strong>
+serviceaccount/grafana-sa created</code></pre>
+</div>
+</div>
+</li>
+<li>
+<p>Grant cluster-monitoring-view permissions</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">$ <strong>oc adm policy add-cluster-role-to-user cluster-monitoring-view -z grafana-sa -n grafana</strong>
+clusterrole.rbac.authorization.k8s.io/cluster-monitoring-view added: "grafana-sa"</code></pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>The <code>cluster-monitoring-view</code> ClusterRole provides read-only access to cluster metrics without granting broader cluster permissions.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</li>
+<li>
+<p>Create a long-lived ServiceAccount token</p>
+<div class="paragraph">
+<p>For OpenShift 4.11+, create a Secret to generate a non-expiring token:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">$ <strong>cat &lt;&lt;EOF | oc apply -f -</strong>
+<strong>apiVersion: v1</strong>
+<strong>kind: Secret</strong>
+<strong>metadata:</strong>
+*  name: grafana-sa-token*
+*  namespace: grafana*
+*  annotations:*
+*    kubernetes.io/service-account.name: grafana-sa*
+<strong>type: kubernetes.io/service-account-token</strong>
+<strong>EOF</strong>
+secret/grafana-sa-token created</code></pre>
+</div>
+</div>
+</li>
+<li>
+<p>Extract the ServiceAccount token</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">$ <strong>export BEARER_TOKEN=$(oc get secret grafana-sa-token -n grafana -o jsonpath='{.data.token}' | base64 -d)</strong>
+$ <strong>echo $BEARER_TOKEN</strong>
+eyJhbGciOiJSUzI1NiIsImtpZCI6Ilg1...</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Save this token securely—you&#8217;ll need it for the datasource configuration.</p>
+</div>
+</li>
+</ol>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_4_configure_grafanadatasource"><a class="anchor" href="#_4_configure_grafanadatasource"></a>4. Configure GrafanaDatasource</h3>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Get the Thanos Querier service endpoint</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">$ <strong>oc get svc thanos-querier -n openshift-monitoring</strong>
+NAME             TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)    AGE
+thanos-querier   ClusterIP   172.30.xxx.xxx   &lt;none&gt;        9091/TCP   30d</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The internal service URL is: <code><a href="https://thanos-querier.openshift-monitoring.svc:9091" class="bare">https://thanos-querier.openshift-monitoring.svc:9091</a></code></p>
+</div>
+</li>
+<li>
+<p>Create the GrafanaDatasource CR</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">$ <strong>cat &lt;&lt;EOF | oc apply -f -</strong>
+<strong>apiVersion: grafana.integreatly.org/v1beta1</strong>
+<strong>kind: GrafanaDatasource</strong>
+<strong>metadata:</strong>
+*  name: prometheus-grafanadatasource*
+*  namespace: grafana*
+<strong>spec:</strong>
+*  instanceSelector:*
+*    matchLabels:*
+*      dashboards: "grafana"*
+*  datasource:*
+*    name: Prometheus*
+*    type: prometheus*
+*    access: proxy*
+*    url: https://thanos-querier.openshift-monitoring.svc:9091*
+*    isDefault: true*
+*    jsonData:*
+*      "tlsSkipVerify": true*
+*      "timeInterval": "30s"*
+*      "httpHeaderName1": "Authorization"*
+*    secureJsonData:*
+*      "httpHeaderValue1": "Bearer ${BEARER_TOKEN}"*
+<strong>EOF</strong>
+grafanadatasource.grafana.integreatly.org/prometheus-grafanadatasource created</code></pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>The <code>tlsSkipVerify: true</code> setting is acceptable for internal cluster communication. For external datasources, configure proper TLS verification.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</li>
+<li>
+<p>Verify the datasource was created</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">$ <strong>oc get grafanadatasource -n grafana</strong>
+NAME                            AGE
+prometheus-grafanadatasource    30s</code></pre>
+</div>
+</div>
+</li>
+</ol>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_5_test_datasource_connection"><a class="anchor" href="#_5_test_datasource_connection"></a>5. Test Datasource Connection</h3>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Log in to the Grafana web interface</p>
+</li>
+<li>
+<p>Navigate to <strong>Configuration</strong> → <strong>Data Sources</strong></p>
+</li>
+<li>
+<p>Click on the <strong>Prometheus</strong> datasource</p>
+</li>
+<li>
+<p>Scroll down and click <strong>Save &amp; Test</strong></p>
+<div class="paragraph">
+<p>You should see a green success message: "Data source is working"</p>
+</div>
+</li>
+<li>
+<p>Test a simple query:</p>
+<div class="ulist">
+<ul>
+<li>
+<p>Go to <strong>Explore</strong> in the left menu</p>
+</li>
+<li>
+<p>Select the <strong>Prometheus</strong> datasource</p>
+</li>
+<li>
+<p>Enter query: <code>up{job="nvidia-dcgm-exporter"}</code></p>
+</li>
+<li>
+<p>Click <strong>Run Query</strong></p>
+<div class="paragraph">
+<p>You should see metrics from DCGM Exporter instances across your GPU nodes.</p>
+</div>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p>Verify GPU metrics are accessible:</p>
+<div class="paragraph">
+<p>Query:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>DCGM_FI_DEV_GPU_UTIL</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>You should see GPU utilization metrics from all devices in your cluster.</p>
+</div>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>You have successfully deployed the Grafana Operator, created a Grafana instance, configured secure ServiceAccount-based access to OpenShift&#8217;s monitoring stack, and established a working datasource connection to the Thanos Querier. Grafana can now query and visualize all cluster metrics, including GPU telemetry from DCGM Exporter.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_whats_next"><a class="anchor" href="#_whats_next"></a>What&#8217;s next</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>In the final section, you will import and customize the NVIDIA DCGM Exporter dashboards to visualize GPU metrics, correlate accelerator performance with standard node resources like CPU and memory, and create comprehensive observability views for your GPU infrastructure.</p>
+</div>
+</div>
+</div>
+<nav class="pagination">
+  <span class="prev"><a href="s2-expose-metrics-lab.html">Lab: Exposing GPU Metrics</a></span>
+  <span class="next"><a href="s4-dashboards-lab.html">Lab: Visualizing GPU Hardware</a></span>
+</nav>
+</article>
+  </div>
+</main>
+</div>
+<footer class="footer">
+  <img src="../../../_/img/rhl-logo-red.png" height="40px" alt="Red Hat"  href="https://redhat.com" >
+</footer><script id="site-script" src="../../../_/js/site.js" data-ui-root-path="../../../_"></script>
+<script async src="../../../_/js/vendor/highlight.js"></script>
+  </body>
+</html>

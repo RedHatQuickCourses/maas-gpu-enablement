@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Lab: MIG Slicing Configuration :: Nvidia Accelerator Configuration for Scale</title>
+    <link rel="prev" href="s1-mig-overview.html">
+    <link rel="next" href="../ch3-observability/index.html">
+    <meta name="generator" content="Antora 3.1.3">
+    <link rel="stylesheet" href="../../../_/css/site.css">
+    <script>var uiRootPath = '../../../_'</script>
+  </head>
+  <body class="article">
+<header class="header">
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="https://www.redhat.com" target="_blank"><img src="../../../_/img/redhat-logo.png" height="40px" alt="Red Hat"></a>
+      <a class="navbar-item" style="font-size: 24px; color: white" href="../../..">Nvidia Accelerator Configuration for Scale</a>
+      <button class="navbar-burger" data-target="topbar-nav">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+    <div id="topbar-nav" class="navbar-menu">
+      <div class="navbar-end">
+        <a class="navbar-item" href="https://github.com/RedHatQuickCourses/REPLACEREPONAME/issues" target="_blank">Report Issues</a>
+      </div>
+    </div>
+  </nav>
+</header>
+<div class="body">
+<div class="nav-container" data-component="maas-gpu-enablement" data-version="1">
+  <aside class="nav">
+    <div class="panels">
+<div class="nav-panel-menu is-active" data-panel="menu">
+  <nav class="nav-menu">
+    <h3 class="title"><a href="../index.html">Nvidia Accelerator Configuration for Scale</a></h3>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../index.html">Home</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../LABENV/index.html">Lab Environment</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../ch1-gpu-operator/index.html">Understand and Install Foundational Operators</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch1-gpu-operator/s1-hardware-stack.html">Deconstructing the Hardware Stack</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch1-gpu-operator/s2-deploy-operators-lab.html">Lab: Deploying the Base Stack</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="index.html">Configure Multi-Instance GPU (MIG) for MaaS</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="s1-mig-overview.html">Maximizing GPU ROI with Multi-Instance GPU</a>
+  </li>
+  <li class="nav-item is-current-page" data-depth="2">
+    <a class="nav-link" href="s2-mig-slicing-lab.html">Lab: MIG Slicing Configuration</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../ch3-observability/index.html">Monitor GPU Telemetry and Health</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch3-observability/s1-observability-stack.html">The MaaS Observability Stack</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch3-observability/s2-expose-metrics-lab.html">Lab: Exposing GPU Metrics</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch3-observability/s3-grafana-setup-lab.html">Lab: Deploying the Grafana Operator and Setting Up Access</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch3-observability/s4-dashboards-lab.html">Lab: Visualizing GPU Hardware</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+</ul>
+  </nav>
+</div>
+<div class="nav-panel-explore" data-panel="explore">
+  <div class="context">
+    <span class="title">Nvidia Accelerator Configuration for Scale</span>
+    <span class="version">1</span>
+  </div>
+  <ul class="components">
+    <li class="component is-current">
+      <a class="title" href="../index.html">Nvidia Accelerator Configuration for Scale</a>
+      <ul class="versions">
+        <li class="version is-current is-latest">
+          <a href="../index.html">1</a>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</div>
+    </div>
+  </aside>
+</div>
+<main class="article">
+<div class="toolbar" role="navigation">
+<button class="nav-toggle"></button>
+  <a href="../index.html" class="home-link"></a>
+<nav class="breadcrumbs" aria-label="breadcrumbs">
+  <ul>
+    <li><a href="../index.html">Nvidia Accelerator Configuration for Scale</a></li>
+    <li><a href="index.html">Configure Multi-Instance GPU (MIG) for MaaS</a></li>
+    <li><a href="s2-mig-slicing-lab.html">Lab: MIG Slicing Configuration</a></li>
+  </ul>
+</nav>
+</div>
+  <div class="content">
+<aside class="toc sidebar" data-title="Contents" data-levels="2">
+  <div class="toc-menu"></div>
+</aside>
+<article class="doc">
+<h1 class="page">Lab: MIG Slicing Configuration</h1>
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p><em>Estimated reading time: <strong>35 minutes</strong>.</em></p>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1">Objective</dt>
+<dd>
+<p>Update node labels to apply MIG partitioning profiles, create custom mig-parted configuration resources for specific hardware deployments, and verify that sliced MIG instances are exposed as allocatable resources on GPU nodes.</p>
+</dd>
+</dl>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_before_you_begin"><a class="anchor" href="#_before_you_begin"></a>Before you begin</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>This lab requires:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Completed installation of NVIDIA GPU Operator from Chapter 1</p>
+</li>
+<li>
+<p>OpenShift cluster with NVIDIA A30, A100, or H100 GPU nodes</p>
+</li>
+<li>
+<p>Cluster administrator privileges</p>
+</li>
+<li>
+<p>MIG-capable GPU hardware (Ampere or Hopper architecture)</p>
+</li>
+</ul>
+</div>
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-warning" title="Warning"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>Applying MIG configuration requires GPU reset and will interrupt any running GPU workloads. Schedule this activity during a maintenance window.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_instructions"><a class="anchor" href="#_instructions"></a>Instructions</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_1_verify_mig_capability"><a class="anchor" href="#_1_verify_mig_capability"></a>1. Verify MIG Capability</h3>
+<div class="paragraph">
+<p>First, confirm your GPU hardware supports MIG.</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Check GPU model on a worker node</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">$ <strong>oc debug node/worker-gpu-0.example.com</strong>
+Starting pod/worker-gpu-0examplecom-debug ...
+sh-4.4# <strong>chroot /host</strong>
+sh-4.4# <strong>nvidia-smi -L</strong>
+GPU 0: NVIDIA A100-PCIE-40GB (UUID: GPU-xxxxx)</code></pre>
+</div>
+</div>
+</li>
+<li>
+<p>Verify MIG mode capability</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">sh-4.4# <strong>nvidia-smi -i 0 --query-gpu=mig.mode.current,mig.mode.pending --format=csv</strong>
+mig.mode.current, mig.mode.pending
+Disabled, Disabled</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>If MIG mode shows as available (even if disabled), your hardware supports MIG. Exit the debug pod.</p>
+</div>
+</li>
+</ol>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_2_enable_mig_mode_using_node_labels"><a class="anchor" href="#_2_enable_mig_mode_using_node_labels"></a>2. Enable MIG Mode Using Node Labels</h3>
+<div class="paragraph">
+<p>The GPU Operator can enable MIG mode by applying specific node labels.</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Label GPU nodes to enable MIG mode</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">$ <strong>oc label node worker-gpu-0.example.com nvidia.com/mig.config=all-1g.10gb --overwrite</strong>
+node/worker-gpu-0.example.com labeled
+
+$ <strong>oc label node worker-gpu-1.example.com nvidia.com/mig.config=all-1g.10gb --overwrite</strong>
+node/worker-gpu-1.example.com labeled</code></pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>The <code>all-1g.10gb</code> profile will partition each GPU into seven 1g.10gb MIG instances (for A100 80GB) or seven 1g.5gb instances (for A100 40GB).</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</li>
+<li>
+<p>Monitor the MIG manager daemonset as it reconfigures GPUs</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">$ <strong>oc logs -n nvidia-gpu-operator -l app=nvidia-mig-manager -f</strong>
+time="2024-04-10T14:23:15Z" level=info msg="Applying MIG configuration" node=worker-gpu-0.example.com profile=all-1g.10gb
+time="2024-04-10T14:23:18Z" level=info msg="Enabling MIG mode on GPU 0"
+time="2024-04-10T14:23:20Z" level=info msg="Creating MIG instances: 1g.10gb x7"
+time="2024-04-10T14:23:25Z" level=info msg="MIG configuration complete"</code></pre>
+</div>
+</div>
+</li>
+<li>
+<p>Wait for the mig-manager pod to complete the reconfiguration</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">$ <strong>oc get pods -n nvidia-gpu-operator -l app=nvidia-mig-manager</strong>
+NAME                          READY   STATUS      RESTARTS   AGE
+nvidia-mig-manager-xxxxx      0/1     Completed   0          3m</code></pre>
+</div>
+</div>
+</li>
+</ol>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_3_create_custom_mig_configuration"><a class="anchor" href="#_3_create_custom_mig_configuration"></a>3. Create Custom MIG Configuration</h3>
+<div class="paragraph">
+<p>For more advanced MIG profiles or mixed configurations, create a custom ConfigMap for mig-parted.</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Create a custom MIG configuration file</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">$ <strong>cat &lt;&lt;EOF | oc apply -f -</strong>
+<strong>apiVersion: v1</strong>
+<strong>kind: ConfigMap</strong>
+<strong>metadata:</strong>
+*  name: custom-mig-parted-config*
+*  namespace: nvidia-gpu-operator*
+<strong>data:</strong>
+*  config.yaml: |*
+*    version: v1*
+*    mig-configs:*
+*      all-2g.20gb:*
+*        - devices: all*
+*          mig-enabled: true*
+*          mig-devices:*
+*            "2g.20gb": 3*
+*      mixed-profile:*
+*        - devices: all*
+*          mig-enabled: true*
+*          mig-devices:*
+*            "1g.10gb": 2*
+*            "3g.40gb": 1*
+<strong>EOF</strong>
+configmap/custom-mig-parted-config created</code></pre>
+</div>
+</div>
+</li>
+<li>
+<p>Update the ClusterPolicy to use the custom config</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">$ <strong>oc patch clusterpolicy gpu-cluster-policy --type=merge -p '</strong>
+*  {*
+*    "spec": {*
+*      "migManager": {*
+*        "config": {*
+*          "name": "custom-mig-parted-config"*
+*        }*
+*      }*
+*    }*
+*  }'*
+clusterpolicy.nvidia.com/gpu-cluster-policy patched</code></pre>
+</div>
+</div>
+</li>
+<li>
+<p>Apply a custom profile to specific nodes</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">$ <strong>oc label node worker-gpu-2.example.com nvidia.com/mig.config=all-2g.20gb --overwrite</strong>
+node/worker-gpu-2.example.com labeled</code></pre>
+</div>
+</div>
+</li>
+</ol>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_4_verify_mig_instance_allocation"><a class="anchor" href="#_4_verify_mig_instance_allocation"></a>4. Verify MIG Instance Allocation</h3>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Check that MIG instances are now visible as allocatable resources</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">$ <strong>oc describe node worker-gpu-0.example.com | grep -A 10 "Allocatable:"</strong>
+Allocatable:
+  cpu:                          31500m
+  ephemeral-storage:            487267823448
+  hugepages-1Gi:                0
+  hugepages-2Mi:                0
+  memory:                       252455456Ki
+  nvidia.com/mig-1g.10gb:       <strong>7</strong>
+  pods:                         250</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>You should see <code>nvidia.com/mig-1g.10gb: 7</code> indicating seven MIG instances are available.</p>
+</div>
+</li>
+<li>
+<p>View detailed MIG device information</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">$ <strong>oc debug node/worker-gpu-0.example.com</strong>
+sh-4.4# <strong>chroot /host</strong>
+sh-4.4# <strong>nvidia-smi -L</strong>
+GPU 0: NVIDIA A100-PCIE-40GB (UUID: GPU-xxxxx)
+  MIG 1g.10gb     Device  0: (UUID: MIG-xxxxx-0)
+  MIG 1g.10gb     Device  1: (UUID: MIG-xxxxx-1)
+  MIG 1g.10gb     Device  2: (UUID: MIG-xxxxx-2)
+  MIG 1g.10gb     Device  3: (UUID: MIG-xxxxx-3)
+  MIG 1g.10gb     Device  4: (UUID: MIG-xxxxx-4)
+  MIG 1g.10gb     Device  5: (UUID: MIG-xxxxx-5)
+  MIG 1g.10gb     Device  6: (UUID: MIG-xxxxx-6)</code></pre>
+</div>
+</div>
+</li>
+<li>
+<p>Test MIG instance allocation with a sample workload</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">$ <strong>cat &lt;&lt;EOF | oc apply -f -</strong>
+<strong>apiVersion: v1</strong>
+<strong>kind: Pod</strong>
+<strong>metadata:</strong>
+*  name: mig-test*
+<strong>spec:</strong>
+*  restartPolicy: OnFailure*
+*  containers:*
+*  - name: cuda-test*
+*    image: nvidia/cuda:12.2.0-base-ubi8*
+*    command: ["nvidia-smi"]*
+*    resources:*
+*      limits:*
+*        nvidia.com/mig-1g.10gb: 1*
+<strong>EOF</strong>
+pod/mig-test created</code></pre>
+</div>
+</div>
+</li>
+<li>
+<p>Check the pod output to confirm MIG instance allocation</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">$ <strong>oc logs mig-test</strong>
++-----------------------------------------------------------------------------+
+| NVIDIA-SMI 535.129.03             Driver Version: 535.129.03   CUDA Version: 12.2     |
+|-------------------------------+----------------------+----------------------+
+| GPU  Name        Persistence-M| Bus-Id        Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp  Perf  Pwr:Usage/Cap|         Memory-Usage | GPU-Util  Compute M. |
+|                               |                      |               MIG M. |
+|===============================+======================+======================|
+|   0  NVIDIA A100-PCI...  On   | 00000000:3B:00.0 Off |                   On |
+| N/A   30C    P0    35W / 250W |      0MiB / 10240MiB |     N/A      Default |
+|                               |                      |              Enabled |
++-------------------------------+----------------------+----------------------+
+
++-----------------------------------------------------------------------------+
+| MIG devices:                                                                |
++------------------+----------------------+-----------+-----------------------+
+| GPU  GI  CI  MIG |         Memory-Usage |        Vol|         Shared        |
+|      ID  ID  Dev |           BAR1-Usage | SM     Unc| CE  ENC  DEC  OFA  JPG|
+|                  |                      |        ECC|                       |
+|==================+======================+===========+=======================|
+|  0    7   0   0  |      0MiB / 10240MiB | 14      0 |  1   0    0    0    0 |
+|                  |      0MiB / 16383MiB |           |                       |
++------------------+----------------------+-----------+-----------------------+</code></pre>
+</div>
+</div>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>You have successfully configured Multi-Instance GPU partitioning on your OpenShift cluster. Physical GPUs are now split into multiple isolated instances that can be independently allocated to model serving workloads, maximizing GPU utilization and return on investment.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_whats_next"><a class="anchor" href="#_whats_next"></a>What&#8217;s next</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>In the next chapter, you will build a comprehensive observability stack by enabling OpenShift user-workload monitoring, exposing GPU metrics via DCGM Exporter, deploying the Grafana Operator, and creating custom dashboards to visualize GPU telemetry alongside platform metrics.</p>
+</div>
+</div>
+</div>
+<nav class="pagination">
+  <span class="prev"><a href="s1-mig-overview.html">Maximizing GPU ROI with Multi-Instance GPU</a></span>
+  <span class="next"><a href="../ch3-observability/index.html">Monitor GPU Telemetry and Health</a></span>
+</nav>
+</article>
+  </div>
+</main>
+</div>
+<footer class="footer">
+  <img src="../../../_/img/rhl-logo-red.png" height="40px" alt="Red Hat"  href="https://redhat.com" >
+</footer><script id="site-script" src="../../../_/js/site.js" data-ui-root-path="../../../_"></script>
+<script async src="../../../_/js/vendor/highlight.js"></script>
+  </body>
+</html>
