@@ -1,27 +1,29 @@
-= An Example Quick Course
+= Nvidia Accelerator Configuration for Scale
 :navtitle: Home
 
-== Introduction
+== Goal
 
-Course Title: Course title FIXME
-
-Description:
-Course description FIXME
-
-Duration: FIXME hours
+To equip architects, engineers, and administrators with the knowledge and skills required to configure, manage, and monitor NVIDIA GPU Accelerators on OpenShift. This course serves as the foundational hardware enablement layer for a Models-as-a-Service (MaaS) architecture, ensuring teams can utilize and support these components as part of a revenue-generating services business.
 
 == Objectives
 
 On completing this course, you should be able to:
 
-* Observable, measurable objective...
-* Observable, measurable objective...
-* Observable, measurable objective...
+* Understand and install foundational operators including the NVIDIA GPU Operator stack
+* Configure Multi-Instance GPU (MIG) for maximizing GPU ROI in MaaS deployments
+* Monitor GPU telemetry and health using Grafana and OpenShift observability tools
+
+== Audience
+
+* **Platform Engineers**: Responsible for designing and deploying model serving environments and enabling MaaS
+* **DevOps/SREs**: Focused on observability, operational scale, tracking consumption metrics, and cost allocation
 
 == Prerequisites
 
-This course assumes that you have the following prior experience:
+This course assumes that you have the following experience:
 
-* Course or experience...
-* Course or experience...
-* Course or experience...
+* Familiarity with Kubernetes and Red Hat OpenShift Container Platform
+* Basic understanding of machine learning concepts and Red Hat OpenShift AI
+* Basic networking, routing, and understanding of Kubernetes operators
+* Familiarity with REST APIs, Prometheus metrics, and RBAC within OpenShift
+

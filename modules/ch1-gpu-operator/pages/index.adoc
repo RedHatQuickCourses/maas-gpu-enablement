@@ -1,0 +1,7 @@
+= Understand and Install Foundational Operators
+
+Goal::
+
+Understand the "GPU Silo" crisis and how the NVIDIA GPU Operator automates the management of NVIDIA software components. Learn to install and configure the foundational operators including Node Feature Discovery (NFD) and the NVIDIA GPU Operator stack that enables GPU workloads on OpenShift.
+
+This chapter covers the essential components that power the GPU stack: NFD for hardware discovery, NVIDIA Driver Container for GPU drivers, NVIDIA Container Toolkit for runtime integration, GPU Feature Discovery for capabilities detection, and DCGM for monitoring and telemetry.

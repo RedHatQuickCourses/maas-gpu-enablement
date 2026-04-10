@@ -1,0 +1,7 @@
+= Configure Multi-Instance GPU (MIG) for MaaS
+
+Goal::
+
+Maximize GPU return on investment by understanding how the Multi-Instance GPU (MIG) feature splits hardware resources into multiple GPU instances that operate with complete isolation from each other. Learn to configure and apply MIG partitioning profiles to optimize GPU utilization for Models-as-a-Service deployments.
+
+This chapter explores MIG advertisement strategies including Single (homogeneous) and Mixed (heterogeneous) slicing approaches, and provides hands-on experience with configuring MIG partitions on supported NVIDIA hardware.

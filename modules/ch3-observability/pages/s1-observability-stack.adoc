@@ -1,0 +1,178 @@
+:time_estimate: 10
+
+= The MaaS Observability Stack
+
+_Estimated reading time: *{time_estimate} minutes*._
+
+Objective::
+
+Understand how hardware telemetry flows from GPU accelerators to the platform observability plane. Learn the integration between OpenShift's built-in monitoring (Prometheus/Thanos) and standalone visualization using the Grafana Operator for correlating platform, node, and accelerator metrics.
+
+== Why GPU Observability Matters for MaaS
+
+Operating Models-as-a-Service at scale requires comprehensive visibility into the entire infrastructure stack. For GPU-accelerated deployments, this means monitoring:
+
+* **Infrastructure health**: CPU, memory, network, storage
+* **GPU hardware health**: Temperature, power consumption, error rates
+* **GPU utilization**: Compute usage, memory usage, MIG instance allocation
+* **Workload performance**: Inference throughput, latency, batch sizes
+* **Cost allocation**: Per-model GPU usage for chargeback and optimization
+
+Without proper observability, organizations face:
+
+* Unexpected hardware failures without early warning
+* Suboptimal resource utilization and wasted capacity
+* Inability to correlate application performance with infrastructure metrics
+* Lack of data for capacity planning and cost optimization
+* Difficulty troubleshooting inference performance issues
+
+== The Telemetry Flow
+
+GPU metrics flow through a multi-tier observability stack:
+
+=== Layer 1: GPU Hardware Telemetry
+
+**NVIDIA DCGM (Data Center GPU Manager)** continuously collects telemetry directly from GPU hardware:
+
+* GPU utilization percentage
+* Memory utilization and allocation
+* GPU temperature and power draw
+* PCIe throughput
+* ECC (error-correcting code) errors
+* NVLink bandwidth (for multi-GPU systems)
+* Per-process GPU usage
+* MIG instance metrics
+
+DCGM runs as a lightweight daemon on each GPU node with minimal performance overhead (<1% GPU utilization).
+
+=== Layer 2: Metric Export
+
+**DCGM Exporter** translates DCGM telemetry into Prometheus-compatible metrics format:
+
+* Scrapes DCGM on a configurable interval (default: 30 seconds)
+* Exposes metrics via HTTP endpoint on port 9400
+* Adds Kubernetes labels (pod, namespace, node) for correlation
+* Supports custom metric collection profiles
+
+Example metrics exported:
+```
+DCGM_FI_DEV_GPU_UTIL{gpu="0", UUID="GPU-xxxxx", device="nvidia0"}
+DCGM_FI_DEV_FB_USED{gpu="0", UUID="GPU-xxxxx", device="nvidia0"}
+DCGM_FI_DEV_POWER_USAGE{gpu="0", UUID="GPU-xxxxx", device="nvidia0"}
+DCGM_FI_DEV_GPU_TEMP{gpu="0", UUID="GPU-xxxxx", device="nvidia0"}
+```
+
+=== Layer 3: Metric Collection and Storage
+
+**OpenShift Monitoring Stack** provides the collection and storage tier:
+
+**Prometheus**:
+* Scrapes DCGM Exporter endpoints automatically
+* Stores metrics with configurable retention (default: 15 days)
+* Evaluates alerting rules for GPU health
+* Provides PromQL query interface
+
+**Thanos Querier**:
+* Federates metrics from multiple Prometheus instances
+* Provides long-term storage integration
+* Enables cross-cluster metric queries
+* Deduplicates metrics from HA Prometheus deployments
+
+**User Workload Monitoring**:
+* Separate Prometheus instance for application-level metrics
+* Enables namespace-scoped metric collection
+* Isolates tenant metrics from platform metrics
+* Configurable resource limits and retention policies
+
+=== Layer 4: Visualization and Analysis
+
+**Grafana** provides the visualization and dashboard layer:
+
+* Connects to Thanos Querier as primary data source
+* Supports complex PromQL queries for metric correlation
+* Provides pre-built NVIDIA DCGM dashboards
+* Enables custom dashboard creation for specific use cases
+* Supports alerting, annotations, and templating
+
+== Integration Architecture
+
+The complete observability architecture connects multiple OpenShift subsystems:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│ GPU Node (worker-gpu-0)                                     │
+│  ┌──────────┐         ┌─────────────┐                       │
+│  │  DCGM    │────────▶│ DCGM        │:9400                  │
+│  │  Daemon  │         │ Exporter    │────┐                  │
+│  └──────────┘         └─────────────┘    │                  │
+│       │                                   │                  │
+│    GPU Hardware                           │                  │
+└───────────────────────────────────────────┼──────────────────┘
+                                            │
+                    ┌───────────────────────▼──────────────────┐
+                    │ OpenShift Monitoring                     │
+                    │  ┌────────────────┐   ┌───────────────┐ │
+                    │  │ Prometheus     │──▶│ Thanos        │ │
+                    │  │ (User Workload)│   │ Querier       │ │
+                    │  └────────────────┘   └───────┬───────┘ │
+                    └─────────────────────────────────┼─────────┘
+                                                      │
+                    ┌─────────────────────────────────▼─────────┐
+                    │ Grafana Instance                          │
+                    │  ┌──────────────────────────────────────┐ │
+                    │  │ NVIDIA DCGM Dashboard                │ │
+                    │  │  • GPU Utilization                   │ │
+                    │  │  • Memory Usage                      │ │
+                    │  │  • Temperature & Power               │ │
+                    │  │  • MIG Instance Metrics              │ │
+                    │  └──────────────────────────────────────┘ │
+                    └───────────────────────────────────────────┘
+```
+
+== Key Observability Capabilities
+
+=== Real-Time Monitoring
+
+* Live GPU utilization and memory consumption
+* Immediate visibility into hardware health issues
+* Per-MIG-instance resource tracking
+* Workload-to-GPU correlation
+
+=== Historical Analysis
+
+* Trend analysis for capacity planning
+* Performance regression detection
+* Cost optimization opportunities
+* SLA compliance verification
+
+=== Alerting and Anomaly Detection
+
+* GPU temperature threshold alerts
+* Memory exhaustion warnings
+* Error rate spike detection
+* Utilization anomaly detection
+
+=== Multi-Dimensional Correlation
+
+Correlate GPU metrics with:
+
+* **Pod metrics**: Container CPU/memory, restart counts
+* **Node metrics**: System CPU, network, disk I/O
+* **Application metrics**: Inference latency, throughput, error rates
+* **Platform metrics**: Scheduler decisions, resource quotas
+
+This holistic view enables operators to:
+
+* Identify GPU bottlenecks in the inference pipeline
+* Correlate application performance degradation with hardware issues
+* Optimize resource allocation based on actual usage patterns
+* Troubleshoot complex issues spanning multiple infrastructure layers
+
+== What's Next
+
+In the next section, you will enable OpenShift user-workload monitoring by modifying the cluster monitoring configuration, and label the GPU Operator namespace to expose GPU telemetry for Prometheus collection via the NVIDIA DCGM Exporter.
+
+////
+**The MaaS Observability Stack:**
+Understand how hardware telemetry flows up to the platform observability plane. Discuss the integration between OpenShift's built-in monitoring (Prometheus/Thanos) and standalone visualization using the Grafana Operator for platform, node, and accelerator metric correlation.
+////

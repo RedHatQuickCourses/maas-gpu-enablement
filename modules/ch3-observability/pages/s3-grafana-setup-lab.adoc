@@ -1,0 +1,306 @@
+:time_estimate: 25
+
+= Lab: Deploying the Grafana Operator and Setting Up Access
+
+_Estimated reading time: *{time_estimate} minutes*._
+
+Objective::
+
+Install the Grafana Operator from OperatorHub, create a Grafana instance Custom Resource, and set up secure access to cluster metrics by creating a ServiceAccount with cluster-monitoring-view permissions and configuring a GrafanaDatasource pointing to the Thanos Querier endpoint.
+
+== Before you begin
+
+This lab requires:
+
+* Completed GPU metric exposure from the previous lab
+* Cluster administrator privileges
+* User-workload monitoring enabled and operational
+
+== Instructions
+
+=== 1. Install the Grafana Operator
+
+. Create a namespace for Grafana
++
+[source,console,subs="verbatim,quotes"]
+----
+$ *oc create namespace grafana*
+namespace/grafana created
+----
+
+. Install the Grafana Operator from OperatorHub
++
+[source,console,subs="verbatim,quotes"]
+----
+$ *cat <<EOF | oc apply -f -*
+*apiVersion: operators.coreos.com/v1*
+*kind: OperatorGroup*
+*metadata:*
+*  name: grafana-operator-group*
+*  namespace: grafana*
+*spec:*
+*  targetNamespaces:*
+*  - grafana*
+*---*
+*apiVersion: operators.coreos.com/v1alpha1*
+*kind: Subscription*
+*metadata:*
+*  name: grafana-operator*
+*  namespace: grafana*
+*spec:*
+*  channel: v5*
+*  name: grafana-operator*
+*  source: community-operators*
+*  sourceNamespace: openshift-marketplace*
+*  installPlanApproval: Automatic*
+*EOF*
+operatorgroup.operators.coreos.com/grafana-operator-group created
+subscription.operators.coreos.com/grafana-operator created
+----
++
+[NOTE]
+====
+This lab uses the community Grafana Operator. For production deployments, consider using the Red Hat-supported Grafana Operator if available in your catalog.
+====
+
+. Verify operator installation
++
+[source,console,subs="verbatim,quotes"]
+----
+$ *oc get csv -n grafana*
+NAME                      DISPLAY            VERSION   REPLACES   PHASE
+grafana-operator.v5.6.0   Grafana Operator   5.6.0                *Succeeded*
+----
+
+. Wait for the operator pod to be ready
++
+[source,console,subs="verbatim,quotes"]
+----
+$ *oc get pods -n grafana*
+NAME                                READY   STATUS    RESTARTS   AGE
+grafana-operator-xxxxx              1/1     Running   0          2m
+----
+
+=== 2. Create a Grafana Instance
+
+. Deploy a Grafana instance
++
+[source,console,subs="verbatim,quotes"]
+----
+$ *cat <<EOF | oc apply -f -*
+*apiVersion: grafana.integreatly.org/v1beta1*
+*kind: Grafana*
+*metadata:*
+*  name: grafana*
+*  namespace: grafana*
+*  labels:*
+*    dashboards: "grafana"*
+*spec:*
+*  config:*
+*    log:*
+*      mode: "console"*
+*      level: "warn"*
+*    auth:*
+*      disable_login_form: false*
+*    security:*
+*      admin_user: admin*
+*      admin_password: redhat123  # Change in production!*
+*  route:*
+*    spec:*
+*      port:*
+*        targetPort: grafana-http*
+*      tls:*
+*        termination: edge*
+*        insecureEdgeTerminationPolicy: Redirect*
+*EOF*
+grafana.grafana.integreatly.org/grafana created
+----
++
+[WARNING]
+====
+Change the admin password to a secure value for production deployments. Consider integrating with OpenShift OAuth for authentication instead of using basic auth.
+====
+
+. Wait for Grafana pod deployment
++
+[source,console,subs="verbatim,quotes"]
+----
+$ *oc get pods -n grafana -l app=grafana*
+NAME                       READY   STATUS    RESTARTS   AGE
+grafana-deployment-xxxxx   1/1     Running   0          1m
+----
+
+. Get the Grafana route URL
++
+[source,console,subs="verbatim,quotes"]
+----
+$ *oc get route grafana-route -n grafana*
+NAME             HOST/PORT
+grafana-route    grafana-route-grafana.apps.cluster.example.com
+----
+
+. Test access to Grafana
++
+Open the route URL in your browser and log in with:
++
+* Username: `admin`
+* Password: `redhat123` (or your configured password)
+
+=== 3. Create ServiceAccount for Metrics Access
+
+To securely query OpenShift's Prometheus/Thanos, create a dedicated ServiceAccount with appropriate permissions.
+
+. Create a ServiceAccount for Grafana
++
+[source,console,subs="verbatim,quotes"]
+----
+$ *oc create serviceaccount grafana-sa -n grafana*
+serviceaccount/grafana-sa created
+----
+
+. Grant cluster-monitoring-view permissions
++
+[source,console,subs="verbatim,quotes"]
+----
+$ *oc adm policy add-cluster-role-to-user cluster-monitoring-view -z grafana-sa -n grafana*
+clusterrole.rbac.authorization.k8s.io/cluster-monitoring-view added: "grafana-sa"
+----
++
+[NOTE]
+====
+The `cluster-monitoring-view` ClusterRole provides read-only access to cluster metrics without granting broader cluster permissions.
+====
+
+. Create a long-lived ServiceAccount token
++
+For OpenShift 4.11+, create a Secret to generate a non-expiring token:
++
+[source,console,subs="verbatim,quotes"]
+----
+$ *cat <<EOF | oc apply -f -*
+*apiVersion: v1*
+*kind: Secret*
+*metadata:*
+*  name: grafana-sa-token*
+*  namespace: grafana*
+*  annotations:*
+*    kubernetes.io/service-account.name: grafana-sa*
+*type: kubernetes.io/service-account-token*
+*EOF*
+secret/grafana-sa-token created
+----
+
+. Extract the ServiceAccount token
++
+[source,console,subs="verbatim,quotes"]
+----
+$ *export BEARER_TOKEN=$(oc get secret grafana-sa-token -n grafana -o jsonpath='{.data.token}' | base64 -d)*
+$ *echo $BEARER_TOKEN*
+eyJhbGciOiJSUzI1NiIsImtpZCI6Ilg1...
+----
++
+Save this token securely—you'll need it for the datasource configuration.
+
+=== 4. Configure GrafanaDatasource
+
+. Get the Thanos Querier service endpoint
++
+[source,console,subs="verbatim,quotes"]
+----
+$ *oc get svc thanos-querier -n openshift-monitoring*
+NAME             TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)    AGE
+thanos-querier   ClusterIP   172.30.xxx.xxx   <none>        9091/TCP   30d
+----
++
+The internal service URL is: `https://thanos-querier.openshift-monitoring.svc:9091`
+
+. Create the GrafanaDatasource CR
++
+[source,console,subs="verbatim,quotes"]
+----
+$ *cat <<EOF | oc apply -f -*
+*apiVersion: grafana.integreatly.org/v1beta1*
+*kind: GrafanaDatasource*
+*metadata:*
+*  name: prometheus-grafanadatasource*
+*  namespace: grafana*
+*spec:*
+*  instanceSelector:*
+*    matchLabels:*
+*      dashboards: "grafana"*
+*  datasource:*
+*    name: Prometheus*
+*    type: prometheus*
+*    access: proxy*
+*    url: https://thanos-querier.openshift-monitoring.svc:9091*
+*    isDefault: true*
+*    jsonData:*
+*      "tlsSkipVerify": true*
+*      "timeInterval": "30s"*
+*      "httpHeaderName1": "Authorization"*
+*    secureJsonData:*
+*      "httpHeaderValue1": "Bearer ${BEARER_TOKEN}"*
+*EOF*
+grafanadatasource.grafana.integreatly.org/prometheus-grafanadatasource created
+----
++
+[NOTE]
+====
+The `tlsSkipVerify: true` setting is acceptable for internal cluster communication. For external datasources, configure proper TLS verification.
+====
+
+. Verify the datasource was created
++
+[source,console,subs="verbatim,quotes"]
+----
+$ *oc get grafanadatasource -n grafana*
+NAME                            AGE
+prometheus-grafanadatasource    30s
+----
+
+=== 5. Test Datasource Connection
+
+. Log in to the Grafana web interface
+
+. Navigate to **Configuration** → **Data Sources**
+
+. Click on the **Prometheus** datasource
+
+. Scroll down and click **Save & Test**
++
+You should see a green success message: "Data source is working"
+
+. Test a simple query:
++
+* Go to **Explore** in the left menu
+* Select the **Prometheus** datasource
+* Enter query: `up{job="nvidia-dcgm-exporter"}`
+* Click **Run Query**
++
+You should see metrics from DCGM Exporter instances across your GPU nodes.
+
+. Verify GPU metrics are accessible:
++
+Query:
++
+----
+DCGM_FI_DEV_GPU_UTIL
+----
++
+You should see GPU utilization metrics from all devices in your cluster.
+
+You have successfully deployed the Grafana Operator, created a Grafana instance, configured secure ServiceAccount-based access to OpenShift's monitoring stack, and established a working datasource connection to the Thanos Querier. Grafana can now query and visualize all cluster metrics, including GPU telemetry from DCGM Exporter.
+
+== What's next
+
+In the final section, you will import and customize the NVIDIA DCGM Exporter dashboards to visualize GPU metrics, correlate accelerator performance with standard node resources like CPU and memory, and create comprehensive observability views for your GPU infrastructure.
+
+////
+**Deploying the Grafana Operator & Setting Up Access:**
+Install the community or Red Hat Grafana Operator from OperatorHub and create a Grafana instance Custom Resource (CR).
+
+Set up secure access to the cluster's metrics by:
+1. Creating a dedicated ServiceAccount (e.g., `grafana-sa`).
+2. Granting the ServiceAccount the `cluster-monitoring-view` ClusterRole so it can securely read OpenShift platform metrics.
+3. Extracting the ServiceAccount token and creating a `GrafanaDatasource` CR that points directly to the OpenShift `thanos-querier` endpoint.
+////

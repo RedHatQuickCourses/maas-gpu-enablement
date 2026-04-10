@@ -1,0 +1,144 @@
+:time_estimate: 12
+
+= Maximizing GPU ROI with Multi-Instance GPU
+
+_Estimated reading time: *{time_estimate} minutes*._
+
+Objective::
+
+Understand how the Multi-Instance GPU (MIG) feature splits hardware resources into multiple GPU instances that operate with complete isolation from each other. Evaluate MIG advertisement strategies including Single (homogeneous) and Mixed (heterogeneous) slicing approaches.
+
+== The GPU Utilization Challenge
+
+High-performance GPUs like the NVIDIA A100 and H100 represent significant capital investment, often costing $10,000-$30,000 per unit. However, many AI inference workloads don't require the full computational capacity of these GPUs, leading to resource underutilization and poor return on investment.
+
+Traditional approaches to sharing GPUs include:
+
+* **Time-slicing**: Multiple workloads share a GPU through temporal scheduling, but lack performance isolation
+* **GPU passthrough**: Each workload gets exclusive access to a full GPU, maximizing performance but minimizing utilization
+* **Virtual GPUs (vGPU)**: Requires additional licensing and virtualization overhead
+
+Multi-Instance GPU (MIG) provides a hardware-level solution that balances performance isolation with resource efficiency.
+
+== What is Multi-Instance GPU?
+
+Multi-Instance GPU is a hardware capability available on NVIDIA Ampere and Hopper architecture GPUs (A30, A100, H100, etc.) that partitions a single physical GPU into multiple isolated GPU instances. Each instance has:
+
+* **Dedicated GPU compute resources** (streaming multiprocessors)
+* **Dedicated memory** (a slice of the total GPU VRAM)
+* **Dedicated memory bandwidth** (isolated memory controllers)
+* **Complete fault isolation** (errors in one instance don't affect others)
+
+From the perspective of containerized workloads, each MIG instance appears as a separate GPU device with predictable, guaranteed performance.
+
+== MIG Architecture
+
+A physical GPU can be partitioned into MIG instances with different profiles:
+
+=== Common MIG Profiles
+
+For an A100 40GB GPU:
+
+[cols="2,2,2,4"]
+|===
+|Profile |Instances |Memory per Instance |Use Case
+
+|`1g.5gb`
+|7
+|5 GB
+|Small inference models, development workloads
+
+|`2g.10gb`
+|3
+|10 GB
+|Medium models, fine-tuning tasks
+
+|`3g.20gb`
+|2
+|20 GB
+|Large models, training workloads
+
+|`4g.20gb`
+|1
+|20 GB
+|Very large models
+
+|`7g.40gb`
+|1
+|40 GB
+|Full GPU (no partitioning)
+|===
+
+For an A100 80GB GPU, profiles scale to `1g.10gb`, `2g.20gb`, `3g.40gb`, etc.
+
+[NOTE]
+====
+The number before `g` indicates compute slice size (in 1/7ths of total GPU), while the value after indicates memory allocation.
+====
+
+== MIG Advertisement Strategies
+
+The NVIDIA GPU Operator supports two strategies for exposing MIG instances to the Kubernetes scheduler:
+
+=== Single Strategy (Homogeneous)
+
+All MIG instances on a node must use the same profile. This simplifies scheduling and resource management:
+
+* Easy to understand and manage
+* Predictable resource allocation
+* Best for uniform workload patterns
+* Example: All nodes configured with `3g.20gb` profile, advertising 2 GPU instances per physical GPU
+
+=== Mixed Strategy (Heterogeneous)
+
+Different MIG profiles can coexist on the same physical GPU. This provides maximum flexibility:
+
+* Accommodates diverse workload requirements
+* Optimizes resource utilization
+* More complex to manage and schedule
+* Example: One physical GPU split into `1g.5gb` + `3g.20gb` profiles
+
+The choice between strategies depends on your workload patterns and operational complexity tolerance.
+
+== MIG Benefits for MaaS
+
+For Models-as-a-Service architectures, MIG provides critical advantages:
+
+=== Cost Efficiency
+* Serve multiple models concurrently on expensive hardware
+* Right-size GPU resources to actual model requirements
+* Improve GPU utilization from 20-30% to 70-90%
+
+=== Performance Isolation
+* Guarantee consistent inference latency per model
+* Prevent noisy neighbor problems
+* Enable SLA-backed model serving
+
+=== Operational Flexibility
+* Scale model instances independently
+* Mix small and large models on same infrastructure
+* Support multi-tenant deployments with hardware isolation
+
+=== Resource Predictability
+* Each model deployment gets guaranteed GPU resources
+* Simplify capacity planning and cost allocation
+* Enable accurate per-model billing and chargeback
+
+== Hardware Requirements
+
+MIG is available on:
+
+* **NVIDIA A30** - Ampere architecture, up to 4 MIG instances
+* **NVIDIA A100** (40GB/80GB) - Ampere architecture, up to 7 MIG instances
+* **NVIDIA H100** - Hopper architecture, enhanced MIG with up to 7 instances
+
+Older GPU architectures (V100, T4, etc.) do not support MIG and must use time-slicing or passthrough approaches.
+
+== What's Next
+
+In the next section, you will configure MIG partitioning on your GPU nodes by applying MIG profiles, creating custom mig-parted configurations, and verifying that sliced instances are exposed as allocatable resources to the OpenShift scheduler.
+
+////
+**Maximizing GPU ROI:**
+Understand how the Multi-Instance GPU (MIG) feature splits hardware resources into multiple GPU instances, operating completely isolated from each other. Evaluate MIG advertisement strategies: Single (homogeneous) vs. Mixed (heterogeneous) slicing.
+////
