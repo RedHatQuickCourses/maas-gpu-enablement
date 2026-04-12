@@ -1,4 +1,4 @@
-:time_estimate: 35
+:time_estimate: 45
 
 = Lab: MIG Slicing Configuration
 
@@ -25,6 +25,21 @@ Applying MIG configuration requires GPU reset and will interrupt any running GPU
 == Instructions
 
 === 1. Verify MIG Capability
+
+Before applying MIG configuration, verify your GPU hardware supports MIG. This prevents configuration errors and clarifies which profiles are available.
+
+[NOTE]
+====
+**Why Verify Before Labeling?**
+
+The GPU Operator's MIG Manager will fail silently if you label a non-MIG-capable GPU (e.g., V100, T4). Verifying capability first:
+
+* Confirms hardware supports MIG (A30/A100/H100 only)
+* Shows current MIG mode state (enabled/disabled)
+* Prevents wasted 10-20 minute reconfiguration attempts
+
+Reference: xref:s1-mig-overview.adoc#_hardware_requirements_and_gpu_model_support[MIG Hardware Requirements in s1]
+====
 
 First, confirm your GPU hardware supports MIG.
 
