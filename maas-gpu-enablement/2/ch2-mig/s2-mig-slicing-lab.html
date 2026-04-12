@@ -276,21 +276,32 @@ Disabled, Disabled</code></pre>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_2_enable_mig_mode_using_node_labels"><a class="anchor" href="#_2_enable_mig_mode_using_node_labels"></a>2. Enable MIG Mode Using Node Labels</h3>
+<h3 id="_2_configure_mig_strategy_and_enable_mig_mode"><a class="anchor" href="#_2_configure_mig_strategy_and_enable_mig_mode"></a>2. Configure MIG Strategy and Enable MIG Mode</h3>
 <div class="paragraph">
-<p>The GPU Operator can enable MIG mode by applying specific node labels.</p>
+<p>The GPU Operator supports two MIG advertisement strategies (see <a href="s1-mig-overview.html#_mig_advertisement_strategies" class="xref page">MIG Advertisement Strategies in s1</a>):</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Single</strong>: All instances advertised as <code>nvidia.com/gpu</code> (backward compatible)</p>
+</li>
+<li>
+<p><strong>Mixed</strong>: Instances advertised with profile-specific names like <code>nvidia.com/mig-2g.10gb</code></p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>For this lab, we&#8217;ll use <strong>mixed strategy</strong> to demonstrate heterogeneous profiles.</p>
 </div>
 <div class="olist arabic">
 <ol class="arabic">
 <li>
-<p>Label GPU nodes to enable MIG mode</p>
+<p>Set MIG strategy to mixed in ClusterPolicy</p>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">$ <strong>oc label node worker-gpu-0.example.com nvidia.com/mig.config=all-1g.10gb --overwrite</strong>
-node/worker-gpu-0.example.com labeled
-
-$ <strong>oc label node worker-gpu-1.example.com nvidia.com/mig.config=all-1g.10gb --overwrite</strong>
-node/worker-gpu-1.example.com labeled</code></pre>
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">$ <strong>oc patch clusterpolicy/gpu-cluster-policy --type='json' \
+  -p='[{"op": "replace", "path": "/spec/mig/strategy", "value": "mixed"}]'</strong>
+clusterpolicy.nvidia.com/gpu-cluster-policy patched</code></pre>
 </div>
 </div>
 <div class="admonitionblock note">
@@ -301,7 +312,26 @@ node/worker-gpu-1.example.com labeled</code></pre>
 </td>
 <td class="content">
 <div class="paragraph">
-<p>The <code>all-1g.10gb</code> profile will partition each GPU into seven 1g.10gb MIG instances (for A100 80GB) or seven 1g.5gb instances (for A100 40GB).</p>
+<p><strong>Why Set Strategy First?</strong></p>
+</div>
+<div class="paragraph">
+<p>The MIG strategy determines how resources are advertised to Kubernetes:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Single</strong>: <code>nvidia.com/gpu: 7</code> (all instances identical)</p>
+</li>
+<li>
+<p><strong>Mixed</strong>: <code>nvidia.com/mig-1g.5gb: 7</code> (profile-specific)</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Setting strategy before labeling nodes ensures consistent resource naming. This is a <strong>cluster-wide</strong> setting in ClusterPolicy, not per-node.</p>
+</div>
+<div class="paragraph">
+<p>Reference: <a href="s1-mig-overview.html#_production_strategy_selection_matrix" class="xref page">Strategy Selection Matrix in s1</a></p>
 </div>
 </td>
 </tr>
@@ -309,25 +339,127 @@ node/worker-gpu-1.example.com labeled</code></pre>
 </div>
 </li>
 <li>
-<p>Monitor the MIG manager daemonset as it reconfigures GPUs</p>
+<p>Label GPU nodes with MIG profile appropriate for your hardware</p>
+<div class="paragraph">
+<p>For <strong>A100-40GB GPUs</strong>, use profiles with smaller memory allocations:</p>
+</div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">$ <strong>oc logs -n nvidia-gpu-operator -l app=nvidia-mig-manager -f</strong>
-time="2024-04-10T14:23:15Z" level=info msg="Applying MIG configuration" node=worker-gpu-0.example.com profile=all-1g.10gb
-time="2024-04-10T14:23:18Z" level=info msg="Enabling MIG mode on GPU 0"
-time="2024-04-10T14:23:20Z" level=info msg="Creating MIG instances: 1g.10gb x7"
-time="2024-04-10T14:23:25Z" level=info msg="MIG configuration complete"</code></pre>
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">$ <strong>oc label node worker-gpu-0.example.com nvidia.com/mig.config=all-1g.5gb --overwrite</strong>
+node/worker-gpu-0.example.com labeled</code></pre>
 </div>
+</div>
+<div class="paragraph">
+<p>For <strong>A100-80GB GPUs</strong>, use profiles with larger memory allocations:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">$ <strong>oc label node worker-gpu-1.example.com nvidia.com/mig.config=all-1g.10gb --overwrite</strong>
+node/worker-gpu-1.example.com labeled</code></pre>
+</div>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p><strong>Profile Naming Convention: A100-40GB vs. A100-80GB</strong></p>
+</div>
+<div class="paragraph">
+<p>MIG profile names encode memory allocation:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>A100-40GB</strong>: <code>1g.5gb</code> (5GB per instance), <code>2g.10gb</code> (10GB), <code>3g.20gb</code> (20GB)</p>
+</li>
+<li>
+<p><strong>A100-80GB</strong>: <code>1g.10gb</code> (10GB per instance), <code>2g.20gb</code> (20GB), <code>3g.40gb</code> (40GB)</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>The <code>all-1g.5gb</code> profile on A100-40GB creates 7 instances of 5GB each.
+The <code>all-1g.10gb</code> profile on A100-80GB creates 7 instances of 10GB each.</p>
+</div>
+<div class="paragraph">
+<p>Both maximize instance density (7x) for small model serving.</p>
+</div>
+<div class="paragraph">
+<p>Reference: <a href="s1-mig-overview.html#_mig_profile_characteristics" class="xref page">MIG Profile Table in s1</a></p>
+</div>
+</td>
+</tr>
+</table>
 </div>
 </li>
 <li>
-<p>Wait for the mig-manager pod to complete the reconfiguration</p>
+<p>Monitor the MIG Manager DaemonSet as it reconfigures GPUs</p>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">$ <strong>oc get pods -n nvidia-gpu-operator -l app=nvidia-mig-manager</strong>
-NAME                          READY   STATUS      RESTARTS   AGE
-nvidia-mig-manager-xxxxx      0/1     Completed   0          3m</code></pre>
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">$ <strong>oc logs -n nvidia-gpu-operator -l app=nvidia-mig-manager -f</strong>
+time="2024-04-10T14:23:15Z" level=info msg="Applying MIG configuration" node=worker-gpu-0.example.com profile=all-1g.5gb
+time="2024-04-10T14:23:18Z" level=info msg="Enabling MIG mode on GPU 0"
+time="2024-04-10T14:23:20Z" level=info msg="Creating MIG instances: 1g.5gb x7"
+time="2024-04-10T14:23:25Z" level=info msg="MIG configuration complete"</code></pre>
 </div>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p><strong>Expected Reconfiguration Time: 10-20 Minutes</strong></p>
+</div>
+<div class="paragraph">
+<p>The log message "MIG configuration complete" indicates MIG Manager finished its work, but <strong>allocatable resources may not appear immediately</strong>. The full workflow requires:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>MIG Manager enables MIG mode and creates instances (~60 seconds)</p>
+</li>
+<li>
+<p>GPU Feature Discovery rescans GPU capabilities (~60 seconds)</p>
+</li>
+<li>
+<p>Device Plugin rediscovers resources (~60 seconds)</p>
+</li>
+<li>
+<p>Kubernetes scheduler updates node status (~30 seconds)</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p><strong>Wait 10-20 minutes</strong> before checking <code>oc describe node</code> for MIG resources. This timing is normal for GPU hardware reconfiguration.</p>
+</div>
+<div class="paragraph">
+<p>Reference: <a href="s1-mig-overview.html#_mig_enablement_workflow" class="xref page">MIG Enablement Workflow Diagram in s1</a></p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</li>
+<li>
+<p>Verify MIG configuration state on node labels</p>
+<div class="paragraph">
+<p>Wait 10-20 minutes, then check the node label showing configuration state:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">$ <strong>oc get node worker-gpu-0.example.com -o jsonpath='{.metadata.labels.nvidia\.com/mig\.config\.state}'</strong>
+success</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The <code>success</code> state indicates MIG Manager completed reconfiguration without errors.</p>
 </div>
 </li>
 </ol>
@@ -336,12 +468,12 @@ nvidia-mig-manager-xxxxx      0/1     Completed   0          3m</code></pre>
 <div class="sect2">
 <h3 id="_3_create_custom_mig_configuration"><a class="anchor" href="#_3_create_custom_mig_configuration"></a>3. Create Custom MIG Configuration</h3>
 <div class="paragraph">
-<p>For more advanced MIG profiles or mixed configurations, create a custom ConfigMap for mig-parted.</p>
+<p>The GPU Operator auto-generates MIG configurations for standard profiles (<code>all-1g.5gb</code>, <code>all-2g.10gb</code>, <code>all-balanced</code>). For advanced heterogeneous combinations not covered by <code>all-balanced</code>, create a custom <code>mig-parted</code> ConfigMap.</p>
 </div>
 <div class="olist arabic">
 <ol class="arabic">
 <li>
-<p>Create a custom MIG configuration file</p>
+<p>Create a custom MIG configuration file for mixed A100-40GB profiles</p>
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">$ <strong>cat &lt;&lt;EOF | oc apply -f -</strong>
@@ -354,24 +486,86 @@ nvidia-mig-manager-xxxxx      0/1     Completed   0          3m</code></pre>
 *  config.yaml: |*
 *    version: v1*
 *    mig-configs:*
-*      all-2g.20gb:*
+*      all-2g.10gb:*                      <i class="conum" data-value="1"></i><b>(1)</b>
 *        - devices: all*
 *          mig-enabled: true*
 *          mig-devices:*
-*            "2g.20gb": 3*
-*      mixed-profile:*
+*            "2g.10gb": 3*                <i class="conum" data-value="2"></i><b>(2)</b>
+*      mixed-inference:*                 <i class="conum" data-value="3"></i><b>(3)</b>
 *        - devices: all*
 *          mig-enabled: true*
 *          mig-devices:*
-*            "1g.10gb": 2*
-*            "3g.40gb": 1*
+*            "1g.5gb": 2*                 <i class="conum" data-value="4"></i><b>(4)</b>
+*            "2g.10gb": 1*
+*            "3g.20gb": 1*
 <strong>EOF</strong>
 configmap/custom-mig-parted-config created</code></pre>
 </div>
 </div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Homogeneous profile: 3 medium instances</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Each instance gets 2/7 compute + 10GB memory</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>Heterogeneous profile matching s1 multi-tenant scenario</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td>Creates 4 total instances: 2 small + 1 medium + 1 large</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p><strong>Custom Profile Naming and Validation</strong></p>
+</div>
+<div class="paragraph">
+<p>Profile names in <code>mig-configs</code> section become node labels. The <code>mixed-inference</code> profile can be applied with:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc label node worker-gpu-2.example.com nvidia.com/mig.config=mixed-inference --overwrite</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>Profile Validation Rules</strong> (A100-40GB):</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Compute slices must sum to ≤7g (e.g., 1g + 1g + 2g + 3g = 7g ✅)</p>
 </li>
 <li>
-<p>Update the ClusterPolicy to use the custom config</p>
+<p>Memory must match compute (1g → 5GB, 2g → 10GB, 3g → 20GB)</p>
+</li>
+<li>
+<p>Exceeding 7g total compute will fail MIG Manager validation ❌</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Reference: <a href="s1-mig-overview.html#_common_mig_profile_combinations" class="xref page">Profile Combinations Table in s1</a></p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</li>
+<li>
+<p>Update the ClusterPolicy to use the custom ConfigMap</p>
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">$ <strong>oc patch clusterpolicy gpu-cluster-policy --type=merge -p '</strong>
@@ -389,19 +583,22 @@ clusterpolicy.nvidia.com/gpu-cluster-policy patched</code></pre>
 </div>
 </li>
 <li>
-<p>Apply a custom profile to specific nodes</p>
+<p>Apply a custom profile to specific node</p>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">$ <strong>oc label node worker-gpu-2.example.com nvidia.com/mig.config=all-2g.20gb --overwrite</strong>
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">$ <strong>oc label node worker-gpu-2.example.com nvidia.com/mig.config=mixed-inference --overwrite</strong>
 node/worker-gpu-2.example.com labeled</code></pre>
 </div>
+</div>
+<div class="paragraph">
+<p>Wait 10-20 minutes for reconfiguration to complete.</p>
 </div>
 </li>
 </ol>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_4_verify_mig_instance_allocation"><a class="anchor" href="#_4_verify_mig_instance_allocation"></a>4. Verify MIG Instance Allocation</h3>
+<h3 id="_4_verify_mig_instance_allocation_and_test_concurrent_workloads"><a class="anchor" href="#_4_verify_mig_instance_allocation_and_test_concurrent_workloads"></a>4. Verify MIG Instance Allocation and Test Concurrent Workloads</h3>
 <div class="olist arabic">
 <ol class="arabic">
 <li>
@@ -411,16 +608,18 @@ node/worker-gpu-2.example.com labeled</code></pre>
 <pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">$ <strong>oc describe node worker-gpu-0.example.com | grep -A 10 "Allocatable:"</strong>
 Allocatable:
   cpu:                          31500m
-  ephemeral-storage:            487267823448
-  hugepages-1Gi:                0
-  hugepages-2Mi:                0
   memory:                       252455456Ki
-  nvidia.com/mig-1g.10gb:       <strong>7</strong>
+  nvidia.com/mig-1g.5gb:        <strong>7</strong>           <i class="conum" data-value="1"></i><b>(1)</b>
   pods:                         250</code></pre>
 </div>
 </div>
-<div class="paragraph">
-<p>You should see <code>nvidia.com/mig-1g.10gb: 7</code> indicating seven MIG instances are available.</p>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Seven MIG instances now available for workload scheduling</td>
+</tr>
+</table>
 </div>
 </li>
 <li>
@@ -431,25 +630,27 @@ Allocatable:
 sh-4.4# <strong>chroot /host</strong>
 sh-4.4# <strong>nvidia-smi -L</strong>
 GPU 0: NVIDIA A100-PCIE-40GB (UUID: GPU-xxxxx)
-  MIG 1g.10gb     Device  0: (UUID: MIG-xxxxx-0)
-  MIG 1g.10gb     Device  1: (UUID: MIG-xxxxx-1)
-  MIG 1g.10gb     Device  2: (UUID: MIG-xxxxx-2)
-  MIG 1g.10gb     Device  3: (UUID: MIG-xxxxx-3)
-  MIG 1g.10gb     Device  4: (UUID: MIG-xxxxx-4)
-  MIG 1g.10gb     Device  5: (UUID: MIG-xxxxx-5)
-  MIG 1g.10gb     Device  6: (UUID: MIG-xxxxx-6)</code></pre>
+  MIG 1g.5gb     Device  0: (UUID: MIG-xxxxx-0)
+  MIG 1g.5gb     Device  1: (UUID: MIG-xxxxx-1)
+  MIG 1g.5gb     Device  2: (UUID: MIG-xxxxx-2)
+  MIG 1g.5gb     Device  3: (UUID: MIG-xxxxx-3)
+  MIG 1g.5gb     Device  4: (UUID: MIG-xxxxx-4)
+  MIG 1g.5gb     Device  5: (UUID: MIG-xxxxx-5)
+  MIG 1g.5gb     Device  6: (UUID: MIG-xxxxx-6)
+sh-4.4# <strong>exit</strong>
+sh-4.4# <strong>exit</strong></code></pre>
 </div>
 </div>
 </li>
 <li>
-<p>Test MIG instance allocation with a sample workload</p>
+<p>Deploy three concurrent test workloads to validate hardware isolation</p>
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">$ <strong>cat &lt;&lt;EOF | oc apply -f -</strong>
 <strong>apiVersion: v1</strong>
 <strong>kind: Pod</strong>
 <strong>metadata:</strong>
-*  name: mig-test*
+*  name: mig-test-1*
 <strong>spec:</strong>
 *  restartPolicy: OnFailure*
 *  containers:*
@@ -458,46 +659,651 @@ GPU 0: NVIDIA A100-PCIE-40GB (UUID: GPU-xxxxx)
 *    command: ["nvidia-smi"]*
 *    resources:*
 *      limits:*
-*        nvidia.com/mig-1g.10gb: 1*
+*        nvidia.com/mig-1g.5gb: 1*    <i class="conum" data-value="1"></i><b>(1)</b>
+<strong>---</strong>
+<strong>apiVersion: v1</strong>
+<strong>kind: Pod</strong>
+<strong>metadata:</strong>
+*  name: mig-test-2*
+<strong>spec:</strong>
+*  restartPolicy: OnFailure*
+*  containers:*
+*  - name: cuda-test*
+*    image: nvidia/cuda:12.2.0-base-ubi8*
+*    command: ["nvidia-smi"]*
+*    resources:*
+*      limits:*
+*        nvidia.com/mig-1g.5gb: 1*
+<strong>---</strong>
+<strong>apiVersion: v1</strong>
+<strong>kind: Pod</strong>
+<strong>metadata:</strong>
+*  name: mig-test-3*
+<strong>spec:</strong>
+*  restartPolicy: OnFailure*
+*  containers:*
+*  - name: cuda-test*
+*    image: nvidia/cuda:12.2.0-base-ubi8*
+*    command: ["nvidia-smi"]*
+*    resources:*
+*      limits:*
+*        nvidia.com/mig-1g.5gb: 1*
 <strong>EOF</strong>
-pod/mig-test created</code></pre>
+pod/mig-test-1 created
+pod/mig-test-2 created
+pod/mig-test-3 created</code></pre>
 </div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Each pod requests one MIG instance of the same profile</td>
+</tr>
+</table>
 </div>
 </li>
 <li>
-<p>Check the pod output to confirm MIG instance allocation</p>
+<p>Verify all three pods are running concurrently on the same physical GPU</p>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">$ <strong>oc logs mig-test</strong>
-+-----------------------------------------------------------------------------+
-| NVIDIA-SMI 535.129.03             Driver Version: 535.129.03   CUDA Version: 12.2     |
-|-------------------------------+----------------------+----------------------+
-| GPU  Name        Persistence-M| Bus-Id        Disp.A | Volatile Uncorr. ECC |
-| Fan  Temp  Perf  Pwr:Usage/Cap|         Memory-Usage | GPU-Util  Compute M. |
-|                               |                      |               MIG M. |
-|===============================+======================+======================|
-|   0  NVIDIA A100-PCI...  On   | 00000000:3B:00.0 Off |                   On |
-| N/A   30C    P0    35W / 250W |      0MiB / 10240MiB |     N/A      Default |
-|                               |                      |              Enabled |
-+-------------------------------+----------------------+----------------------+
-
-+-----------------------------------------------------------------------------+
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">$ <strong>oc get pods | grep mig-test</strong>
+mig-test-1   0/1     Completed   0    45s
+mig-test-2   0/1     Completed   0    45s
+mig-test-3   0/1     Completed   0    45s</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>All three pods completed successfully, demonstrating 3x workload density on single A100.</p>
+</div>
+</li>
+<li>
+<p>Examine each pod&#8217;s output to confirm dedicated MIG instance allocation</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">$ <strong>oc logs mig-test-1 | grep -A 8 "MIG devices:"</strong>
 | MIG devices:                                                                |
 +------------------+----------------------+-----------+-----------------------+
-| GPU  GI  CI  MIG |         Memory-Usage |        Vol|         Shared        |
-|      ID  ID  Dev |           BAR1-Usage | SM     Unc| CE  ENC  DEC  OFA  JPG|
-|                  |                      |        ECC|                       |
-|==================+======================+===========+=======================|
-|  0    7   0   0  |      0MiB / 10240MiB | 14      0 |  1   0    0    0    0 |
-|                  |      0MiB / 16383MiB |           |                       |
+|  0    <strong>0</strong>   0   0  |      0MiB /  5120MiB | 15      0 |  1   0    0    0    0 |  <i class="conum" data-value="1"></i><b>(1)</b>
++------------------+----------------------+-----------+-----------------------+
+
+$ <strong>oc logs mig-test-2 | grep -A 8 "MIG devices:"</strong>
+| MIG devices:                                                                |
++------------------+----------------------+-----------+-----------------------+
+|  0    <strong>1</strong>   0   1  |      0MiB /  5120MiB | 15      0 |  1   0    0    0    0 |  <i class="conum" data-value="2"></i><b>(2)</b>
++------------------+----------------------+-----------+-----------------------+
+
+$ <strong>oc logs mig-test-3 | grep -A 8 "MIG devices:"</strong>
+| MIG devices:                                                                |
++------------------+----------------------+-----------+-----------------------+
+|  0    <strong>2</strong>   0   2  |      0MiB /  5120MiB | 15      0 |  1   0    0    0    0 |  <i class="conum" data-value="3"></i><b>(3)</b>
 +------------------+----------------------+-----------+-----------------------+</code></pre>
 </div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Pod 1 allocated to MIG Instance 0 (GI ID = 0)</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Pod 2 allocated to MIG Instance 1 (GI ID = 1)</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>Pod 3 allocated to MIG Instance 2 (GI ID = 2)</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p><strong>Hardware Isolation Validated</strong></p>
+</div>
+<div class="paragraph">
+<p>The GI ID (GPU Instance ID, second column) differs for each pod:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>mig-test-1: GI ID = 0</p>
+</li>
+<li>
+<p>mig-test-2: GI ID = 1</p>
+</li>
+<li>
+<p>mig-test-3: GI ID = 2</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>This proves each pod received a <strong>dedicated MIG instance</strong> on the same physical GPU. The instances operate with:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Dedicated streaming multiprocessors (15 SMs per 1g.5gb instance)</p>
+</li>
+<li>
+<p>Dedicated 5GB VRAM partition</p>
+</li>
+<li>
+<p>Complete hardware isolation (no memory or compute sharing)</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>This is the core value of MIG: hardware-guaranteed isolation with high density (7x workloads per GPU).</p>
+</div>
+<div class="paragraph">
+<p>Reference: <a href="s1-mig-overview.html#_mig_partition_visualization" class="xref page">MIG Partitioning Diagram in s1</a></p>
+</div>
+</td>
+</tr>
+</table>
 </div>
 </li>
 </ol>
 </div>
 <div class="paragraph">
-<p>You have successfully configured Multi-Instance GPU partitioning on your OpenShift cluster. Physical GPUs are now split into multiple isolated instances that can be independently allocated to model serving workloads, maximizing GPU utilization and return on investment.</p>
+<p>You have successfully configured Multi-Instance GPU partitioning and validated hardware isolation across concurrent workloads.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_5_configure_heterogeneous_mig_with_all_balanced_profile"><a class="anchor" href="#_5_configure_heterogeneous_mig_with_all_balanced_profile"></a>5. Configure Heterogeneous MIG with All-Balanced Profile</h3>
+<div class="paragraph">
+<p>The built-in <code>all-balanced</code> profile creates a heterogeneous mix of instance sizes on a single GPU, ideal for multi-tenant platforms with diverse workload tiers.</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Apply the all-balanced profile to a GPU node</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">$ <strong>oc label node worker-gpu-1.example.com nvidia.com/mig.config=all-balanced --overwrite</strong>
+node/worker-gpu-1.example.com labeled</code></pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p><strong>What Does All-Balanced Create?</strong></p>
+</div>
+<div class="paragraph">
+<p>For <strong>A100-40GB</strong>, <code>all-balanced</code> creates:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>2x <code>1g.5gb</code> instances (small models: 5GB each)</p>
+</li>
+<li>
+<p>1x <code>2g.10gb</code> instance (medium models: 10GB)</p>
+</li>
+<li>
+<p>1x <code>3g.20gb</code> instance (large models: 20GB)</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Total: 4 instances spanning three size tiers, matching the multi-tenant scenario from s1.</p>
+</div>
+<div class="paragraph">
+<p>Reference: <a href="s1-mig-overview.html#_the_multi_tenant_platform_scenario" class="xref page">Multi-Tenant Scenario in s1</a></p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</li>
+<li>
+<p>Wait 10-20 minutes, then verify heterogeneous instances are created</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">$ <strong>oc describe node worker-gpu-1.example.com | grep nvidia.com/mig</strong>
+  nvidia.com/mig-1g.5gb:       2
+  nvidia.com/mig-2g.10gb:      1
+  nvidia.com/mig-3g.20gb:      1
+  nvidia.com/mig.config=all-balanced
+  nvidia.com/mig.config.state=success
+  nvidia.com/mig.strategy=mixed</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>You should see <strong>three different resource types</strong> advertised on the same node.</p>
+</div>
+</li>
+<li>
+<p>Deploy workloads requesting different profiles to verify mixed strategy</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">$ <strong>cat &lt;&lt;EOF | oc apply -f -</strong>
+<strong>apiVersion: v1</strong>
+<strong>kind: Pod</strong>
+<strong>metadata:</strong>
+*  name: small-model-pod*
+<strong>spec:</strong>
+*  restartPolicy: OnFailure*
+*  containers:*
+*  - name: cuda-test*
+*    image: nvidia/cuda:12.2.0-base-ubi8*
+*    command: ["nvidia-smi"]*
+*    resources:*
+*      limits:*
+*        nvidia.com/mig-1g.5gb: 1*     <i class="conum" data-value="1"></i><b>(1)</b>
+<strong>---</strong>
+<strong>apiVersion: v1</strong>
+<strong>kind: Pod</strong>
+<strong>metadata:</strong>
+*  name: medium-model-pod*
+<strong>spec:</strong>
+*  restartPolicy: OnFailure*
+*  containers:*
+*  - name: cuda-test*
+*    image: nvidia/cuda:12.2.0-base-ubi8*
+*    command: ["nvidia-smi"]*
+*    resources:*
+*      limits:*
+*        nvidia.com/mig-2g.10gb: 1*    <i class="conum" data-value="2"></i><b>(2)</b>
+<strong>---</strong>
+<strong>apiVersion: v1</strong>
+<strong>kind: Pod</strong>
+<strong>metadata:</strong>
+*  name: large-model-pod*
+<strong>spec:</strong>
+*  restartPolicy: OnFailure*
+*  containers:*
+*  - name: cuda-test*
+*    image: nvidia/cuda:12.2.0-base-ubi8*
+*    command: ["nvidia-smi"]*
+*    resources:*
+*      limits:*
+*        nvidia.com/mig-3g.20gb: 1*    <i class="conum" data-value="3"></i><b>(3)</b>
+<strong>EOF</strong>
+pod/small-model-pod created
+pod/medium-model-pod created
+pod/large-model-pod created</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Small workload requests 1g.5gb instance (5GB VRAM)</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Medium workload requests 2g.10gb instance (10GB VRAM)</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>Large workload requests 3g.20gb instance (20GB VRAM)</td>
+</tr>
+</table>
+</div>
+</li>
+<li>
+<p>Verify all three pods with different profiles coexist on the same physical GPU</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">$ <strong>oc get pods -o wide | grep model-pod</strong>
+small-model-pod    0/1  Completed  0  30s  10.131.0.25  worker-gpu-1.example.com
+medium-model-pod   0/1  Completed  0  30s  10.131.0.26  worker-gpu-1.example.com
+large-model-pod    0/1  Completed  0  30s  10.131.0.27  worker-gpu-1.example.com</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>All three pods scheduled on the same node (<code>worker-gpu-1.example.com</code>) but with different MIG profiles.</p>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p><strong>Mixed Strategy Enables True Multi-Tenancy</strong></p>
+</div>
+<div class="paragraph">
+<p>With mixed strategy:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Team A (small models) requests <code>nvidia.com/mig-1g.5gb</code></p>
+</li>
+<li>
+<p>Team B (medium models) requests <code>nvidia.com/mig-2g.10gb</code></p>
+</li>
+<li>
+<p>Team C (large models) requests <code>nvidia.com/mig-3g.20gb</code></p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>All three teams share the same physical A100 GPU with hardware isolation, each getting appropriately-sized resources. This is the platform design from s1&#8217;s multi-tenant scenario.</p>
+</div>
+<div class="paragraph">
+<p>Reference: <a href="s1-mig-overview.html#_before_and_after_mig_resource_utilization" class="xref page">Multi-Tenant ROI Table in s1</a></p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</li>
+</ol>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_troubleshooting_common_issues"><a class="anchor" href="#_troubleshooting_common_issues"></a>Troubleshooting Common Issues</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_mig_configuration_not_applied_after_20_minutes"><a class="anchor" href="#_mig_configuration_not_applied_after_20_minutes"></a>MIG Configuration Not Applied After 20 Minutes</h3>
+<div class="paragraph">
+<p><strong>Symptom:</strong> After labeling node, <code>oc describe node</code> still shows <code>nvidia.com/gpu: X</code> instead of <code>nvidia.com/mig-*</code> resources</p>
+</div>
+<div class="paragraph">
+<p><strong>Diagnosis Steps:</strong></p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Verify node label was applied correctly</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ oc get node worker-gpu-0.example.com -o jsonpath='{.metadata.labels.nvidia\.com/mig\.config}'
+all-1g.5gb</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>If output is empty, the label wasn&#8217;t applied. Re-apply with <code>--overwrite</code> flag.</p>
+</div>
+</li>
+<li>
+<p>Check MIG Manager logs for errors</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ oc logs -n nvidia-gpu-operator -l app=nvidia-mig-manager --tail=50</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Look for:
+* <code>level=error</code> messages indicating validation failures
+* <code>MIG configuration complete</code> success message
+* <code>Applying MIG configuration</code> followed by profile name</p>
+</div>
+</li>
+<li>
+<p>Check MIG configuration state label</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ oc get node worker-gpu-0.example.com -o jsonpath='{.metadata.labels.nvidia\.com/mig\.config\.state}'
+success</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Possible states:
+* <code>success</code>: MIG Manager completed configuration ✅
+* <code>pending</code>: Reconfiguration in progress (wait 10-20 min)
+* <code>failed</code>: Error occurred, check MIG Manager logs ❌</p>
+</div>
+</li>
+<li>
+<p>Verify GPU supports MIG mode</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ oc debug node/worker-gpu-0.example.com
+sh-4.4# chroot /host
+sh-4.4# nvidia-smi -i 0 --query-gpu=mig.mode.current --format=csv
+mig.mode.current
+Enabled</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>If shows <code>Disabled</code> after 20 minutes, GPU may not support MIG or MIG Manager failed to enable it.</p>
+</div>
+</li>
+</ol>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_custom_configmap_not_recognized"><a class="anchor" href="#_custom_configmap_not_recognized"></a>Custom ConfigMap Not Recognized</h3>
+<div class="paragraph">
+<p><strong>Symptom:</strong> After creating custom ConfigMap and patching ClusterPolicy, custom profiles not available</p>
+</div>
+<div class="paragraph">
+<p><strong>Solution:</strong></p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Verify ConfigMap exists in correct namespace</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ oc get configmap -n nvidia-gpu-operator custom-mig-parted-config
+NAME                        DATA   AGE
+custom-mig-parted-config    1      5m</code></pre>
+</div>
+</div>
+</li>
+<li>
+<p>Verify ConfigMap is referenced in ClusterPolicy</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ oc get clusterpolicy gpu-cluster-policy -o jsonpath='{.spec.migManager.config.name}'
+custom-mig-parted-config</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>If output is empty, the patch didn&#8217;t apply. Re-run <code>oc patch clusterpolicy</code> command.</p>
+</div>
+</li>
+<li>
+<p>Restart MIG Manager pods to pick up new ConfigMap</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ oc delete pods -n nvidia-gpu-operator -l app=nvidia-mig-manager
+pod "nvidia-mig-manager-xxxxx" deleted</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Pods will automatically recreate and load new ConfigMap.</p>
+</div>
+</li>
+</ol>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_pod_scheduling_fails_insufficient_nvidia_commig_x"><a class="anchor" href="#_pod_scheduling_fails_insufficient_nvidia_commig_x"></a>Pod Scheduling Fails: "Insufficient nvidia.com/mig-X"</h3>
+<div class="paragraph">
+<p><strong>Symptom:</strong> Pod stuck in <code>Pending</code> state with event:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>0/3 nodes are available: 3 Insufficient nvidia.com/mig-2g.10gb.</pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>Root Causes and Solutions:</strong></p>
+</div>
+<div class="paragraph">
+<p><strong>Cause 1: Nodes have different MIG profile</strong></p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Check what profiles are available on nodes</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ oc get nodes -o custom-columns=NAME:.metadata.name,MIG-1G:.status.allocatable.nvidia\\.com/mig-1g\\.5gb,MIG-2G:.status.allocatable.nvidia\\.com/mig-2g\\.10gb
+NAME                       MIG-1G   MIG-2G
+worker-gpu-0.example.com   7        &lt;none&gt;
+worker-gpu-1.example.com   &lt;none&gt;   3</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>Solution</strong>: Either:
+* Update pod resource request to match available profile (<code>nvidia.com/mig-1g.5gb: 1</code>)
+* Relabel node to desired profile (triggers 10-20 min reconfiguration)
+* Add nodeSelector to target specific node with correct profile</p>
+</div>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p><strong>Cause 2: All MIG instances already allocated</strong></p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Check if MIG instances are exhausted</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ oc describe node worker-gpu-0.example.com | grep -A 2 "Allocated resources:"
+Allocated resources:
+  nvidia.com/mig-1g.5gb:  7  (100% of capacity)</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>Solution</strong>: Either:
+* Wait for running pods to complete and release instances
+* Add more GPU nodes to cluster
+* Scale down lower-priority workloads</p>
+</div>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p><strong>Cause 3: Using single strategy with profile-specific request</strong></p>
+</div>
+<div class="paragraph">
+<p>If ClusterPolicy has <code>mig.strategy: single</code>, pods must request <code>nvidia.com/gpu: 1</code>, NOT <code>nvidia.com/mig-*</code>.</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Check MIG strategy</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ oc get clusterpolicy gpu-cluster-policy -o jsonpath='{.spec.mig.strategy}'
+single</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>Solution</strong>: Change pod resource request from <code>nvidia.com/mig-2g.10gb: 1</code> to <code>nvidia.com/gpu: 1</code></p>
+</div>
+</li>
+</ol>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_mig_reconfiguration_takes_longer_than_20_minutes"><a class="anchor" href="#_mig_reconfiguration_takes_longer_than_20_minutes"></a>MIG Reconfiguration Takes Longer Than 20 Minutes</h3>
+<div class="paragraph">
+<p><strong>Symptom:</strong> Node labeled 30+ minutes ago but <code>mig.config.state</code> still shows <code>pending</code></p>
+</div>
+<div class="paragraph">
+<p><strong>Diagnosis:</strong></p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Check if node has running GPU workloads</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ oc get pods --all-namespaces -o wide | grep worker-gpu-0.example.com | grep -E "nvidia.com/(gpu|mig)"</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>If GPU workloads are running, MIG Manager cannot reconfigure until they terminate.</p>
+</div>
+</li>
+<li>
+<p>Drain node to evict GPU workloads</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ oc adm drain worker-gpu-0.example.com --ignore-daemonsets --delete-emptydir-data</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Wait for pod eviction (5-10 minutes), then check <code>mig.config.state</code> again.</p>
+</div>
+</li>
+<li>
+<p>Check MIG Manager pod status</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ oc get pods -n nvidia-gpu-operator -l app=nvidia-mig-manager
+NAME                         READY   STATUS    RESTARTS   AGE
+nvidia-mig-manager-xxxxx     1/1     Running   3          45m</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>If <code>RESTARTS &gt; 0</code> and increasing, check logs for crash loop:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ oc logs -n nvidia-gpu-operator -l app=nvidia-mig-manager --previous</code></pre>
+</div>
+</div>
+</li>
+</ol>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_verification_nvidia_smi_shows_different_instance_count_than_expected"><a class="anchor" href="#_verification_nvidia_smi_shows_different_instance_count_than_expected"></a>Verification: nvidia-smi Shows Different Instance Count Than Expected</h3>
+<div class="paragraph">
+<p><strong>Symptom:</strong> Applied <code>all-1g.5gb</code> expecting 7 instances but <code>nvidia-smi -L</code> shows 3 instances</p>
+</div>
+<div class="paragraph">
+<p><strong>Possible Causes:</strong></p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>Node has A100-80GB instead of A100-40GB</strong>: Profile <code>all-1g.5gb</code> doesn&#8217;t exist for 80GB model</p>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Solution</strong>: Use <code>all-1g.10gb</code> for A100-80GB GPUs</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p><strong>Custom ConfigMap overriding built-in profile</strong>: Your ConfigMap may define <code>all-1g.5gb</code> differently</p>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Solution</strong>: Check ConfigMap content, remove custom definition to use auto-generated profile</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p><strong>MIG reconfiguration incomplete</strong>: Device Plugin hasn&#8217;t updated yet</p>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Solution</strong>: Wait full 20 minutes, check <code>nvidia.com/mig.config.state=success</code></p>
+</li>
+</ul>
+</div>
+</li>
+</ol>
 </div>
 </div>
 </div>
@@ -506,7 +1312,32 @@ pod/mig-test created</code></pre>
 <h2 id="_whats_next"><a class="anchor" href="#_whats_next"></a>What&#8217;s next</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>In the next chapter, you will build a comprehensive observability stack by enabling OpenShift user-workload monitoring, exposing GPU metrics via DCGM Exporter, deploying the Grafana Operator, and creating custom dashboards to visualize GPU telemetry alongside platform metrics.</p>
+<p>In the next chapter, you will build a comprehensive observability stack by enabling OpenShift user-workload monitoring, exposing GPU metrics via DCGM Exporter, deploying the Grafana Operator, and creating custom dashboards to visualize <strong>per-MIG-instance</strong> telemetry alongside platform metrics.</p>
+</div>
+<div class="paragraph">
+<p><strong>Chapter 3 Preview</strong>: You&#8217;ll learn to:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Monitor individual MIG instance utilization (compute %, memory usage)</p>
+</li>
+<li>
+<p>Correlate MIG instance metrics with pod resource requests</p>
+</li>
+<li>
+<p>Create alerts for MIG instance oversubscription or underutilization</p>
+</li>
+<li>
+<p>Visualize the ROI gains from MIG partitioning (utilization improvement from 33% to 78%)</p>
+</li>
+<li>
+<p>Track MIG reconfiguration events and their impact on workload SLAs</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>The observability stack validates the performance isolation and resource efficiency benefits you configured in this lab.</p>
 </div>
 </div>
 </div>
