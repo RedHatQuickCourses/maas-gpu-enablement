@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Operator Foundations and GPU Stack Deployment :: Nvidia Accelerator Configuration for Scale</title>
+    <link rel="prev" href="../LABENV/index.html">
+    <link rel="next" href="s1-hardware-stack.html">
+    <meta name="generator" content="Antora 3.1.3">
+    <link rel="stylesheet" href="../../../_/css/site.css">
+    <script>var uiRootPath = '../../../_'</script>
+  </head>
+  <body class="article">
+<header class="header">
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="https://www.redhat.com" target="_blank"><img src="../../../_/img/redhat-logo.png" height="40px" alt="Red Hat"></a>
+      <a class="navbar-item" style="font-size: 24px; color: white" href="../../..">Nvidia Accelerator Configuration for Scale</a>
+      <button class="navbar-burger" data-target="topbar-nav">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+    <div id="topbar-nav" class="navbar-menu">
+      <div class="navbar-end">
+        <a class="navbar-item" href="https://github.com/RedHatQuickCourses/REPLACEREPONAME/issues" target="_blank">Report Issues</a>
+      </div>
+    </div>
+  </nav>
+</header>
+<div class="body">
+<div class="nav-container" data-component="maas-gpu-enablement" data-version="2">
+  <aside class="nav">
+    <div class="panels">
+<div class="nav-panel-menu is-active" data-panel="menu">
+  <nav class="nav-menu">
+    <h3 class="title"><a href="../index.html">Nvidia Accelerator Configuration for Scale</a></h3>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../index.html">Home</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../LABENV/index.html">Lab Environment</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item is-current-page" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="index.html">Operator Foundations and GPU Stack Deployment</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="s1-hardware-stack.html">Deconstructing the Hardware Stack</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="s2-operators-overview.html">Understanding Operators and Platform Automation</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="s3-deploy-operators-lab.html">Lab: Deploying the Base Stack</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../ch2-mig/index.html">Configure Multi-Instance GPU (MIG) for MaaS</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch2-mig/s1-mig-overview.html">Maximizing GPU ROI with Multi-Instance GPU</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch2-mig/s2-mig-slicing-lab.html">Lab: MIG Slicing Configuration</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../ch3-observability/index.html">Monitor GPU Telemetry and Health</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch3-observability/s1-observability-stack.html">The MaaS Observability Stack</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch3-observability/s2-expose-metrics-lab.html">Lab: Exposing GPU Metrics</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch3-observability/s3-grafana-setup-lab.html">Lab: Deploying the Grafana Operator and Setting Up Access</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch3-observability/s4-dashboards-lab.html">Lab: Visualizing GPU Hardware</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+</ul>
+  </nav>
+</div>
+<div class="nav-panel-explore" data-panel="explore">
+  <div class="context">
+    <span class="title">Nvidia Accelerator Configuration for Scale</span>
+    <span class="version">2</span>
+  </div>
+  <ul class="components">
+    <li class="component is-current">
+      <a class="title" href="../index.html">Nvidia Accelerator Configuration for Scale</a>
+      <ul class="versions">
+        <li class="version is-current is-latest">
+          <a href="../index.html">2</a>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</div>
+    </div>
+  </aside>
+</div>
+<main class="article">
+<div class="toolbar" role="navigation">
+<button class="nav-toggle"></button>
+  <a href="../index.html" class="home-link"></a>
+<nav class="breadcrumbs" aria-label="breadcrumbs">
+  <ul>
+    <li><a href="../index.html">Nvidia Accelerator Configuration for Scale</a></li>
+    <li><a href="index.html">Operator Foundations and GPU Stack Deployment</a></li>
+  </ul>
+</nav>
+</div>
+  <div class="content">
+<aside class="toc sidebar" data-title="Contents" data-levels="2">
+  <div class="toc-menu"></div>
+</aside>
+<article class="doc">
+<h1 class="page">Operator Foundations and GPU Stack Deployment</h1>
+<div id="preamble">
+<div class="sectionbody">
+<div class="dlist">
+<dl>
+<dt class="hdlist1">Goal</dt>
+<dd>
+<p>Master the foundational operator pattern that powers enterprise AI platform automation, understand the GPU software stack architecture, and deploy the complete NVIDIA GPU Operator stack using OpenShift&#8217;s Operator Lifecycle Manager.</p>
+</dd>
+</dl>
+</div>
+<div class="paragraph">
+<p>This chapter establishes the patterns required for managing GPU infrastructure at enterprise scale. You will learn why operators are the foundational building block for AI platform lifecycle management, how OpenShift&#8217;s Operator Lifecycle Manager orchestrates software delivery, and gain hands-on experience deploying, troubleshooting, and managing the complete NVIDIA GPU Operator stack.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_why_this_chapter_matters"><a class="anchor" href="#_why_this_chapter_matters"></a>Why This Chapter Matters</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>For platform engineers understanding operators isn&#8217;t optional - it&#8217;s foundational. Operators transform GPU infrastructure from manually-managed silos requiring 150+ hours of setup time into declarative, self-healing systems deployed in hours. This chapter teaches you the automation patterns that make GPU investments generate maximum ROI.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_learning_objectives"><a class="anchor" href="#_learning_objectives"></a>Learning Objectives</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>On completing this chapter, you should be able to:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Understand the operator pattern</strong> and explain why it&#8217;s critical for enterprise AI platform automation at scale</p>
+</li>
+<li>
+<p><strong>Navigate OpenShift&#8217;s Operator Lifecycle Manager (OLM)</strong> architecture including Subscriptions, CSVs, InstallPlans, and CatalogSources</p>
+</li>
+<li>
+<p><strong>Differentiate between cluster operators and add-on operators</strong> and make informed decisions about which operator catalogs to use for production</p>
+</li>
+<li>
+<p><strong>Deploy Node Feature Discovery and NVIDIA GPU Operator</strong> using OLM with proper configuration</p>
+</li>
+<li>
+<p><strong>Manage operator lifecycle</strong> including configuration changes, upgrades, rollbacks, and health monitoring</p>
+</li>
+<li>
+<p><strong>Troubleshoot common operator deployment issues</strong> and perform complete operator cleanup and reinstallation</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_chapter_structure"><a class="anchor" href="#_chapter_structure"></a>Chapter Structure</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>This chapter follows a deliberate progression from <strong>WHY</strong> → <strong>WHAT</strong> → <strong>HOW</strong> → <strong>DO</strong> → <strong>MANAGE</strong> → <strong>TROUBLESHOOT</strong>:</p>
+</div>
+<div class="paragraph">
+<p><strong>Section 1: The Operator Pattern for AI Platform Automation (12 minutes)</strong></p>
+</div>
+<div class="paragraph">
+<p>Learn why operators exist, how they solve the GPU Silo Crisis, and the business value they deliver for MaaS deployments. Understand the evolution from manual scripts to declarative automation and the concrete ROI operators provide at scale.</p>
+</div>
+<div class="paragraph">
+<p><strong>Section 2: Deconstructing the GPU Software Stack (15 minutes)</strong></p>
+</div>
+<div class="paragraph">
+<p>Examine the six core components the NVIDIA GPU Operator manages: Node Feature Discovery, NVIDIA Driver Container, Container Toolkit, GPU Feature Discovery, DCGM, and DCGM Exporter. Understand each component&#8217;s role and how they work together.</p>
+</div>
+<div class="paragraph">
+<p><strong>Section 3: Operator Lifecycle Manager and Custom Resources (18 minutes)</strong></p>
+</div>
+<div class="paragraph">
+<p>Deep dive into OpenShift&#8217;s OLM architecture. Learn how Subscriptions, CSVs, and InstallPlans work together. Understand Custom Resource Definitions, Custom Resources, and Controllers. Master the difference between cluster operators and add-on operators, and understand when to use Red Hat vs. Certified vs. Community operator catalogs.</p>
+</div>
+<div class="paragraph">
+<p><strong>Section 4: Lab - Deploying the GPU Operator Stack (30 minutes)</strong></p>
+</div>
+<div class="paragraph">
+<p>Hands-on deployment of Node Feature Discovery and NVIDIA GPU Operator using OLM. Install operators, create Custom Resources, and verify the complete stack. This lab includes detailed explanations of what&#8217;s happening behind the scenes at each step, reinforcing your understanding of the OLM workflow.</p>
+</div>
+<div class="paragraph">
+<p><strong>Section 5: Operator Lifecycle Management (12 minutes)</strong></p>
+</div>
+<div class="paragraph">
+<p>Learn how to manage operators after deployment. Modify configuration by editing Custom Resources, manage operator upgrades through OLM, monitor operator health, and understand rollback considerations for production AI platforms.</p>
+</div>
+<div class="paragraph">
+<p><strong>Section 6: Lab - Troubleshooting and Cleanup (25 minutes)</strong></p>
+</div>
+<div class="paragraph">
+<p>Practice diagnosing common operator issues through hands-on scenarios. Intentionally break operator deployments and learn how to fix them. Perform complete operator removal following best practices, then reinstall to reinforce the OLM workflow.</p>
+</div>
+<div class="paragraph">
+<p><strong>Total Chapter Time:</strong> 112 minutes (1 hour 52 minutes)</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_prerequisites"><a class="anchor" href="#_prerequisites"></a>Prerequisites</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Before starting this chapter, you should:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Have cluster administrator access to an OpenShift cluster (version 4.14 or higher)</p>
+</li>
+<li>
+<p>Have at least one worker node with NVIDIA GPU hardware</p>
+</li>
+<li>
+<p>Be familiar with Kubernetes basics (Pods, DaemonSets, Services, Namespaces)</p>
+</li>
+<li>
+<p>Have the <code>oc</code> CLI tool installed and configured</p>
+</li>
+<li>
+<p>Understand basic YAML syntax and Kubernetes resource structure</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_what_youll_build"><a class="anchor" href="#_what_youll_build"></a>What You&#8217;ll Build</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>By the end of this chapter, you will have:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Deployed Node Feature Discovery operator from the <code>redhat-operators</code> catalog</p>
+</li>
+<li>
+<p>Deployed NVIDIA GPU Operator from the <code>certified-operators</code> catalog</p>
+</li>
+<li>
+<p>Created a ClusterPolicy Custom Resource configuring the complete GPU software stack</p>
+</li>
+<li>
+<p>Verified all GPU Operator components running (driver, toolkit, device-plugin, DCGM, GFD)</p>
+</li>
+<li>
+<p>Practiced modifying operator configuration declaratively</p>
+</li>
+<li>
+<p>Performed operator troubleshooting and complete cleanup</p>
+</li>
+<li>
+<p>Reinforced understanding of the complete OLM workflow through reinstallation</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Your OpenShift cluster will be ready to schedule GPU-accelerated workloads with automated driver management, self-healing components, and comprehensive monitoring - the foundation for a production-ready Models-as-a-Service platform.</p>
+</div>
+</div>
+</div>
+<nav class="pagination">
+  <span class="prev"><a href="../LABENV/index.html">Lab Environment</a></span>
+  <span class="next"><a href="s1-hardware-stack.html">Deconstructing the Hardware Stack</a></span>
+</nav>
+</article>
+  </div>
+</main>
+</div>
+<footer class="footer">
+  <img src="../../../_/img/rhl-logo-red.png" height="40px" alt="Red Hat"  href="https://redhat.com" >
+</footer><script id="site-script" src="../../../_/js/site.js" data-ui-root-path="../../../_"></script>
+<script async src="../../../_/js/vendor/highlight.js"></script>
+  </body>
+</html>

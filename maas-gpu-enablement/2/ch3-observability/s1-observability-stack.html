@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>The MaaS Observability Stack :: Nvidia Accelerator Configuration for Scale</title>
+    <link rel="prev" href="index.html">
+    <link rel="next" href="s2-expose-metrics-lab.html">
+    <meta name="generator" content="Antora 3.1.3">
+    <link rel="stylesheet" href="../../../_/css/site.css">
+    <script>var uiRootPath = '../../../_'</script>
+  </head>
+  <body class="article">
+<header class="header">
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="https://www.redhat.com" target="_blank"><img src="../../../_/img/redhat-logo.png" height="40px" alt="Red Hat"></a>
+      <a class="navbar-item" style="font-size: 24px; color: white" href="../../..">Nvidia Accelerator Configuration for Scale</a>
+      <button class="navbar-burger" data-target="topbar-nav">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+    <div id="topbar-nav" class="navbar-menu">
+      <div class="navbar-end">
+        <a class="navbar-item" href="https://github.com/RedHatQuickCourses/REPLACEREPONAME/issues" target="_blank">Report Issues</a>
+      </div>
+    </div>
+  </nav>
+</header>
+<div class="body">
+<div class="nav-container" data-component="maas-gpu-enablement" data-version="2">
+  <aside class="nav">
+    <div class="panels">
+<div class="nav-panel-menu is-active" data-panel="menu">
+  <nav class="nav-menu">
+    <h3 class="title"><a href="../index.html">Nvidia Accelerator Configuration for Scale</a></h3>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../index.html">Home</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../LABENV/index.html">Lab Environment</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../ch1-gpu-operator/index.html">Operator Foundations and GPU Stack Deployment</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch1-gpu-operator/s1-hardware-stack.html">Deconstructing the Hardware Stack</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch1-gpu-operator/s2-operators-overview.html">Understanding Operators and Platform Automation</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch1-gpu-operator/s3-deploy-operators-lab.html">Lab: Deploying the Base Stack</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../ch2-mig/index.html">Configure Multi-Instance GPU (MIG) for MaaS</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch2-mig/s1-mig-overview.html">Maximizing GPU ROI with Multi-Instance GPU</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch2-mig/s2-mig-slicing-lab.html">Lab: MIG Slicing Configuration</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="index.html">Monitor GPU Telemetry and Health</a>
+<ul class="nav-list">
+  <li class="nav-item is-current-page" data-depth="2">
+    <a class="nav-link" href="s1-observability-stack.html">The MaaS Observability Stack</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="s2-expose-metrics-lab.html">Lab: Exposing GPU Metrics</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="s3-grafana-setup-lab.html">Lab: Deploying the Grafana Operator and Setting Up Access</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="s4-dashboards-lab.html">Lab: Visualizing GPU Hardware</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+</ul>
+  </nav>
+</div>
+<div class="nav-panel-explore" data-panel="explore">
+  <div class="context">
+    <span class="title">Nvidia Accelerator Configuration for Scale</span>
+    <span class="version">2</span>
+  </div>
+  <ul class="components">
+    <li class="component is-current">
+      <a class="title" href="../index.html">Nvidia Accelerator Configuration for Scale</a>
+      <ul class="versions">
+        <li class="version is-current is-latest">
+          <a href="../index.html">2</a>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</div>
+    </div>
+  </aside>
+</div>
+<main class="article">
+<div class="toolbar" role="navigation">
+<button class="nav-toggle"></button>
+  <a href="../index.html" class="home-link"></a>
+<nav class="breadcrumbs" aria-label="breadcrumbs">
+  <ul>
+    <li><a href="../index.html">Nvidia Accelerator Configuration for Scale</a></li>
+    <li><a href="index.html">Monitor GPU Telemetry and Health</a></li>
+    <li><a href="s1-observability-stack.html">The MaaS Observability Stack</a></li>
+  </ul>
+</nav>
+</div>
+  <div class="content">
+<aside class="toc sidebar" data-title="Contents" data-levels="2">
+  <div class="toc-menu"></div>
+</aside>
+<article class="doc">
+<h1 class="page">The MaaS Observability Stack</h1>
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p><em>Estimated reading time: <strong>10 minutes</strong>.</em></p>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1">Objective</dt>
+<dd>
+<p>Understand how hardware telemetry flows from GPU accelerators to the platform observability plane. Learn the integration between OpenShift&#8217;s built-in monitoring (Prometheus/Thanos) and standalone visualization using the Grafana Operator for correlating platform, node, and accelerator metrics.</p>
+</dd>
+</dl>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_why_gpu_observability_matters_for_maas"><a class="anchor" href="#_why_gpu_observability_matters_for_maas"></a>Why GPU Observability Matters for MaaS</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Operating Models-as-a-Service at scale requires comprehensive visibility into the entire infrastructure stack. For GPU-accelerated deployments, this means monitoring:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Infrastructure health</strong>: CPU, memory, network, storage</p>
+</li>
+<li>
+<p><strong>GPU hardware health</strong>: Temperature, power consumption, error rates</p>
+</li>
+<li>
+<p><strong>GPU utilization</strong>: Compute usage, memory usage, MIG instance allocation</p>
+</li>
+<li>
+<p><strong>Workload performance</strong>: Inference throughput, latency, batch sizes</p>
+</li>
+<li>
+<p><strong>Cost allocation</strong>: Per-model GPU usage for chargeback and optimization</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Without proper observability, organizations face:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Unexpected hardware failures without early warning</p>
+</li>
+<li>
+<p>Suboptimal resource utilization and wasted capacity</p>
+</li>
+<li>
+<p>Inability to correlate application performance with infrastructure metrics</p>
+</li>
+<li>
+<p>Lack of data for capacity planning and cost optimization</p>
+</li>
+<li>
+<p>Difficulty troubleshooting inference performance issues</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_the_telemetry_flow"><a class="anchor" href="#_the_telemetry_flow"></a>The Telemetry Flow</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>GPU metrics flow through a multi-tier observability stack:</p>
+</div>
+<div class="sect2">
+<h3 id="_layer_1_gpu_hardware_telemetry"><a class="anchor" href="#_layer_1_gpu_hardware_telemetry"></a>Layer 1: GPU Hardware Telemetry</h3>
+<div class="paragraph">
+<p><strong>NVIDIA DCGM (Data Center GPU Manager)</strong> continuously collects telemetry directly from GPU hardware:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>GPU utilization percentage</p>
+</li>
+<li>
+<p>Memory utilization and allocation</p>
+</li>
+<li>
+<p>GPU temperature and power draw</p>
+</li>
+<li>
+<p>PCIe throughput</p>
+</li>
+<li>
+<p>ECC (error-correcting code) errors</p>
+</li>
+<li>
+<p>NVLink bandwidth (for multi-GPU systems)</p>
+</li>
+<li>
+<p>Per-process GPU usage</p>
+</li>
+<li>
+<p>MIG instance metrics</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>DCGM runs as a lightweight daemon on each GPU node with minimal performance overhead (&lt;1% GPU utilization).</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_layer_2_metric_export"><a class="anchor" href="#_layer_2_metric_export"></a>Layer 2: Metric Export</h3>
+<div class="paragraph">
+<p><strong>DCGM Exporter</strong> translates DCGM telemetry into Prometheus-compatible metrics format:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Scrapes DCGM on a configurable interval (default: 30 seconds)</p>
+</li>
+<li>
+<p>Exposes metrics via HTTP endpoint on port 9400</p>
+</li>
+<li>
+<p>Adds Kubernetes labels (pod, namespace, node) for correlation</p>
+</li>
+<li>
+<p>Supports custom metric collection profiles</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Example metrics exported:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">DCGM_FI_DEV_GPU_UTIL{gpu="0", UUID="GPU-xxxxx", device="nvidia0"}
+DCGM_FI_DEV_FB_USED{gpu="0", UUID="GPU-xxxxx", device="nvidia0"}
+DCGM_FI_DEV_POWER_USAGE{gpu="0", UUID="GPU-xxxxx", device="nvidia0"}
+DCGM_FI_DEV_GPU_TEMP{gpu="0", UUID="GPU-xxxxx", device="nvidia0"}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_layer_3_metric_collection_and_storage"><a class="anchor" href="#_layer_3_metric_collection_and_storage"></a>Layer 3: Metric Collection and Storage</h3>
+<div class="paragraph">
+<p><strong>OpenShift Monitoring Stack</strong> provides the collection and storage tier:</p>
+</div>
+<div class="paragraph">
+<p><strong>Prometheus</strong>:
+* Scrapes DCGM Exporter endpoints automatically
+* Stores metrics with configurable retention (default: 15 days)
+* Evaluates alerting rules for GPU health
+* Provides PromQL query interface</p>
+</div>
+<div class="paragraph">
+<p><strong>Thanos Querier</strong>:
+* Federates metrics from multiple Prometheus instances
+* Provides long-term storage integration
+* Enables cross-cluster metric queries
+* Deduplicates metrics from HA Prometheus deployments</p>
+</div>
+<div class="paragraph">
+<p><strong>User Workload Monitoring</strong>:
+* Separate Prometheus instance for application-level metrics
+* Enables namespace-scoped metric collection
+* Isolates tenant metrics from platform metrics
+* Configurable resource limits and retention policies</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_layer_4_visualization_and_analysis"><a class="anchor" href="#_layer_4_visualization_and_analysis"></a>Layer 4: Visualization and Analysis</h3>
+<div class="paragraph">
+<p><strong>Grafana</strong> provides the visualization and dashboard layer:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Connects to Thanos Querier as primary data source</p>
+</li>
+<li>
+<p>Supports complex PromQL queries for metric correlation</p>
+</li>
+<li>
+<p>Provides pre-built NVIDIA DCGM dashboards</p>
+</li>
+<li>
+<p>Enables custom dashboard creation for specific use cases</p>
+</li>
+<li>
+<p>Supports alerting, annotations, and templating</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_integration_architecture"><a class="anchor" href="#_integration_architecture"></a>Integration Architecture</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The complete observability architecture connects multiple OpenShift subsystems:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">┌─────────────────────────────────────────────────────────────┐
+│ GPU Node (worker-gpu-0)                                     │
+│  ┌──────────┐         ┌─────────────┐                       │
+│  │  DCGM    │────────▶│ DCGM        │:9400                  │
+│  │  Daemon  │         │ Exporter    │────┐                  │
+│  └──────────┘         └─────────────┘    │                  │
+│       │                                   │                  │
+│    GPU Hardware                           │                  │
+└───────────────────────────────────────────┼──────────────────┘
+                                            │
+                    ┌───────────────────────▼──────────────────┐
+                    │ OpenShift Monitoring                     │
+                    │  ┌────────────────┐   ┌───────────────┐ │
+                    │  │ Prometheus     │──▶│ Thanos        │ │
+                    │  │ (User Workload)│   │ Querier       │ │
+                    │  └────────────────┘   └───────┬───────┘ │
+                    └─────────────────────────────────┼─────────┘
+                                                      │
+                    ┌─────────────────────────────────▼─────────┐
+                    │ Grafana Instance                          │
+                    │  ┌──────────────────────────────────────┐ │
+                    │  │ NVIDIA DCGM Dashboard                │ │
+                    │  │  • GPU Utilization                   │ │
+                    │  │  • Memory Usage                      │ │
+                    │  │  • Temperature &amp; Power               │ │
+                    │  │  • MIG Instance Metrics              │ │
+                    │  └──────────────────────────────────────┘ │
+                    └───────────────────────────────────────────┘</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_key_observability_capabilities"><a class="anchor" href="#_key_observability_capabilities"></a>Key Observability Capabilities</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_real_time_monitoring"><a class="anchor" href="#_real_time_monitoring"></a>Real-Time Monitoring</h3>
+<div class="ulist">
+<ul>
+<li>
+<p>Live GPU utilization and memory consumption</p>
+</li>
+<li>
+<p>Immediate visibility into hardware health issues</p>
+</li>
+<li>
+<p>Per-MIG-instance resource tracking</p>
+</li>
+<li>
+<p>Workload-to-GPU correlation</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_historical_analysis"><a class="anchor" href="#_historical_analysis"></a>Historical Analysis</h3>
+<div class="ulist">
+<ul>
+<li>
+<p>Trend analysis for capacity planning</p>
+</li>
+<li>
+<p>Performance regression detection</p>
+</li>
+<li>
+<p>Cost optimization opportunities</p>
+</li>
+<li>
+<p>SLA compliance verification</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_alerting_and_anomaly_detection"><a class="anchor" href="#_alerting_and_anomaly_detection"></a>Alerting and Anomaly Detection</h3>
+<div class="ulist">
+<ul>
+<li>
+<p>GPU temperature threshold alerts</p>
+</li>
+<li>
+<p>Memory exhaustion warnings</p>
+</li>
+<li>
+<p>Error rate spike detection</p>
+</li>
+<li>
+<p>Utilization anomaly detection</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_multi_dimensional_correlation"><a class="anchor" href="#_multi_dimensional_correlation"></a>Multi-Dimensional Correlation</h3>
+<div class="paragraph">
+<p>Correlate GPU metrics with:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Pod metrics</strong>: Container CPU/memory, restart counts</p>
+</li>
+<li>
+<p><strong>Node metrics</strong>: System CPU, network, disk I/O</p>
+</li>
+<li>
+<p><strong>Application metrics</strong>: Inference latency, throughput, error rates</p>
+</li>
+<li>
+<p><strong>Platform metrics</strong>: Scheduler decisions, resource quotas</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>This holistic view enables operators to:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Identify GPU bottlenecks in the inference pipeline</p>
+</li>
+<li>
+<p>Correlate application performance degradation with hardware issues</p>
+</li>
+<li>
+<p>Optimize resource allocation based on actual usage patterns</p>
+</li>
+<li>
+<p>Troubleshoot complex issues spanning multiple infrastructure layers</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_whats_next"><a class="anchor" href="#_whats_next"></a>What&#8217;s Next</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>In the next section, you will enable OpenShift user-workload monitoring by modifying the cluster monitoring configuration, and label the GPU Operator namespace to expose GPU telemetry for Prometheus collection via the NVIDIA DCGM Exporter.</p>
+</div>
+</div>
+</div>
+<nav class="pagination">
+  <span class="prev"><a href="index.html">Monitor GPU Telemetry and Health</a></span>
+  <span class="next"><a href="s2-expose-metrics-lab.html">Lab: Exposing GPU Metrics</a></span>
+</nav>
+</article>
+  </div>
+</main>
+</div>
+<footer class="footer">
+  <img src="../../../_/img/rhl-logo-red.png" height="40px" alt="Red Hat"  href="https://redhat.com" >
+</footer><script id="site-script" src="../../../_/js/site.js" data-ui-root-path="../../../_"></script>
+<script async src="../../../_/js/vendor/highlight.js"></script>
+  </body>
+</html>

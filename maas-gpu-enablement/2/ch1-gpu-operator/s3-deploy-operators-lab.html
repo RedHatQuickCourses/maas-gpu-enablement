@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Lab: Deploying the Base Stack :: Nvidia Accelerator Configuration for Scale</title>
+    <link rel="prev" href="s2-operators-overview.html">
+    <link rel="next" href="../ch2-mig/index.html">
+    <meta name="generator" content="Antora 3.1.3">
+    <link rel="stylesheet" href="../../../_/css/site.css">
+    <script>var uiRootPath = '../../../_'</script>
+  </head>
+  <body class="article">
+<header class="header">
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="https://www.redhat.com" target="_blank"><img src="../../../_/img/redhat-logo.png" height="40px" alt="Red Hat"></a>
+      <a class="navbar-item" style="font-size: 24px; color: white" href="../../..">Nvidia Accelerator Configuration for Scale</a>
+      <button class="navbar-burger" data-target="topbar-nav">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+    <div id="topbar-nav" class="navbar-menu">
+      <div class="navbar-end">
+        <a class="navbar-item" href="https://github.com/RedHatQuickCourses/REPLACEREPONAME/issues" target="_blank">Report Issues</a>
+      </div>
+    </div>
+  </nav>
+</header>
+<div class="body">
+<div class="nav-container" data-component="maas-gpu-enablement" data-version="2">
+  <aside class="nav">
+    <div class="panels">
+<div class="nav-panel-menu is-active" data-panel="menu">
+  <nav class="nav-menu">
+    <h3 class="title"><a href="../index.html">Nvidia Accelerator Configuration for Scale</a></h3>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../index.html">Home</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../LABENV/index.html">Lab Environment</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="index.html">Operator Foundations and GPU Stack Deployment</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="s1-hardware-stack.html">Deconstructing the Hardware Stack</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="s2-operators-overview.html">Understanding Operators and Platform Automation</a>
+  </li>
+  <li class="nav-item is-current-page" data-depth="2">
+    <a class="nav-link" href="s3-deploy-operators-lab.html">Lab: Deploying the Base Stack</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../ch2-mig/index.html">Configure Multi-Instance GPU (MIG) for MaaS</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch2-mig/s1-mig-overview.html">Maximizing GPU ROI with Multi-Instance GPU</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch2-mig/s2-mig-slicing-lab.html">Lab: MIG Slicing Configuration</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../ch3-observability/index.html">Monitor GPU Telemetry and Health</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch3-observability/s1-observability-stack.html">The MaaS Observability Stack</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch3-observability/s2-expose-metrics-lab.html">Lab: Exposing GPU Metrics</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch3-observability/s3-grafana-setup-lab.html">Lab: Deploying the Grafana Operator and Setting Up Access</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch3-observability/s4-dashboards-lab.html">Lab: Visualizing GPU Hardware</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+</ul>
+  </nav>
+</div>
+<div class="nav-panel-explore" data-panel="explore">
+  <div class="context">
+    <span class="title">Nvidia Accelerator Configuration for Scale</span>
+    <span class="version">2</span>
+  </div>
+  <ul class="components">
+    <li class="component is-current">
+      <a class="title" href="../index.html">Nvidia Accelerator Configuration for Scale</a>
+      <ul class="versions">
+        <li class="version is-current is-latest">
+          <a href="../index.html">2</a>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</div>
+    </div>
+  </aside>
+</div>
+<main class="article">
+<div class="toolbar" role="navigation">
+<button class="nav-toggle"></button>
+  <a href="../index.html" class="home-link"></a>
+<nav class="breadcrumbs" aria-label="breadcrumbs">
+  <ul>
+    <li><a href="../index.html">Nvidia Accelerator Configuration for Scale</a></li>
+    <li><a href="index.html">Operator Foundations and GPU Stack Deployment</a></li>
+    <li><a href="s3-deploy-operators-lab.html">Lab: Deploying the Base Stack</a></li>
+  </ul>
+</nav>
+</div>
+  <div class="content">
+<aside class="toc sidebar" data-title="Contents" data-levels="2">
+  <div class="toc-menu"></div>
+</aside>
+<article class="doc">
+<h1 class="page">Lab: Deploying the Base Stack</h1>
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p><em>Estimated reading time: <strong>30 minutes</strong>.</em></p>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1">Objective</dt>
+<dd>
+<p>Apply your understanding of Operator Lifecycle Manager to install the Node Feature Discovery Operator and NVIDIA GPU Operator. You&#8217;ll create Subscriptions, configure the ClusterPolicy Custom Resource, and verify the complete stack through operator reconciliation.</p>
+</dd>
+</dl>
+</div>
+<div class="paragraph">
+<p>In the previous section, you learned about operators, OLM architecture, and the three-layer MaaS operator stack. This lab focuses on deploying Layer 1 - the Core &amp; Infrastructure operators (NFD and GPU Operator) that enable hardware discovery and GPU software stack automation.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_before_you_begin"><a class="anchor" href="#_before_you_begin"></a>Before you begin</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>This lab requires:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Access to an OpenShift cluster (version 4.10 or higher)</p>
+</li>
+<li>
+<p>Cluster administrator privileges</p>
+</li>
+<li>
+<p>At least one worker node with NVIDIA GPU hardware</p>
+</li>
+<li>
+<p>The <code>oc</code> CLI tool installed and configured</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_instructions"><a class="anchor" href="#_instructions"></a>Instructions</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_1_install_the_node_feature_discovery_operator"><a class="anchor" href="#_1_install_the_node_feature_discovery_operator"></a>1. Install the Node Feature Discovery Operator</h3>
+<div class="paragraph">
+<p>Node Feature Discovery must be installed first as it provides the hardware detection capabilities required by the GPU Operator.</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Log in to your OpenShift cluster as a cluster administrator</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">$ <strong>oc login -u admin https://api.cluster.example.com:6443</strong>
+Login successful.</code></pre>
+</div>
+</div>
+</li>
+<li>
+<p>Create the Node Feature Discovery Operator subscription</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">$ <strong>cat &lt;&lt;EOF | oc apply -f -</strong>
+<strong>apiVersion: v1</strong>
+<strong>kind: Namespace</strong>
+<strong>metadata:</strong>
+*  name: openshift-nfd*
+<strong>---</strong>
+<strong>apiVersion: operators.coreos.com/v1</strong>
+<strong>kind: OperatorGroup</strong>
+<strong>metadata:</strong>
+*  name: nfd-operator-group*
+*  namespace: openshift-nfd*
+<strong>spec:</strong>
+*  targetNamespaces:*
+*  - openshift-nfd*
+<strong>---</strong>
+<strong>apiVersion: operators.coreos.com/v1alpha1</strong>
+<strong>kind: Subscription</strong>
+<strong>metadata:</strong>
+*  name: nfd*
+*  namespace: openshift-nfd*
+<strong>spec:</strong>
+*  channel: "stable"*
+*  name: nfd*
+*  source: redhat-operators*
+*  sourceNamespace: openshift-marketplace*
+<strong>EOF</strong>
+namespace/openshift-nfd created
+operatorgroup.operators.coreos.com/nfd-operator-group created
+subscription.operators.coreos.com/nfd created</code></pre>
+</div>
+</div>
+</li>
+<li>
+<p>Wait for the NFD Operator to be ready</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">$ <strong>oc get csv -n openshift-nfd</strong>
+NAME                  DISPLAY                      VERSION   REPLACES   PHASE
+nfd.v4.14.0-202401   Node Feature Discovery       4.14.0               <strong>Succeeded</strong></code></pre>
+</div>
+</div>
+</li>
+<li>
+<p>Create the NodeFeatureDiscovery instance</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">$ <strong>cat &lt;&lt;EOF | oc apply -f -</strong>
+<strong>apiVersion: nfd.openshift.io/v1</strong>
+<strong>kind: NodeFeatureDiscovery</strong>
+<strong>metadata:</strong>
+*  name: nfd-instance*
+*  namespace: openshift-nfd*
+<strong>spec:</strong>
+*  operand:*
+*    image: registry.redhat.io/openshift4/ose-node-feature-discovery:v4.14*
+*  workerConfig:*
+*    configData: |*
+*      sources:*
+*        pci:*
+*          deviceClassWhitelist:*
+*            - "0300"*
+*            - "0302"*
+*          deviceLabelFields:*
+*            - "vendor"*
+<strong>EOF</strong>
+nodefeaturediscovery.nfd.openshift.io/nfd-instance created</code></pre>
+</div>
+</div>
+</li>
+<li>
+<p>Verify NFD is labeling GPU nodes</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">$ <strong>oc get nodes -l feature.node.kubernetes.io/pci-10de.present=true</strong>
+NAME                         STATUS   ROLES    AGE   VERSION
+worker-gpu-0.example.com     Ready    worker   5d    v1.27.6+b49f9d1
+worker-gpu-1.example.com     Ready    worker   5d    v1.27.6+b49f9d1</code></pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>The label <code>feature.node.kubernetes.io/pci-10de.present=true</code> indicates NVIDIA hardware (vendor ID 10de) was detected on these nodes.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</li>
+</ol>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_2_install_the_nvidia_gpu_operator"><a class="anchor" href="#_2_install_the_nvidia_gpu_operator"></a>2. Install the NVIDIA GPU Operator</h3>
+<div class="paragraph">
+<p>Now that NFD is running and detecting GPU hardware, install the NVIDIA GPU Operator to deploy the complete software stack.</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Create the namespace and operator subscription</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">$ <strong>cat &lt;&lt;EOF | oc apply -f -</strong>
+<strong>apiVersion: v1</strong>
+<strong>kind: Namespace</strong>
+<strong>metadata:</strong>
+*  name: nvidia-gpu-operator*
+<strong>---</strong>
+<strong>apiVersion: operators.coreos.com/v1</strong>
+<strong>kind: OperatorGroup</strong>
+<strong>metadata:</strong>
+*  name: nvidia-gpu-operator-group*
+*  namespace: nvidia-gpu-operator*
+<strong>spec:</strong>
+*  targetNamespaces:*
+*  - nvidia-gpu-operator*
+<strong>---</strong>
+<strong>apiVersion: operators.coreos.com/v1alpha1</strong>
+<strong>kind: Subscription</strong>
+<strong>metadata:</strong>
+*  name: gpu-operator-certified*
+*  namespace: nvidia-gpu-operator*
+<strong>spec:</strong>
+*  channel: "v23.9"*
+*  name: gpu-operator-certified*
+*  source: certified-operators*
+*  sourceNamespace: openshift-marketplace*
+<strong>EOF</strong>
+namespace/nvidia-gpu-operator created
+operatorgroup.operators.coreos.com/nvidia-gpu-operator-group created
+subscription.operators.coreos.com/gpu-operator-certified created</code></pre>
+</div>
+</div>
+</li>
+<li>
+<p>Monitor the operator installation</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">$ <strong>oc get csv -n nvidia-gpu-operator -w</strong>
+NAME                         DISPLAY            VERSION   REPLACES   PHASE
+gpu-operator-certified.v23.9.0   NVIDIA GPU Operator   23.9.0               <strong>Installing</strong>
+gpu-operator-certified.v23.9.0   NVIDIA GPU Operator   23.9.0               <strong>Succeeded</strong></code></pre>
+</div>
+</div>
+</li>
+</ol>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_3_configure_the_clusterpolicy"><a class="anchor" href="#_3_configure_the_clusterpolicy"></a>3. Configure the ClusterPolicy</h3>
+<div class="paragraph">
+<p>The ClusterPolicy custom resource configures how the GPU Operator deploys all stack components.</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Create a customized ClusterPolicy</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">$ <strong>cat &lt;&lt;EOF | oc apply -f -</strong>
+<strong>apiVersion: nvidia.com/v1</strong>
+<strong>kind: ClusterPolicy</strong>
+<strong>metadata:</strong>
+*  name: gpu-cluster-policy*
+<strong>spec:</strong>
+*  operator:*
+*    defaultRuntime: crio*
+*  driver:*
+*    enabled: true*
+*    version: "535.129.03"*
+*  toolkit:*
+*    enabled: true*
+*  devicePlugin:*
+*    enabled: true*
+*  dcgm:*
+*    enabled: true*
+*  dcgmExporter:*
+*    enabled: true*
+*  gfd:*
+*    enabled: true*
+*  migManager:*
+*    enabled: true*
+*  nodeStatusExporter:*
+*    enabled: true*
+<strong>EOF</strong>
+clusterpolicy.nvidia.com/gpu-cluster-policy created</code></pre>
+</div>
+</div>
+</li>
+<li>
+<p>Monitor the daemonset pod deployment</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">$ <strong>oc get pods -n nvidia-gpu-operator</strong>
+NAME                                       READY   STATUS    RESTARTS   AGE
+gpu-feature-discovery-xxxxx                1/1     Running   0          2m
+gpu-operator-xxxxx                         1/1     Running   0          5m
+nvidia-container-toolkit-daemonset-xxxxx   1/1     Running   0          3m
+nvidia-dcgm-exporter-xxxxx                 1/1     Running   0          2m
+nvidia-dcgm-xxxxx                          1/1     Running   0          2m
+nvidia-driver-daemonset-xxxxx              1/1     Running   0          4m
+nvidia-device-plugin-daemonset-xxxxx       1/1     Running   0          2m
+nvidia-operator-validator-xxxxx            1/1     Running   0          1m</code></pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>All daemonset pods should reach <code>Running</code> status. The driver installation may take several minutes on first deployment.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</li>
+</ol>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_4_verify_gpu_resources"><a class="anchor" href="#_4_verify_gpu_resources"></a>4. Verify GPU Resources</h3>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Check that GPU resources are now allocatable on nodes</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">$ <strong>oc describe node worker-gpu-0.example.com | grep nvidia.com/gpu</strong>
+  nvidia.com/gpu:     1
+  nvidia.com/gpu:     1
+  nvidia.com/gpu:     0</code></pre>
+</div>
+</div>
+</li>
+<li>
+<p>View detailed GPU capabilities via node labels</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">$ <strong>oc get node worker-gpu-0.example.com -o json | jq '.metadata.labels | with_entries(select(.key | contains("nvidia")))'</strong>
+{
+  "nvidia.com/cuda.driver.major": "535",
+  "nvidia.com/cuda.driver.minor": "129",
+  "nvidia.com/cuda.runtime.major": "12",
+  "nvidia.com/cuda.runtime.minor": "2",
+  "nvidia.com/gpu.count": "1",
+  "nvidia.com/gpu.family": "ampere",
+  "nvidia.com/gpu.memory": "40960",
+  "nvidia.com/gpu.product": "A100-PCIE-40GB"
+}</code></pre>
+</div>
+</div>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>You have successfully deployed the complete NVIDIA GPU Operator stack including Node Feature Discovery, GPU drivers, container toolkit, device plugin, GPU Feature Discovery, and DCGM monitoring components. Your OpenShift cluster can now schedule and run GPU-accelerated workloads.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_whats_next"><a class="anchor" href="#_whats_next"></a>What&#8217;s next</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>In the next chapter, you will learn how to configure Multi-Instance GPU (MIG) partitioning to maximize GPU utilization by splitting physical GPUs into multiple isolated instances for concurrent MaaS workloads.</p>
+</div>
+</div>
+</div>
+<nav class="pagination">
+  <span class="prev"><a href="s2-operators-overview.html">Understanding Operators and Platform Automation</a></span>
+  <span class="next"><a href="../ch2-mig/index.html">Configure Multi-Instance GPU (MIG) for MaaS</a></span>
+</nav>
+</article>
+  </div>
+</main>
+</div>
+<footer class="footer">
+  <img src="../../../_/img/rhl-logo-red.png" height="40px" alt="Red Hat"  href="https://redhat.com" >
+</footer><script id="site-script" src="../../../_/js/site.js" data-ui-root-path="../../../_"></script>
+<script async src="../../../_/js/vendor/highlight.js"></script>
+  </body>
+</html>

@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Maximizing GPU ROI with Multi-Instance GPU :: Nvidia Accelerator Configuration for Scale</title>
+    <link rel="prev" href="index.html">
+    <link rel="next" href="s2-mig-slicing-lab.html">
+    <meta name="generator" content="Antora 3.1.3">
+    <link rel="stylesheet" href="../../../_/css/site.css">
+    <script>var uiRootPath = '../../../_'</script>
+  </head>
+  <body class="article">
+<header class="header">
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="https://www.redhat.com" target="_blank"><img src="../../../_/img/redhat-logo.png" height="40px" alt="Red Hat"></a>
+      <a class="navbar-item" style="font-size: 24px; color: white" href="../../..">Nvidia Accelerator Configuration for Scale</a>
+      <button class="navbar-burger" data-target="topbar-nav">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+    <div id="topbar-nav" class="navbar-menu">
+      <div class="navbar-end">
+        <a class="navbar-item" href="https://github.com/RedHatQuickCourses/REPLACEREPONAME/issues" target="_blank">Report Issues</a>
+      </div>
+    </div>
+  </nav>
+</header>
+<div class="body">
+<div class="nav-container" data-component="maas-gpu-enablement" data-version="2">
+  <aside class="nav">
+    <div class="panels">
+<div class="nav-panel-menu is-active" data-panel="menu">
+  <nav class="nav-menu">
+    <h3 class="title"><a href="../index.html">Nvidia Accelerator Configuration for Scale</a></h3>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../index.html">Home</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../LABENV/index.html">Lab Environment</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../ch1-gpu-operator/index.html">Operator Foundations and GPU Stack Deployment</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch1-gpu-operator/s1-hardware-stack.html">Deconstructing the Hardware Stack</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch1-gpu-operator/s2-operators-overview.html">Understanding Operators and Platform Automation</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch1-gpu-operator/s3-deploy-operators-lab.html">Lab: Deploying the Base Stack</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="index.html">Configure Multi-Instance GPU (MIG) for MaaS</a>
+<ul class="nav-list">
+  <li class="nav-item is-current-page" data-depth="2">
+    <a class="nav-link" href="s1-mig-overview.html">Maximizing GPU ROI with Multi-Instance GPU</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="s2-mig-slicing-lab.html">Lab: MIG Slicing Configuration</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../ch3-observability/index.html">Monitor GPU Telemetry and Health</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch3-observability/s1-observability-stack.html">The MaaS Observability Stack</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch3-observability/s2-expose-metrics-lab.html">Lab: Exposing GPU Metrics</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch3-observability/s3-grafana-setup-lab.html">Lab: Deploying the Grafana Operator and Setting Up Access</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch3-observability/s4-dashboards-lab.html">Lab: Visualizing GPU Hardware</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+</ul>
+  </nav>
+</div>
+<div class="nav-panel-explore" data-panel="explore">
+  <div class="context">
+    <span class="title">Nvidia Accelerator Configuration for Scale</span>
+    <span class="version">2</span>
+  </div>
+  <ul class="components">
+    <li class="component is-current">
+      <a class="title" href="../index.html">Nvidia Accelerator Configuration for Scale</a>
+      <ul class="versions">
+        <li class="version is-current is-latest">
+          <a href="../index.html">2</a>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</div>
+    </div>
+  </aside>
+</div>
+<main class="article">
+<div class="toolbar" role="navigation">
+<button class="nav-toggle"></button>
+  <a href="../index.html" class="home-link"></a>
+<nav class="breadcrumbs" aria-label="breadcrumbs">
+  <ul>
+    <li><a href="../index.html">Nvidia Accelerator Configuration for Scale</a></li>
+    <li><a href="index.html">Configure Multi-Instance GPU (MIG) for MaaS</a></li>
+    <li><a href="s1-mig-overview.html">Maximizing GPU ROI with Multi-Instance GPU</a></li>
+  </ul>
+</nav>
+</div>
+  <div class="content">
+<aside class="toc sidebar" data-title="Contents" data-levels="2">
+  <div class="toc-menu"></div>
+</aside>
+<article class="doc">
+<h1 class="page">Maximizing GPU ROI with Multi-Instance GPU</h1>
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p><em>Estimated reading time: <strong>12 minutes</strong>.</em></p>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1">Objective</dt>
+<dd>
+<p>Understand how the Multi-Instance GPU (MIG) feature splits hardware resources into multiple GPU instances that operate with complete isolation from each other. Evaluate MIG advertisement strategies including Single (homogeneous) and Mixed (heterogeneous) slicing approaches.</p>
+</dd>
+</dl>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_the_gpu_utilization_challenge"><a class="anchor" href="#_the_gpu_utilization_challenge"></a>The GPU Utilization Challenge</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>High-performance GPUs like the NVIDIA A100 and H100 represent significant capital investment, often costing $10,000-$30,000 per unit. However, many AI inference workloads don&#8217;t require the full computational capacity of these GPUs, leading to resource underutilization and poor return on investment.</p>
+</div>
+<div class="paragraph">
+<p>Traditional approaches to sharing GPUs include:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Time-slicing</strong>: Multiple workloads share a GPU through temporal scheduling, but lack performance isolation</p>
+</li>
+<li>
+<p><strong>GPU passthrough</strong>: Each workload gets exclusive access to a full GPU, maximizing performance but minimizing utilization</p>
+</li>
+<li>
+<p><strong>Virtual GPUs (vGPU)</strong>: Requires additional licensing and virtualization overhead</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Multi-Instance GPU (MIG) provides a hardware-level solution that balances performance isolation with resource efficiency.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_what_is_multi_instance_gpu"><a class="anchor" href="#_what_is_multi_instance_gpu"></a>What is Multi-Instance GPU?</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Multi-Instance GPU is a hardware capability available on NVIDIA Ampere and Hopper architecture GPUs (A30, A100, H100, etc.) that partitions a single physical GPU into multiple isolated GPU instances. Each instance has:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Dedicated GPU compute resources</strong> (streaming multiprocessors)</p>
+</li>
+<li>
+<p><strong>Dedicated memory</strong> (a slice of the total GPU VRAM)</p>
+</li>
+<li>
+<p><strong>Dedicated memory bandwidth</strong> (isolated memory controllers)</p>
+</li>
+<li>
+<p><strong>Complete fault isolation</strong> (errors in one instance don&#8217;t affect others)</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>From the perspective of containerized workloads, each MIG instance appears as a separate GPU device with predictable, guaranteed performance.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_mig_architecture"><a class="anchor" href="#_mig_architecture"></a>MIG Architecture</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>A physical GPU can be partitioned into MIG instances with different profiles:</p>
+</div>
+<div class="sect2">
+<h3 id="_common_mig_profiles"><a class="anchor" href="#_common_mig_profiles"></a>Common MIG Profiles</h3>
+<div class="paragraph">
+<p>For an A100 40GB GPU:</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 20%;">
+<col style="width: 20%;">
+<col style="width: 20%;">
+<col style="width: 40%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Profile</th>
+<th class="tableblock halign-left valign-top">Instances</th>
+<th class="tableblock halign-left valign-top">Memory per Instance</th>
+<th class="tableblock halign-left valign-top">Use Case</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>1g.5gb</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">7</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">5 GB</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Small inference models, development workloads</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>2g.10gb</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">3</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">10 GB</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Medium models, fine-tuning tasks</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>3g.20gb</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">20 GB</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Large models, training workloads</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>4g.20gb</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">20 GB</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Very large models</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>7g.40gb</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">40 GB</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Full GPU (no partitioning)</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>For an A100 80GB GPU, profiles scale to <code>1g.10gb</code>, <code>2g.20gb</code>, <code>3g.40gb</code>, etc.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>The number before <code>g</code> indicates compute slice size (in 1/7ths of total GPU), while the value after indicates memory allocation.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_mig_advertisement_strategies"><a class="anchor" href="#_mig_advertisement_strategies"></a>MIG Advertisement Strategies</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The NVIDIA GPU Operator supports two strategies for exposing MIG instances to the Kubernetes scheduler:</p>
+</div>
+<div class="sect2">
+<h3 id="_single_strategy_homogeneous"><a class="anchor" href="#_single_strategy_homogeneous"></a>Single Strategy (Homogeneous)</h3>
+<div class="paragraph">
+<p>All MIG instances on a node must use the same profile. This simplifies scheduling and resource management:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Easy to understand and manage</p>
+</li>
+<li>
+<p>Predictable resource allocation</p>
+</li>
+<li>
+<p>Best for uniform workload patterns</p>
+</li>
+<li>
+<p>Example: All nodes configured with <code>3g.20gb</code> profile, advertising 2 GPU instances per physical GPU</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_mixed_strategy_heterogeneous"><a class="anchor" href="#_mixed_strategy_heterogeneous"></a>Mixed Strategy (Heterogeneous)</h3>
+<div class="paragraph">
+<p>Different MIG profiles can coexist on the same physical GPU. This provides maximum flexibility:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Accommodates diverse workload requirements</p>
+</li>
+<li>
+<p>Optimizes resource utilization</p>
+</li>
+<li>
+<p>More complex to manage and schedule</p>
+</li>
+<li>
+<p>Example: One physical GPU split into <code>1g.5gb</code> + <code>3g.20gb</code> profiles</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>The choice between strategies depends on your workload patterns and operational complexity tolerance.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_mig_benefits_for_maas"><a class="anchor" href="#_mig_benefits_for_maas"></a>MIG Benefits for MaaS</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>For Models-as-a-Service architectures, MIG provides critical advantages:</p>
+</div>
+<div class="sect2">
+<h3 id="_cost_efficiency"><a class="anchor" href="#_cost_efficiency"></a>Cost Efficiency</h3>
+<div class="ulist">
+<ul>
+<li>
+<p>Serve multiple models concurrently on expensive hardware</p>
+</li>
+<li>
+<p>Right-size GPU resources to actual model requirements</p>
+</li>
+<li>
+<p>Improve GPU utilization from 20-30% to 70-90%</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_performance_isolation"><a class="anchor" href="#_performance_isolation"></a>Performance Isolation</h3>
+<div class="ulist">
+<ul>
+<li>
+<p>Guarantee consistent inference latency per model</p>
+</li>
+<li>
+<p>Prevent noisy neighbor problems</p>
+</li>
+<li>
+<p>Enable SLA-backed model serving</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_operational_flexibility"><a class="anchor" href="#_operational_flexibility"></a>Operational Flexibility</h3>
+<div class="ulist">
+<ul>
+<li>
+<p>Scale model instances independently</p>
+</li>
+<li>
+<p>Mix small and large models on same infrastructure</p>
+</li>
+<li>
+<p>Support multi-tenant deployments with hardware isolation</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_resource_predictability"><a class="anchor" href="#_resource_predictability"></a>Resource Predictability</h3>
+<div class="ulist">
+<ul>
+<li>
+<p>Each model deployment gets guaranteed GPU resources</p>
+</li>
+<li>
+<p>Simplify capacity planning and cost allocation</p>
+</li>
+<li>
+<p>Enable accurate per-model billing and chargeback</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_hardware_requirements"><a class="anchor" href="#_hardware_requirements"></a>Hardware Requirements</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>MIG is available on:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>NVIDIA A30</strong> - Ampere architecture, up to 4 MIG instances</p>
+</li>
+<li>
+<p><strong>NVIDIA A100</strong> (40GB/80GB) - Ampere architecture, up to 7 MIG instances</p>
+</li>
+<li>
+<p><strong>NVIDIA H100</strong> - Hopper architecture, enhanced MIG with up to 7 instances</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Older GPU architectures (V100, T4, etc.) do not support MIG and must use time-slicing or passthrough approaches.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_whats_next"><a class="anchor" href="#_whats_next"></a>What&#8217;s Next</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>In the next section, you will configure MIG partitioning on your GPU nodes by applying MIG profiles, creating custom mig-parted configurations, and verifying that sliced instances are exposed as allocatable resources to the OpenShift scheduler.</p>
+</div>
+</div>
+</div>
+<nav class="pagination">
+  <span class="prev"><a href="index.html">Configure Multi-Instance GPU (MIG) for MaaS</a></span>
+  <span class="next"><a href="s2-mig-slicing-lab.html">Lab: MIG Slicing Configuration</a></span>
+</nav>
+</article>
+  </div>
+</main>
+</div>
+<footer class="footer">
+  <img src="../../../_/img/rhl-logo-red.png" height="40px" alt="Red Hat"  href="https://redhat.com" >
+</footer><script id="site-script" src="../../../_/js/site.js" data-ui-root-path="../../../_"></script>
+<script async src="../../../_/js/vendor/highlight.js"></script>
+  </body>
+</html>
