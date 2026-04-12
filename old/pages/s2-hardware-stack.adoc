@@ -6,11 +6,15 @@ _Estimated reading time: *{time_estimate} minutes*._
 
 Objective::
 
-Understand the "GPU Silo" crisis and how the NVIDIA GPU Operator automates the management of NVIDIA software components. Learn the core components that power the GPU stack and their roles in enabling GPU workloads on OpenShift.
+Understand the GPU software components that the NVIDIA GPU Operator manages, their specific roles in the stack, and how they work together to enable GPU acceleration in containerized environments.
 
-== The GPU Silo Crisis
+== Introduction
 
-Organizations investing in GPU infrastructure often face the "GPU Silo" problem where expensive GPU hardware remains underutilized due to complex manual configuration, dependency management, and operational overhead. The NVIDIA GPU Operator addresses this challenge by automating the deployment and lifecycle management of all necessary GPU software components.
+In the previous section, you learned why operators are critical for automating AI platform operations at scale. The NVIDIA GPU Operator is a sophisticated example of the operator pattern applied to GPU infrastructure management.
+
+But what exactly does the GPU Operator manage? What components make up the GPU software stack?
+
+This section deconstructs the six core components that work together to enable GPU acceleration on OpenShift. Understanding each component's role will help you troubleshoot issues, make informed configuration decisions, and explain the architecture to stakeholders.
 
 == Core Components of the GPU Stack
 
@@ -21,6 +25,7 @@ The NVIDIA GPU Operator orchestrates several critical components that work toget
 Node Feature Discovery scans the node's hardware via PCI IDs and applies Kubernetes labels to nodes where GPU hardware is detected. This enables the OpenShift scheduler to intelligently place GPU workloads on nodes with the appropriate hardware capabilities.
 
 Key responsibilities:
+
 * Hardware detection via PCI bus scanning
 * Automatic node labeling based on discovered features
 * Integration with Kubernetes scheduler for GPU-aware placement
@@ -80,7 +85,9 @@ This automated approach transforms GPU infrastructure from manually-managed silo
 
 == What's Next
 
-In the next section, you will learn how Kubernetes operators automate the lifecycle management of these components through OpenShift's Operator Lifecycle Manager. You'll understand operator subscriptions, channels, self-healing capabilities, and the three-layer operator architecture that powers Models-as-a-Service platforms. Then you'll deploy the complete GPU operator stack hands-on.
+You now understand WHAT the GPU stack contains and how these components work together. Before deploying them, you need to understand HOW OpenShift's Operator Lifecycle Manager orchestrates the installation, upgrades, and management of operators like the NVIDIA GPU Operator.
+
+The next section provides a deep dive into OLM architecture, Custom Resources, Controllers, and the workflow that transforms a Subscription into a running operator.
 
 ////
 **Deconstructing the Hardware Stack:**

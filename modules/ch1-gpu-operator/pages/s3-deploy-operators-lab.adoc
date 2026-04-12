@@ -6,7 +6,9 @@ _Estimated reading time: *{time_estimate} minutes*._
 
 Objective::
 
-Install the Node Feature Discovery Operator and NVIDIA GPU Operator, configure the ClusterPolicy to deploy all GPU stack components, and verify successful installation by inspecting the daemonset pods.
+Apply your understanding of Operator Lifecycle Manager to install the Node Feature Discovery Operator and NVIDIA GPU Operator. You'll create Subscriptions, configure the ClusterPolicy Custom Resource, and verify the complete stack through operator reconciliation.
+
+In the previous section, you learned about operators, OLM architecture, and the three-layer MaaS operator stack. This lab focuses on deploying Layer 1 - the Core & Infrastructure operators (NFD and GPU Operator) that enable hardware discovery and GPU software stack automation.
 
 == Before you begin
 

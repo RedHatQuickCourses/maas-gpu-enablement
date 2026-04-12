@@ -1,0 +1,779 @@
+:time_estimate: 25
+
+= Lab: Troubleshooting and Cleanup
+
+_Estimated reading time: *{time_estimate} minutes*._
+
+Objective::
+
+Develop troubleshooting skills for operator issues, practice complete operator removal and cleanup following best practices, and perform a reinstallation to reinforce OLM workflow knowledge.
+
+[WARNING]
+====
+This lab involves intentionally breaking operator deployments and performing complete uninstallation. **Ensure you are working in a non-production environment** or a dedicated lab cluster.
+====
+
+== Before you begin
+
+This lab requires:
+
+* Completed previous labs (NFD and GPU Operator installed)
+* Cluster administrator privileges
+* At least one GPU worker node
+* Familiarity with `oc` CLI and Kubernetes troubleshooting
+
+== Part 1: Troubleshooting Operator Issues
+
+In this section, you'll practice diagnosing common operator deployment problems. These scenarios simulate real production issues.
+
+=== Scenario 1: ClusterPolicy Configuration Error
+
+**Situation:** Administrator configures invalid driver version in ClusterPolicy, causing driver pods to fail.
+
+**Step 1: Create invalid configuration**
+
+[source,console,subs="verbatim,quotes"]
+----
+$ *oc edit clusterpolicy gpu-cluster-policy*
+----
+
+Modify the driver version to an invalid value:
+
+[source,yaml]
+----
+spec:
+  driver:
+    enabled: true
+    version: "999.99.99"  # Invalid - this image doesn't exist
+----
+
+Save and exit.
+
+**Step 2: Observe the impact**
+
+Wait 30 seconds for the operator to reconcile, then check ClusterPolicy status:
+
+[source,console,subs="verbatim,quotes"]
+----
+$ *oc get clusterpolicy gpu-cluster-policy -o yaml | grep -A 15 status:*
+status:
+  state: notReady
+  conditions:
+  - type: Ready
+    status: "False"
+    reason: ComponentsNotReady
+  - type: DriverReady
+    status: "False"
+    reason: ImagePullBackOff
+    message: "Driver image not found for version 999.99.99"
+----
+
+The ClusterPolicy status shows `state: notReady` and `DriverReady: False`.
+
+**Step 3: Check operator logs for error details**
+
+[source,console,subs="verbatim,quotes"]
+----
+$ *oc logs -n nvidia-gpu-operator deployment/gpu-operator --tail=50 | grep -i error*
+ERROR: Failed to pull driver image: nvcr.io/nvidia/driver:999.99.99-ubuntu22.04
+ERROR: Reconciliation failed for ClusterPolicy gpu-cluster-policy
+ERROR: Driver daemonset pods in ImagePullBackOff state
+----
+
+The operator logs reveal the image pull failure.
+
+**Step 4: Check driver DaemonSet and pod status**
+
+[source,console,subs="verbatim,quotes"]
+----
+$ *oc get pods -n nvidia-gpu-operator -l app=nvidia-driver-daemonset*
+NAME                              READY   STATUS             RESTARTS   AGE
+nvidia-driver-daemonset-xxxxx     0/1     ImagePullBackOff   0          2m
+----
+
+[source,console,subs="verbatim,quotes"]
+----
+$ *oc describe pod nvidia-driver-daemonset-xxxxx -n nvidia-gpu-operator | grep -A 10 Events:*
+Events:
+  Type     Reason     Age                From               Message
+  ----     ------     ----               ----               -------
+  Normal   Scheduled  2m                 default-scheduler  Successfully assigned nvidia-gpu-operator/nvidia-driver-daemonset-xxxxx to worker-gpu-0
+  Normal   Pulling    1m (x4 over 2m)    kubelet            Pulling image "nvcr.io/nvidia/driver:999.99.99-ubuntu22.04"
+  Warning  Failed     1m (x4 over 2m)    kubelet            Failed to pull image "nvcr.io/nvidia/driver:999.99.99-ubuntu22.04": rpc error: code = NotFound desc = failed to pull and unpack image
+  Warning  Failed     1m (x4 over 2m)    kubelet            Error: ErrImagePull
+  Normal   BackOff    30s (x6 over 2m)   kubelet            Back-off pulling image "nvcr.io/nvidia/driver:999.99.99-ubuntu22.04"
+  Warning  Failed     30s (x6 over 2m)   kubelet            Error: ImagePullBackOff
+----
+
+Pod events clearly show the image doesn't exist.
+
+**Step 5: Resolution - Fix the configuration**
+
+[source,console,subs="verbatim,quotes"]
+----
+$ *oc edit clusterpolicy gpu-cluster-policy*
+----
+
+Restore a valid driver version:
+
+[source,yaml]
+----
+spec:
+  driver:
+    enabled: true
+    version: "535.129.03"  # Valid version
+----
+
+Save and exit.
+
+**Step 6: Verify automatic recovery**
+
+[source,console,subs="verbatim,quotes"]
+----
+$ *oc get pods -n nvidia-gpu-operator -l app=nvidia-driver-daemonset -w*
+nvidia-driver-daemonset-xxxxx     0/1     Terminating        0          3m
+nvidia-driver-daemonset-yyyyy     0/1     ContainerCreating  0          5s
+nvidia-driver-daemonset-yyyyy     1/1     Running            0          45s
+----
+
+[source,console,subs="verbatim,quotes"]
+----
+$ *oc get clusterpolicy gpu-cluster-policy -o yaml | grep -A 5 status:*
+status:
+  state: ready
+  conditions:
+  - type: Ready
+    status: "True"
+  - type: DriverReady
+    status: "True"
+----
+
+The operator detected the corrected ClusterPolicy and automatically created a new driver pod with the valid image.
+
+**Key learning:**
+
+* Invalid CR configuration causes operator reconciliation failures
+* ClusterPolicy status conditions show which component failed
+* Operator logs provide detailed error messages
+* Pod events reveal root cause (image pull failure)
+* Fixing CR spec triggers automatic re-reconciliation
+
+=== Scenario 2: Viewing Pending Operator Upgrades
+
+**Situation:** New operator version available, manual approval required.
+
+**Step 1: Check current operator version**
+
+[source,console,subs="verbatim,quotes"]
+----
+$ *oc get csv -n nvidia-gpu-operator*
+NAME                               DISPLAY              VERSION   PHASE
+gpu-operator-certified.v23.9.0     NVIDIA GPU Operator  23.9.0    Succeeded
+----
+
+Currently running v23.9.0.
+
+**Step 2: Simulate manual approval subscription**
+
+[source,console,subs="verbatim,quotes"]
+----
+$ *oc edit subscription gpu-operator-certified -n nvidia-gpu-operator*
+----
+
+Add manual approval:
+
+[source,yaml]
+----
+spec:
+  channel: "v23.9"
+  installPlanApproval: Manual  # Add this line
+  name: gpu-operator-certified
+  source: certified-operators
+  sourceNamespace: openshift-marketplace
+----
+
+Save and exit.
+
+**Step 3: Check for pending InstallPlans**
+
+[source,console,subs="verbatim,quotes"]
+----
+$ *oc get installplan -n nvidia-gpu-operator*
+NAME            CSV                                  APPROVAL   APPROVED
+install-xxxxx   gpu-operator-certified.v23.9.0      Automatic  true      # Current install
+install-yyyyy   gpu-operator-certified.v23.9.2      Manual     false     # Pending upgrade
+----
+
+An InstallPlan for v23.9.2 exists but requires manual approval.
+
+[NOTE]
+====
+In a real environment, this InstallPlan would only appear if v23.9.2 was actually released. In a lab environment, you may not see a pending upgrade unless a newer version exists in the catalog.
+====
+
+**Step 4: Review InstallPlan details**
+
+[source,console,subs="verbatim,quotes"]
+----
+$ *oc describe installplan install-yyyyy -n nvidia-gpu-operator*
+Name:         install-yyyyy
+Namespace:    nvidia-gpu-operator
+API Version:  operators.coreos.com/v1alpha1
+Kind:         InstallPlan
+Spec:
+  Approval:  Manual
+  Approved:  false
+  Cluster Service Version Names:
+    gpu-operator-certified.v23.9.2
+  Generation:  1
+Status:
+  Conditions:
+    Type:    Installed
+    Status:  False
+    Reason:  RequiresApproval
+    Message: InstallPlan requires manual approval
+  Phase:     RequiresApproval
+  Plan:
+    - resolving: gpu-operator-certified.v23.9.2
+    - resource:
+        group: apiextensions.k8s.io
+        kind: CustomResourceDefinition
+        name: clusterpolicies.nvidia.com
+----
+
+The InstallPlan shows what will be installed/updated (CSV v23.9.2, CRDs, RBAC resources).
+
+**Step 5: (Optional) Approve the upgrade**
+
+[NOTE]
+====
+Only approve if you want to proceed with the upgrade. For this lab, you can skip this step to preserve the current version.
+====
+
+[source,console,subs="verbatim,quotes"]
+----
+$ *oc patch installplan install-yyyyy -n nvidia-gpu-operator \
+  --type merge --patch '{"spec":{"approved":true}}'*
+installplan.operators.coreos.com/install-yyyyy patched
+----
+
+**Step 6: Monitor upgrade (if approved)**
+
+[source,console,subs="verbatim,quotes"]
+----
+$ *oc get csv -n nvidia-gpu-operator -w*
+NAME                               DISPLAY              VERSION   PHASE
+gpu-operator-certified.v23.9.0     NVIDIA GPU Operator  23.9.0    Replacing
+gpu-operator-certified.v23.9.2     NVIDIA GPU Operator  23.9.2    Installing
+gpu-operator-certified.v23.9.2     NVIDIA GPU Operator  23.9.2    Succeeded
+----
+
+CSV phases transition: `Succeeded` → `Replacing` → (new CSV) `Installing` → `Succeeded`.
+
+**Key learning:**
+
+* Manual approval gives control over upgrade timing
+* InstallPlans show pending upgrades and what will change
+* `oc describe installplan` reveals detailed upgrade plan
+* Approval is a simple patch operation
+
+=== Scenario 3: Operator Pod Not Starting
+
+**Situation:** Operator pod fails to start due to missing permissions or resource constraints.
+
+**Step 1: Check operator pod status**
+
+[source,console,subs="verbatim,quotes"]
+----
+$ *oc get pods -n nvidia-gpu-operator -l app=gpu-operator*
+NAME                            READY   STATUS    RESTARTS   AGE
+gpu-operator-5f8d9c7b6d-xxxxx   1/1     Running   0          15m
+----
+
+If the pod is running normally, this scenario demonstrates how to diagnose when it's not.
+
+**Step 2: Simulate pod failure (advanced - optional)**
+
+[source,console,subs="verbatim,quotes"]
+----
+$ *oc set resources deployment/gpu-operator -n nvidia-gpu-operator \
+  --requests=memory=64Gi*
+----
+
+This sets an unrealistic memory request that no node can satisfy.
+
+**Step 3: Observe pod status**
+
+[source,console,subs="verbatim,quotes"]
+----
+$ *oc get pods -n nvidia-gpu-operator -l app=gpu-operator*
+NAME                            READY   STATUS    RESTARTS   AGE
+gpu-operator-7d9f8c6b8d-yyyyy   0/1     Pending   0          30s
+----
+
+Pod is stuck in `Pending` state.
+
+**Step 4: Check pod events for root cause**
+
+[source,console,subs="verbatim,quotes"]
+----
+$ *oc describe pod gpu-operator-7d9f8c6b8d-yyyyy -n nvidia-gpu-operator | grep -A 10 Events:*
+Events:
+  Type     Reason            Message
+  ----     ------            -------
+  Warning  FailedScheduling  0/6 nodes are available: 6 Insufficient memory.
+  Warning  FailedScheduling  0/6 nodes are available: 6 Insufficient memory.
+----
+
+Events clearly show the pod cannot be scheduled due to insufficient memory.
+
+**Step 5: Resolution - Fix resource requests**
+
+[source,console,subs="verbatim,quotes"]
+----
+$ *oc set resources deployment/gpu-operator -n nvidia-gpu-operator \
+  --requests=memory=256Mi*
+deployment.apps/gpu-operator resource requirements updated
+----
+
+**Step 6: Verify pod starts successfully**
+
+[source,console,subs="verbatim,quotes"]
+----
+$ *oc get pods -n nvidia-gpu-operator -l app=gpu-operator -w*
+NAME                            READY   STATUS              RESTARTS   AGE
+gpu-operator-7d9f8c6b8d-yyyyy   0/1     Terminating         0          2m
+gpu-operator-6c8d5f7b9e-zzzzz   0/1     ContainerCreating   0          5s
+gpu-operator-6c8d5f7b9e-zzzzz   1/1     Running             0          20s
+----
+
+**Key learning:**
+
+* Pod events reveal scheduling failures
+* Resource constraints prevent operator from starting
+* No operator = no reconciliation, components remain unmanaged
+* `oc describe pod` is the primary diagnostic tool
+
+== Part 2: Complete Operator Removal
+
+Cleanly removing an operator requires following a specific order to avoid orphaned resources.
+
+[IMPORTANT]
+====
+**Correct Deletion Order:**
+
+1. Delete Custom Resources (CRs)
+2. Wait for operator to clean up managed resources
+3. Delete Subscription
+4. Delete ClusterServiceVersion (CSV)
+5. (Optional) Delete CRDs
+6. Delete namespace
+
+**Wrong order causes orphaned resources, stuck finalizers, and incomplete cleanup!**
+====
+
+=== Step 1: Delete Custom Resources
+
+Delete the ClusterPolicy Custom Resource to trigger operator cleanup:
+
+[source,console,subs="verbatim,quotes"]
+----
+$ *oc delete clusterpolicy gpu-cluster-policy*
+clusterpolicy.nvidia.com "gpu-cluster-policy" deleted
+----
+
+[NOTE]
+====
+**What's happening?**
+
+The GPU Operator controller detects the ClusterPolicy deletion and begins its cleanup reconciliation:
+
+* Deletes all managed DaemonSets (driver, toolkit, device-plugin, DCGM, etc.)
+* Deletes ConfigMaps
+* Deletes Services
+* Waits for all resources to terminate
+* Removes finalizers from ClusterPolicy
+* Allows ClusterPolicy deletion to complete
+====
+
+**Wait for operator to finish cleanup:**
+
+[source,console,subs="verbatim,quotes"]
+----
+$ *oc get pods -n nvidia-gpu-operator -w*
+NAME                                       READY   STATUS        RESTARTS   AGE
+gpu-operator-xxxxx                         1/1     Running       0          20m
+nvidia-driver-daemonset-xxxxx              1/1     Terminating   0          15m
+nvidia-container-toolkit-daemonset-xxxxx   1/1     Terminating   0          14m
+nvidia-device-plugin-daemonset-xxxxx       1/1     Terminating   0          13m
+nvidia-dcgm-xxxxx                          1/1     Terminating   0          13m
+nvidia-dcgm-exporter-xxxxx                 1/1     Terminating   0          12m
+gpu-feature-discovery-xxxxx                1/1     Terminating   0          12m
+----
+
+Wait until only the `gpu-operator` pod remains:
+
+[source,console,subs="verbatim,quotes"]
+----
+$ *oc get pods -n nvidia-gpu-operator*
+NAME                  READY   STATUS    RESTARTS   AGE
+gpu-operator-xxxxx    1/1     Running   0          21m
+----
+
+All managed component pods have been cleaned up.
+
+=== Step 2: Delete Subscription
+
+[source,console,subs="verbatim,quotes"]
+----
+$ *oc delete subscription gpu-operator-certified -n nvidia-gpu-operator*
+subscription.operators.coreos.com "gpu-operator-certified" deleted
+----
+
+[NOTE]
+====
+Deleting the Subscription tells OLM to stop managing the operator. OLM will no longer:
+
+* Check for updates
+* Create new InstallPlans
+* Maintain the CSV
+
+The operator pod continues running (managed by the CSV) until you delete the CSV.
+====
+
+=== Step 3: Delete ClusterServiceVersion (CSV)
+
+[source,console,subs="verbatim,quotes"]
+----
+$ *oc get csv -n nvidia-gpu-operator*
+NAME                               DISPLAY              VERSION   PHASE
+gpu-operator-certified.v23.9.0     NVIDIA GPU Operator  23.9.0    Succeeded
+----
+
+[source,console,subs="verbatim,quotes"]
+----
+$ *oc delete csv gpu-operator-certified.v23.9.0 -n nvidia-gpu-operator*
+clusterserviceversion.operators.coreos.com "gpu-operator-certified.v23.9.0" deleted
+----
+
+**Verify operator pod is terminated:**
+
+[source,console,subs="verbatim,quotes"]
+----
+$ *oc get pods -n nvidia-gpu-operator*
+No resources found in nvidia-gpu-operator namespace.
+----
+
+All operator-related pods are now gone.
+
+=== Step 4: (Optional) Delete Custom Resource Definitions
+
+[WARNING]
+====
+**Deleting CRDs deletes ALL Custom Resources of that type cluster-wide!**
+
+Only delete CRDs if:
+
+* You're certain no ClusterPolicies exist anywhere in the cluster
+* You want a complete cleanup
+* You're planning to reinstall
+
+If other teams or namespaces might have ClusterPolicy resources, do NOT delete the CRD.
+====
+
+**Check if CRDs have finalizers or remaining resources:**
+
+[source,console,subs="verbatim,quotes"]
+----
+$ *oc get crd clusterpolicies.nvidia.com -o yaml | grep -A 5 finalizers*
+----
+
+If no finalizers are present and you've confirmed all CRs are deleted:
+
+[source,console,subs="verbatim,quotes"]
+----
+$ *oc delete crd clusterpolicies.nvidia.com*
+customresourcedefinition.apiextensions.k8s.io "clusterpolicies.nvidia.com" deleted
+----
+
+**Also delete related CRDs:**
+
+[source,console,subs="verbatim,quotes"]
+----
+$ *oc get crd | grep nvidia.com*
+nvidiadrivers.nvidia.com
+clusterpolicies.nvidia.com  # Already deleted
+----
+
+[source,console,subs="verbatim,quotes"]
+----
+$ *oc delete crd nvidiadrivers.nvidia.com*
+----
+
+=== Step 5: Delete Namespace
+
+[source,console,subs="verbatim,quotes"]
+----
+$ *oc delete namespace nvidia-gpu-operator*
+namespace "nvidia-gpu-operator" deleted
+----
+
+This may take 30-60 seconds as Kubernetes cleans up remaining resources and finalizes deletion.
+
+=== Step 6: Verify Complete Cleanup
+
+**Check for any remaining operator resources:**
+
+[source,console,subs="verbatim,quotes"]
+----
+# No pods should remain
+$ *oc get pods -A | grep -i nvidia*
+
+# No DaemonSets should remain
+$ *oc get daemonsets -A | grep -i nvidia*
+
+# Check CRDs (may remain if not deleted in Step 4)
+$ *oc get crd | grep nvidia*
+
+# Check for GPU node labels (these persist after operator removal)
+$ *oc get nodes -o json | jq '.items[].metadata.labels | keys | .[] | select(contains("nvidia"))'*
+----
+
+[NOTE]
+====
+**Node labels added by GPU Feature Discovery persist after operator removal.**
+
+These labels are harmless, but can be manually removed if desired:
+
+[source,bash]
+----
+oc label node <node-name> nvidia.com/gpu.count-
+oc label node <node-name> nvidia.com/gpu.product-
+oc label node <node-name> nvidia.com/gpu.memory-
+# Repeat for all NVIDIA labels
+----
+====
+
+**Cleanup complete!** The GPU Operator and all its components have been removed.
+
+== Part 3: Reinstallation Practice
+
+Now that you've removed the operator, practice reinstalling it to reinforce the OLM workflow.
+
+=== Step 1: Recreate Operator Namespace and Resources
+
+[source,console,subs="verbatim,quotes"]
+----
+$ *cat <<EOF | oc apply -f -*
+*apiVersion: v1*
+*kind: Namespace*
+*metadata:*
+*  name: nvidia-gpu-operator*
+*---*
+*apiVersion: operators.coreos.com/v1*
+*kind: OperatorGroup*
+*metadata:*
+*  name: nvidia-gpu-operator-group*
+*  namespace: nvidia-gpu-operator*
+*spec:*
+*  targetNamespaces:*
+*  - nvidia-gpu-operator*
+*---*
+*apiVersion: operators.coreos.com/v1alpha1*
+*kind: Subscription*
+*metadata:*
+*  name: gpu-operator-certified*
+*  namespace: nvidia-gpu-operator*
+*spec:*
+*  channel: "v23.9"*
+*  name: gpu-operator-certified*
+*  source: certified-operators*
+*  sourceNamespace: openshift-marketplace*
+*  installPlanApproval: Manual*
+*EOF*
+namespace/nvidia-gpu-operator created
+operatorgroup.operators.coreos.com/nvidia-gpu-operator-group created
+subscription.operators.coreos.com/gpu-operator-certified created
+----
+
+This time, we're using **Manual** approval to practice the approval workflow.
+
+=== Step 2: Monitor OLM Installation
+
+**Check that OLM created an InstallPlan:**
+
+[source,console,subs="verbatim,quotes"]
+----
+$ *oc get installplan -n nvidia-gpu-operator*
+NAME            CSV                                  APPROVAL   APPROVED
+install-xxxxx   gpu-operator-certified.v23.9.0      Manual     false
+----
+
+**Approve the installation:**
+
+[source,console,subs="verbatim,quotes"]
+----
+$ *oc patch installplan install-xxxxx -n nvidia-gpu-operator \
+  --type merge --patch '{"spec":{"approved":true}}'*
+installplan.operators.coreos.com/install-xxxxx patched
+----
+
+**Watch CSV installation progress:**
+
+[source,console,subs="verbatim,quotes"]
+----
+$ *oc get csv -n nvidia-gpu-operator -w*
+NAME                               DISPLAY              VERSION   PHASE
+gpu-operator-certified.v23.9.0     NVIDIA GPU Operator  23.9.0    Installing
+gpu-operator-certified.v23.9.0     NVIDIA GPU Operator  23.9.0    Succeeded
+----
+
+**Verify operator pod is running:**
+
+[source,console,subs="verbatim,quotes"]
+----
+$ *oc get pods -n nvidia-gpu-operator*
+NAME                            READY   STATUS    RESTARTS   AGE
+gpu-operator-xxxxx              1/1     Running   0          1m
+----
+
+=== Step 3: Recreate ClusterPolicy
+
+[source,console,subs="verbatim,quotes"]
+----
+$ *cat <<EOF | oc apply -f -*
+*apiVersion: nvidia.com/v1*
+*kind: ClusterPolicy*
+*metadata:*
+*  name: gpu-cluster-policy*
+*spec:*
+*  operator:*
+*    defaultRuntime: crio*
+*  driver:*
+*    enabled: true*
+*    version: "535.129.03"*
+*  toolkit:*
+*    enabled: true*
+*  devicePlugin:*
+*    enabled: true*
+*  dcgm:*
+*    enabled: true*
+*  dcgmExporter:*
+*    enabled: true*
+*  gfd:*
+*    enabled: true*
+*  migManager:*
+*    enabled: true*
+*EOF*
+clusterpolicy.nvidia.com/gpu-cluster-policy created
+----
+
+=== Step 4: Verify Installation
+
+**Monitor component deployment:**
+
+[source,console,subs="verbatim,quotes"]
+----
+$ *oc get pods -n nvidia-gpu-operator -w*
+NAME                                       READY   STATUS              RESTARTS   AGE
+gpu-operator-xxxxx                         1/1     Running             0          3m
+nvidia-driver-daemonset-xxxxx              0/1     ContainerCreating   0          10s
+nvidia-driver-daemonset-xxxxx              1/1     Running             0          2m
+nvidia-container-toolkit-daemonset-xxxxx   0/1     ContainerCreating   0          5s
+nvidia-container-toolkit-daemonset-xxxxx   1/1     Running             0          30s
+nvidia-device-plugin-daemonset-xxxxx       0/1     ContainerCreating   0          5s
+nvidia-device-plugin-daemonset-xxxxx       1/1     Running             0          25s
+nvidia-dcgm-xxxxx                          0/1     ContainerCreating   0          5s
+nvidia-dcgm-xxxxx                          1/1     Running             0          20s
+nvidia-dcgm-exporter-xxxxx                 0/1     ContainerCreating   0          5s
+nvidia-dcgm-exporter-xxxxx                 1/1     Running             0          15s
+gpu-feature-discovery-xxxxx                0/1     ContainerCreating   0          5s
+gpu-feature-discovery-xxxxx                1/1     Running             0          20s
+----
+
+**Verify all components are running:**
+
+[source,console,subs="verbatim,quotes"]
+----
+$ *oc get pods -n nvidia-gpu-operator*
+NAME                                       READY   STATUS    RESTARTS   AGE
+gpu-feature-discovery-xxxxx                1/1     Running   0          3m
+gpu-operator-xxxxx                         1/1     Running   0          5m
+nvidia-container-toolkit-daemonset-xxxxx   1/1     Running   0          3m
+nvidia-dcgm-exporter-xxxxx                 1/1     Running   0          3m
+nvidia-dcgm-xxxxx                          1/1     Running   0          3m
+nvidia-driver-daemonset-xxxxx              1/1     Running   0          4m
+nvidia-device-plugin-daemonset-xxxxx       1/1     Running   0          3m
+----
+
+**Verify GPU resources are advertised:**
+
+[source,console,subs="verbatim,quotes"]
+----
+$ *oc describe node <gpu-node-name> | grep nvidia.com/gpu*
+  nvidia.com/gpu:     1
+  nvidia.com/gpu:     1
+  nvidia.com/gpu:     0
+----
+
+**Check ClusterPolicy status:**
+
+[source,console,subs="verbatim,quotes"]
+----
+$ *oc get clusterpolicy gpu-cluster-policy -o yaml | grep -A 10 status:*
+status:
+  state: ready
+  conditions:
+  - type: Ready
+    status: "True"
+  - type: DriverReady
+    status: "True"
+  - type: ToolkitReady
+    status: "True"
+----
+
+**Success!** You've successfully reinstalled the GPU Operator.
+
+== Key Takeaways
+
+**Troubleshooting:**
+
+* **Operator logs** reveal reconciliation errors and detailed error messages
+* **CR status conditions** show which components failed and why
+* **Pod events** expose scheduling failures, image pull errors, and resource issues
+* **ClusterPolicy status** provides high-level component health overview
+
+**Cleanup Order Matters:**
+
+1. CR → 2. Subscription → 3. CSV → 4. CRD → 5. Namespace
+
+**Wrong order causes:**
+
+* Orphaned resources (DaemonSets without operator to manage them)
+* Stuck finalizers (resources waiting for operator cleanup that never comes)
+* Incomplete cleanup
+
+**OLM Workflow Reinforcement:**
+
+* **Subscription** → OLM resolves → **InstallPlan** → Approve → **CSV** → Operator starts → **CRD** → User creates **CR** → Operator reconciles
+
+**Practical Skills Gained:**
+
+* Diagnosing configuration errors via CR status
+* Using operator logs to identify root causes
+* Understanding InstallPlan approval workflow
+* Performing clean operator removal
+* Reinstalling operators with confidence
+
+== What's Next
+
+You now have a solid foundation in operator patterns, OLM architecture, GPU Operator deployment, lifecycle management, and troubleshooting. You've practiced:
+
+* Understanding why operators matter for AI platforms
+* Navigating OLM resources and workflows
+* Deploying operators using Subscriptions
+* Modifying configuration via Custom Resources
+* Troubleshooting common operator issues
+* Performing complete cleanup and reinstallation
+
+In **Chapter 2**, you'll learn how to maximize GPU return on investment by configuring Multi-Instance GPU (MIG) partitioning. MIG allows you to split physical GPUs into multiple isolated instances, enabling concurrent workloads and dramatically improving GPU utilization for Models-as-a-Service deployments.

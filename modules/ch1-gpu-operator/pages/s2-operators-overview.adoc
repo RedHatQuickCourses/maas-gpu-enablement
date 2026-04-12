@@ -1,0 +1,850 @@
+:time_estimate: 25
+
+= Understanding Operators and Platform Automation
+
+_Estimated reading time: *{time_estimate} minutes*._
+
+Objective::
+
+Understand how Kubernetes operators automate GPU platform lifecycle management through OpenShift's Operator Lifecycle Manager (OLM), and how Red Hat OpenShift AI orchestrates the complete suite of operators required for a production Models-as-a-Service platform.
+
+== The Operator Pattern for Platform Automation
+
+Kubernetes operators extend Kubernetes automation by encoding human operational knowledge into software. An operator combines three essential components:
+
+1. **Custom Resource (CR):** A declarative configuration file expressing your desired state
+2. **Controller:** Software that watches CRs and reconciles actual cluster state to match
+3. **Reconciliation Loop:** Continuous monitoring that detects and corrects drift
+
+=== How Operators Work: A Concrete Example
+
+Consider GPU driver management on a 100-node cluster. The traditional approach requires:
+
+* Writing bash scripts to install drivers on each node
+* Manually updating when new driver versions are released
+* Detecting and recovering from driver crashes
+* Ensuring consistent versions across all nodes
+* Coordinating updates to avoid disrupting workloads
+
+With the NVIDIA GPU Operator, you declare your desired state in a ClusterPolicy Custom Resource:
+
+[source,yaml]
+----
+apiVersion: nvidia.com/v1
+kind: ClusterPolicy
+metadata:
+  name: gpu-cluster-policy
+spec:
+  driver:
+    enabled: true
+    version: "535.129.03"  # <1>
+  dcgm:
+    enabled: true
+----
+<1> Declarative driver version specification
+
+The operator's controller continuously reconciles this desired state:
+
+----
+┌─────────────────────────────────────────────────────┐
+│   Operator Reconciliation Loop                      │
+│                                                     │
+│   1. OBSERVE → Read current cluster state           │
+│   2. DIFF → Compare to ClusterPolicy desired state  │
+│   3. ACT → Create/update resources to align         │
+│   4. REPEAT → Every ~5 seconds                      │
+└─────────────────────────────────────────────────────┘
+----
+
+=== Declarative vs. Imperative Infrastructure
+
+**Imperative (manual scripting):**
+
+[source,bash]
+----
+for node in $(oc get nodes -l gpu=true -o name); do
+  ssh $node "curl -O https://driver-repo/driver-535.129.03.run"
+  ssh $node "sh driver-535.129.03.run --silent"
+  ssh $node "systemctl restart kubelet"
+done
+# Script does NOT monitor or self-heal
+# Requires re-execution if a node crashes
+----
+
+**Declarative (operator-managed):**
+
+[source,yaml]
+----
+apiVersion: nvidia.com/v1
+kind: ClusterPolicy
+metadata:
+  name: gpu-cluster-policy
+spec:
+  driver:
+    version: "535.129.03"
+# Operator CONTINUOUSLY enforces this state
+# Automatically recovers from failures
+# Applies to new nodes automatically
+----
+
+The operator approach eliminates 90% of operational toil while providing self-healing capabilities that manual scripts cannot match.
+
+=== Self-Healing in Action
+
+Operators don't just deploy resources—they continuously monitor and repair them.
+
+**Scenario:** Admin accidentally deletes the NVIDIA driver DaemonSet
+
+[source,bash]
+----
+$ oc delete daemonset nvidia-driver-daemonset -n nvidia-gpu-operator
+daemonset.apps "nvidia-driver-daemonset" deleted
+
+# 45 seconds later...
+
+$ oc get daemonset nvidia-driver-daemonset -n nvidia-gpu-operator
+NAME                        DESIRED   CURRENT   READY   UP-TO-DATE   AGE
+nvidia-driver-daemonset     3         3         3       3            23s
+----
+
+**What happened:**
+
+1. Controller detected ClusterPolicy still specifies `driver.enabled: true`
+2. Controller observed DaemonSet is missing
+3. Controller recreated DaemonSet automatically
+4. No human intervention required
+
+This self-healing capability transforms GPU infrastructure from fragile, manually-managed silos into resilient, declarative systems suitable for enterprise AI platforms at scale.
+
+== Operator Lifecycle Manager (OLM) Architecture
+
+OpenShift includes Operator Lifecycle Manager (OLM), a built-in framework for discovering, installing, and managing operators. OLM solves the "who manages the managers" problem.
+
+=== The Challenge OLM Solves
+
+Installing an operator manually requires:
+
+* Finding the operator's container images and versions
+* Creating Custom Resource Definitions (CRDs)
+* Configuring RBAC permissions (ServiceAccounts, Roles, RoleBindings)
+* Deploying the operator's Deployment or Pod
+* Managing upgrades when new versions are released
+* Handling dependencies between operators
+
+OLM automates this entire lifecycle, functioning as a "package manager for operators" similar to how `yum` or `apt` manages system packages.
+
+=== Catalog Sources: Operator Repositories
+
+OLM uses **CatalogSources** to discover available operators. OpenShift includes four default catalogs:
+
+[cols="1,2,1,2",options="header"]
+|===
+|Catalog Name |Content |Support Level |Production Usage
+
+|`redhat-operators`
+|Red Hat platform operators (Node Feature Discovery, OpenShift AI)
+|Red Hat support included
+|✅ **Recommended for core infrastructure**
+
+|`certified-operators`
+|Vendor-certified operators (NVIDIA GPU Operator, Cert-manager)
+|Vendor support (e.g., NVIDIA)
+|✅ **Recommended for vendor software**
+
+|`community-operators`
+|Community-maintained operators
+|No support SLAs
+|❌ **Caution with production use**
+
+|`redhat-marketplace`
+|Commercial operators from Red Hat Marketplace
+|Vendor support, requires subscription
+|✅ Depends on procurement
+|===
+
+[WARNING]
+====
+**Caution with community operators in production AI platforms.** They lack support SLAs, may have security vulnerabilities, and could be unmaintained. Use only `redhat-operators` or `certified-operators` with active support contracts.
+====
+
+**Example: Viewing available catalogs**
+
+[source,bash]
+----
+$ oc get catalogsources -n openshift-marketplace
+NAME                  DISPLAY               TYPE   PUBLISHER   AGE
+certified-operators   Certified Operators   grpc   Red Hat     45d
+community-operators   Community Operators   grpc   Red Hat     45d
+redhat-operators      Red Hat Operators     grpc   Red Hat     45d
+redhat-marketplace    Red Hat Marketplace   grpc   Red Hat     45d
+----
+
+**Finding operators in catalogs:**
+
+[source,bash]
+----
+$ oc get packagemanifests | grep nvidia
+gpu-operator-certified     Certified Operators   23h
+----
+
+=== Core OLM Resources
+
+OLM uses five core resource types to manage operator lifecycle:
+
+==== Subscription
+
+A **Subscription** declares your intent to install and maintain an operator. It specifies:
+
+* Which operator to install
+* Which catalog contains the operator
+* Which update channel to track
+* Whether upgrades should be automatic or manual
+
+**Example Subscription:**
+
+[source,yaml]
+----
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: gpu-operator-certified
+  namespace: nvidia-gpu-operator
+spec:
+  channel: "v23.9"                           # <1>
+  name: gpu-operator-certified               # <2>
+  source: certified-operators                # <3>
+  sourceNamespace: openshift-marketplace     # <4>
+  installPlanApproval: Manual                # <5>
+----
+<1> Update channel - tracks v23.9.x versions
+<2> Operator package name from catalog
+<3> Which CatalogSource to use
+<4> Namespace where catalog lives
+<5> Manual approval required for upgrades (production best practice)
+
+[TIP]
+====
+**Production Best Practice:** Always configure `installPlanApproval: Manual` and pin to version-specific channels (e.g., `channel: "v23.9"`) for revenue-generating MaaS platforms. This gives you control over when driver and operator upgrades occur, allowing you to test in development environments first.
+====
+
+==== ClusterServiceVersion (CSV)
+
+A **ClusterServiceVersion (CSV)** represents a specific version of an installed operator. It contains:
+
+* Operator metadata (name, version, description)
+* Deployment specification (operator pod configuration)
+* Custom Resource Definitions (CRDs) the operator manages
+* RBAC requirements (permissions needed)
+* Upgrade path information
+
+**CSV Lifecycle Phases:**
+
+[cols="1,3",options="header"]
+|===
+|Phase |Meaning
+
+|`Pending`
+|Waiting for dependencies or requirements
+
+|`Installing`
+|Operator deployment in progress
+
+|`Succeeded`
+|Operator installed and running normally ✅
+
+|`Failed`
+|Installation or operation failed ❌
+
+|`Replacing`
+|Being replaced by newer version during upgrade
+|===
+
+**Example: Checking CSV status**
+
+[source,bash]
+----
+$ oc get csv -n nvidia-gpu-operator
+NAME                               DISPLAY              VERSION   PHASE
+gpu-operator-certified.v23.9.0     NVIDIA GPU Operator  23.9.0    Succeeded
+----
+
+==== OperatorGroup
+
+An **OperatorGroup** defines the scope where an operator can manage resources. It configures:
+
+* Which namespaces the operator watches (single, multiple, or all)
+* RBAC generation for operator permissions
+
+**Example OperatorGroup:**
+
+[source,yaml]
+----
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+metadata:
+  name: nvidia-gpu-operator-group
+  namespace: nvidia-gpu-operator
+spec:
+  targetNamespaces:
+  - nvidia-gpu-operator  # <1>
+----
+<1> Operator only manages resources in this namespace
+
+==== InstallPlan
+
+An **InstallPlan** is OLM's execution plan for installing or upgrading an operator. It lists:
+
+* Which CSV version to install
+* CRDs to create or update
+* RBAC resources to configure
+
+**InstallPlans can be:**
+
+* **Automatic:** Executed immediately without admin approval (dev/test environments)
+* **Manual:** Requires explicit approval before execution (production environments)
+
+**Example: Approving a pending upgrade**
+
+[source,bash]
+----
+# View pending upgrades
+$ oc get installplan -n nvidia-gpu-operator
+NAME            CSV                                  APPROVAL   APPROVED
+install-xxxxx   gpu-operator-certified.v23.9.0      Automatic  true      # Current
+install-yyyyy   gpu-operator-certified.v23.9.2      Manual     false     # Pending
+
+# Approve the upgrade
+$ oc patch installplan install-yyyyy -n nvidia-gpu-operator \
+  --type merge --patch '{"spec":{"approved":true}}'
+----
+
+==== CatalogSource
+
+A **CatalogSource** represents a repository of available operators. It points to a catalog index container image that OLM queries to discover operators.
+
+**Example: Viewing CatalogSource details**
+
+[source,bash]
+----
+$ oc get catalogsource certified-operators -n openshift-marketplace -o yaml
+apiVersion: operators.coreos.com/v1alpha1
+kind: CatalogSource
+metadata:
+  name: certified-operators
+  namespace: openshift-marketplace
+spec:
+  sourceType: grpc
+  image: registry.redhat.io/redhat/certified-operator-index:v4.14
+  displayName: Certified Operators
+  publisher: Red Hat
+----
+
+=== OLM Workflow: How These Resources Work Together
+
+The complete OLM workflow when you create a Subscription:
+
+----
+1. User creates Subscription
+         ↓
+2. OLM's Catalog Operator reads Subscription
+         ↓
+3. OLM queries CatalogSource for operator package
+         ↓
+4. OLM resolves latest version in specified channel
+         ↓
+5. OLM creates InstallPlan with execution steps
+         ↓
+6. If installPlanApproval: Automatic → Execute immediately
+   If installPlanApproval: Manual → Wait for approval
+         ↓
+7. OLM deploys ClusterServiceVersion (CSV)
+         ↓
+8. CSV creates operator Deployment/Pod
+         ↓
+9. CSV registers Custom Resource Definitions (CRDs)
+         ↓
+10. Operator pod starts, begins watching for Custom Resources
+----
+
+=== Update Strategies and Channels
+
+Operator catalogs organize versions into **channels**:
+
+* **`stable`:** Production-ready, tested versions (most conservative)
+* **`fast`:** Latest features, less testing (early access)
+* **`v23.9`, `v24.3`:** Version-specific channels (pin to major.minor)
+
+**Channel selection strategy for production:**
+
+[cols="1,2,2",options="header"]
+|===
+|Channel Type |Update Behavior |Production Recommendation
+
+|`stable`
+|Receives updates across major versions
+|❌ Too broad - unexpected major version upgrades
+
+|`fast`
+|Bleeding edge, less stable
+|❌ Too risky for revenue-generating platforms
+
+|`v23.9`
+|Only v23.9.x updates (e.g., 23.9.0 → 23.9.2)
+|✅ **Recommended - predictable minor updates only**
+|===
+
+**Best practice:** Pin to version-specific channels (`v23.9`) with `installPlanApproval: Manual` to control exactly when upgrades occur.
+
+== Custom Resources and Controllers
+
+Kubernetes provides generic resources (Pods, Services, Deployments), but AI platforms need domain-specific concepts like GPU driver configurations, inference services, and workload queues. Custom Resources extend Kubernetes to support these use cases.
+
+=== The Problem CRDs Solve
+
+**Without CRDs:** You would store GPU configuration in ConfigMaps and write custom scripts to parse and apply them. No validation, no versioning, no integration with `oc` CLI.
+
+**With CRDs:** You define a new resource type that Kubernetes understands natively.
+
+=== Custom Resource Definition (CRD)
+
+A **CRD** is a schema that defines a new resource type. It specifies:
+
+* API group and version
+* Resource kind (singular and plural names)
+* Fields allowed in the spec
+* Validation rules
+
+**Example: Viewing the ClusterPolicy CRD**
+
+[source,bash]
+----
+$ oc get crd clusterpolicies.nvidia.com
+NAME                          CREATED AT
+clusterpolicies.nvidia.com    2024-04-10T14:23:45Z
+
+$ oc describe crd clusterpolicies.nvidia.com
+...
+spec:
+  group: nvidia.com
+  names:
+    kind: ClusterPolicy
+    plural: clusterpolicies
+  scope: Cluster
+  versions:
+  - name: v1
+    schema:
+      openAPIV3Schema:
+        properties:
+          spec:
+            properties:
+              driver:
+                properties:
+                  enabled:
+                    type: boolean
+                  version:
+                    type: string
+----
+
+This CRD tells Kubernetes: "There is a new resource type called `ClusterPolicy` in the `nvidia.com` API group. It has fields like `driver.enabled` and `driver.version`."
+
+=== Custom Resource (CR)
+
+A **CR** is an instance of a CRD—your actual configuration.
+
+**Example ClusterPolicy Custom Resource:**
+
+[source,yaml]
+----
+apiVersion: nvidia.com/v1           # <1>
+kind: ClusterPolicy                 # <2>
+metadata:
+  name: gpu-cluster-policy          # <3>
+spec:                               # <4>
+  driver:
+    enabled: true
+    version: "535.129.03"
+  dcgm:
+    enabled: true
+  migManager:
+    enabled: true
+  nodeStatusExporter:
+    enabled: true
+----
+<1> API group and version from CRD
+<2> Resource kind from CRD
+<3> Name of this specific ClusterPolicy
+<4> Your desired GPU stack configuration
+
+You can interact with CRs using `oc` just like any native Kubernetes resource:
+
+[source,bash]
+----
+$ oc get clusterpolicies
+NAME                 AGE
+gpu-cluster-policy   5d
+
+$ oc describe clusterpolicy gpu-cluster-policy
+
+$ oc edit clusterpolicy gpu-cluster-policy  # Make live changes
+----
+
+=== Controller: The Reconciliation Engine
+
+A **controller** is software that:
+
+1. Watches for changes to Custom Resources
+2. Compares desired state (CR spec) to actual state (cluster resources)
+3. Takes actions to reconcile differences
+4. Continuously repeats this loop
+
+**Controller Reconciliation Example:**
+
+**Scenario:** Admin accidentally deletes the DCGM DaemonSet
+
+[source,bash]
+----
+$ oc delete daemonset nvidia-dcgm -n nvidia-gpu-operator
+daemonset.apps "nvidia-dcgm" deleted
+----
+
+**Controller detects the mismatch:**
+
+* **Desired state (ClusterPolicy):** `dcgm.enabled: true`
+* **Actual state (cluster):** No DCGM DaemonSet exists
+
+**Controller acts within ~30 seconds:**
+
+1. Detects missing DaemonSet
+2. Reads ClusterPolicy spec
+3. Recreates DCGM DaemonSet
+4. Updates ClusterPolicy status to reflect reconciliation
+
+**Result:**
+
+[source,bash]
+----
+$ oc get daemonset nvidia-dcgm -n nvidia-gpu-operator
+NAME          DESIRED   CURRENT   READY   UP-TO-DATE   AGE
+nvidia-dcgm   3         3         3       3            18s
+----
+
+No human intervention required. The controller self-healed the system.
+
+=== CR + Controller = Self-Healing Automation
+
+The power of operators comes from combining CRs with controllers:
+
+* **CR** provides declarative desired state (WHAT you want)
+* **Controller** implements continuous reconciliation (HOW to maintain it)
+* **Result** is self-healing infrastructure that resists drift
+
+This pattern scales from single-node test clusters to 1000-node production AI platforms.
+
+== Cluster Operators vs. Add-on Operators
+
+OpenShift distinguishes between two categories of operators based on their role and lifecycle management.
+
+=== Cluster Operators
+
+**Cluster operators** are core OpenShift platform components managed by the **Cluster Version Operator (CVO)**. They provide essential platform services.
+
+**Examples:**
+
+* `authentication` - OAuth and identity management
+* `dns` - Cluster DNS (CoreDNS)
+* `ingress` - Cluster ingress routing
+* `network` - Pod networking (OpenShift SDN or OVN-Kubernetes)
+* `storage` - Persistent volume management
+
+**Key characteristics:**
+
+* **Cannot be uninstalled** - They are part of the OpenShift control plane
+* **Automatically upgraded** when you upgrade OpenShift
+* **Managed by CVO** - You don't control their lifecycle individually
+* **Located in `openshift-*` namespaces**
+
+**Viewing cluster operators:**
+
+[source,bash]
+----
+$ oc get clusteroperators
+NAME                 VERSION   AVAILABLE   PROGRESSING   DEGRADED
+authentication       4.14.0    True        False         False
+dns                  4.14.0    True        False         False
+ingress              4.14.0    True        False         False
+network              4.14.0    True        False         False
+----
+
+=== Add-on Operators
+
+**Add-on operators** extend OpenShift with additional capabilities. They are **user-managed** through OLM.
+
+**Examples:**
+
+* Node Feature Discovery (NFD)
+* NVIDIA GPU Operator
+* Red Hat OpenShift AI
+* Cert-manager
+* Kueue
+
+**Key characteristics:**
+
+* **User-controlled lifecycle** - You decide when to install, upgrade, remove
+* **Managed through OLM** - Use Subscriptions, CSVs, InstallPlans
+* **Located in user-created namespaces** (e.g., `nvidia-gpu-operator`, `redhat-ods-operator`)
+* **Optional** - Only install what your platform needs
+
+**Viewing add-on operators:**
+
+[source,bash]
+----
+$ oc get csv -A | grep -v openshift
+NAMESPACE               NAME                               VERSION   PHASE
+nvidia-gpu-operator     gpu-operator-certified.v23.9.0     23.9.0    Succeeded
+openshift-nfd           nfd.v4.14.0                        4.14.0    Succeeded
+redhat-ods-operator     rhods-operator.3.3.0               3.3.0     Succeeded
+----
+
+=== Decision Matrix for Production AI Platforms
+
+[cols="1,2,2",options="header"]
+|===
+|Operator Type |Installation Method |Use Case
+
+|**Cluster Operators**
+|Pre-installed with OpenShift, CVO-managed
+|Core platform services (DNS, networking, auth)
+
+|**Add-on Operators from `redhat-operators`**
+|OLM Subscription with Red Hat support
+|Red Hat platform extensions (NFD, OpenShift AI)
+
+|**Add-on Operators from `certified-operators`**
+|OLM Subscription with vendor support
+|Third-party vendor software (NVIDIA GPU Operator)
+
+|**Community operators**
+|❌ Never in production
+|❌ No support, potential security risks
+|===
+
+== The Three-Layer MaaS Operator Stack
+
+A production Models-as-a-Service platform requires orchestrating dozens of operators across three functional layers. Red Hat OpenShift AI provides this orchestration.
+
+=== Layer 1: Core & Infrastructure Operators
+
+**Purpose:** Enable hardware detection and GPU software stack automation
+
+**Operators in this layer:**
+
+* **Node Feature Discovery (NFD)**
+  ** Scans node hardware via PCI bus
+  ** Labels nodes with detected capabilities
+  ** Namespace: `openshift-nfd`
+  ** Catalog: `redhat-operators`
+
+* **NVIDIA GPU Operator**
+  ** Deploys GPU drivers as containers
+  ** Installs NVIDIA Container Toolkit
+  ** Manages device plugin for GPU resource allocation
+  ** Deploys DCGM for monitoring
+  ** Namespace: `nvidia-gpu-operator`
+  ** Catalog: `certified-operators`
+
+**Activation:**
+
+[source,yaml]
+----
+# NFD activation
+apiVersion: nfd.openshift.io/v1
+kind: NodeFeatureDiscovery
+metadata:
+  name: nfd-instance
+  namespace: openshift-nfd
+
+# GPU Operator activation
+apiVersion: nvidia.com/v1
+kind: ClusterPolicy
+metadata:
+  name: gpu-cluster-policy
+----
+
+**You will deploy this layer in the next lab.**
+
+=== Layer 2: Operators for Inference at Scale
+
+**Purpose:** Provide production-grade MaaS capabilities like certificate management, rate limiting, workload queueing, and distributed training.
+
+**Operators in this layer:**
+
+* **Cert-manager**
+  ** Automates TLS certificate issuance and renewal
+  ** Integrates with Let's Encrypt and internal CAs
+  ** Namespace: `cert-manager`
+  ** Required for secure inference endpoints
+
+* **Connectivity Link (or Kuadrant)**
+  ** Rate limiting for inference requests
+  ** Authentication and authorization policies
+  ** API gateway capabilities
+  ** Namespace: `kuadrant-system`
+
+* **LeaderWorkerSet**
+  ** Orchestrates distributed training jobs
+  ** Leader/worker pod coordination
+  ** Namespace: Workload-specific
+
+* **Kueue**
+  ** Workload queueing and quota management
+  ** Fair sharing of GPU resources across teams
+  ** Namespace: `kueue-system`
+  ** Critical for multi-tenant MaaS platforms
+
+**Activation:** Each operator has its own Custom Resource for configuration.
+
+=== Layer 3: Red Hat OpenShift AI Orchestration
+
+**Purpose:** Coordinate the complete MaaS ecosystem with unified configuration and dependency management.
+
+**Red Hat OpenShift AI Operator:**
+
+* **Single control point** for MaaS platform lifecycle
+* **Manages Layer 2 operator dependencies** automatically
+* **Unified configuration** via DataScienceCluster Custom Resource
+* **Coordinates upgrades** across the operator suite
+* **Namespace:** `redhat-ods-operator`
+* **Catalog:** `redhat-operators`
+
+**DataScienceCluster CR Example:**
+
+[source,yaml]
+----
+apiVersion: datasciencecluster.opendatahub.io/v1
+kind: DataScienceCluster
+metadata:
+  name: default-dsc
+spec:
+  components:
+    kueue:
+      managementState: Unmanaged  # <1>
+    kserve:
+      managementState: Managed  # <2>
+    dashboard:
+      managementState: Managed
+----
+<1> OpenShift AI hand off Queueing to the Red Hat Kueue operator
+<2> OpenShift AI automatically installs and manages KServe operator
+
+**Key benefit:** Instead of manually installing 10+ operators, you install OpenShift AI once, and it orchestrates the dependencies.
+
+=== How the Layers Work Together
+
+**Example: Deploying an InferenceService**
+
+[source,yaml]
+----
+apiVersion: serving.kserve.io/v1beta1
+kind: InferenceService
+metadata:
+  name: llama-3-8b
+spec:
+  predictor:
+    model:
+      modelFormat: vllm
+      runtime: vllm-runtime
+    resources:
+      limits:
+        nvidia.com/gpu: 1  # <1>
+----
+<1> Request GPU resource
+
+**Workflow across three layers:**
+
+1. **Layer 3 (OpenShift AI):** Receives InferenceService creation request
+2. **Layer 2 (Kueue):** Queues workload if GPUs unavailable, enforces quota
+3. **Layer 2 (KServe):** Creates inference deployment pods
+4. **Layer 1 (GPU Operator):** Kubernetes scheduler finds GPU node (via NFD labels), device plugin allocates GPU to pod, DCGM monitors GPU telemetry
+5. **Layer 2 (Cert-manager):** Issues TLS certificate for inference endpoint
+6. **Layer 2 (Kuadrant):** Applies rate limiting policies
+
+All three layers coordinate to deliver a production-ready inference service with security, monitoring, and resource management.
+
+----
+┌─────────────────────────────────────────────────┐
+│  Layer 3: Red Hat OpenShift AI Orchestration    │
+│  (DataScienceCluster coordinates dependencies)  │
+└─────────────────────────────────────────────────┘
+                      ↓
+┌─────────────────────────────────────────────────┐
+│  Layer 2: Operators for Inference at Scale      │
+│  (Kueue, KServe, Cert-manager, Kuadrant)        │
+└─────────────────────────────────────────────────┘
+                      ↓
+┌─────────────────────────────────────────────────┐
+│  Layer 1: Core & Infrastructure Operators       │
+│  (NFD, NVIDIA GPU Operator)                     │
+└─────────────────────────────────────────────────┘
+                      ↓
+             GPU Hardware
+----
+
+== Namespace Organization and Self-Healing
+
+Operators use namespace isolation to organize resources and enforce separation between control plane and data plane components.
+
+=== Namespace Separation Pattern
+
+A production MaaS platform typically uses these namespaces:
+
+[source,bash]
+----
+$ oc get namespaces | grep -E '(marketplace|nfd|nvidia|ods|kueue|cert)'
+openshift-marketplace       # <1>
+openshift-nfd               # <2>
+nvidia-gpu-operator         # <3>
+redhat-ods-operator         # <4>
+redhat-ods-applications     # <5>
+kueue-system                # <6>
+cert-manager                # <7>
+----
+<1> CatalogSources - operator discovery
+<2> Node Feature Discovery - hardware detection control plane
+<3> NVIDIA GPU Operator - GPU stack control plane
+<4> OpenShift AI operator control plane
+<5> OpenShift AI dashboard and shared services
+<6> Kueue workload queue management
+<7> Certificate management control plane
+
+**User workload namespaces** are separate (e.g., `ml-team-alpha`, `data-science-prod`) where InferenceServices and training jobs run.
+
+=== Self-Healing Across Namespaces
+
+Operators monitor their namespaces and enforce consistent state:
+
+**Example: Multi-namespace self-healing**
+
+1. **Admin deletes NFD worker DaemonSet** in `openshift-nfd`
+2. **NFD operator** detects missing DaemonSet, recreates it
+3. **GPU Operator** detects nodes losing NFD labels
+4. **GPU Operator** waits for NFD to stabilize, then re-validates ClusterPolicy
+5. **Both operators** return to healthy state without human intervention
+
+This self-healing spans the entire operator stack, maintaining platform integrity even under configuration errors or accidental deletions.
+
+=== Consistent State Enforcement
+
+Operators continuously enforce desired state across namespaces:
+
+* NFD ensures all nodes have accurate hardware labels
+* GPU Operator ensures all GPU nodes run driver, toolkit, device plugin pods
+* OpenShift AI ensures all enabled components have running operators
+* Kueue ensures ResourceFlavors match available GPU node labels
+
+This creates a **resilient platform** where operators collaborate to maintain system health.
+
+== What's Next
+
+In the next lab, you will deploy the foundational Layer 1 operators—Node Feature Discovery and NVIDIA GPU Operator—using OpenShift's Operator Lifecycle Manager. You'll create Subscriptions, configure the ClusterPolicy Custom Resource, and verify the complete GPU software stack is running.
+
+This hands-on experience will reinforce your understanding of OLM workflow, Custom Resource activation, and operator reconciliation in action.
