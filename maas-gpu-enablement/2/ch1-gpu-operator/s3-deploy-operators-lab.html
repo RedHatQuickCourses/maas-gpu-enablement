@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Lab: Deploying the Base Stack :: Nvidia Accelerator Configuration for Scale</title>
+    <title>GPU Operator Features and Platform Deployment :: Nvidia Accelerator Configuration for Scale</title>
     <link rel="prev" href="s2-operators-overview.html">
     <link rel="next" href="../ch2-mig/index.html">
     <meta name="generator" content="Antora 3.1.3">
@@ -64,7 +64,7 @@
     <a class="nav-link" href="s2-operators-overview.html">Understanding Operators and Platform Automation</a>
   </li>
   <li class="nav-item is-current-page" data-depth="2">
-    <a class="nav-link" href="s3-deploy-operators-lab.html">Lab: Deploying the Base Stack</a>
+    <a class="nav-link" href="s3-deploy-operators-lab.html">GPU Operator Features and Platform Deployment</a>
   </li>
 </ul>
   </li>
@@ -138,7 +138,7 @@
   <ul>
     <li><a href="../index.html">Nvidia Accelerator Configuration for Scale</a></li>
     <li><a href="index.html">Operator Foundations and GPU Stack Deployment</a></li>
-    <li><a href="s3-deploy-operators-lab.html">Lab: Deploying the Base Stack</a></li>
+    <li><a href="s3-deploy-operators-lab.html">GPU Operator Features and Platform Deployment</a></li>
   </ul>
 </nav>
 </div>
@@ -147,35 +147,1415 @@
   <div class="toc-menu"></div>
 </aside>
 <article class="doc">
-<h1 class="page">Lab: Deploying the Base Stack</h1>
+<h1 class="page">GPU Operator Features and Platform Deployment</h1>
 <div id="preamble">
 <div class="sectionbody">
 <div class="paragraph">
-<p><em>Estimated reading time: <strong>30 minutes</strong>.</em></p>
+<p><em>Estimated reading time: <strong>28 minutes</strong>.</em></p>
 </div>
 <div class="dlist">
 <dl>
 <dt class="hdlist1">Objective</dt>
 <dd>
-<p>Apply your understanding of Operator Lifecycle Manager to install the Node Feature Discovery Operator and NVIDIA GPU Operator. You&#8217;ll create Subscriptions, configure the ClusterPolicy Custom Resource, and verify the complete stack through operator reconciliation.</p>
+<p>Understand how the NVIDIA GPU Operator transforms raw GPU hardware into a production-ready, multi-tenant compute platform through automated lifecycle management of drivers, device plugins, monitoring, and GPU sharing capabilities. Deploy the complete operator stack using OpenShift Operator Lifecycle Manager, configure GPU sharing strategies (time-slicing preparation, MIG enablement), and integrate GPU telemetry with cluster monitoring for production observability.</p>
 </dd>
 </dl>
 </div>
 <div class="paragraph">
-<p>In the previous section, you learned about operators, OLM architecture, and the three-layer MaaS operator stack. This lab focuses on deploying Layer 1 - the Core &amp; Infrastructure operators (NFD and GPU Operator) that enable hardware discovery and GPU software stack automation.</p>
+<p>In the previous sections, you learned about the GPU hardware stack components and the operator pattern for platform automation. This section builds on that foundation by examining GPU Operator features in depth, comparing GPU sharing strategies for multi-tenant platforms, and deploying the complete stack with production-ready configuration.</p>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_before_you_begin"><a class="anchor" href="#_before_you_begin"></a>Before you begin</h2>
+<h2 id="_the_gpu_underutilization_problem"><a class="anchor" href="#_the_gpu_underutilization_problem"></a>The GPU Underutilization Problem</h2>
 <div class="sectionbody">
+<div class="paragraph">
+<p>Enterprise AI platforms investing in GPU infrastructure often face a critical challenge: expensive GPU hardware remains dramatically underutilized despite $25,000-$50,000 per GPU capital investment. Understanding this problem and the solutions the GPU Operator enables is essential for maximizing return on GPU infrastructure investment.</p>
+</div>
+<div class="sect2">
+<h3 id="_the_50000_idle_gpu_crisis"><a class="anchor" href="#_the_50000_idle_gpu_crisis"></a>The $50,000 Idle GPU Crisis</h3>
+<div class="paragraph">
+<p>Organizations deploying AI platforms without GPU sharing capabilities typically see GPU utilization rates between 20-40% for inference workloads. This underutilization represents massive wasted capital and operational expense.</p>
+</div>
+<div class="paragraph">
+<p><strong>Concrete Example:</strong></p>
+</div>
+<div class="paragraph">
+<p>FinServe Corp purchases 10x NVIDIA A100-80GB GPUs at $25,000 per GPU ($250,000 total capital expenditure). They deploy 3 large language model inference services, each allocated a dedicated GPU. Monitoring shows:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>GPU 1 (Finance QA model): 30% average utilization</p>
+</li>
+<li>
+<p>GPU 2 (Risk Analysis model): 25% average utilization</p>
+</li>
+<li>
+<p>GPU 3 (Document Intelligence model): 20% average utilization</p>
+</li>
+<li>
+<p>GPUs 4-10: 0% utilization (reserved for "future workloads")</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>Result:</strong> 25% average utilization across the platform → 75% idle capacity → $175,000 in wasted GPU investment annually.</p>
+</div>
+<div class="paragraph">
+<p>The GPU Operator addresses this crisis through three GPU sharing strategies, each with different isolation guarantees, reconfiguration requirements, and utilization outcomes:</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 12.5%;">
+<col style="width: 37.5%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Strategy</th>
+<th class="tableblock halign-left valign-top">Isolation Level</th>
+<th class="tableblock halign-left valign-top">Typical Utilization</th>
+<th class="tableblock halign-left valign-top">Best Use Case</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Full GPU Allocation</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Complete hardware isolation</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">20-40%</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Training workloads, &lt;10 inference services, guaranteed performance requirements</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Time-Slicing</strong> (Software)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Software-level temporal multiplexing</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">60-80%</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Bursty inference workloads, dev/test environments, GPUs without MIG support (V100, T4, A10)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>MIG</strong> (Hardware Partitioning)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Hardware-level spatial isolation</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">85-95%</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Multi-tenant MaaS platforms, &gt;10 concurrent workloads, SLA-backed services on Ampere/Hopper GPUs</p></td>
+</tr>
+</tbody>
+</table>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>For MaaS platforms serving fewer than 10 models, time-slicing provides the fastest time-to-value with minimal configuration overhead. For platforms serving more than 10 models or requiring SLA-backed performance guarantees, invest in MIG-capable hardware (A100, A30, H100) for maximum utilization with guaranteed isolation.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_multi_tenant_sharing_challenges"><a class="anchor" href="#_multi_tenant_sharing_challenges"></a>Multi-Tenant Sharing Challenges</h3>
+<div class="paragraph">
+<p>Traditional approaches to GPU sharing fail to meet production MaaS platform requirements:</p>
+</div>
+<div class="paragraph">
+<p><strong>Approach 1: Full GPU Passthrough (No Sharing)</strong></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>One workload per physical GPU</p>
+</li>
+<li>
+<p>Complete isolation but catastrophic underutilization</p>
+</li>
+<li>
+<p>Requires 1:1 GPU-to-workload ratio (10 models = 10 GPUs minimum)</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>Approach 2: Manual Time-Sharing</strong></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Multiple pods scheduled to same GPU via Kubernetes resource oversubscription</p>
+</li>
+<li>
+<p>No performance isolation—runaway processes starve other workloads</p>
+</li>
+<li>
+<p>Unpredictable latency makes SLA compliance impossible</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>Approach 3: MIG (Multi-Instance GPU)</strong></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Hardware-partitioned GPU instances with dedicated compute and memory</p>
+</li>
+<li>
+<p>Guaranteed performance isolation with high utilization</p>
+</li>
+<li>
+<p>Requires Ampere or Hopper architecture GPUs and configuration expertise</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>The GPU Operator automates MIG and time-slicing configuration, transforming GPU sharing from manual, error-prone processes into declarative, operator-managed capabilities.</p>
+</div>
+<div class="paragraph">
+<p><strong>Transformation Example:</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>Before GPU Operator + Sharing:
+10 GPUs → 3 workloads → 25% utilization → $175K wasted annually
+
+After GPU Operator + MIG:
+10 A100 GPUs → 70 MIG instances (7 per GPU) → 24 active workloads
+→ 85% utilization → $150K annual savings → 8x more concurrent workloads</pre>
+</div>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>GPU sharing strategy is not reversible without workload downtime. Choose based on 12-month workload projections, not current state. Migrating from time-slicing to MIG requires node drains, driver reconfiguration, and workload migration (10-15 minutes downtime per node).</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_clusterpolicy_as_the_control_plane"><a class="anchor" href="#_clusterpolicy_as_the_control_plane"></a>ClusterPolicy as the Control Plane</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The <a href="s2-operators-overview.html#_custom_resources_and_controllers" class="xref page">ClusterPolicy Custom Resource</a> (introduced in Section 2) serves as the single declarative control plane for the entire GPU software stack. Every component the GPU Operator manages—drivers, monitoring, device plugins, GPU sharing—is configured through ClusterPolicy specification fields.</p>
+</div>
+<div class="sect2">
+<h3 id="_declarative_gpu_stack_configuration"><a class="anchor" href="#_declarative_gpu_stack_configuration"></a>Declarative GPU Stack Configuration</h3>
+<div class="paragraph">
+<p>ClusterPolicy abstracts the complexity of managing eight interdependent components into a single YAML resource. The operator&#8217;s controller continuously reconciles this desired state, deploying and maintaining DaemonSets for each enabled component.</p>
+</div>
+<div class="paragraph">
+<p><strong>Component Hierarchy:</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>ClusterPolicy Custom Resource
+  ├── driver           # NVIDIA GPU drivers (containerized)
+  ├── toolkit          # Container runtime integration
+  ├── devicePlugin     # GPU resource advertisement to Kubernetes
+  ├── gfd              # GPU Feature Discovery (fine-grained labels)
+  ├── dcgm             # Data Center GPU Manager (telemetry)
+  ├── dcgmExporter     # Prometheus metrics export
+  ├── migManager       # MIG partitioning automation
+  └── nodeStatusExporter  # Node-level GPU health events</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>When you create a ClusterPolicy CR, the GPU Operator controller:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Reads the desired state from <code>spec</code> fields</p>
+</li>
+<li>
+<p>Creates DaemonSets for enabled components</p>
+</li>
+<li>
+<p>Deploys pods to GPU nodes (identified by <a href="s1-hardware-stack.html#_node_feature_discovery_nfd" class="xref page">NFD labels</a>)</p>
+</li>
+<li>
+<p>Monitors component health and reconciles drift every 5-10 seconds</p>
+</li>
+<li>
+<p>Self-heals by recreating deleted or failed resources</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>This declarative approach replaces manual driver installation scripts, configuration management tools, and custom automation—reducing GPU platform deployment time from 150+ hours to under 2 hours.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_component_deep_dive_roles_and_responsibilities"><a class="anchor" href="#_component_deep_dive_roles_and_responsibilities"></a>Component Deep-Dive: Roles and Responsibilities</h3>
+<div class="paragraph">
+<p>Understanding what each ClusterPolicy component does and why it exists is essential for production configuration decisions and troubleshooting.</p>
+</div>
+<div class="sect3">
+<h4 id="_driver_container"><a class="anchor" href="#_driver_container"></a>Driver Container</h4>
+<div class="paragraph">
+<p>The <a href="s1-hardware-stack.html#_nvidia_driver_container" class="xref page">NVIDIA Driver Container</a> deploys GPU drivers as containerized workloads rather than host-installed kernel modules. This architectural shift provides several production advantages:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Version consistency:</strong> All GPU nodes run identical driver versions specified in ClusterPolicy</p>
+</li>
+<li>
+<p><strong>Automated deployment:</strong> New GPU nodes receive drivers automatically via DaemonSet scheduling</p>
+</li>
+<li>
+<p><strong>Self-healing:</strong> Deleted or crashed driver pods are recreated by the operator within 30 seconds</p>
+</li>
+<li>
+<p><strong>Isolation from host OS:</strong> Driver updates don&#8217;t require host OS reboots or kernel version coordination</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>ClusterPolicy Configuration:</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">spec:
+  driver:
+    enabled: true
+    version: "535.129.03"  <i class="conum" data-value="1"></i><b>(1)</b>
+    repository: nvcr.io/nvidia
+    image: driver</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Pin to specific driver version for production consistency—never use <code>latest</code> tag</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p><strong>Self-Healing Example:</strong></p>
+</div>
+<div class="paragraph">
+<p>An administrator accidentally deletes the NVIDIA driver DaemonSet during troubleshooting:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ oc delete daemonset nvidia-driver-daemonset -n nvidia-gpu-operator
+daemonset.apps "nvidia-driver-daemonset" deleted
+
+# GPU Operator controller detects the mismatch within 5 seconds
+
+# 30 seconds later, the DaemonSet is automatically recreated:
+$ oc get daemonset nvidia-driver-daemonset -n nvidia-gpu-operator
+NAME                      DESIRED   CURRENT   READY   AGE
+nvidia-driver-daemonset   2         2         2       18s</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>What happened:</strong> The controller detected that <code>driver.enabled: true</code> in ClusterPolicy but the DaemonSet was missing. It recreated the DaemonSet, pods started, and GPU access was restored in approximately 90 seconds total—no human intervention required.</p>
+</div>
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-warning" title="Warning"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>Never manually modify GPU driver DaemonSets or other operator-managed resources. Changes are overwritten by operator reconciliation within 30 seconds. All configuration must be declared in ClusterPolicy <code>spec</code> to persist.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_device_plugin"><a class="anchor" href="#_device_plugin"></a>Device Plugin</h4>
+<div class="paragraph">
+<p>The NVIDIA Device Plugin is a Kubernetes device plugin that advertises GPU resources to the kubelet, enabling the scheduler to bind GPU-requesting pods to nodes with available GPUs.</p>
+</div>
+<div class="paragraph">
+<p><strong>How It Works:</strong></p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Device plugin discovers GPUs on the node (via driver and NVIDIA libraries)</p>
+</li>
+<li>
+<p>Registers GPU count with kubelet as <code>nvidia.com/gpu</code> extended resource</p>
+</li>
+<li>
+<p>Kubelet advertises resource capacity to Kubernetes API</p>
+</li>
+<li>
+<p>Scheduler binds pods requesting <code>nvidia.com/gpu</code> to nodes with availability</p>
+</li>
+<li>
+<p>Device plugin allocates specific GPU device(s) to pod containers</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p><strong>Resource Advertisement Example:</strong></p>
+</div>
+<div class="paragraph">
+<p>A node with 2x NVIDIA A100-40GB GPUs advertises:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ oc describe node worker-gpu-0.example.com
+...
+Capacity:
+  nvidia.com/gpu:  2
+Allocatable:
+  nvidia.com/gpu:  2</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>An inference pod requests GPU allocation:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">apiVersion: v1
+kind: Pod
+metadata:
+  name: llama-inference
+spec:
+  containers:
+  - name: vllm-server
+    image: vllm/vllm-openai:latest
+    resources:
+      limits:
+        nvidia.com/gpu: 1  <i class="conum" data-value="1"></i><b>(1)</b></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Request 1 GPU—scheduler binds to node with <code>nvidia.com/gpu</code> availability</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p><strong>ClusterPolicy Configuration:</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">spec:
+  devicePlugin:
+    enabled: true
+    config:
+      name: ""  <i class="conum" data-value="1"></i><b>(1)</b></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Leave empty for default single-GPU allocation; specify ConfigMap name for time-slicing configuration (covered in Section 3)</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_gpu_feature_discovery_gfd"><a class="anchor" href="#_gpu_feature_discovery_gfd"></a>GPU Feature Discovery (GFD)</h4>
+<div class="paragraph">
+<p><a href="s1-hardware-stack.html#_gpu_feature_discovery_gfd" class="xref page">GPU Feature Discovery</a> extends basic hardware detection by applying fine-grained GPU capability labels to nodes. While <a href="s1-hardware-stack.html#_node_feature_discovery_nfd" class="xref page">NFD</a> labels nodes with generic PCI vendor detection (<code>feature.node.kubernetes.io/pci-10de.present=true</code>), GFD provides GPU-specific details.</p>
+</div>
+<div class="paragraph">
+<p><strong>GFD Label Examples:</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ oc get node worker-gpu-0.example.com -o json | \
+  jq '.metadata.labels | with_entries(select(.key | contains("nvidia")))'
+{
+  "nvidia.com/cuda.driver.major": "535",
+  "nvidia.com/cuda.driver.minor": "129",
+  "nvidia.com/cuda.runtime.major": "12",
+  "nvidia.com/cuda.runtime.minor": "2",
+  "nvidia.com/gpu.count": "2",
+  "nvidia.com/gpu.family": "ampere",
+  "nvidia.com/gpu.memory": "40960",
+  "nvidia.com/gpu.product": "A100-PCIE-40GB",
+  "nvidia.com/mig.capable": "true"
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>These labels enable intelligent workload placement:</p>
+</div>
+<div class="paragraph">
+<p><strong>Example 1: Target specific GPU models</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml"># Large LLM inference requires A100 GPUs with 40GB+ VRAM
+nodeSelector:
+  nvidia.com/gpu.product: "A100-PCIE-40GB"
+  nvidia.com/gpu.memory: "40960"</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>Example 2: Ensure MIG capability for future flexibility</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">affinity:
+  nodeAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: nvidia.com/mig.capable
+          operator: In
+          values: ["true"]  <i class="conum" data-value="1"></i><b>(1)</b></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Schedule only on MIG-capable GPUs (A30, A100, H100) even if MIG is not currently enabled</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_dcgm_dcgm_exporter"><a class="anchor" href="#_dcgm_dcgm_exporter"></a>DCGM + DCGM Exporter</h4>
+<div class="paragraph">
+<p><a href="s1-hardware-stack.html#_data_center_gpu_manager_dcgm" class="xref page">DCGM (Data Center GPU Manager)</a> continuously monitors GPU health, performance, and telemetry. The <a href="s1-hardware-stack.html#_dcgm_exporter" class="xref page">DCGM Exporter</a> extracts metrics from DCGM and exposes them in Prometheus format for integration with OpenShift monitoring.</p>
+</div>
+<div class="paragraph">
+<p><strong>Telemetry Pipeline:</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>DCGM Daemon (per GPU node)
+  ↓ collects metrics every 30 seconds
+DCGM Exporter (per GPU node, port 9400)
+  ↓ formats as Prometheus metrics
+ServiceMonitor (discovers exporter endpoints)
+  ↓ configures Prometheus scraping
+Prometheus User Workload Monitoring
+  ↓ stores time-series data
+Thanos Querier (federated query layer)
+  ↓ enables cross-cluster queries
+Grafana Dashboards (Chapter 3)</pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>Key Metrics Exported:</strong></p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 50%;">
+<col style="width: 16.6667%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Metric Name</th>
+<th class="tableblock halign-left valign-top">Description</th>
+<th class="tableblock halign-left valign-top">Typical Use Case</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>DCGM_FI_DEV_GPU_UTIL</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">GPU utilization percentage (0-100)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Capacity planning, identifying underutilized GPUs</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>DCGM_FI_DEV_FB_USED</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">GPU framebuffer (VRAM) used in MB</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Memory leak detection, right-sizing workloads</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>DCGM_FI_DEV_POWER_USAGE</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">GPU power draw in watts</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Cost allocation, power budget optimization</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>DCGM_FI_DEV_GPU_TEMP</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">GPU temperature in Celsius</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Thermal throttling detection, cooling validation</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>DCGM_FI_DEV_SM_CLOCK</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Streaming multiprocessor clock frequency (MHz)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Performance verification, clock throttling detection</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>These metrics are the foundation for GPU observability dashboards you will create in Chapter 3.</p>
+</div>
+<div class="paragraph">
+<p><strong>ClusterPolicy Configuration:</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">spec:
+  dcgm:
+    enabled: true  <i class="conum" data-value="1"></i><b>(1)</b>
+  dcgmExporter:
+    enabled: true  <i class="conum" data-value="2"></i><b>(2)</b>
+    config:
+      name: ""  <i class="conum" data-value="3"></i><b>(3)</b></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Deploy DCGM daemon for telemetry collection</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Deploy DCGM Exporter for Prometheus integration</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>Leave empty for default metrics; specify ConfigMap for custom metric sets</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>DCGM Exporter scrape interval defaults to 30 seconds. For high-frequency monitoring of training jobs or performance testing, configure a custom interval via environment variable:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">spec:
+  dcgmExporter:
+    env:
+    - name: DCGM_EXPORTER_INTERVAL
+      value: "10000"  # 10 seconds in milliseconds</code></pre>
+</div>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_mig_manager"><a class="anchor" href="#_mig_manager"></a>MIG Manager</h4>
+<div class="paragraph">
+<p>The MIG Manager automates Multi-Instance GPU mode enablement and profile application based on node labels. While MIG configuration details are covered comprehensively in Chapter 2, the ClusterPolicy enables the manager as a prerequisite.</p>
+</div>
+<div class="paragraph">
+<p><strong>How MIG Manager Works:</strong></p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Administrator applies MIG configuration label to GPU node</p>
+</li>
+<li>
+<p>MIG Manager detects label via watch on Node resources</p>
+</li>
+<li>
+<p>MIG Manager enables MIG mode on the GPU (if not already enabled)</p>
+</li>
+<li>
+<p>MIG Manager applies specified profile (e.g., <code>all-1g.10gb</code>, <code>mixed</code>)</p>
+</li>
+<li>
+<p>MIG Manager signals device plugin to rediscover GPU instances</p>
+</li>
+<li>
+<p>Device plugin advertises MIG instances as allocatable resources</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p><strong>Label-Driven Workflow Example:</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Administrator labels node with desired MIG configuration
+$ oc label node worker-gpu-0.example.com \
+  nvidia.com/mig.config=all-1g.10gb
+
+# MIG Manager detects label, enables MIG mode, applies profile
+# (Takes approximately 60 seconds, requires driver pod restart)
+
+# Device plugin rediscovers and advertises MIG instances
+$ oc describe node worker-gpu-0.example.com | grep mig
+  nvidia.com/mig-1g.10gb:  7  <i class="conum" data-value="1"></i><b>(1)</b></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Single A100-80GB partitioned into 7x <code>1g.10gb</code> instances, each allocatable to separate workloads</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p><strong>ClusterPolicy Configuration:</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">spec:
+  migManager:
+    enabled: true  <i class="conum" data-value="1"></i><b>(1)</b></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Enable MIG Manager—actual MIG profile configuration happens via node labels (Chapter 2)</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>Enable <code>migManager: true</code> in ClusterPolicy even if you are not immediately using MIG. This prepares your platform for future MIG enablement without requiring ClusterPolicy reconfiguration and operator restarts.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_node_status_exporter"><a class="anchor" href="#_node_status_exporter"></a>Node Status Exporter</h4>
+<div class="paragraph">
+<p>The Node Status Exporter monitors GPU node health and publishes status information as Kubernetes Events. This enables kubectl-based troubleshooting without requiring SSH access to nodes or Prometheus queries.</p>
+</div>
+<div class="paragraph">
+<p><strong>Exported Events:</strong></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>GPU hardware errors detected by NVIDIA driver</p>
+</li>
+<li>
+<p>PCI communication failures</p>
+</li>
+<li>
+<p>GPU thermal throttling events</p>
+</li>
+<li>
+<p>Driver initialization failures</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>Viewing GPU Health Events:</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ oc get events -n nvidia-gpu-operator --field-selector type=Warning
+LAST SEEN   TYPE      REASON              OBJECT                MESSAGE
+2m          Warning   GPUThermalThrottle  node/worker-gpu-0     GPU 0 temperature exceeded 85°C</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>ClusterPolicy Configuration:</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">spec:
+  nodeStatusExporter:
+    enabled: true  <i class="conum" data-value="1"></i><b>(1)</b></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Enable for production deployments—critical for kubectl-based GPU troubleshooting</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>Enable <code>nodeStatusExporter: true</code> for production deployments. It exports node-level GPU health to Kubernetes Events, enabling platform administrators to troubleshoot GPU issues with <code>kubectl</code> without requiring direct node access or Prometheus knowledge.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_gpu_sharing_strategies"><a class="anchor" href="#_gpu_sharing_strategies"></a>GPU Sharing Strategies</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Choosing the right GPU sharing strategy is one of the most critical architectural decisions for MaaS platforms. The wrong choice leads to either wasted GPU capacity (underutilization) or unpredictable performance (resource contention). This section compares the three approaches and provides production decision frameworks.</p>
+</div>
+<div class="sect2">
+<h3 id="_three_gpu_sharing_modes"><a class="anchor" href="#_three_gpu_sharing_modes"></a>Three GPU Sharing Modes</h3>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 9.0909%;">
+<col style="width: 18.1818%;">
+<col style="width: 18.1818%;">
+<col style="width: 18.1818%;">
+<col style="width: 18.1818%;">
+<col style="width: 18.1819%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Strategy</th>
+<th class="tableblock halign-left valign-top">Isolation Level</th>
+<th class="tableblock halign-left valign-top">Reconfiguration Impact</th>
+<th class="tableblock halign-left valign-top">Hardware Requirements</th>
+<th class="tableblock halign-left valign-top">Best For</th>
+<th class="tableblock halign-left valign-top">Avoid When</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Full GPU</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Complete hardware isolation, one workload per GPU</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">None—workloads simply request different GPUs</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Any NVIDIA GPU</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Training workloads, &lt;10 inference services, guaranteed performance</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Platform has &gt;70% idle GPU capacity</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Time-Slicing</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Software-level temporal multiplexing, no isolation</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ConfigMap update + device plugin restart (2-3 min), no workload drain required</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Any NVIDIA GPU</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Bursty inference workloads, dev/test environments, non-MIG GPUs (V100/T4/A10)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">SLA-backed production services, predictable latency requirements</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>MIG</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Hardware-level spatial partitioning, guaranteed isolation</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Node drain + driver restart + MIG reconfiguration (10-15 min downtime per node)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Ampere or Hopper only (A30, A100, A100X, H100)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Multi-tenant MaaS platforms, &gt;10 concurrent workloads, SLA guarantees</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Mixed GPU generations (some MIG-capable, some not)</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect2">
+<h3 id="_configuring_time_slicing_software_sharing"><a class="anchor" href="#_configuring_time_slicing_software_sharing"></a>Configuring Time-Slicing (Software Sharing)</h3>
+<div class="paragraph">
+<p>Time-slicing allows multiple pods to share a single GPU by oversubscribing the <code>nvidia.com/gpu</code> resource. The device plugin advertises more GPU resources than physically exist, and the CUDA runtime time-multiplexes access.</p>
+</div>
+<div class="paragraph">
+<p><strong>How Time-Slicing Works:</strong></p>
+</div>
+<div class="paragraph">
+<p>Without time-slicing, a node with 1 GPU advertises <code>nvidia.com/gpu: 1</code>. Only one pod can allocate the GPU. With time-slicing configured as <code>replicas: 4</code>, the device plugin advertises <code>nvidia.com/gpu: 4</code>. Four pods can allocate the resource, sharing GPU access temporally.</p>
+</div>
+<div class="paragraph">
+<p><strong>Configuration via Device Plugin ConfigMap:</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: device-plugin-config
+  namespace: nvidia-gpu-operator
+data:
+  any: |-  <i class="conum" data-value="1"></i><b>(1)</b>
+    version: v1
+    sharing:
+      timeSlicing:
+        replicas: 4  <i class="conum" data-value="2"></i><b>(2)</b>
+        renameByDefault: false  <i class="conum" data-value="3"></i><b>(3)</b></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td><code>any</code> applies to all GPU types; use specific device IDs for heterogeneous configurations</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Advertise each physical GPU as 4 allocatable resources (4x oversubscription)</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>Keep resource name as <code>nvidia.com/gpu</code> (vs. <code>nvidia.com/gpu-shared</code>)</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p><strong>Applying Time-Slicing Configuration:</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Create the ConfigMap
+$ oc apply -f device-plugin-config.yaml
+
+# Update ClusterPolicy to reference the ConfigMap
+$ oc patch clusterpolicy gpu-cluster-policy --type='json' \
+  -p='[{"op": "replace", "path": "/spec/devicePlugin/config/name", \
+       "value": "device-plugin-config"}]'
+
+# Device plugin DaemonSet restarts (2-3 minutes)
+# GPUs are now oversubscribed by 4x</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>Production Time-Slicing Example:</strong></p>
+</div>
+<div class="paragraph">
+<p>A platform team has 3x NVIDIA T4 GPUs (16GB VRAM each) that do not support MIG. They run small BERT-based inference models averaging 2GB VRAM and &lt;10% GPU compute utilization during request processing.</p>
+</div>
+<div class="paragraph">
+<p><strong>Without time-slicing:</strong></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>3 GPUs available</p>
+</li>
+<li>
+<p>3 inference pods (1 per GPU)</p>
+</li>
+<li>
+<p>Average utilization: 20%</p>
+</li>
+<li>
+<p>Wasted capacity: 80%</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>With time-slicing (<code>replicas: 8</code>):</strong></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>3 physical GPUs → 24 advertised GPU resources</p>
+</li>
+<li>
+<p>24 inference pods can run concurrently</p>
+</li>
+<li>
+<p>Average utilization: 75%</p>
+</li>
+<li>
+<p>Wasted capacity: 25%</p>
+</li>
+<li>
+<p><strong>Result:</strong> 8x more concurrent workloads, 3.75x better utilization</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>Time-Slicing Replica Count Decision Matrix:</strong></p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 16.6666%;">
+<col style="width: 50.0001%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Workload Pattern</th>
+<th class="tableblock halign-left valign-top">Replica Count</th>
+<th class="tableblock halign-left valign-top">Expected Utilization Outcome</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Continuous high-compute (&gt;80% GPU usage)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1-2x</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Avoid time-slicing—use full GPU allocation or MIG</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Moderate compute, bursty (30-50% duty cycle)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">4-8x</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">60-80% average utilization, acceptable latency variance</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Low compute, infrequent (&lt;10% duty cycle)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">10-16x</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">85%+ average utilization, high latency variance</p></td>
+</tr>
+</tbody>
+</table>
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-warning" title="Warning"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>Time-slicing provides <strong>NO performance isolation</strong>. A runaway process on one container consuming 100% GPU can starve all other containers sharing the GPU. Use time-slicing only for:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Trusted workloads</strong> where you control all code running on shared GPUs</p>
+</li>
+<li>
+<p><strong>Dev/test environments</strong> where performance unpredictability is acceptable</p>
+</li>
+<li>
+<p><strong>Non-production inference</strong> where SLAs are not enforced</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>Never use time-slicing for:</strong></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>SLA-backed production services</p>
+</li>
+<li>
+<p>Multi-tenant platforms with untrusted workloads</p>
+</li>
+<li>
+<p>Latency-sensitive applications requiring predictable performance</p>
+</li>
+</ul>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>Start with conservative time-slicing ratios (<code>replicas: 2-4</code>) in production. Monitor GPU utilization with DCGM metrics for 2 weeks. If average utilization remains below 50%, incrementally increase replicas. If workloads experience latency variability or timeouts, reduce replicas or migrate to MIG.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_preparing_for_mig_hardware_partitioning"><a class="anchor" href="#_preparing_for_mig_hardware_partitioning"></a>Preparing for MIG (Hardware Partitioning)</h3>
+<div class="paragraph">
+<p>Multi-Instance GPU (MIG) technology partitions a single physical GPU into multiple hardware-isolated GPU instances, each with dedicated compute resources (Streaming Multiprocessors) and memory (framebuffer). MIG is covered comprehensively in Chapter 2—this section introduces concepts and prepares your ClusterPolicy configuration.</p>
+</div>
+<div class="paragraph">
+<p><strong>MIG Advantages Over Time-Slicing:</strong></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Guaranteed isolation:</strong> Each MIG instance has dedicated SMs and VRAM—no resource contention</p>
+</li>
+<li>
+<p><strong>Predictable performance:</strong> Workloads on MIG instances never experience performance variance from co-located workloads</p>
+</li>
+<li>
+<p><strong>QoS guarantees:</strong> Enables SLA-backed inference services on multi-tenant platforms</p>
+</li>
+<li>
+<p><strong>Fault isolation:</strong> Errors in one MIG instance do not affect other instances</p>
+</li>
+<li>
+<p><strong>Higher utilization:</strong> 85-95% average utilization vs. 60-80% with time-slicing</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>MIG Disadvantages:</strong></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Hardware requirement:</strong> Requires Ampere or Hopper architecture (A30, A100, H100)—V100, T4, A10 do not support MIG</p>
+</li>
+<li>
+<p><strong>Reconfiguration downtime:</strong> Changing MIG profiles requires node drain and driver restart (10-15 minutes per node)</p>
+</li>
+<li>
+<p><strong>Fixed partitions:</strong> MIG profiles are predefined (e.g., 1g.10gb, 2g.20gb, 3g.40gb)—cannot create arbitrary partition sizes</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>MIG Partitioning Visualization (A100-40GB):</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>Physical NVIDIA A100-40GB
+├── 40GB VRAM (framebuffer)
+└── 108 Streaming Multiprocessors (SMs)
+
+MIG Profile: all-1g.5gb (homogeneous)
+┌──────────────────────────────────────────────┐
+│ [1g.5gb] [1g.5gb] [1g.5gb] [1g.5gb] [1g.5gb] │
+│ [1g.5gb] [1g.5gb]                            │
+│                                              │
+│ 7 instances, each with:                     │
+│   - 5GB VRAM                                 │
+│   - 14 SMs (~13% compute)                    │
+│   - Advertised as: nvidia.com/mig-1g.5gb     │
+└──────────────────────────────────────────────┘
+
+MIG Profile: mixed (heterogeneous)
+┌──────────────────────────────────────────────┐
+│ [1g.5gb] [1g.5gb] [3g.20gb──────────────]    │
+│                                              │
+│ 3 instances:                                 │
+│   - 2x 1g.5gb (small models, 5GB each)       │
+│   - 1x 3g.20gb (large model, 20GB VRAM)      │
+│   - Flexible allocation for diverse workloads│
+└──────────────────────────────────────────────┘</pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>Production MIG Example:</strong></p>
+</div>
+<div class="paragraph">
+<p>A FinTech MaaS platform serves 15 models:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>10x small models (DistilBERT variants, ~3GB VRAM requirement)</p>
+</li>
+<li>
+<p>5x large models (Llama-2-7B, ~15GB VRAM requirement)</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>MIG Configuration:</strong></p>
+</div>
+<div class="paragraph">
+<p>Configure 5x NVIDIA A100-80GB GPUs with <code>mixed</code> MIG profile:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Each GPU: 3x <code>1g.10gb</code> instances + 1x <code>3g.40gb</code> instance</p>
+</li>
+<li>
+<p>Total capacity: 15x <code>1g.10gb</code> (small) + 5x <code>3g.40gb</code> (large)</p>
+</li>
+<li>
+<p>Perfect fit for 10 small + 5 large models</p>
+</li>
+<li>
+<p>Average utilization: 92%</p>
+</li>
+<li>
+<p><strong>Result:</strong> $200K GPU investment serves 15 concurrent models instead of 5</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>ClusterPolicy MIG Preparation:</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">spec:
+  migManager:
+    enabled: true  <i class="conum" data-value="1"></i><b>(1)</b>
+  gfd:
+    enabled: true  <i class="conum" data-value="2"></i><b>(2)</b></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Enable MIG Manager for profile automation (Chapter 2)</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>GPU Feature Discovery labels MIG instances with profiles</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>MIG configuration via node labels, custom mig-parted configurations, and verification are covered in Chapter 2.</p>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>MIG reconfiguration requires draining GPU workloads and restarting driver pods. Plan MIG profile changes during maintenance windows. Typical downtime: 10-15 minutes per node (drain + driver restart + MIG apply + pod reschedule).</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_production_decision_framework"><a class="anchor" href="#_production_decision_framework"></a>Production Decision Framework</h3>
+<div class="paragraph">
+<p>Use this decision tree to select the optimal GPU sharing strategy for your MaaS platform:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>START: Evaluate GPU Hardware Generation
+│
+├─ GPU is Ampere or Hopper (A30/A100/H100)
+│  │
+│  ├─ Workloads require guaranteed latency/SLAs?
+│  │  ├─ YES → Use MIG (Chapter 2)
+│  │  │        Best utilization + performance guarantees
+│  │  │
+│  │  └─ NO → Workloads are bursty/dev/test?
+│  │     ├─ YES → Use Time-Slicing
+│  │     │        Good utilization, acceptable variance
+│  │     │
+│  │     └─ NO → Use Full GPU Allocation
+│  │              Training or &lt;10 inference services
+│  │
+└─ GPU is Pre-Ampere (V100/T4/A10/A16)
+   │
+   ├─ Workload is production with SLAs?
+   │  ├─ YES → Use Full GPU Allocation
+   │  │        No MIG available, time-slicing too risky
+   │  │
+   │  └─ NO → Use Time-Slicing
+   │           Dev/test/bursty inference acceptable
+   │
+   └─ Platform has &gt;70% idle capacity?
+      └─ YES → Consider upgrading to MIG-capable GPUs
+               ROI payback in 6-12 months via higher utilization</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_integrating_with_openshift_monitoring"><a class="anchor" href="#_integrating_with_openshift_monitoring"></a>Integrating with OpenShift Monitoring</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>GPU telemetry must integrate with OpenShift&#8217;s monitoring stack for unified observability. The DCGM Exporter exposes GPU metrics in Prometheus format, but these metrics are only collected if the GPU Operator namespace is configured for monitoring.</p>
+</div>
+<div class="sect2">
+<h3 id="_dcgm_exporter_and_prometheus_integration"><a class="anchor" href="#_dcgm_exporter_and_prometheus_integration"></a>DCGM Exporter and Prometheus Integration</h3>
+<div class="paragraph">
+<p>OpenShift&#8217;s monitoring stack is based on Prometheus for metric collection and Thanos for long-term storage and federated queries. The DCGM Exporter integrates with this stack via ServiceMonitor resources.</p>
+</div>
+<div class="paragraph">
+<p><strong>Integration Architecture:</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>DCGM Daemon (per GPU node)
+  ↓ collects GPU metrics every 30s
+DCGM Exporter DaemonSet (port 9400/metrics)
+  ↓ exposes Prometheus-format metrics
+ServiceMonitor (nvidia-dcgm-exporter)
+  ↓ discovered by Prometheus Operator
+Prometheus User Workload Monitoring
+  ↓ scrapes endpoints, stores time-series
+Thanos Querier
+  ↓ federated queries, long-term storage
+Grafana (Chapter 3)
+  ↓ visualization and dashboards</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The GPU Operator automatically creates a ServiceMonitor resource when <code>dcgmExporter.enabled: true</code>. However, Prometheus only scrapes ServiceMonitors in namespaces labeled for monitoring.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_enabling_metric_collection"><a class="anchor" href="#_enabling_metric_collection"></a>Enabling Metric Collection</h3>
+<div class="paragraph">
+<p>OpenShift&#8217;s user workload monitoring must be configured to discover ServiceMonitors in the <code>nvidia-gpu-operator</code> namespace.</p>
+</div>
+<div class="paragraph">
+<p><strong>Apply Monitoring Label to Namespace:</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ oc label namespace nvidia-gpu-operator \
+  openshift.io/cluster-monitoring=true</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>Why This Label Matters:</strong></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Without the label: Prometheus ignores ServiceMonitors in the namespace</p>
+</li>
+<li>
+<p>With the label: Prometheus discovers the <code>nvidia-dcgm-exporter</code> ServiceMonitor and begins scraping GPU metrics</p>
+</li>
+<li>
+<p>The label enables user-workload Prometheus to monitor custom applications and operators</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>Verify ServiceMonitor Discovery:</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ oc get servicemonitor -n nvidia-gpu-operator
+NAME                   AGE
+nvidia-dcgm-exporter   5m
+
+$ oc describe servicemonitor nvidia-dcgm-exporter -n nvidia-gpu-operator
+...
+Spec:
+  Endpoints:
+    Port:  gpu-metrics  <i class="conum" data-value="1"></i><b>(1)</b>
+    Path:  /metrics
+  Selector:
+    Match Labels:
+      app:  nvidia-dcgm-exporter</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>DCGM Exporter exposes metrics on port 9400 at <code>/metrics</code> endpoint</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_verifying_metric_availability"><a class="anchor" href="#_verifying_metric_availability"></a>Verifying Metric Availability</h3>
+<div class="paragraph">
+<p>After enabling namespace monitoring, GPU metrics should be available in Prometheus within 30-60 seconds.</p>
+</div>
+<div class="paragraph">
+<p><strong>Query Prometheus for GPU Metrics:</strong></p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Open OpenShift web console</p>
+</li>
+<li>
+<p>Navigate to <strong>Observe → Metrics</strong></p>
+</li>
+<li>
+<p>Enter a DCGM metric query:</p>
+</li>
+</ol>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-promql hljs" data-lang="promql">DCGM_FI_DEV_GPU_UTIL{namespace="nvidia-gpu-operator"}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>Expected Result:</strong></p>
+</div>
+<div class="paragraph">
+<p>You should see time-series data for GPU utilization across all GPU nodes. Each series represents one GPU.</p>
+</div>
+<div class="paragraph">
+<p><strong>Example Metric Queries:</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-promql hljs" data-lang="promql"># GPU utilization percentage
+DCGM_FI_DEV_GPU_UTIL
+
+# GPU memory used (MB)
+DCGM_FI_DEV_FB_USED
+
+# GPU temperature (Celsius)
+DCGM_FI_DEV_GPU_TEMP
+
+# GPU power draw (Watts)
+DCGM_FI_DEV_POWER_USAGE</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>Chapter 3 Integration:</strong></p>
+</div>
+<div class="paragraph">
+<p>In Chapter 3 (Observability), you will create Grafana dashboards that visualize these metrics with:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>GPU utilization heatmaps across the cluster</p>
+</li>
+<li>
+<p>VRAM usage trends over time</p>
+</li>
+<li>
+<p>Power consumption and cost allocation</p>
+</li>
+<li>
+<p>Temperature and thermal throttling alerts</p>
+</li>
+<li>
+<p>Correlation between GPU metrics and inference latency</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>The DCGM Exporter configuration you deployed in this lab is the prerequisite for that observability stack.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_hands_on_deploying_the_gpu_operator_stack"><a class="anchor" href="#_hands_on_deploying_the_gpu_operator_stack"></a>Hands-On: Deploying the GPU Operator Stack</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>This lab deploys the complete GPU Operator stack on your OpenShift cluster. You will install Node Feature Discovery, install the NVIDIA GPU Operator, create a production-ready ClusterPolicy, verify all components, and enable GPU monitoring integration.</p>
+</div>
+<div class="sect2">
+<h3 id="_before_you_begin"><a class="anchor" href="#_before_you_begin"></a>Before You Begin</h3>
 <div class="paragraph">
 <p>This lab requires:</p>
 </div>
 <div class="ulist">
 <ul>
 <li>
-<p>Access to an OpenShift cluster (version 4.10 or higher)</p>
+<p>OpenShift cluster (version 4.12 or higher)</p>
 </li>
 <li>
 <p>Cluster administrator privileges</p>
@@ -184,17 +1564,13 @@
 <p>At least one worker node with NVIDIA GPU hardware</p>
 </li>
 <li>
-<p>The <code>oc</code> CLI tool installed and configured</p>
+<p>The <code>oc</code> CLI tool installed and authenticated</p>
 </li>
 </ul>
 </div>
 </div>
-</div>
-<div class="sect1">
-<h2 id="_instructions"><a class="anchor" href="#_instructions"></a>Instructions</h2>
-<div class="sectionbody">
 <div class="sect2">
-<h3 id="_1_install_the_node_feature_discovery_operator"><a class="anchor" href="#_1_install_the_node_feature_discovery_operator"></a>1. Install the Node Feature Discovery Operator</h3>
+<h3 id="_install_node_feature_discovery_operator"><a class="anchor" href="#_install_node_feature_discovery_operator"></a>Install Node Feature Discovery Operator</h3>
 <div class="paragraph">
 <p>Node Feature Discovery must be installed first as it provides the hardware detection capabilities required by the GPU Operator.</p>
 </div>
@@ -244,15 +1620,21 @@ operatorgroup.operators.coreos.com/nfd-operator-group created
 subscription.operators.coreos.com/nfd created</code></pre>
 </div>
 </div>
+<div class="paragraph">
+<p>This creates the namespace, OperatorGroup, and Subscription for NFD. OLM will now install the operator automatically.</p>
+</div>
 </li>
 <li>
 <p>Wait for the NFD Operator to be ready</p>
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">$ <strong>oc get csv -n openshift-nfd</strong>
-NAME                  DISPLAY                      VERSION   REPLACES   PHASE
-nfd.v4.14.0-202401   Node Feature Discovery       4.14.0               <strong>Succeeded</strong></code></pre>
+NAME                       DISPLAY                      VERSION   REPLACES   PHASE
+nfd.v4.14.0-202401         Node Feature Discovery       4.14.0               <strong>Succeeded</strong></code></pre>
 </div>
+</div>
+<div class="paragraph">
+<p>The <code>Succeeded</code> phase confirms the <a href="s2-operators-overview.html#_clusterserviceversion_csv" class="xref page">ClusterServiceVersion</a> was deployed successfully by OLM.</p>
 </div>
 </li>
 <li>
@@ -281,6 +1663,9 @@ nfd.v4.14.0-202401   Node Feature Discovery       4.14.0               <strong>S
 nodefeaturediscovery.nfd.openshift.io/nfd-instance created</code></pre>
 </div>
 </div>
+<div class="paragraph">
+<p>This NodeFeatureDiscovery Custom Resource activates the operator&#8217;s <a href="s2-operators-overview.html#_controller_the_reconciliation_engine" class="xref page">reconciliation loop</a>. The operator deploys NFD worker DaemonSets that scan the PCI bus for GPU hardware and apply labels.</p>
+</div>
 </li>
 <li>
 <p>Verify NFD is labeling GPU nodes</p>
@@ -292,26 +1677,15 @@ worker-gpu-0.example.com     Ready    worker   5d    v1.27.6+b49f9d1
 worker-gpu-1.example.com     Ready    worker   5d    v1.27.6+b49f9d1</code></pre>
 </div>
 </div>
-<div class="admonitionblock note">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-note" title="Note"></i>
-</td>
-<td class="content">
 <div class="paragraph">
-<p>The label <code>feature.node.kubernetes.io/pci-10de.present=true</code> indicates NVIDIA hardware (vendor ID 10de) was detected on these nodes.</p>
-</div>
-</td>
-</tr>
-</table>
+<p>The label <code>feature.node.kubernetes.io/pci-10de.present=true</code> indicates NVIDIA hardware (PCI vendor ID <code>10de</code>) was detected on these nodes.</p>
 </div>
 </li>
 </ol>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_2_install_the_nvidia_gpu_operator"><a class="anchor" href="#_2_install_the_nvidia_gpu_operator"></a>2. Install the NVIDIA GPU Operator</h3>
+<h3 id="_install_nvidia_gpu_operator"><a class="anchor" href="#_install_nvidia_gpu_operator"></a>Install NVIDIA GPU Operator</h3>
 <div class="paragraph">
 <p>Now that NFD is running and detecting GPU hardware, install the NVIDIA GPU Operator to deploy the complete software stack.</p>
 </div>
@@ -352,30 +1726,36 @@ operatorgroup.operators.coreos.com/nvidia-gpu-operator-group created
 subscription.operators.coreos.com/gpu-operator-certified created</code></pre>
 </div>
 </div>
+<div class="paragraph">
+<p>This Subscription uses <code>channel: "v23.9"</code>, pinning to 23.9.x minor releases only. This prevents unexpected major version upgrades, following the <a href="s2-operators-overview.html#_update_strategies_and_channels" class="xref page">production best practice from Section 2</a>.</p>
+</div>
 </li>
 <li>
 <p>Monitor the operator installation</p>
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">$ <strong>oc get csv -n nvidia-gpu-operator -w</strong>
-NAME                         DISPLAY            VERSION   REPLACES   PHASE
-gpu-operator-certified.v23.9.0   NVIDIA GPU Operator   23.9.0               <strong>Installing</strong>
-gpu-operator-certified.v23.9.0   NVIDIA GPU Operator   23.9.0               <strong>Succeeded</strong></code></pre>
+NAME                               DISPLAY              VERSION   REPLACES   PHASE
+gpu-operator-certified.v23.9.0     NVIDIA GPU Operator  23.9.0               <strong>Installing</strong>
+gpu-operator-certified.v23.9.0     NVIDIA GPU Operator  23.9.0               <strong>Succeeded</strong></code></pre>
 </div>
+</div>
+<div class="paragraph">
+<p>Wait for <code>Succeeded</code> phase before proceeding. This typically takes 60-90 seconds.</p>
 </div>
 </li>
 </ol>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_3_configure_the_clusterpolicy"><a class="anchor" href="#_3_configure_the_clusterpolicy"></a>3. Configure the ClusterPolicy</h3>
+<h3 id="_configure_clusterpolicy_with_production_settings"><a class="anchor" href="#_configure_clusterpolicy_with_production_settings"></a>Configure ClusterPolicy with Production Settings</h3>
 <div class="paragraph">
-<p>The ClusterPolicy custom resource configures how the GPU Operator deploys all stack components.</p>
+<p>The ClusterPolicy Custom Resource configures how the GPU Operator deploys all stack components. This configuration enables all production features: drivers, device plugin, monitoring, GFD, MIG Manager, and node status export.</p>
 </div>
 <div class="olist arabic">
 <ol class="arabic">
 <li>
-<p>Create a customized ClusterPolicy</p>
+<p>Create a production-ready ClusterPolicy</p>
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">$ <strong>cat &lt;&lt;EOF | oc apply -f -</strong>
@@ -393,10 +1773,14 @@ gpu-operator-certified.v23.9.0   NVIDIA GPU Operator   23.9.0               <str
 *    enabled: true*
 *  devicePlugin:*
 *    enabled: true*
+*    config:*
+*      name: ""*
 *  dcgm:*
 *    enabled: true*
 *  dcgmExporter:*
 *    enabled: true*
+*    config:*
+*      name: ""*
 *  gfd:*
 *    enabled: true*
 *  migManager:*
@@ -407,87 +1791,568 @@ gpu-operator-certified.v23.9.0   NVIDIA GPU Operator   23.9.0               <str
 clusterpolicy.nvidia.com/gpu-cluster-policy created</code></pre>
 </div>
 </div>
+<div class="paragraph">
+<p><strong>Configuration Explanation:</strong></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>driver.version: "535.129.03"</code> — Pinned driver version ensures consistency across all GPU nodes</p>
 </li>
 <li>
-<p>Monitor the daemonset pod deployment</p>
+<p><code>devicePlugin.config.name: ""</code> — Default configuration (single GPU allocation per pod); reference a ConfigMap name here for time-slicing</p>
+</li>
+<li>
+<p><code>dcgm.enabled: true</code> — Enables GPU telemetry collection</p>
+</li>
+<li>
+<p><code>dcgmExporter.enabled: true</code> — Exposes metrics to Prometheus (Section 4 integration)</p>
+</li>
+<li>
+<p><code>migManager.enabled: true</code> — Prepares MIG capability for Chapter 2</p>
+</li>
+<li>
+<p><code>nodeStatusExporter.enabled: true</code> — Exports GPU health to Kubernetes Events for kubectl-based troubleshooting</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p>Monitor the DaemonSet pod deployment</p>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">$ <strong>oc get pods -n nvidia-gpu-operator</strong>
-NAME                                       READY   STATUS    RESTARTS   AGE
-gpu-feature-discovery-xxxxx                1/1     Running   0          2m
-gpu-operator-xxxxx                         1/1     Running   0          5m
-nvidia-container-toolkit-daemonset-xxxxx   1/1     Running   0          3m
-nvidia-dcgm-exporter-xxxxx                 1/1     Running   0          2m
-nvidia-dcgm-xxxxx                          1/1     Running   0          2m
-nvidia-driver-daemonset-xxxxx              1/1     Running   0          4m
-nvidia-device-plugin-daemonset-xxxxx       1/1     Running   0          2m
-nvidia-operator-validator-xxxxx            1/1     Running   0          1m</code></pre>
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">$ <strong>oc get pods -n nvidia-gpu-operator -w</strong>
+NAME                                       READY   STATUS              RESTARTS   AGE
+gpu-feature-discovery-xxxxx                0/1     ContainerCreating   0          15s
+gpu-operator-xxxxx                         1/1     Running             0          2m
+nvidia-container-toolkit-daemonset-xxxxx   0/1     ContainerCreating   0          20s
+nvidia-dcgm-exporter-xxxxx                 0/1     Pending             0          10s
+nvidia-dcgm-xxxxx                          0/1     Pending             0          10s
+nvidia-driver-daemonset-xxxxx              0/2     ContainerCreating   0          30s
+nvidia-device-plugin-daemonset-xxxxx       0/1     Pending             0          5s
+nvidia-operator-validator-xxxxx            0/1     Pending             0          5s</code></pre>
 </div>
 </div>
-<div class="admonitionblock note">
+<div class="paragraph">
+<p>Wait for all pods to reach <code>Running</code> status. The driver DaemonSet takes 3-4 minutes on first deployment (compiling drivers for host kernel).</p>
+</div>
+</li>
+</ol>
+</div>
+<div class="admonitionblock warning">
 <table>
 <tr>
 <td class="icon">
-<i class="fa icon-note" title="Note"></i>
+<i class="fa icon-warning" title="Warning"></i>
 </td>
 <td class="content">
 <div class="paragraph">
-<p>All daemonset pods should reach <code>Running</code> status. The driver installation may take several minutes on first deployment.</p>
+<p>Driver pod startup takes 3-4 minutes on first deployment. Do not delete pods during <code>ContainerCreating</code> status or you will reset the installation timer. The driver container must compile kernel modules for the host OS, which requires time.</p>
 </div>
 </td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_verify_complete_stack_deployment"><a class="anchor" href="#_verify_complete_stack_deployment"></a>Verify Complete Stack Deployment</h3>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Check that all DaemonSets are healthy</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">$ <strong>oc get ds -n nvidia-gpu-operator</strong>
+NAME                               DESIRED   CURRENT   READY   UP-TO-DATE   AVAILABLE
+gpu-feature-discovery              2         2         2       2            2
+nvidia-container-toolkit-daemonset 2         2         2       2            2
+nvidia-dcgm                        2         2         2       2            2
+nvidia-dcgm-exporter               2         2         2       2            2
+nvidia-device-plugin-daemonset     2         2         2       2            2
+nvidia-driver-daemonset            2         2         2       2            2
+nvidia-mig-manager                 0         0         0       0            0  <i class="conum" data-value="1"></i><b>(1)</b>
+nvidia-node-status-exporter        2         2         2       2            2</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>MIG Manager shows 0/0 until MIG profiles are applied via node labels (Chapter 2)</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>All DaemonSets should show <code>DESIRED == CURRENT == READY</code>. The <code>nvidia-mig-manager</code> DaemonSet shows 0/0 because no nodes have MIG configuration labels yet.</p>
+</div>
+</li>
+<li>
+<p>Verify GPU resources are advertised on nodes</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">$ <strong>oc describe node worker-gpu-0.example.com | grep nvidia.com/gpu</strong>
+  nvidia.com/gpu:     2
+  nvidia.com/gpu:     2
+  nvidia.com/gpu:     0  <i class="conum" data-value="1"></i><b>(1)</b></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Capacity: 2, Allocatable: 2, Allocated: 0 (no GPU workloads running yet)</td>
+</tr>
+</table>
+</div>
+</li>
+<li>
+<p>View detailed GPU capabilities via GFD labels</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">$ <strong>oc get node worker-gpu-0.example.com -o json | \</strong>
+  <strong>jq '.metadata.labels | with_entries(select(.key | contains("nvidia")))'</strong>
+{
+  "nvidia.com/cuda.driver.major": "535",
+  "nvidia.com/cuda.driver.minor": "129",
+  "nvidia.com/cuda.runtime.major": "12",
+  "nvidia.com/cuda.runtime.minor": "2",
+  "nvidia.com/gpu.count": "2",
+  "nvidia.com/gpu.family": "ampere",
+  "nvidia.com/gpu.memory": "40960",
+  "nvidia.com/gpu.product": "A100-PCIE-40GB",
+  "nvidia.com/mig.capable": "true"
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>These labels were applied by GPU Feature Discovery and enable intelligent workload placement as shown in Section 2.</p>
+</div>
+</li>
+<li>
+<p>Monitor ClusterPolicy reconciliation status</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">$ <strong>oc get clusterpolicy -o yaml | grep -A 20 status</strong>
+status:
+  conditions:
+  - lastTransitionTime: "2024-04-11T14:23:45Z"
+    status: "True"
+    type: Ready
+  state: ready  <i class="conum" data-value="1"></i><b>(1)</b></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td><code>state: ready</code> confirms all components are successfully reconciled</td>
 </tr>
 </table>
 </div>
 </li>
 </ol>
 </div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>Monitor ClusterPolicy status with <code>oc get clusterpolicy -o jsonpath='{.items[0].status.state}'</code>. The <code>ready</code> state confirms all components are reconciled. If state is <code>notReady</code>, check <code>oc get pods -n nvidia-gpu-operator</code> for failed pods.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
 </div>
 <div class="sect2">
-<h3 id="_4_verify_gpu_resources"><a class="anchor" href="#_4_verify_gpu_resources"></a>4. Verify GPU Resources</h3>
+<h3 id="_enable_gpu_monitoring_integration"><a class="anchor" href="#_enable_gpu_monitoring_integration"></a>Enable GPU Monitoring Integration</h3>
+<div class="paragraph">
+<p>Apply the namespace monitoring label to enable Prometheus scraping of DCGM Exporter metrics.</p>
+</div>
 <div class="olist arabic">
 <ol class="arabic">
 <li>
-<p>Check that GPU resources are now allocatable on nodes</p>
+<p>Label the namespace for cluster monitoring</p>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">$ <strong>oc describe node worker-gpu-0.example.com | grep nvidia.com/gpu</strong>
-  nvidia.com/gpu:     1
-  nvidia.com/gpu:     1
-  nvidia.com/gpu:     0</code></pre>
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">$ <strong>oc label namespace nvidia-gpu-operator \</strong>
+  <strong>openshift.io/cluster-monitoring=true</strong>
+namespace/nvidia-gpu-operator labeled</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This label enables OpenShift&#8217;s user workload Prometheus to discover the <code>nvidia-dcgm-exporter</code> ServiceMonitor.</p>
+</div>
+</li>
+<li>
+<p>Verify ServiceMonitor is discovered</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">$ <strong>oc get servicemonitor -n nvidia-gpu-operator</strong>
+NAME                   AGE
+nvidia-dcgm-exporter   5m</code></pre>
 </div>
 </div>
 </li>
 <li>
-<p>View detailed GPU capabilities via node labels</p>
+<p>Test metric availability in Prometheus</p>
+<div class="openblock">
+<div class="content">
+<div class="olist loweralpha">
+<ol class="loweralpha" type="a">
+<li>
+<p>Open the OpenShift web console</p>
+</li>
+<li>
+<p>Navigate to <strong>Observe → Metrics</strong></p>
+</li>
+<li>
+<p>Enter the following query:</p>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">$ <strong>oc get node worker-gpu-0.example.com -o json | jq '.metadata.labels | with_entries(select(.key | contains("nvidia")))'</strong>
-{
-  "nvidia.com/cuda.driver.major": "535",
-  "nvidia.com/cuda.driver.minor": "129",
-  "nvidia.com/cuda.runtime.major": "12",
-  "nvidia.com/cuda.runtime.minor": "2",
-  "nvidia.com/gpu.count": "1",
-  "nvidia.com/gpu.family": "ampere",
-  "nvidia.com/gpu.memory": "40960",
-  "nvidia.com/gpu.product": "A100-PCIE-40GB"
-}</code></pre>
+<pre class="highlightjs highlight"><code class="language-promql hljs" data-lang="promql">DCGM_FI_DEV_GPU_UTIL{namespace="nvidia-gpu-operator"}</code></pre>
+</div>
+</div>
+</li>
+<li>
+<p>Click <strong>Run Queries</strong></p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p><strong>Expected Result:</strong> You should see time-series data for GPU utilization across all GPU nodes.</p>
+</div>
 </div>
 </div>
 </li>
 </ol>
 </div>
 <div class="paragraph">
-<p>You have successfully deployed the complete NVIDIA GPU Operator stack including Node Feature Discovery, GPU drivers, container toolkit, device plugin, GPU Feature Discovery, and DCGM monitoring components. Your OpenShift cluster can now schedule and run GPU-accelerated workloads.</p>
+<p>You have successfully deployed the complete NVIDIA GPU Operator stack including Node Feature Discovery, GPU drivers, container toolkit, device plugin, GPU Feature Discovery, DCGM monitoring, DCGM Exporter, MIG Manager (prepared), and node status exporter. Your OpenShift cluster can now schedule GPU-accelerated workloads with automated driver management, self-healing components, and comprehensive monitoring.</p>
 </div>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_whats_next"><a class="anchor" href="#_whats_next"></a>What&#8217;s next</h2>
+<h2 id="_production_operational_considerations"><a class="anchor" href="#_production_operational_considerations"></a>Production Operational Considerations</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>In the next chapter, you will learn how to configure Multi-Instance GPU (MIG) partitioning to maximize GPU utilization by splitting physical GPUs into multiple isolated instances for concurrent MaaS workloads.</p>
+<p>After deployment, understanding Day 2 operations is critical for maintaining a production MaaS platform. GPU platform changes have different impacts on workload availability, and choosing the right maintenance windows prevents service disruptions.</p>
+</div>
+<div class="sect2">
+<h3 id="_day_2_operations_reconfiguration_impact"><a class="anchor" href="#_day_2_operations_reconfiguration_impact"></a>Day 2 Operations: Reconfiguration Impact</h3>
+<div class="paragraph">
+<p>Different ClusterPolicy changes trigger different levels of disruption. Plan changes according to platform SLAs and traffic patterns.</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 28.5714%;">
+<col style="width: 14.2857%;">
+<col style="width: 28.5714%;">
+<col style="width: 28.5715%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Configuration Change</th>
+<th class="tableblock halign-left valign-top">Pod Restarts Required</th>
+<th class="tableblock halign-left valign-top">Workload Downtime</th>
+<th class="tableblock halign-left valign-top">Recommended Change Window</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Add new GPU node to cluster</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">No</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">None—new capacity is added online</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Anytime</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Driver version upgrade (<code>driver.version</code>)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Yes—driver DaemonSet pods restart</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">5-8 minutes per node (rolling restart)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Maintenance window</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Enable time-slicing (add <code>devicePlugin.config.name</code>)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Yes—device plugin DaemonSet restarts</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2-3 minutes (device plugin restart)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Low-traffic period</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Change MIG profile (node label)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Yes—full node drain required, driver restart</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">10-15 minutes per node (drain + reconfigure)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Maintenance window</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Update DCGM configuration</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Yes—DCGM pods restart</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1-2 minutes (monitoring gap only)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Anytime</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Add/remove GPU node label</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">No—scheduler updates routing</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">None—gradual workload migration</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Anytime</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p><strong>Example: Driver Version Upgrade Workflow</strong></p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Update ClusterPolicy with new driver version:</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ oc patch clusterpolicy gpu-cluster-policy --type='json' \
+  -p='[{"op": "replace", "path": "/spec/driver/version", \
+       "value": "535.161.07"}]'</code></pre>
+</div>
+</div>
+</li>
+<li>
+<p>Driver DaemonSet performs rolling restart (one node at a time)</p>
+</li>
+<li>
+<p>Each node experiences 5-8 minutes of GPU unavailability during driver reload</p>
+</li>
+<li>
+<p>Total platform downtime: 0 (rolling restart) if you have &gt;1 GPU node</p>
+</li>
+<li>
+<p>Total time for 10-node cluster: ~60 minutes (rolling)</p>
+</li>
+</ol>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>Always test driver upgrades in a dev environment first. While NVIDIA maintains backward compatibility, specific CUDA workloads may have version sensitivities. Validate inference services, training jobs, and custom CUDA code against the new driver before upgrading production.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_workload_placement_best_practices"><a class="anchor" href="#_workload_placement_best_practices"></a>Workload Placement Best Practices</h3>
+<div class="paragraph">
+<p>Use GPU Feature Discovery labels to ensure workloads land on appropriate GPU hardware.</p>
+</div>
+<div class="paragraph">
+<p><strong>Example 1: Target specific GPU models for large LLMs</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">apiVersion: v1
+kind: Pod
+metadata:
+  name: llama-70b-inference
+spec:
+  containers:
+  - name: vllm-server
+    image: vllm/vllm-openai:latest
+    resources:
+      limits:
+        nvidia.com/gpu: 1
+  nodeSelector:
+    nvidia.com/gpu.product: "A100-PCIE-40GB"  <i class="conum" data-value="1"></i><b>(1)</b>
+    nvidia.com/gpu.memory: "40960"  <i class="conum" data-value="2"></i><b>(2)</b></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Only schedule on A100 GPUs (not T4 or V100)</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Require 40GB VRAM minimum</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p><strong>Example 2: Ensure MIG capability for future flexibility</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">apiVersion: v1
+kind: Pod
+metadata:
+  name: multi-tenant-inference
+spec:
+  containers:
+  - name: inference-service
+    image: inference:latest
+    resources:
+      limits:
+        nvidia.com/gpu: 1
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: nvidia.com/mig.capable
+            operator: In
+            values: ["true"]  <i class="conum" data-value="1"></i><b>(1)</b></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Only schedule on MIG-capable GPUs even if MIG is not currently enabled—allows future migration to MIG without workload changes</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_monitoring_operator_health"><a class="anchor" href="#_monitoring_operator_health"></a>Monitoring Operator Health</h3>
+<div class="paragraph">
+<p>Production platforms require proactive operator health monitoring. These commands should be integrated into platform monitoring dashboards and alerting systems.</p>
+</div>
+<div class="paragraph">
+<p><strong>Check ClusterPolicy reconciliation state:</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ oc get clusterpolicy -o jsonpath='{.items[0].status.state}'
+ready  <i class="conum" data-value="1"></i><b>(1)</b></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Expected: <code>ready</code>—if <code>notReady</code>, investigate pod status</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p><strong>Verify all DaemonSets are healthy:</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ oc get ds -n nvidia-gpu-operator
+NAME                               DESIRED   CURRENT   READY
+gpu-feature-discovery              2         2         2
+nvidia-driver-daemonset            2         2         2
+nvidia-device-plugin-daemonset     2         2         2
+# All other DaemonSets...
+
+# DESIRED == CURRENT == READY for all DaemonSets</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>Check for GPU node errors and warnings:</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ oc get events -n nvidia-gpu-operator \
+  --field-selector type=Warning \
+  --sort-by='.lastTimestamp'</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>Monitor GPU resource availability:</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ oc get nodes -l nvidia.com/gpu.present=true \
+  -o custom-columns=\
+NODE:.metadata.name,\
+GPU_CAPACITY:.status.capacity.nvidia\\.com/gpu,\
+GPU_ALLOCATABLE:.status.allocatable.nvidia\\.com/gpu,\
+GPU_ALLOCATED:.status.allocated.nvidia\\.com/gpu</code></pre>
+</div>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>For multi-cluster MaaS platforms, pin all clusters to identical GPU Operator and driver versions. Version drift causes workload portability issues (models tested on one cluster may fail on another) and complicates troubleshooting. Use GitOps tools (ArgoCD, Flux) to enforce consistent ClusterPolicy configurations across clusters.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_whats_next"><a class="anchor" href="#_whats_next"></a>What&#8217;s Next</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>You now have a production-ready GPU platform with automated lifecycle management, telemetry collection, and flexible resource sharing capabilities. The GPU Operator continuously maintains your desired state, self-heals from failures, and exposes comprehensive GPU metrics to OpenShift monitoring.</p>
+</div>
+<div class="paragraph">
+<p><strong>In Chapter 2</strong>, you will configure Multi-Instance GPU (MIG) partitioning to maximize hardware ROI. You will:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Apply MIG profiles to GPU nodes using declarative labels</p>
+</li>
+<li>
+<p>Create custom <code>mig-parted</code> configurations for heterogeneous workloads (mixed small and large model serving)</p>
+</li>
+<li>
+<p>Verify MIG instances are exposed as allocatable Kubernetes resources (<code>nvidia.com/mig-1g.10gb</code>, <code>nvidia.com/mig-3g.40gb</code>)</p>
+</li>
+<li>
+<p>Deploy inference services that request specific MIG profiles</p>
+</li>
+<li>
+<p>Monitor MIG instance utilization and reconfigure profiles based on workload demand</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>This enables running 7x more concurrent inference workloads on the same A100 hardware investment, transforming a 10-GPU cluster serving 10 models into a platform serving 70+ models with guaranteed performance isolation.</p>
+</div>
+<div class="paragraph">
+<p><strong>In Chapter 3</strong>, you will build comprehensive GPU observability by deploying Grafana and creating custom dashboards for DCGM metrics. You will:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Deploy the Grafana Operator and configure data sources</p>
+</li>
+<li>
+<p>Import NVIDIA GPU telemetry dashboards</p>
+</li>
+<li>
+<p>Create custom dashboards correlating GPU metrics with application performance</p>
+</li>
+<li>
+<p>Configure alerts for GPU thermal throttling, memory exhaustion, and utilization anomalies</p>
+</li>
+<li>
+<p>Use observability data for proactive capacity planning and cost optimization</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>This visibility enables data-driven decisions about GPU sharing strategies, capacity planning, and SLA compliance verification.</p>
+</div>
+<div class="paragraph">
+<p>The ClusterPolicy configuration you deployed in this lab includes <code>migManager: enabled</code> and <code>dcgmExporter: enabled</code>, preparing your platform for these advanced capabilities without requiring reconfiguration.</p>
 </div>
 </div>
 </div>
