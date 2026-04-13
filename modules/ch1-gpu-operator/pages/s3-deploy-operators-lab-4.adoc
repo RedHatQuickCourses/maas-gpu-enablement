@@ -1,0 +1,559 @@
+:time_estimate: 28
+
+= Hands-On: Deploying the GPU Operator Stack
+
+[WARNING]
+====
+This lab in a work in progress. The content is being developed and may contain placeholders, incomplete information. Please refer to the final version for the complete lab experience.
+====
+
+_Estimated reading time: *{time_estimate} minutes*._
+
+This lab deploys the complete GPU Operator stack on your OpenShift cluster. You will install Node Feature Discovery, install the NVIDIA GPU Operator, create a production-ready ClusterPolicy, verify all components, and enable GPU monitoring integration.
+
+=== Before You Begin
+
+This lab requires:
+
+* OpenShift cluster (version 4.12 or higher)
+* Cluster administrator privileges
+* At least one worker node with NVIDIA GPU hardware
+* The `oc` CLI tool installed and authenticated
+
+=== Install Node Feature Discovery Operator
+
+Node Feature Discovery must be installed first as it provides the hardware detection capabilities required by the GPU Operator.
+
+. Log in to your OpenShift cluster as a cluster administrator
++
+[source,console,subs="verbatim,quotes"]
+----
+$ *oc login -u admin https://api.cluster.example.com:6443*
+Login successful.
+----
+
+. Create the Node Feature Discovery Operator subscription
++
+[source,console,subs="verbatim,quotes"]
+----
+$ *cat <<EOF | oc apply -f -*
+*apiVersion: v1*
+*kind: Namespace*
+*metadata:*
+*  name: openshift-nfd*
+*---*
+*apiVersion: operators.coreos.com/v1*
+*kind: OperatorGroup*
+*metadata:*
+*  name: nfd-operator-group*
+*  namespace: openshift-nfd*
+*spec:*
+*  targetNamespaces:*
+*  - openshift-nfd*
+*---*
+*apiVersion: operators.coreos.com/v1alpha1*
+*kind: Subscription*
+*metadata:*
+*  name: nfd*
+*  namespace: openshift-nfd*
+*spec:*
+*  channel: "stable"*
+*  name: nfd*
+*  source: redhat-operators*
+*  sourceNamespace: openshift-marketplace*
+*EOF*
+namespace/openshift-nfd created
+operatorgroup.operators.coreos.com/nfd-operator-group created
+subscription.operators.coreos.com/nfd created
+----
++
+This creates the namespace, OperatorGroup, and Subscription for NFD. OLM will now install the operator automatically.
+
+. Wait for the NFD Operator to be ready
++
+[source,console,subs="verbatim,quotes"]
+----
+$ *oc get csv -n openshift-nfd*
+NAME                       DISPLAY                      VERSION   REPLACES   PHASE
+nfd.v4.14.0-202401         Node Feature Discovery       4.14.0               *Succeeded*
+----
++
+The `Succeeded` phase confirms the xref:s2-operators-overview.adoc#_clusterserviceversion_csv[ClusterServiceVersion] was deployed successfully by OLM.
+
+. Create the NodeFeatureDiscovery instance
++
+[source,console,subs="verbatim,quotes"]
+----
+$ *cat <<EOF | oc apply -f -*
+*apiVersion: nfd.openshift.io/v1*
+*kind: NodeFeatureDiscovery*
+*metadata:*
+*  name: nfd-instance*
+*  namespace: openshift-nfd*
+*spec:*
+*  operand:*
+*    image: registry.redhat.io/openshift4/ose-node-feature-discovery:v4.14*
+*  workerConfig:*
+*    configData: |*
+*      sources:*
+*        pci:*
+*          deviceClassWhitelist:*
+*            - "0300"*
+*            - "0302"*
+*          deviceLabelFields:*
+*            - "vendor"*
+*EOF*
+nodefeaturediscovery.nfd.openshift.io/nfd-instance created
+----
++
+This NodeFeatureDiscovery Custom Resource activates the operator's xref:s2-operators-overview.adoc#_controller_the_reconciliation_engine[reconciliation loop]. The operator deploys NFD worker DaemonSets that scan the PCI bus for GPU hardware and apply labels.
+
+. Verify NFD is labeling GPU nodes
++
+[source,console,subs="verbatim,quotes"]
+----
+$ *oc get nodes -l feature.node.kubernetes.io/pci-10de.present=true*
+NAME                         STATUS   ROLES    AGE   VERSION
+worker-gpu-0.example.com     Ready    worker   5d    v1.27.6+b49f9d1
+worker-gpu-1.example.com     Ready    worker   5d    v1.27.6+b49f9d1
+----
++
+The label `feature.node.kubernetes.io/pci-10de.present=true` indicates NVIDIA hardware (PCI vendor ID `10de`) was detected on these nodes.
+
+=== Install NVIDIA GPU Operator
+
+Now that NFD is running and detecting GPU hardware, install the NVIDIA GPU Operator to deploy the complete software stack.
+
+. Create the namespace and operator subscription
++
+[source,console,subs="verbatim,quotes"]
+----
+$ *cat <<EOF | oc apply -f -*
+*apiVersion: v1*
+*kind: Namespace*
+*metadata:*
+*  name: nvidia-gpu-operator*
+*---*
+*apiVersion: operators.coreos.com/v1*
+*kind: OperatorGroup*
+*metadata:*
+*  name: nvidia-gpu-operator-group*
+*  namespace: nvidia-gpu-operator*
+*spec:*
+*  targetNamespaces:*
+*  - nvidia-gpu-operator*
+*---*
+*apiVersion: operators.coreos.com/v1alpha1*
+*kind: Subscription*
+*metadata:*
+*  name: gpu-operator-certified*
+*  namespace: nvidia-gpu-operator*
+*spec:*
+*  channel: "v23.9"*
+*  name: gpu-operator-certified*
+*  source: certified-operators*
+*  sourceNamespace: openshift-marketplace*
+*EOF*
+namespace/nvidia-gpu-operator created
+operatorgroup.operators.coreos.com/nvidia-gpu-operator-group created
+subscription.operators.coreos.com/gpu-operator-certified created
+----
++
+This Subscription uses `channel: "v23.9"`, pinning to 23.9.x minor releases only. This prevents unexpected major version upgrades, following the xref:s2-operators-overview.adoc#_update_strategies_and_channels[production best practice from Section 2].
+
+. Monitor the operator installation
++
+[source,console,subs="verbatim,quotes"]
+----
+$ *oc get csv -n nvidia-gpu-operator -w*
+NAME                               DISPLAY              VERSION   REPLACES   PHASE
+gpu-operator-certified.v23.9.0     NVIDIA GPU Operator  23.9.0               *Installing*
+gpu-operator-certified.v23.9.0     NVIDIA GPU Operator  23.9.0               *Succeeded*
+----
++
+Wait for `Succeeded` phase before proceeding. This typically takes 60-90 seconds.
+
+=== Configure ClusterPolicy with Production Settings
+
+The ClusterPolicy Custom Resource configures how the GPU Operator deploys all stack components. This configuration enables all production features: drivers, device plugin, monitoring, GFD, MIG Manager, and node status export.
+
+. Create a production-ready ClusterPolicy
++
+[source,console,subs="verbatim,quotes"]
+----
+$ *cat <<EOF | oc apply -f -*
+*apiVersion: nvidia.com/v1*
+*kind: ClusterPolicy*
+*metadata:*
+*  name: gpu-cluster-policy*
+*spec:*
+*  operator:*
+*    defaultRuntime: crio*
+*  driver:*
+*    enabled: true*
+*    version: "535.129.03"*
+*  toolkit:*
+*    enabled: true*
+*  devicePlugin:*
+*    enabled: true*
+*    config:*
+*      name: ""*
+*  dcgm:*
+*    enabled: true*
+*  dcgmExporter:*
+*    enabled: true*
+*    config:*
+*      name: ""*
+*  gfd:*
+*    enabled: true*
+*  migManager:*
+*    enabled: true*
+*  nodeStatusExporter:*
+*    enabled: true*
+*EOF*
+clusterpolicy.nvidia.com/gpu-cluster-policy created
+----
++
+**Configuration Explanation:**
++
+* `driver.version: "535.129.03"` — Pinned driver version ensures consistency across all GPU nodes
+* `devicePlugin.config.name: ""` — Default configuration (single GPU allocation per pod); reference a ConfigMap name here for time-slicing
+* `dcgm.enabled: true` — Enables GPU telemetry collection
+* `dcgmExporter.enabled: true` — Exposes metrics to Prometheus (Section 4 integration)
+* `migManager.enabled: true` — Prepares MIG capability for Chapter 2
+* `nodeStatusExporter.enabled: true` — Exports GPU health to Kubernetes Events for kubectl-based troubleshooting
+
+. Monitor the DaemonSet pod deployment
++
+[source,console,subs="verbatim,quotes"]
+----
+$ *oc get pods -n nvidia-gpu-operator -w*
+NAME                                       READY   STATUS              RESTARTS   AGE
+gpu-feature-discovery-xxxxx                0/1     ContainerCreating   0          15s
+gpu-operator-xxxxx                         1/1     Running             0          2m
+nvidia-container-toolkit-daemonset-xxxxx   0/1     ContainerCreating   0          20s
+nvidia-dcgm-exporter-xxxxx                 0/1     Pending             0          10s
+nvidia-dcgm-xxxxx                          0/1     Pending             0          10s
+nvidia-driver-daemonset-xxxxx              0/2     ContainerCreating   0          30s
+nvidia-device-plugin-daemonset-xxxxx       0/1     Pending             0          5s
+nvidia-operator-validator-xxxxx            0/1     Pending             0          5s
+----
++
+Wait for all pods to reach `Running` status. The driver DaemonSet takes 3-4 minutes on first deployment (compiling drivers for host kernel).
+
+[WARNING]
+====
+Driver pod startup takes 3-4 minutes on first deployment. Do not delete pods during `ContainerCreating` status or you will reset the installation timer. The driver container must compile kernel modules for the host OS, which requires time.
+====
+
+=== Verify Complete Stack Deployment
+
+. Check that all DaemonSets are healthy
++
+[source,console,subs="verbatim,quotes"]
+----
+$ *oc get ds -n nvidia-gpu-operator*
+NAME                               DESIRED   CURRENT   READY   UP-TO-DATE   AVAILABLE
+gpu-feature-discovery              2         2         2       2            2
+nvidia-container-toolkit-daemonset 2         2         2       2            2
+nvidia-dcgm                        2         2         2       2            2
+nvidia-dcgm-exporter               2         2         2       2            2
+nvidia-device-plugin-daemonset     2         2         2       2            2
+nvidia-driver-daemonset            2         2         2       2            2
+nvidia-mig-manager                 0         0         0       0            0  # <1>
+nvidia-node-status-exporter        2         2         2       2            2
+----
++
+<1> MIG Manager shows 0/0 until MIG profiles are applied via node labels (Chapter 2)
++
+All DaemonSets should show `DESIRED == CURRENT == READY`. The `nvidia-mig-manager` DaemonSet shows 0/0 because no nodes have MIG configuration labels yet.
+
+. Verify GPU resources are advertised on nodes
++
+[source,console,subs="verbatim,quotes"]
+----
+$ *oc describe node worker-gpu-0.example.com | grep nvidia.com/gpu*
+  nvidia.com/gpu:     2
+  nvidia.com/gpu:     2
+  nvidia.com/gpu:     0  # <1>
+----
++
+<1> Capacity: 2, Allocatable: 2, Allocated: 0 (no GPU workloads running yet)
+
+. View detailed GPU capabilities via GFD labels
++
+[source,console,subs="verbatim,quotes"]
+----
+$ *oc get node worker-gpu-0.example.com -o json | \*
+  *jq '.metadata.labels | with_entries(select(.key | contains("nvidia")))'*
+{
+  "nvidia.com/cuda.driver.major": "535",
+  "nvidia.com/cuda.driver.minor": "129",
+  "nvidia.com/cuda.runtime.major": "12",
+  "nvidia.com/cuda.runtime.minor": "2",
+  "nvidia.com/gpu.count": "2",
+  "nvidia.com/gpu.family": "ampere",
+  "nvidia.com/gpu.memory": "40960",
+  "nvidia.com/gpu.product": "A100-PCIE-40GB",
+  "nvidia.com/mig.capable": "true"
+}
+----
++
+These labels were applied by GPU Feature Discovery and enable intelligent workload placement as shown in Section 2.
+
+. Monitor ClusterPolicy reconciliation status
++
+[source,console,subs="verbatim,quotes"]
+----
+$ *oc get clusterpolicy -o yaml | grep -A 20 status*
+status:
+  conditions:
+  - lastTransitionTime: "2024-04-11T14:23:45Z"
+    status: "True"
+    type: Ready
+  state: ready  # <1>
+----
++
+<1> `state: ready` confirms all components are successfully reconciled
+
+[TIP]
+====
+Monitor ClusterPolicy status with `oc get clusterpolicy -o jsonpath='{.items[0].status.state}'`. The `ready` state confirms all components are reconciled. If state is `notReady`, check `oc get pods -n nvidia-gpu-operator` for failed pods.
+====
+
+=== Enable GPU Monitoring Integration
+
+Apply the namespace monitoring label to enable Prometheus scraping of DCGM Exporter metrics.
+
+. Label the namespace for cluster monitoring
++
+[source,console,subs="verbatim,quotes"]
+----
+$ *oc label namespace nvidia-gpu-operator \*
+  *openshift.io/cluster-monitoring=true*
+namespace/nvidia-gpu-operator labeled
+----
++
+This label enables OpenShift's user workload Prometheus to discover the `nvidia-dcgm-exporter` ServiceMonitor.
+
+. Verify ServiceMonitor is discovered
++
+[source,console,subs="verbatim,quotes"]
+----
+$ *oc get servicemonitor -n nvidia-gpu-operator*
+NAME                   AGE
+nvidia-dcgm-exporter   5m
+----
+
+. Test metric availability in Prometheus
++
+--
+.. Open the OpenShift web console
+.. Navigate to **Observe → Metrics**
+.. Enter the following query:
++
+[source,promql]
+----
+DCGM_FI_DEV_GPU_UTIL{namespace="nvidia-gpu-operator"}
+----
+.. Click **Run Queries**
+
+**Expected Result:** You should see time-series data for GPU utilization across all GPU nodes.
+--
+
+You have successfully deployed the complete NVIDIA GPU Operator stack including Node Feature Discovery, GPU drivers, container toolkit, device plugin, GPU Feature Discovery, DCGM monitoring, DCGM Exporter, MIG Manager (prepared), and node status exporter. Your OpenShift cluster can now schedule GPU-accelerated workloads with automated driver management, self-healing components, and comprehensive monitoring.
+
+== Production Operational Considerations
+
+After deployment, understanding Day 2 operations is critical for maintaining a production MaaS platform. GPU platform changes have different impacts on workload availability, and choosing the right maintenance windows prevents service disruptions.
+
+=== Day 2 Operations: Reconfiguration Impact
+
+Different ClusterPolicy changes trigger different levels of disruption. Plan changes according to platform SLAs and traffic patterns.
+
+[cols="2,1,2,2",options="header"]
+|===
+|Configuration Change |Pod Restarts Required |Workload Downtime |Recommended Change Window
+
+|Add new GPU node to cluster
+|No
+|None—new capacity is added online
+|Anytime
+
+|Driver version upgrade (`driver.version`)
+|Yes—driver DaemonSet pods restart
+|5-8 minutes per node (rolling restart)
+|Maintenance window
+
+|Enable time-slicing (add `devicePlugin.config.name`)
+|Yes—device plugin DaemonSet restarts
+|2-3 minutes (device plugin restart)
+|Low-traffic period
+
+|Change MIG profile (node label)
+|Yes—full node drain required, driver restart
+|10-15 minutes per node (drain + reconfigure)
+|Maintenance window
+
+|Update DCGM configuration
+|Yes—DCGM pods restart
+|1-2 minutes (monitoring gap only)
+|Anytime
+
+|Add/remove GPU node label
+|No—scheduler updates routing
+|None—gradual workload migration
+|Anytime
+|===
+
+**Example: Driver Version Upgrade Workflow**
+
+. Update ClusterPolicy with new driver version:
++
+[source,bash]
+----
+$ oc patch clusterpolicy gpu-cluster-policy --type='json' \
+  -p='[{"op": "replace", "path": "/spec/driver/version", \
+       "value": "535.161.07"}]'
+----
+
+. Driver DaemonSet performs rolling restart (one node at a time)
+. Each node experiences 5-8 minutes of GPU unavailability during driver reload
+. Total platform downtime: 0 (rolling restart) if you have >1 GPU node
+. Total time for 10-node cluster: ~60 minutes (rolling)
+
+[IMPORTANT]
+====
+Always test driver upgrades in a dev environment first. While NVIDIA maintains backward compatibility, specific CUDA workloads may have version sensitivities. Validate inference services, training jobs, and custom CUDA code against the new driver before upgrading production.
+====
+
+=== Workload Placement Best Practices
+
+Use GPU Feature Discovery labels to ensure workloads land on appropriate GPU hardware.
+
+**Example 1: Target specific GPU models for large LLMs**
+
+[source,yaml]
+----
+apiVersion: v1
+kind: Pod
+metadata:
+  name: llama-70b-inference
+spec:
+  containers:
+  - name: vllm-server
+    image: vllm/vllm-openai:latest
+    resources:
+      limits:
+        nvidia.com/gpu: 1
+  nodeSelector:
+    nvidia.com/gpu.product: "A100-PCIE-40GB"  # <1>
+    nvidia.com/gpu.memory: "40960"  # <2>
+----
+<1> Only schedule on A100 GPUs (not T4 or V100)
+<2> Require 40GB VRAM minimum
+
+**Example 2: Ensure MIG capability for future flexibility**
+
+[source,yaml]
+----
+apiVersion: v1
+kind: Pod
+metadata:
+  name: multi-tenant-inference
+spec:
+  containers:
+  - name: inference-service
+    image: inference:latest
+    resources:
+      limits:
+        nvidia.com/gpu: 1
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: nvidia.com/mig.capable
+            operator: In
+            values: ["true"]  # <1>
+----
+<1> Only schedule on MIG-capable GPUs even if MIG is not currently enabled—allows future migration to MIG without workload changes
+
+=== Monitoring Operator Health
+
+Production platforms require proactive operator health monitoring. These commands should be integrated into platform monitoring dashboards and alerting systems.
+
+**Check ClusterPolicy reconciliation state:**
+
+[source,bash]
+----
+$ oc get clusterpolicy -o jsonpath='{.items[0].status.state}'
+ready  # <1>
+----
+<1> Expected: `ready`—if `notReady`, investigate pod status
+
+**Verify all DaemonSets are healthy:**
+
+[source,bash]
+----
+$ oc get ds -n nvidia-gpu-operator
+NAME                               DESIRED   CURRENT   READY
+gpu-feature-discovery              2         2         2
+nvidia-driver-daemonset            2         2         2
+nvidia-device-plugin-daemonset     2         2         2
+# All other DaemonSets...
+
+# DESIRED == CURRENT == READY for all DaemonSets
+----
+
+**Check for GPU node errors and warnings:**
+
+[source,bash]
+----
+$ oc get events -n nvidia-gpu-operator \
+  --field-selector type=Warning \
+  --sort-by='.lastTimestamp'
+----
+
+**Monitor GPU resource availability:**
+
+[source,bash]
+----
+$ oc get nodes -l nvidia.com/gpu.present=true \
+  -o custom-columns=\
+NODE:.metadata.name,\
+GPU_CAPACITY:.status.capacity.nvidia\\.com/gpu,\
+GPU_ALLOCATABLE:.status.allocatable.nvidia\\.com/gpu,\
+GPU_ALLOCATED:.status.allocated.nvidia\\.com/gpu
+----
+
+[TIP]
+====
+For multi-cluster MaaS platforms, pin all clusters to identical GPU Operator and driver versions. Version drift causes workload portability issues (models tested on one cluster may fail on another) and complicates troubleshooting. Use GitOps tools (ArgoCD, Flux) to enforce consistent ClusterPolicy configurations across clusters.
+====
+
+== What's Next
+
+You now have a production-ready GPU platform with automated lifecycle management, telemetry collection, and flexible resource sharing capabilities. The GPU Operator continuously maintains your desired state, self-heals from failures, and exposes comprehensive GPU metrics to OpenShift monitoring.
+
+**In Chapter 2**, you will configure Multi-Instance GPU (MIG) partitioning to maximize hardware ROI. You will:
+
+* Apply MIG profiles to GPU nodes using declarative labels
+* Create custom `mig-parted` configurations for heterogeneous workloads (mixed small and large model serving)
+* Verify MIG instances are exposed as allocatable Kubernetes resources (`nvidia.com/mig-1g.10gb`, `nvidia.com/mig-3g.40gb`)
+* Deploy inference services that request specific MIG profiles
+* Monitor MIG instance utilization and reconfigure profiles based on workload demand
+
+This enables running 7x more concurrent inference workloads on the same A100 hardware investment, transforming a 10-GPU cluster serving 10 models into a platform serving 70+ models with guaranteed performance isolation.
+
+**In Chapter 3**, you will build comprehensive GPU observability by deploying Grafana and creating custom dashboards for DCGM metrics. You will:
+
+* Deploy the Grafana Operator and configure data sources
+* Import NVIDIA GPU telemetry dashboards
+* Create custom dashboards correlating GPU metrics with application performance
+* Configure alerts for GPU thermal throttling, memory exhaustion, and utilization anomalies
+* Use observability data for proactive capacity planning and cost optimization
+
+This visibility enables data-driven decisions about GPU sharing strategies, capacity planning, and SLA compliance verification.
+
+The ClusterPolicy configuration you deployed in this lab includes `migManager: enabled` and `dcgmExporter: enabled`, preparing your platform for these advanced capabilities without requiring reconfiguration.

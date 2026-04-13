@@ -1,3 +1,7 @@
 * xref:index.adoc[]
 ** xref:s1-mig-overview.adoc[]
-** xref:s2-mig-slicing-lab.adoc[]
+*** xref:s1-mig-overview-2.adoc[]
+*** xref:s1-mig-overview-3.adoc[]
+*** xref:s1-mig-overview-4.adoc[]
+*** xref:s1-mig-overview.adoc[]
+*** xref:s2-mig-slicing-lab.adoc[]

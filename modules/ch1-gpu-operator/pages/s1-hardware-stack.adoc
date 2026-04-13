@@ -1,85 +1,174 @@
 :time_estimate: 15
 
-= Deconstructing the Hardware Stack
+= Deconstructing MaaS Operator Stack
 
 _Estimated reading time: *{time_estimate} minutes*._
 
-Objective::
 
-Understand the "GPU Silo" crisis and how the NVIDIA GPU Operator automates the management of NVIDIA software components. Learn the core components that power the GPU stack and their roles in enabling GPU workloads on OpenShift.
+== The Three-Layer MaaS Operator Stack
 
-== The GPU Silo Crisis
+A production Models-as-a-Service platform requires orchestrating dozens of operators across three functional layers. Red Hat OpenShift AI provides this orchestration.
 
-Organizations investing in GPU infrastructure often face the "GPU Silo" problem where expensive GPU hardware remains underutilized due to complex manual configuration, dependency management, and operational overhead. The NVIDIA GPU Operator addresses this challenge by automating the deployment and lifecycle management of all necessary GPU software components.
+=== Layer 1: Core & Infrastructure Operators
 
+**Purpose:** Enable hardware detection and GPU software stack automation
 
-== Core Components of the GPU Stack
+**Operators in this layer:**
 
-The NVIDIA GPU Operator orchestrates several critical components that work together to enable GPU acceleration in containerized environments:
+* **Node Feature Discovery (NFD)**
+  ** Scans node hardware via PCI bus
+  ** Labels nodes with detected capabilities
+  ** Namespace: `openshift-nfd`
+  ** Catalog: `redhat-operators`
 
-=== Node Feature Discovery (NFD) Operator Dependency
+* **NVIDIA GPU Operator**
+  ** Deploys GPU drivers as containers
+  ** Installs NVIDIA Container Toolkit
+  ** Manages device plugin for GPU resource allocation
+  ** Deploys DCGM for monitoring
+  ** Namespace: `nvidia-gpu-operator`
+  ** Catalog: `certified-operators`
 
-Node Feature Discovery scans the node's hardware via PCI IDs and applies Kubernetes labels to nodes where GPU hardware is detected. This enables the OpenShift scheduler to intelligently place GPU workloads on nodes with the appropriate hardware capabilities.
+**Activation:**
 
-Key responsibilities:
+[source,yaml]
+----
+# NFD activation
+apiVersion: nfd.openshift.io/v1
+kind: NodeFeatureDiscovery
+metadata:
+  name: nfd-instance
+  namespace: openshift-nfd
 
- * Hardware detection via PCI bus scanning
- * Automatic node labeling based on discovered features
- * Integration with Kubernetes scheduler for GPU-aware placement
- 
- 
-=== NVIDIA Driver Container
+# GPU Operator activation
+apiVersion: nvidia.com/v1
+kind: ClusterPolicy
+metadata:
+  name: gpu-cluster-policy
+----
 
-The NVIDIA Driver Container deploys necessary GPU drivers directly via containers, eliminating the need to manually install kernel modules on the host operating system. This containerized approach provides:
+**You will deploy this layer in the upcoming lab.**
 
- * Simplified driver management and updates
- * Consistent driver versions across the cluster
- * Isolation from host OS dependencies
- * Automated driver installation during node provisioning
+---
 
-=== NVIDIA Container Toolkit
+=== Layer 2: Operators for Inference at Scale
 
-The NVIDIA Container Toolkit plugs into the OpenShift container runtime (CRI-O) to ensure pods can securely request and access underlying GPU hardware. It provides:
+**Purpose:** Provide production-grade MaaS capabilities like certificate management, rate limiting, workload queueing, and distributed training.
 
- * Runtime integration for GPU resource allocation
- * Secure GPU device passthrough to containers
- * Environment configuration for CUDA applications
- * Resource isolation between containerized workloads
+**Operators in this layer:**
 
-=== GPU Feature Discovery (GFD)
+* **Cert-manager**
+  ** Automates TLS certificate issuance and renewal
+  ** Integrates with Let's Encrypt and internal CAs
+  ** Namespace: `cert-manager`
+  ** Required for secure inference endpoints
 
-GPU Feature Discovery gathers granular hardware capabilities including GPU model, VRAM size, and MIG profiles, then applies them as specific node labels. This detailed hardware inventory enables:
+* **Connectivity Link (or Kuadrant)**
+  ** Rate limiting for inference requests
+  ** Authentication and authorization policies
+  ** API gateway capabilities
+  ** Namespace: `kuadrant-system`
 
- * Fine-grained workload placement decisions
- * MIG-aware scheduling
- * Hardware capability matching for specific workloads
- * Resource inventory and capacity planning
+* **LeaderWorkerSet**
+  ** Orchestrates distributed training jobs
+  ** Leader/worker pod coordination
+  ** Namespace: Workload-specific
 
-=== Data Center GPU Manager (DCGM)
+* **Kueue**
+  ** Workload queueing and quota management
+  ** Fair sharing of GPU resources across teams
+  ** Namespace: `kueue-system`
+  ** Critical for multi-tenant MaaS platforms
 
-DCGM is a daemon that continuously monitors GPU health, diagnostics, and telemetry. It provides:
+**Activation:** Each operator has its own Custom Resource for configuration.
 
- * Real-time GPU health monitoring
- * Performance metrics collection
- * Diagnostic capabilities for troubleshooting
- * Integration with cluster monitoring systems
+---
 
-=== DCGM Exporter
+=== Layer 3: Red Hat OpenShift AI Orchestration
 
-The DCGM Exporter extracts metrics from DCGM and formats them for Prometheus scraping, enabling integration with OpenShift's monitoring stack. This component bridges GPU telemetry with cloud-native observability platforms.
+**Purpose:** Coordinate the complete MaaS ecosystem with unified configuration and dependency management.
 
-== Architecture Overview
+**Red Hat OpenShift AI Operator:**
 
-Together, these components form a complete GPU enablement stack:
+* **Single control point** for MaaS platform lifecycle
+* **Manages Layer 2 operator dependencies** automatically
+* **Unified configuration** via DataScienceCluster Custom Resource
+* **Coordinates upgrades** across the operator suite
+* **Namespace:** `redhat-ods-operator`
+* **Catalog:** `redhat-operators`
 
-1. **NFD** detects GPU hardware presence
-2. **Driver Container** installs required drivers
-3. **Container Toolkit** enables runtime GPU access
-4. **GFD** advertises detailed GPU capabilities
-5. **DCGM** monitors GPU health and performance
-6. **DCGM Exporter** publishes metrics for observability
+**DataScienceCluster CR Example:**
 
-This automated approach transforms GPU infrastructure from manually-managed silos into a fully integrated, cloud-native compute resource suitable for Models-as-a-Service deployments at scale.
+[source,yaml]
+----
+apiVersion: datasciencecluster.opendatahub.io/v1
+kind: DataScienceCluster
+metadata:
+  name: default-dsc
+spec:
+  components:
+    kueue:
+      managementState: Unmanaged  # <1>
+    kserve:
+      managementState: Managed  # <2>
+    dashboard:
+      managementState: Managed
+----
+<1> OpenShift AI hands-off queueing to the Red Hat Kueue operator
+<2> OpenShift AI automatically installs and manages KServe operator
+
+**Key benefit:** Instead of manually installing 10+ operators, you install OpenShift AI once, and it orchestrates the dependencies.
+
+=== How the Layers Work Together
+
+**Example: Deploying an InferenceService**
+
+[source,yaml]
+----
+apiVersion: serving.kserve.io/v1beta1
+kind: InferenceService
+metadata:
+  name: llama-3-8b
+spec:
+  predictor:
+    model:
+      modelFormat: vllm
+      runtime: vllm-runtime
+    resources:
+      limits:
+        nvidia.com/gpu: 1  # <1>
+----
+<1> Request GPU resource
+
+**Workflow across three layers:**
+
+1. **Layer 3 (OpenShift AI):** Receives InferenceService creation request
+2. **Layer 2 (Kueue):** Queues workload if GPUs unavailable, enforces quota
+3. **Layer 2 (KServe):** Creates inference deployment pods
+4. **Layer 1 (GPU Operator):** Kubernetes scheduler finds GPU node (via NFD labels), device plugin allocates GPU to pod, DCGM monitors GPU telemetry
+5. **Layer 2 (Cert-manager):** Issues TLS certificate for inference endpoint
+6. **Layer 2 (Kuadrant):** Applies rate limiting policies
+
+All three layers coordinate to deliver a production-ready inference service with security, monitoring, and resource management.
+
+----
+┌─────────────────────────────────────────────────┐
+│  Layer 3: Red Hat OpenShift AI Orchestration    │
+│  (DataScienceCluster coordinates dependencies)  │
+└─────────────────────────────────────────────────┘
+                      ↓
+┌─────────────────────────────────────────────────┐
+│  Layer 2: Operators for Inference at Scale      │
+│  (Kueue, KServe, Cert-manager, Kuadrant)        │
+└─────────────────────────────────────────────────┘
+                      ↓
+┌─────────────────────────────────────────────────┐
+│  Layer 1: Core & Infrastructure Operators       │
+│  (NFD, NVIDIA GPU Operator)                     │
+└─────────────────────────────────────────────────┘
+                      ↓
+             GPU Hardware
+----
 
 == What's Next
 

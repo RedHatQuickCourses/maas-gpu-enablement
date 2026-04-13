@@ -1,0 +1,198 @@
+:time_estimate: 28
+
+= Production Operational Considerations
+
+_Estimated reading time: *{time_estimate} minutes*._
+
+After deployment, understanding Day 2 operations is critical for maintaining a production MaaS platform. GPU platform changes have different impacts on workload availability, and choosing the right maintenance windows prevents service disruptions.
+
+== Day 2 Operations: Reconfiguration Impact
+
+Different ClusterPolicy changes trigger different levels of disruption. Plan changes according to platform SLAs and traffic patterns.
+
+[cols="2,1,2,2",options="header"]
+|===
+|Configuration Change |Pod Restarts Required |Workload Downtime |Recommended Change Window
+
+|Add new GPU node to cluster
+|No
+|None—new capacity is added online
+|Anytime
+
+|Driver version upgrade (`driver.version`)
+|Yes—driver DaemonSet pods restart
+|5-8 minutes per node (rolling restart)
+|Maintenance window
+
+|Enable time-slicing (add `devicePlugin.config.name`)
+|Yes—device plugin DaemonSet restarts
+|2-3 minutes (device plugin restart)
+|Low-traffic period
+
+|Change MIG profile (node label)
+|Yes—full node drain required, driver restart
+|10-15 minutes per node (drain + reconfigure)
+|Maintenance window
+
+|Update DCGM configuration
+|Yes—DCGM pods restart
+|1-2 minutes (monitoring gap only)
+|Anytime
+
+|Add/remove GPU node label
+|No—scheduler updates routing
+|None—gradual workload migration
+|Anytime
+|===
+
+**Example: Driver Version Upgrade Workflow**
+
+. Update ClusterPolicy with new driver version:
++
+[source,bash]
+----
+$ oc patch clusterpolicy gpu-cluster-policy --type='json' \
+  -p='[{"op": "replace", "path": "/spec/driver/version", \
+       "value": "535.161.07"}]'
+----
+
+. Driver DaemonSet performs rolling restart (one node at a time)
+. Each node experiences 5-8 minutes of GPU unavailability during driver reload
+. Total platform downtime: 0 (rolling restart) if you have >1 GPU node
+. Total time for 10-node cluster: ~60 minutes (rolling)
+
+[IMPORTANT]
+====
+Always test driver upgrades in a dev environment first. While NVIDIA maintains backward compatibility, specific CUDA workloads may have version sensitivities. Validate inference services, training jobs, and custom CUDA code against the new driver before upgrading production.
+====
+
+== Workload Placement Best Practices
+
+Use GPU Feature Discovery labels to ensure workloads land on appropriate GPU hardware.
+
+**Example 1: Target specific GPU models for large LLMs**
+
+[source,yaml]
+----
+apiVersion: v1
+kind: Pod
+metadata:
+  name: llama-70b-inference
+spec:
+  containers:
+  - name: vllm-server
+    image: vllm/vllm-openai:latest
+    resources:
+      limits:
+        nvidia.com/gpu: 1
+  nodeSelector:
+    nvidia.com/gpu.product: "A100-PCIE-40GB"  # <1>
+    nvidia.com/gpu.memory: "40960"  # <2>
+----
+<1> Only schedule on A100 GPUs (not T4 or V100)
+<2> Require 40GB VRAM minimum
+
+**Example 2: Ensure MIG capability for future flexibility**
+
+[source,yaml]
+----
+apiVersion: v1
+kind: Pod
+metadata:
+  name: multi-tenant-inference
+spec:
+  containers:
+  - name: inference-service
+    image: inference:latest
+    resources:
+      limits:
+        nvidia.com/gpu: 1
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: nvidia.com/mig.capable
+            operator: In
+            values: ["true"]  # <1>
+----
+<1> Only schedule on MIG-capable GPUs even if MIG is not currently enabled—allows future migration to MIG without workload changes
+
+=== Monitoring Operator Health
+
+Production platforms require proactive operator health monitoring. These commands should be integrated into platform monitoring dashboards and alerting systems.
+
+**Check ClusterPolicy reconciliation state:**
+
+[source,bash]
+----
+$ oc get clusterpolicy -o jsonpath='{.items[0].status.state}'
+ready  # <1>
+----
+<1> Expected: `ready`—if `notReady`, investigate pod status
+
+**Verify all DaemonSets are healthy:**
+
+[source,bash]
+----
+$ oc get ds -n nvidia-gpu-operator
+NAME                               DESIRED   CURRENT   READY
+gpu-feature-discovery              2         2         2
+nvidia-driver-daemonset            2         2         2
+nvidia-device-plugin-daemonset     2         2         2
+# All other DaemonSets...
+
+# DESIRED == CURRENT == READY for all DaemonSets
+----
+
+**Check for GPU node errors and warnings:**
+
+[source,bash]
+----
+$ oc get events -n nvidia-gpu-operator \
+  --field-selector type=Warning \
+  --sort-by='.lastTimestamp'
+----
+
+**Monitor GPU resource availability:**
+
+[source,bash]
+----
+$ oc get nodes -l nvidia.com/gpu.present=true \
+  -o custom-columns=\
+NODE:.metadata.name,\
+GPU_CAPACITY:.status.capacity.nvidia\\.com/gpu,\
+GPU_ALLOCATABLE:.status.allocatable.nvidia\\.com/gpu,\
+GPU_ALLOCATED:.status.allocated.nvidia\\.com/gpu
+----
+
+[TIP]
+====
+For multi-cluster MaaS platforms, pin all clusters to identical GPU Operator and driver versions. Version drift causes workload portability issues (models tested on one cluster may fail on another) and complicates troubleshooting. Use GitOps tools (ArgoCD, Flux) to enforce consistent ClusterPolicy configurations across clusters.
+====
+
+== What's Next
+
+You now have a production-ready GPU platform with automated lifecycle management, telemetry collection, and flexible resource sharing capabilities. The GPU Operator continuously maintains your desired state, self-heals from failures, and exposes comprehensive GPU metrics to OpenShift monitoring.
+
+**In Chapter 2**, you will configure Multi-Instance GPU (MIG) partitioning to maximize hardware ROI. You will:
+
+* Apply MIG profiles to GPU nodes using declarative labels
+* Create custom `mig-parted` configurations for heterogeneous workloads (mixed small and large model serving)
+* Verify MIG instances are exposed as allocatable Kubernetes resources (`nvidia.com/mig-1g.10gb`, `nvidia.com/mig-3g.40gb`)
+* Deploy inference services that request specific MIG profiles
+* Monitor MIG instance utilization and reconfigure profiles based on workload demand
+
+This enables running 7x more concurrent inference workloads on the same A100 hardware investment, transforming a 10-GPU cluster serving 10 models into a platform serving 70+ models with guaranteed performance isolation.
+
+**In Chapter 3**, you will build comprehensive GPU observability by deploying Grafana and creating custom dashboards for DCGM metrics. You will:
+
+* Deploy the Grafana Operator and configure data sources
+* Import NVIDIA GPU telemetry dashboards
+* Create custom dashboards correlating GPU metrics with application performance
+* Configure alerts for GPU thermal throttling, memory exhaustion, and utilization anomalies
+* Use observability data for proactive capacity planning and cost optimization
+
+This visibility enables data-driven decisions about GPU sharing strategies, capacity planning, and SLA compliance verification.
+
+The ClusterPolicy configuration you deployed in this lab includes `migManager: enabled` and `dcgmExporter: enabled`, preparing your platform for these advanced capabilities without requiring reconfiguration.
