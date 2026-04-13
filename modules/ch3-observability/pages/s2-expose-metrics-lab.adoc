@@ -4,6 +4,11 @@
 
 _Estimated reading time: *{time_estimate} minutes*._
 
+[WARNING]
+====
+This lab in a work in progress. The content is being developed and may contain placeholders, incomplete information. Please refer to the final version for the complete lab experience.
+====
+
 Objective::
 
 Enable OpenShift user-workload monitoring by modifying the cluster-monitoring-config ConfigMap, and label the GPU Operator namespace to expose GPU telemetry for Prometheus scraping via the NVIDIA DCGM Exporter.
