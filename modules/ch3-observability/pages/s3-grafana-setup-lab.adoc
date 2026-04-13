@@ -4,6 +4,11 @@
 
 _Estimated reading time: *{time_estimate} minutes*._
 
+[WARNING]
+====
+This lab in a work in progress. The content is being developed and may contain placeholders, incomplete information. Please refer to the final version for the complete lab experience.
+====
+
 Objective::
 
 Install the Grafana Operator from OperatorHub, create a Grafana instance Custom Resource, and set up secure access to cluster metrics by creating a ServiceAccount with cluster-monitoring-view permissions and configuring a GrafanaDatasource pointing to the Thanos Querier endpoint.

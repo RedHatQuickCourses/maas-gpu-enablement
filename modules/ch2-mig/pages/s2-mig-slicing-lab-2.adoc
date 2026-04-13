@@ -1,0 +1,225 @@
+:time_estimate: 45
+
+= Troubleshooting Common Issues
+
+_Estimated reading time: *{time_estimate} minutes*._
+
+=== MIG Configuration Not Applied After 20 Minutes
+
+**Symptom:** After labeling node, `oc describe node` still shows `nvidia.com/gpu: X` instead of `nvidia.com/mig-*` resources
+
+**Diagnosis Steps:**
+
+. Verify node label was applied correctly
++
+[source,bash]
+----
+$ oc get node worker-gpu-0.example.com -o jsonpath='{.metadata.labels.nvidia\.com/mig\.config}'
+all-1g.5gb
+----
++
+If output is empty, the label wasn't applied. Re-apply with `--overwrite` flag.
+
+. Check MIG Manager logs for errors
++
+[source,bash]
+----
+$ oc logs -n nvidia-gpu-operator -l app=nvidia-mig-manager --tail=50
+----
++
+Look for:
+* `level=error` messages indicating validation failures
+* `MIG configuration complete` success message
+* `Applying MIG configuration` followed by profile name
+
+. Check MIG configuration state label
++
+[source,bash]
+----
+$ oc get node worker-gpu-0.example.com -o jsonpath='{.metadata.labels.nvidia\.com/mig\.config\.state}'
+success
+----
++
+Possible states:
+* `success`: MIG Manager completed configuration ✅
+* `pending`: Reconfiguration in progress (wait 10-20 min)
+* `failed`: Error occurred, check MIG Manager logs ❌
+
+. Verify GPU supports MIG mode
++
+[source,bash]
+----
+$ oc debug node/worker-gpu-0.example.com
+sh-4.4# chroot /host
+sh-4.4# nvidia-smi -i 0 --query-gpu=mig.mode.current --format=csv
+mig.mode.current
+Enabled
+----
++
+If shows `Disabled` after 20 minutes, GPU may not support MIG or MIG Manager failed to enable it.
+
+=== Custom ConfigMap Not Recognized
+
+**Symptom:** After creating custom ConfigMap and patching ClusterPolicy, custom profiles not available
+
+**Solution:**
+
+. Verify ConfigMap exists in correct namespace
++
+[source,bash]
+----
+$ oc get configmap -n nvidia-gpu-operator custom-mig-parted-config
+NAME                        DATA   AGE
+custom-mig-parted-config    1      5m
+----
+
+. Verify ConfigMap is referenced in ClusterPolicy
++
+[source,bash]
+----
+$ oc get clusterpolicy gpu-cluster-policy -o jsonpath='{.spec.migManager.config.name}'
+custom-mig-parted-config
+----
++
+If output is empty, the patch didn't apply. Re-run `oc patch clusterpolicy` command.
+
+. Restart MIG Manager pods to pick up new ConfigMap
++
+[source,bash]
+----
+$ oc delete pods -n nvidia-gpu-operator -l app=nvidia-mig-manager
+pod "nvidia-mig-manager-xxxxx" deleted
+----
++
+Pods will automatically recreate and load new ConfigMap.
+
+=== Pod Scheduling Fails: "Insufficient nvidia.com/mig-X"
+
+**Symptom:** Pod stuck in `Pending` state with event:
+
+----
+0/3 nodes are available: 3 Insufficient nvidia.com/mig-2g.10gb.
+----
+
+**Root Causes and Solutions:**
+
+**Cause 1: Nodes have different MIG profile**
+
+. Check what profiles are available on nodes
++
+[source,bash]
+----
+$ oc get nodes -o custom-columns=NAME:.metadata.name,MIG-1G:.status.allocatable.nvidia\\.com/mig-1g\\.5gb,MIG-2G:.status.allocatable.nvidia\\.com/mig-2g\\.10gb
+NAME                       MIG-1G   MIG-2G
+worker-gpu-0.example.com   7        <none>
+worker-gpu-1.example.com   <none>   3
+----
++
+**Solution**: Either:
+* Update pod resource request to match available profile (`nvidia.com/mig-1g.5gb: 1`)
+* Relabel node to desired profile (triggers 10-20 min reconfiguration)
+* Add nodeSelector to target specific node with correct profile
+
+**Cause 2: All MIG instances already allocated**
+
+. Check if MIG instances are exhausted
++
+[source,bash]
+----
+$ oc describe node worker-gpu-0.example.com | grep -A 2 "Allocated resources:"
+Allocated resources:
+  nvidia.com/mig-1g.5gb:  7  (100% of capacity)
+----
++
+**Solution**: Either:
+* Wait for running pods to complete and release instances
+* Add more GPU nodes to cluster
+* Scale down lower-priority workloads
+
+**Cause 3: Using single strategy with profile-specific request**
+
+If ClusterPolicy has `mig.strategy: single`, pods must request `nvidia.com/gpu: 1`, NOT `nvidia.com/mig-*`.
+
+. Check MIG strategy
++
+[source,bash]
+----
+$ oc get clusterpolicy gpu-cluster-policy -o jsonpath='{.spec.mig.strategy}'
+single
+----
++
+**Solution**: Change pod resource request from `nvidia.com/mig-2g.10gb: 1` to `nvidia.com/gpu: 1`
+
+=== MIG Reconfiguration Takes Longer Than 20 Minutes
+
+**Symptom:** Node labeled 30+ minutes ago but `mig.config.state` still shows `pending`
+
+**Diagnosis:**
+
+. Check if node has running GPU workloads
++
+[source,bash]
+----
+$ oc get pods --all-namespaces -o wide | grep worker-gpu-0.example.com | grep -E "nvidia.com/(gpu|mig)"
+----
++
+If GPU workloads are running, MIG Manager cannot reconfigure until they terminate.
+
+. Drain node to evict GPU workloads
++
+[source,bash]
+----
+$ oc adm drain worker-gpu-0.example.com --ignore-daemonsets --delete-emptydir-data
+----
++
+Wait for pod eviction (5-10 minutes), then check `mig.config.state` again.
+
+. Check MIG Manager pod status
++
+[source,bash]
+----
+$ oc get pods -n nvidia-gpu-operator -l app=nvidia-mig-manager
+NAME                         READY   STATUS    RESTARTS   AGE
+nvidia-mig-manager-xxxxx     1/1     Running   3          45m
+----
++
+If `RESTARTS > 0` and increasing, check logs for crash loop:
++
+[source,bash]
+----
+$ oc logs -n nvidia-gpu-operator -l app=nvidia-mig-manager --previous
+----
+
+=== Verification: nvidia-smi Shows Different Instance Count Than Expected
+
+**Symptom:** Applied `all-1g.5gb` expecting 7 instances but `nvidia-smi -L` shows 3 instances
+
+**Possible Causes:**
+
+1. **Node has A100-80GB instead of A100-40GB**: Profile `all-1g.5gb` doesn't exist for 80GB model
+   - **Solution**: Use `all-1g.10gb` for A100-80GB GPUs
+
+2. **Custom ConfigMap overriding built-in profile**: Your ConfigMap may define `all-1g.5gb` differently
+   - **Solution**: Check ConfigMap content, remove custom definition to use auto-generated profile
+
+3. **MIG reconfiguration incomplete**: Device Plugin hasn't updated yet
+   - **Solution**: Wait full 20 minutes, check `nvidia.com/mig.config.state=success`
+
+== What's next
+
+In the next chapter, you will build a comprehensive observability stack by enabling OpenShift user-workload monitoring, exposing GPU metrics via DCGM Exporter, deploying the Grafana Operator, and creating custom dashboards to visualize **per-MIG-instance** telemetry alongside platform metrics.
+
+**Chapter 3 Preview**: You'll learn to:
+
+* Monitor individual MIG instance utilization (compute %, memory usage)
+* Correlate MIG instance metrics with pod resource requests
+* Create alerts for MIG instance oversubscription or underutilization
+* Visualize the ROI gains from MIG partitioning (utilization improvement from 33% to 78%)
+* Track MIG reconfiguration events and their impact on workload SLAs
+
+The observability stack validates the performance isolation and resource efficiency benefits you configured in this lab.
+
+////
+**MIG Slicing:**
+Update node labels to apply a MIG partitioning profile (e.g., `nvidia.com/mig.config=all-1g.10gb`). Create a custom `mig-parted` config resource file for specific hardware deployments. Verify that the sliced MIG instances are exposed as allocatable resources on the node.
+////
