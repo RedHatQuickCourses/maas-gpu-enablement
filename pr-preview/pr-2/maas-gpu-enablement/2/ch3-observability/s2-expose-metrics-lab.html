@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Lab: Exposing GPU Metrics :: Nvidia Accelerator Configuration for Scale</title>
+    <link rel="prev" href="s1-observability-stack.html">
+    <link rel="next" href="s3-grafana-setup-lab.html">
+    <meta name="generator" content="Antora 3.1.3">
+    <link rel="stylesheet" href="../../../_/css/site.css">
+    <script>var uiRootPath = '../../../_'</script>
+  </head>
+  <body class="article">
+<header class="header">
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="https://www.redhat.com" target="_blank"><img src="../../../_/img/redhat-logo.png" height="40px" alt="Red Hat"></a>
+      <a class="navbar-item" style="font-size: 24px; color: white" href="../../..">Nvidia Accelerator Configuration for Scale</a>
+      <button class="navbar-burger" data-target="topbar-nav">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+    <div id="topbar-nav" class="navbar-menu">
+      <div class="navbar-end">
+        <a class="navbar-item" href="https://github.com/RedHatQuickCourses/REPLACEREPONAME/issues" target="_blank">Report Issues</a>
+      </div>
+    </div>
+  </nav>
+</header>
+<div class="body">
+<div class="nav-container" data-component="maas-gpu-enablement" data-version="2">
+  <aside class="nav">
+    <div class="panels">
+<div class="nav-panel-menu is-active" data-panel="menu">
+  <nav class="nav-menu">
+    <h3 class="title"><a href="../index.html">Nvidia Accelerator Configuration for Scale</a></h3>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../index.html">Home</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../LABENV/index.html">Lab Environment</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../ch1-gpu-operator/index.html">Operator Foundations and GPU Stack Deployment</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../ch1-gpu-operator/s1-hardware-stack.html">Deconstructing MaaS Operator Stack</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="../ch1-gpu-operator/s2-operators-overview.html">Understanding Operators and Platform Automation</a>
+  </li>
+  <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="../ch1-gpu-operator/s2-operators-overview-2.html">Custom Resources and Controllers</a>
+  </li>
+  <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="../ch1-gpu-operator/s2-operators-overview-3.html">Namespace Organization and Self-Healing</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../ch1-gpu-operator/s3-deploy-operators-lab.html">GPU Operator Features and Platform Deployment</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="../ch1-gpu-operator/s3-deploy-operators-lab-1.html">The GPU Underutilization Problem</a>
+  </li>
+  <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="../ch1-gpu-operator/s3-deploy-operators-lab-2.html">ClusterPolicy as the Control Plane</a>
+  </li>
+  <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="../ch1-gpu-operator/s3-deploy-operators-lab-3.html">Integrating with OpenShift Monitoring</a>
+  </li>
+  <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="../ch1-gpu-operator/s3-deploy-operators-lab-4.html">Hands-On: Deploying the GPU Operator Stack</a>
+  </li>
+  <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="../ch1-gpu-operator/s3-deploy-operators-lab-5.html">Production Operational Considerations</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../ch2-mig/index.html">Configure Multi-Instance GPU (MIG) for MaaS</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../ch2-mig/s1-mig-overview.html">Maximizing GPU ROI with Multi-Instance GPU</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="../ch2-mig/s1-mig-overview-2.html">MIG Advertisement Strategies</a>
+  </li>
+  <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="../ch2-mig/s1-mig-overview-3.html">How MIG Partitioning Works in Kubernetes</a>
+  </li>
+  <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="../ch2-mig/s1-mig-overview-4.html">MIG Benefits for MaaS</a>
+  </li>
+  <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="../ch2-mig/s1-mig-overview-5.html">Production Considerations and Gotchas</a>
+  </li>
+  <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="../ch2-mig/s2-mig-slicing-lab.html">Lab: MIG Slicing Configuration</a>
+  </li>
+  <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="../ch2-mig/s2-mig-slicing-lab-2.html">Troubleshooting Common Issues</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="index.html">Monitor GPU Telemetry and Health</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="s1-observability-stack.html">The MaaS Observability Stack</a>
+  </li>
+  <li class="nav-item is-current-page" data-depth="2">
+    <a class="nav-link" href="s2-expose-metrics-lab.html">Lab: Exposing GPU Metrics</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="s3-grafana-setup-lab.html">Lab: Deploying the Grafana Operator and Setting Up Access</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="s4-dashboards-lab.html">Lab: Visualizing GPU Hardware</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+</ul>
+  </nav>
+</div>
+<div class="nav-panel-explore" data-panel="explore">
+  <div class="context">
+    <span class="title">Nvidia Accelerator Configuration for Scale</span>
+    <span class="version">2</span>
+  </div>
+  <ul class="components">
+    <li class="component is-current">
+      <a class="title" href="../index.html">Nvidia Accelerator Configuration for Scale</a>
+      <ul class="versions">
+        <li class="version is-current is-latest">
+          <a href="../index.html">2</a>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</div>
+    </div>
+  </aside>
+</div>
+<main class="article">
+<div class="toolbar" role="navigation">
+<button class="nav-toggle"></button>
+  <a href="../index.html" class="home-link"></a>
+<nav class="breadcrumbs" aria-label="breadcrumbs">
+  <ul>
+    <li><a href="../index.html">Nvidia Accelerator Configuration for Scale</a></li>
+    <li><a href="index.html">Monitor GPU Telemetry and Health</a></li>
+    <li><a href="s2-expose-metrics-lab.html">Lab: Exposing GPU Metrics</a></li>
+  </ul>
+</nav>
+</div>
+  <div class="content">
+<aside class="toc sidebar" data-title="Contents" data-levels="2">
+  <div class="toc-menu"></div>
+</aside>
+<article class="doc">
+<h1 class="page">Lab: Exposing GPU Metrics</h1>
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p><em>Estimated reading time: <strong>20 minutes</strong>.</em></p>
+</div>
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-warning" title="Warning"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>This lab in a work in progress. The content is being developed and may contain placeholders, incomplete information. Please refer to the final version for the complete lab experience.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1">Objective</dt>
+<dd>
+<p>Enable OpenShift user-workload monitoring by modifying the cluster-monitoring-config ConfigMap, and label the GPU Operator namespace to expose GPU telemetry for Prometheus scraping via the NVIDIA DCGM Exporter.</p>
+</dd>
+</dl>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_before_you_begin"><a class="anchor" href="#_before_you_begin"></a>Before you begin</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>This lab requires:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Completed GPU Operator installation with DCGM Exporter enabled</p>
+</li>
+<li>
+<p>Cluster administrator privileges</p>
+</li>
+<li>
+<p>Basic understanding of Prometheus and OpenShift monitoring architecture</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_instructions"><a class="anchor" href="#_instructions"></a>Instructions</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_1_enable_user_workload_monitoring"><a class="anchor" href="#_1_enable_user_workload_monitoring"></a>1. Enable User Workload Monitoring</h3>
+<div class="paragraph">
+<p>OpenShift separates platform monitoring from user workload monitoring. GPU metrics are considered user workload metrics and require this feature to be enabled.</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Check current cluster monitoring configuration</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">$ <strong>oc get configmap cluster-monitoring-config -n openshift-monitoring -o yaml</strong>
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cluster-monitoring-config
+  namespace: openshift-monitoring
+data:
+  config.yaml: |
+    # ... existing configuration</code></pre>
+</div>
+</div>
+</li>
+<li>
+<p>Enable user workload monitoring</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">$ <strong>cat &lt;&lt;EOF | oc apply -f -</strong>
+<strong>apiVersion: v1</strong>
+<strong>kind: ConfigMap</strong>
+<strong>metadata:</strong>
+*  name: cluster-monitoring-config*
+*  namespace: openshift-monitoring*
+<strong>data:</strong>
+*  config.yaml: |*
+*    enableUserWorkload: true*
+*    prometheusK8s:*
+*      retention: 15d*
+*      volumeClaimTemplate:*
+*        spec:*
+*          resources:*
+*            requests:*
+*              storage: 100Gi*
+<strong>EOF</strong>
+configmap/cluster-monitoring-config configured</code></pre>
+</div>
+</div>
+</li>
+<li>
+<p>Verify user workload monitoring pods are created</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">$ <strong>oc get pods -n openshift-user-workload-monitoring</strong>
+NAME                                   READY   STATUS    RESTARTS   AGE
+prometheus-operator-xxxxx              2/2     Running   0          2m
+prometheus-user-workload-0             6/6     Running   0          1m
+prometheus-user-workload-1             6/6     Running   0          1m
+thanos-ruler-user-workload-0           4/4     Running   0          1m
+thanos-ruler-user-workload-1           4/4     Running   0          1m</code></pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>It may take 2-3 minutes for all pods to reach Running status.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</li>
+</ol>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_2_configure_dcgm_exporter_service_monitor"><a class="anchor" href="#_2_configure_dcgm_exporter_service_monitor"></a>2. Configure DCGM Exporter Service Monitor</h3>
+<div class="paragraph">
+<p>The DCGM Exporter needs to be configured for Prometheus scraping.</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Label the nvidia-gpu-operator namespace for monitoring</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">$ <strong>oc label namespace nvidia-gpu-operator openshift.io/cluster-monitoring=true</strong>
+namespace/nvidia-gpu-operator labeled</code></pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>This label enables the user-workload Prometheus to discover ServiceMonitor resources in this namespace.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</li>
+<li>
+<p>Verify the DCGM Exporter service exists</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">$ <strong>oc get svc -n nvidia-gpu-operator | grep dcgm</strong>
+nvidia-dcgm-exporter       ClusterIP   172.30.xxx.xxx   &lt;none&gt;        9400/TCP   15m</code></pre>
+</div>
+</div>
+</li>
+<li>
+<p>Check if ServiceMonitor was created by the GPU Operator</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">$ <strong>oc get servicemonitor -n nvidia-gpu-operator</strong>
+NAME                   AGE
+nvidia-dcgm-exporter   15m</code></pre>
+</div>
+</div>
+</li>
+<li>
+<p>Inspect the ServiceMonitor configuration</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">$ <strong>oc get servicemonitor nvidia-dcgm-exporter -n nvidia-gpu-operator -o yaml</strong>
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: nvidia-dcgm-exporter
+  namespace: nvidia-gpu-operator
+spec:
+  endpoints:
+  - interval: 30s
+    port: metrics
+    scheme: http
+  selector:
+    matchLabels:
+      app: nvidia-dcgm-exporter</code></pre>
+</div>
+</div>
+</li>
+</ol>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_3_verify_metric_collection"><a class="anchor" href="#_3_verify_metric_collection"></a>3. Verify Metric Collection</h3>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Access the Prometheus web console</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">$ <strong>oc get route -n openshift-monitoring</strong>
+NAME                HOST/PORT
+prometheus-k8s      prometheus-k8s-openshift-monitoring.apps.cluster.example.com</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Open the Prometheus route in your browser. You may need to authenticate with your OpenShift credentials.</p>
+</div>
+</li>
+<li>
+<p>Query for DCGM metrics in the Prometheus UI</p>
+<div class="paragraph">
+<p>In the Prometheus query interface, enter:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-promql hljs" data-lang="promql">DCGM_FI_DEV_GPU_UTIL</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>You should see metrics for all GPU devices across your cluster:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>DCGM_FI_DEV_GPU_UTIL{gpu="0", UUID="GPU-xxxxx", device="nvidia0",
+  exported_namespace="nvidia-gpu-operator", pod="nvidia-dcgm-exporter-xxxxx"} 45</pre>
+</div>
+</div>
+</li>
+<li>
+<p>Query for GPU memory usage</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-promql hljs" data-lang="promql">DCGM_FI_DEV_FB_USED / DCGM_FI_DEV_FB_FREE * 100</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This calculates the GPU memory utilization percentage.</p>
+</div>
+</li>
+<li>
+<p>Verify metrics from multiple nodes</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-promql hljs" data-lang="promql">sum by (node) (DCGM_FI_DEV_GPU_UTIL)</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This should show GPU utilization aggregated by node.</p>
+</div>
+</li>
+</ol>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_4_test_metric_export_with_sample_workload"><a class="anchor" href="#_4_test_metric_export_with_sample_workload"></a>4. Test Metric Export with Sample Workload</h3>
+<div class="paragraph">
+<p>Create a GPU workload to generate metrics.</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Deploy a simple CUDA workload</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">$ <strong>cat &lt;&lt;EOF | oc apply -f -</strong>
+<strong>apiVersion: v1</strong>
+<strong>kind: Pod</strong>
+<strong>metadata:</strong>
+*  name: gpu-burn*
+*  namespace: default*
+<strong>spec:</strong>
+*  restartPolicy: Never*
+*  containers:*
+*  - name: gpu-burn*
+*    image: quay.io/nvidia/gpu-burn:latest*
+*    args: ["60"]  # Run for 60 seconds*
+*    resources:*
+*      limits:*
+*        nvidia.com/gpu: 1*
+<strong>EOF</strong>
+pod/gpu-burn created</code></pre>
+</div>
+</div>
+</li>
+<li>
+<p>Monitor GPU utilization in real-time via Prometheus</p>
+<div class="paragraph">
+<p>Query:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-promql hljs" data-lang="promql">DCGM_FI_DEV_GPU_UTIL{exported_namespace="default"}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>You should see GPU utilization spike to near 100% while the gpu-burn workload is running.</p>
+</div>
+</li>
+<li>
+<p>Check GPU temperature during load</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-promql hljs" data-lang="promql">DCGM_FI_DEV_GPU_TEMP</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Temperature should increase as the GPU processes the workload.</p>
+</div>
+</li>
+<li>
+<p>View GPU power consumption</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-promql hljs" data-lang="promql">DCGM_FI_DEV_POWER_USAGE</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Power draw will increase during intensive GPU operations.</p>
+</div>
+</li>
+</ol>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_5_configure_metric_retention"><a class="anchor" href="#_5_configure_metric_retention"></a>5. Configure Metric Retention</h3>
+<div class="paragraph">
+<p>For production MaaS deployments, configure appropriate metric retention.</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Update user workload monitoring retention</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">$ <strong>cat &lt;&lt;EOF | oc apply -f -</strong>
+<strong>apiVersion: v1</strong>
+<strong>kind: ConfigMap</strong>
+<strong>metadata:</strong>
+*  name: user-workload-monitoring-config*
+*  namespace: openshift-user-workload-monitoring*
+<strong>data:</strong>
+*  config.yaml: |*
+*    prometheus:*
+*      retention: 30d*
+*      volumeClaimTemplate:*
+*        spec:*
+*          resources:*
+*            requests:*
+*              storage: 200Gi*
+<strong>EOF</strong>
+configmap/user-workload-monitoring-config created</code></pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>Adjust retention period and storage based on your organization&#8217;s requirements and compliance needs.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</li>
+<li>
+<p>Verify Prometheus restarts with new configuration</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">$ <strong>oc get pods -n openshift-user-workload-monitoring -w</strong>
+prometheus-user-workload-0   6/6   Terminating   0   15m
+prometheus-user-workload-0   6/6   Running       0   30s</code></pre>
+</div>
+</div>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>You have successfully enabled user-workload monitoring and configured GPU metric collection via DCGM Exporter. Prometheus is now continuously scraping GPU telemetry, making it available for visualization, alerting, and historical analysis.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_whats_next"><a class="anchor" href="#_whats_next"></a>What&#8217;s next</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>In the next section, you will deploy the Grafana Operator, create a Grafana instance, configure secure access to the cluster&#8217;s Prometheus metrics via ServiceAccount tokens, and set up a GrafanaDatasource pointing to the Thanos Querier endpoint.</p>
+</div>
+</div>
+</div>
+<nav class="pagination">
+  <span class="prev"><a href="s1-observability-stack.html">The MaaS Observability Stack</a></span>
+  <span class="next"><a href="s3-grafana-setup-lab.html">Lab: Deploying the Grafana Operator and Setting Up Access</a></span>
+</nav>
+</article>
+  </div>
+</main>
+</div>
+<footer class="footer">
+  <img src="../../../_/img/rhl-logo-red.png" height="40px" alt="Red Hat"  href="https://redhat.com" >
+</footer><script id="site-script" src="../../../_/js/site.js" data-ui-root-path="../../../_"></script>
+<script async src="../../../_/js/vendor/highlight.js"></script>
+  </body>
+</html>
