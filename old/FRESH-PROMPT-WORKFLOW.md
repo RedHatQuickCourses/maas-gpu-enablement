@@ -24,7 +24,7 @@ Gather these materials before starting the conversation:
 
 **Required:**
 - [ ] Course structure file: `antora.yml`
-- [ ] Style reference: `modules/ch1-gpu-operator/pages/s2-operators-overview.adoc`
+- [ ] Style reference: `modules/*/*.adoc`
 - [ ] Style guide: `STYLE-GUIDE.md`
 - [ ] Request template: `CONTENT-REQUEST-TEMPLATE.md`
 

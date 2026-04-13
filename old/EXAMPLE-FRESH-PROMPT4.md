@@ -93,7 +93,7 @@ Style Reference:
 - Pattern to match: Section 5 "Three-Layer MaaS Operator Stack" shows good depth for technical architecture
 
 Content Reference:
-- Check if `observability-reference/` directory exists with vendor documentation
+- Check if `operators-reference/` directory exists with vendor documentation
 - NVIDIA DCGM Documentation: https://docs.nvidia.com/datacenter/dcgm/latest/
 - GPU Operator Monitoring: https://docs.nvidia.com/datacenter/cloud-native/gpu-operator/latest/gpu-operator-metrics.html
 - DCGM Exporter: https://github.com/NVIDIA/dcgm-exporter
@@ -144,7 +144,7 @@ Integration Points:
 
 ## Reference Materials
 
-If `observability-reference/` directory exists in the repository, please read all files there to understand monitoring concepts and configuration examples.
+If `operators-reference/` directory exists in the repository, please read all files there to understand monitoring concepts and configuration examples.
 
 If not, use the online NVIDIA DCGM and GPU Operator documentation URLs provided above as reference for technical accuracy.
 
