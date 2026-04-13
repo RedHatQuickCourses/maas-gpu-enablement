@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>MIG Advertisement Strategies :: Nvidia Accelerator Configuration for Scale</title>
+    <link rel="prev" href="s1-mig-overview.html">
+    <link rel="next" href="s1-mig-overview-3.html">
+    <meta name="generator" content="Antora 3.1.3">
+    <link rel="stylesheet" href="../../../_/css/site.css">
+    <script>var uiRootPath = '../../../_'</script>
+  </head>
+  <body class="article">
+<header class="header">
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="https://www.redhat.com" target="_blank"><img src="../../../_/img/redhat-logo.png" height="40px" alt="Red Hat"></a>
+      <a class="navbar-item" style="font-size: 24px; color: white" href="../../..">Nvidia Accelerator Configuration for Scale</a>
+      <button class="navbar-burger" data-target="topbar-nav">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+    <div id="topbar-nav" class="navbar-menu">
+      <div class="navbar-end">
+        <a class="navbar-item" href="https://github.com/RedHatQuickCourses/REPLACEREPONAME/issues" target="_blank">Report Issues</a>
+      </div>
+    </div>
+  </nav>
+</header>
+<div class="body">
+<div class="nav-container" data-component="maas-gpu-enablement" data-version="2">
+  <aside class="nav">
+    <div class="panels">
+<div class="nav-panel-menu is-active" data-panel="menu">
+  <nav class="nav-menu">
+    <h3 class="title"><a href="../index.html">Nvidia Accelerator Configuration for Scale</a></h3>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../index.html">Home</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../LABENV/index.html">Lab Environment</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../ch1-gpu-operator/index.html">Operator Foundations and GPU Stack Deployment</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../ch1-gpu-operator/s1-hardware-stack.html">Deconstructing MaaS Operator Stack</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="../ch1-gpu-operator/s2-operators-overview.html">Understanding Operators and Platform Automation</a>
+  </li>
+  <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="../ch1-gpu-operator/s2-operators-overview-2.html">Custom Resources and Controllers</a>
+  </li>
+  <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="../ch1-gpu-operator/s2-operators-overview-3.html">Namespace Organization and Self-Healing</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../ch1-gpu-operator/s3-deploy-operators-lab.html">GPU Operator Features and Platform Deployment</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="../ch1-gpu-operator/s3-deploy-operators-lab-1.html">The GPU Underutilization Problem</a>
+  </li>
+  <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="../ch1-gpu-operator/s3-deploy-operators-lab-2.html">ClusterPolicy as the Control Plane</a>
+  </li>
+  <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="../ch1-gpu-operator/s3-deploy-operators-lab-3.html">Integrating with OpenShift Monitoring</a>
+  </li>
+  <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="../ch1-gpu-operator/s3-deploy-operators-lab-4.html">Hands-On: Deploying the GPU Operator Stack</a>
+  </li>
+  <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="../ch1-gpu-operator/s3-deploy-operators-lab-5.html">Production Operational Considerations</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="index.html">Configure Multi-Instance GPU (MIG) for MaaS</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="s1-mig-overview.html">Maximizing GPU ROI with Multi-Instance GPU</a>
+<ul class="nav-list">
+  <li class="nav-item is-current-page" data-depth="3">
+    <a class="nav-link" href="s1-mig-overview-2.html">MIG Advertisement Strategies</a>
+  </li>
+  <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="s1-mig-overview-3.html">How MIG Partitioning Works in Kubernetes</a>
+  </li>
+  <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="s1-mig-overview-4.html">MIG Benefits for MaaS</a>
+  </li>
+  <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="s1-mig-overview.html">Maximizing GPU ROI with Multi-Instance GPU</a>
+  </li>
+  <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="s2-mig-slicing-lab.html">Lab: MIG Slicing Configuration</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../ch3-observability/index.html">Monitor GPU Telemetry and Health</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch3-observability/s1-observability-stack.html">The MaaS Observability Stack</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch3-observability/s2-expose-metrics-lab.html">Lab: Exposing GPU Metrics</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch3-observability/s3-grafana-setup-lab.html">Lab: Deploying the Grafana Operator and Setting Up Access</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch3-observability/s4-dashboards-lab.html">Lab: Visualizing GPU Hardware</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+</ul>
+  </nav>
+</div>
+<div class="nav-panel-explore" data-panel="explore">
+  <div class="context">
+    <span class="title">Nvidia Accelerator Configuration for Scale</span>
+    <span class="version">2</span>
+  </div>
+  <ul class="components">
+    <li class="component is-current">
+      <a class="title" href="../index.html">Nvidia Accelerator Configuration for Scale</a>
+      <ul class="versions">
+        <li class="version is-current is-latest">
+          <a href="../index.html">2</a>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</div>
+    </div>
+  </aside>
+</div>
+<main class="article">
+<div class="toolbar" role="navigation">
+<button class="nav-toggle"></button>
+  <a href="../index.html" class="home-link"></a>
+<nav class="breadcrumbs" aria-label="breadcrumbs">
+  <ul>
+    <li><a href="../index.html">Nvidia Accelerator Configuration for Scale</a></li>
+    <li><a href="index.html">Configure Multi-Instance GPU (MIG) for MaaS</a></li>
+    <li><a href="s1-mig-overview.html">Maximizing GPU ROI with Multi-Instance GPU</a></li>
+    <li><a href="s1-mig-overview-2.html">MIG Advertisement Strategies</a></li>
+  </ul>
+</nav>
+</div>
+  <div class="content">
+<aside class="toc sidebar" data-title="Contents" data-levels="2">
+  <div class="toc-menu"></div>
+</aside>
+<article class="doc">
+<h1 class="page">MIG Advertisement Strategies</h1>
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p><em>Estimated reading time: <strong>20 minutes</strong>.</em></p>
+</div>
+<div class="paragraph">
+<p>The NVIDIA GPU Operator supports two strategies for exposing MIG instances to the Kubernetes scheduler. This strategy choice fundamentally affects how workloads request resources and how you manage node configurations.</p>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_single_strategy_homogeneous"><a class="anchor" href="#_single_strategy_homogeneous"></a>Single Strategy (Homogeneous)</h3>
+<div class="paragraph">
+<p>All MIG instances on a node must use the same profile. Instances are advertised as <code>nvidia.com/gpu</code> resources, providing <strong>backward compatibility</strong> with existing workloads.</p>
+</div>
+<div class="paragraph">
+<p><strong>Characteristics</strong>:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Resource advertisement</strong>: <code>nvidia.com/gpu: 7</code> (for 7x <code>1g.5gb</code> instances)</p>
+</li>
+<li>
+<p><strong>Node configuration</strong>: All GPUs on node must use identical profile</p>
+</li>
+<li>
+<p><strong>Workload requests</strong>: Standard <code>nvidia.com/gpu: 1</code> (no profile-specific request)</p>
+</li>
+<li>
+<p><strong>Scheduling</strong>: Kubernetes scheduler treats MIG instances identically to full GPUs</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>Example</strong>: A100-40GB cluster with <code>all-3g.20gb</code> profile:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Each physical GPU creates 2 MIG instances</p>
+</li>
+<li>
+<p>Node with 4 A100 GPUs advertises <code>nvidia.com/gpu: 8</code></p>
+</li>
+<li>
+<p>Existing inference services request <code>nvidia.com/gpu: 1</code> without modification</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>Advantages</strong>:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Easy to understand and manage</p>
+</li>
+<li>
+<p>Backward compatible with existing pod specifications</p>
+</li>
+<li>
+<p>Predictable resource allocation (all instances identical)</p>
+</li>
+<li>
+<p>Simple capacity planning (uniform node pools)</p>
+</li>
+<li>
+<p>Best for uniform workload patterns</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_mixed_strategy_heterogeneous"><a class="anchor" href="#_mixed_strategy_heterogeneous"></a>Mixed Strategy (Heterogeneous)</h3>
+<div class="paragraph">
+<p>Different MIG profiles can coexist on the same physical GPU. Instances are advertised with <strong>profile-specific resource names</strong>.</p>
+</div>
+<div class="paragraph">
+<p><strong>Characteristics</strong>:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Resource advertisement</strong>: <code>nvidia.com/mig-1g.5gb: 2</code>, <code>nvidia.com/mig-2g.10gb: 1</code>, <code>nvidia.com/mig-3g.20gb: 1</code></p>
+</li>
+<li>
+<p><strong>Node configuration</strong>: Each GPU can have different profile mix</p>
+</li>
+<li>
+<p><strong>Workload requests</strong>: Must specify profile: <code>nvidia.com/mig-3g.20gb: 1</code></p>
+</li>
+<li>
+<p><strong>Scheduling</strong>: Kubernetes scheduler matches request to available profile</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>Example</strong>: A100-40GB node with <code>all-balanced</code> profile:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Creates 2x <code>1g.5gb</code>, 1x <code>2g.10gb</code>, 1x <code>3g.20gb</code> per GPU</p>
+</li>
+<li>
+<p>Small models request <code>nvidia.com/mig-1g.5gb: 1</code></p>
+</li>
+<li>
+<p>Large models request <code>nvidia.com/mig-3g.20gb: 1</code></p>
+</li>
+<li>
+<p>Scheduler places workloads on nodes with matching profiles</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>Advantages</strong>:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Accommodates diverse workload requirements on single node</p>
+</li>
+<li>
+<p>Optimizes resource utilization for heterogeneous platforms</p>
+</li>
+<li>
+<p>Maximum flexibility for workload placement</p>
+</li>
+<li>
+<p>Supports true multi-tenant deployments with varied resource needs</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>Challenges</strong>:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>More complex to manage and schedule</p>
+</li>
+<li>
+<p>Workload specifications must be profile-aware</p>
+</li>
+<li>
+<p>Per-GPU configuration tracking required</p>
+</li>
+<li>
+<p>Risk of scheduling failures if pod requests unavailable profile</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_production_strategy_selection_matrix"><a class="anchor" href="#_production_strategy_selection_matrix"></a>Production Strategy Selection Matrix</h3>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 25%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Criterion</th>
+<th class="tableblock halign-left valign-top">Single Strategy</th>
+<th class="tableblock halign-left valign-top">Mixed Strategy</th>
+<th class="tableblock halign-left valign-top">Production Guidance</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Operational Complexity</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✅ Low - uniform config</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">❌ High - per-GPU tracking</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Single for teams &lt;10 engineers</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Resource Efficiency</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">⚠️ May waste resources if workloads vary</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✅ Optimal packing for diverse workloads</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Mixed for heterogeneous platforms</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Scheduling Simplicity</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✅ Simple - all instances identical</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">⚠️ Complex - must match profiles</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Single for &lt;50 total workloads</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Backward Compatibility</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✅ Existing pods work unchanged</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">❌ Pods must specify MIG profiles</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Single for migrating existing apps</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Reconfiguration Impact</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✅ Change all nodes uniformly</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">❌ Per-node config drift risk</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Single for stability-focused platforms</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Multi-Tenancy Support</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">⚠️ Limited - all tenants same size</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✅ Excellent - right-size per tenant</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Mixed for true SaaS platforms</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Cluster Size Sweet Spot</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✅ Large clusters (node pools)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✅ Small clusters (diverse nodes)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Depends on node count and diversity</p></td>
+</tr>
+</tbody>
+</table>
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-warning" title="Warning"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p><strong>Mixed Strategy Requires Profile-Aware Scheduling</strong></p>
+</div>
+<div class="paragraph">
+<p>With mixed strategy, pods <strong>must</strong> request specific MIG profiles in resource limits:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">resources:
+  limits:
+    nvidia.com/mig-3g.20gb: 1  # Correct for mixed</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Requesting generic <code>nvidia.com/gpu: 1</code> will <strong>fail to schedule</strong> on MIG-enabled nodes using mixed strategy. You must either:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Update all pod specifications to request specific profiles</p>
+</li>
+<li>
+<p>Implement admission webhooks to inject correct resource requests</p>
+</li>
+<li>
+<p>Use Kueue ResourceFlavors (covered in later chapters) for automated profile selection</p>
+</li>
+</ul>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p><strong>Recommended Adoption Path: Start Single, Migrate to Mixed</strong></p>
+</div>
+<div class="paragraph">
+<p>For teams new to MIG:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>Months 1-3</strong>: Deploy Single strategy with one profile (e.g., <code>all-2g.10gb</code>)</p>
+<div class="ulist">
+<ul>
+<li>
+<p>Learn MIG operational patterns</p>
+</li>
+<li>
+<p>Measure actual workload resource usage</p>
+</li>
+<li>
+<p>Build confidence with uniform configuration</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p><strong>Months 4-6</strong>: Evaluate resource waste and workload diversity</p>
+<div class="ulist">
+<ul>
+<li>
+<p>Analyze DCGM metrics for over/under-provisioning</p>
+</li>
+<li>
+<p>Identify distinct workload tiers (small, medium, large)</p>
+</li>
+<li>
+<p>Calculate potential efficiency gains from mixed profiles</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p><strong>Months 7+</strong>: Migrate to Mixed strategy if justified</p>
+<div class="ulist">
+<ul>
+<li>
+<p>Migrate when &gt;20% resource waste from uniform sizing</p>
+</li>
+<li>
+<p>Requires dedicated platform team for GPU operations</p>
+</li>
+<li>
+<p>Implement profile-aware admission controls first</p>
+</li>
+</ul>
+</div>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>This phased approach balances operational learning with efficiency optimization.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+<nav class="pagination">
+  <span class="prev"><a href="s1-mig-overview.html">Maximizing GPU ROI with Multi-Instance GPU</a></span>
+  <span class="next"><a href="s1-mig-overview-3.html">How MIG Partitioning Works in Kubernetes</a></span>
+</nav>
+</article>
+  </div>
+</main>
+</div>
+<footer class="footer">
+  <img src="../../../_/img/rhl-logo-red.png" height="40px" alt="Red Hat"  href="https://redhat.com" >
+</footer><script id="site-script" src="../../../_/js/site.js" data-ui-root-path="../../../_"></script>
+<script async src="../../../_/js/vendor/highlight.js"></script>
+  </body>
+</html>

@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Deconstructing MaaS Operator Stack :: Nvidia Accelerator Configuration for Scale</title>
+    <link rel="prev" href="index.html">
+    <link rel="next" href="s2-operators-overview.html">
+    <meta name="generator" content="Antora 3.1.3">
+    <link rel="stylesheet" href="../../../_/css/site.css">
+    <script>var uiRootPath = '../../../_'</script>
+  </head>
+  <body class="article">
+<header class="header">
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="https://www.redhat.com" target="_blank"><img src="../../../_/img/redhat-logo.png" height="40px" alt="Red Hat"></a>
+      <a class="navbar-item" style="font-size: 24px; color: white" href="../../..">Nvidia Accelerator Configuration for Scale</a>
+      <button class="navbar-burger" data-target="topbar-nav">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+    <div id="topbar-nav" class="navbar-menu">
+      <div class="navbar-end">
+        <a class="navbar-item" href="https://github.com/RedHatQuickCourses/REPLACEREPONAME/issues" target="_blank">Report Issues</a>
+      </div>
+    </div>
+  </nav>
+</header>
+<div class="body">
+<div class="nav-container" data-component="maas-gpu-enablement" data-version="2">
+  <aside class="nav">
+    <div class="panels">
+<div class="nav-panel-menu is-active" data-panel="menu">
+  <nav class="nav-menu">
+    <h3 class="title"><a href="../index.html">Nvidia Accelerator Configuration for Scale</a></h3>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../index.html">Home</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../LABENV/index.html">Lab Environment</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="index.html">Operator Foundations and GPU Stack Deployment</a>
+<ul class="nav-list">
+  <li class="nav-item is-current-page" data-depth="2">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="s1-hardware-stack.html">Deconstructing MaaS Operator Stack</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="s2-operators-overview.html">Understanding Operators and Platform Automation</a>
+  </li>
+  <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="s2-operators-overview-2.html">Custom Resources and Controllers</a>
+  </li>
+  <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="s2-operators-overview-3.html">Namespace Organization and Self-Healing</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="s3-deploy-operators-lab.html">GPU Operator Features and Platform Deployment</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="s3-deploy-operators-lab-1.html">The GPU Underutilization Problem</a>
+  </li>
+  <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="s3-deploy-operators-lab-2.html">ClusterPolicy as the Control Plane</a>
+  </li>
+  <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="s3-deploy-operators-lab-3.html">Integrating with OpenShift Monitoring</a>
+  </li>
+  <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="s3-deploy-operators-lab-4.html">Hands-On: Deploying the GPU Operator Stack</a>
+  </li>
+  <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="s3-deploy-operators-lab-5.html">Production Operational Considerations</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../ch2-mig/index.html">Configure Multi-Instance GPU (MIG) for MaaS</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../ch2-mig/s1-mig-overview.html">Maximizing GPU ROI with Multi-Instance GPU</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="../ch2-mig/s1-mig-overview-2.html">MIG Advertisement Strategies</a>
+  </li>
+  <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="../ch2-mig/s1-mig-overview-3.html">How MIG Partitioning Works in Kubernetes</a>
+  </li>
+  <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="../ch2-mig/s1-mig-overview-4.html">MIG Benefits for MaaS</a>
+  </li>
+  <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="../ch2-mig/s1-mig-overview.html">Maximizing GPU ROI with Multi-Instance GPU</a>
+  </li>
+  <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="../ch2-mig/s2-mig-slicing-lab.html">Lab: MIG Slicing Configuration</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../ch3-observability/index.html">Monitor GPU Telemetry and Health</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch3-observability/s1-observability-stack.html">The MaaS Observability Stack</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch3-observability/s2-expose-metrics-lab.html">Lab: Exposing GPU Metrics</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch3-observability/s3-grafana-setup-lab.html">Lab: Deploying the Grafana Operator and Setting Up Access</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch3-observability/s4-dashboards-lab.html">Lab: Visualizing GPU Hardware</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+</ul>
+  </nav>
+</div>
+<div class="nav-panel-explore" data-panel="explore">
+  <div class="context">
+    <span class="title">Nvidia Accelerator Configuration for Scale</span>
+    <span class="version">2</span>
+  </div>
+  <ul class="components">
+    <li class="component is-current">
+      <a class="title" href="../index.html">Nvidia Accelerator Configuration for Scale</a>
+      <ul class="versions">
+        <li class="version is-current is-latest">
+          <a href="../index.html">2</a>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</div>
+    </div>
+  </aside>
+</div>
+<main class="article">
+<div class="toolbar" role="navigation">
+<button class="nav-toggle"></button>
+  <a href="../index.html" class="home-link"></a>
+<nav class="breadcrumbs" aria-label="breadcrumbs">
+  <ul>
+    <li><a href="../index.html">Nvidia Accelerator Configuration for Scale</a></li>
+    <li><a href="index.html">Operator Foundations and GPU Stack Deployment</a></li>
+    <li><a href="s1-hardware-stack.html">Deconstructing MaaS Operator Stack</a></li>
+  </ul>
+</nav>
+</div>
+  <div class="content">
+<aside class="toc sidebar" data-title="Contents" data-levels="2">
+  <div class="toc-menu"></div>
+</aside>
+<article class="doc">
+<h1 class="page">Deconstructing MaaS Operator Stack</h1>
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p><em>Estimated reading time: <strong>15 minutes</strong>.</em></p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_the_three_layer_maas_operator_stack"><a class="anchor" href="#_the_three_layer_maas_operator_stack"></a>The Three-Layer MaaS Operator Stack</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>A production Models-as-a-Service platform requires orchestrating dozens of operators across three functional layers. Red Hat OpenShift AI provides this orchestration.</p>
+</div>
+<div class="sect2">
+<h3 id="_layer_1_core_infrastructure_operators"><a class="anchor" href="#_layer_1_core_infrastructure_operators"></a>Layer 1: Core &amp; Infrastructure Operators</h3>
+<div class="paragraph">
+<p><strong>Purpose:</strong> Enable hardware detection and GPU software stack automation</p>
+</div>
+<div class="paragraph">
+<p><strong>Operators in this layer:</strong></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Node Feature Discovery (NFD)</strong></p>
+<div class="ulist">
+<ul>
+<li>
+<p>Scans node hardware via PCI bus</p>
+</li>
+<li>
+<p>Labels nodes with detected capabilities</p>
+</li>
+<li>
+<p>Namespace: <code>openshift-nfd</code></p>
+</li>
+<li>
+<p>Catalog: <code>redhat-operators</code></p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p><strong>NVIDIA GPU Operator</strong></p>
+<div class="ulist">
+<ul>
+<li>
+<p>Deploys GPU drivers as containers</p>
+</li>
+<li>
+<p>Installs NVIDIA Container Toolkit</p>
+</li>
+<li>
+<p>Manages device plugin for GPU resource allocation</p>
+</li>
+<li>
+<p>Deploys DCGM for monitoring</p>
+</li>
+<li>
+<p>Namespace: <code>nvidia-gpu-operator</code></p>
+</li>
+<li>
+<p>Catalog: <code>certified-operators</code></p>
+</li>
+</ul>
+</div>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>Activation:</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml"># NFD activation
+apiVersion: nfd.openshift.io/v1
+kind: NodeFeatureDiscovery
+metadata:
+  name: nfd-instance
+  namespace: openshift-nfd
+
+# GPU Operator activation
+apiVersion: nvidia.com/v1
+kind: ClusterPolicy
+metadata:
+  name: gpu-cluster-policy</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>You will deploy this layer in the upcoming lab.</strong></p>
+</div>
+<hr>
+</div>
+<div class="sect2">
+<h3 id="_layer_2_operators_for_inference_at_scale"><a class="anchor" href="#_layer_2_operators_for_inference_at_scale"></a>Layer 2: Operators for Inference at Scale</h3>
+<div class="paragraph">
+<p><strong>Purpose:</strong> Provide production-grade MaaS capabilities like certificate management, rate limiting, workload queueing, and distributed training.</p>
+</div>
+<div class="paragraph">
+<p><strong>Operators in this layer:</strong></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Cert-manager</strong></p>
+<div class="ulist">
+<ul>
+<li>
+<p>Automates TLS certificate issuance and renewal</p>
+</li>
+<li>
+<p>Integrates with Let&#8217;s Encrypt and internal CAs</p>
+</li>
+<li>
+<p>Namespace: <code>cert-manager</code></p>
+</li>
+<li>
+<p>Required for secure inference endpoints</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p><strong>Connectivity Link (or Kuadrant)</strong></p>
+<div class="ulist">
+<ul>
+<li>
+<p>Rate limiting for inference requests</p>
+</li>
+<li>
+<p>Authentication and authorization policies</p>
+</li>
+<li>
+<p>API gateway capabilities</p>
+</li>
+<li>
+<p>Namespace: <code>kuadrant-system</code></p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p><strong>LeaderWorkerSet</strong></p>
+<div class="ulist">
+<ul>
+<li>
+<p>Orchestrates distributed training jobs</p>
+</li>
+<li>
+<p>Leader/worker pod coordination</p>
+</li>
+<li>
+<p>Namespace: Workload-specific</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p><strong>Kueue</strong></p>
+<div class="ulist">
+<ul>
+<li>
+<p>Workload queueing and quota management</p>
+</li>
+<li>
+<p>Fair sharing of GPU resources across teams</p>
+</li>
+<li>
+<p>Namespace: <code>kueue-system</code></p>
+</li>
+<li>
+<p>Critical for multi-tenant MaaS platforms</p>
+</li>
+</ul>
+</div>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>Activation:</strong> Each operator has its own Custom Resource for configuration.</p>
+</div>
+<hr>
+</div>
+<div class="sect2">
+<h3 id="_layer_3_red_hat_openshift_ai_orchestration"><a class="anchor" href="#_layer_3_red_hat_openshift_ai_orchestration"></a>Layer 3: Red Hat OpenShift AI Orchestration</h3>
+<div class="paragraph">
+<p><strong>Purpose:</strong> Coordinate the complete MaaS ecosystem with unified configuration and dependency management.</p>
+</div>
+<div class="paragraph">
+<p><strong>Red Hat OpenShift AI Operator:</strong></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Single control point</strong> for MaaS platform lifecycle</p>
+</li>
+<li>
+<p><strong>Manages Layer 2 operator dependencies</strong> automatically</p>
+</li>
+<li>
+<p><strong>Unified configuration</strong> via DataScienceCluster Custom Resource</p>
+</li>
+<li>
+<p><strong>Coordinates upgrades</strong> across the operator suite</p>
+</li>
+<li>
+<p><strong>Namespace:</strong> <code>redhat-ods-operator</code></p>
+</li>
+<li>
+<p><strong>Catalog:</strong> <code>redhat-operators</code></p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>DataScienceCluster CR Example:</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">apiVersion: datasciencecluster.opendatahub.io/v1
+kind: DataScienceCluster
+metadata:
+  name: default-dsc
+spec:
+  components:
+    kueue:
+      managementState: Unmanaged  <i class="conum" data-value="1"></i><b>(1)</b>
+    kserve:
+      managementState: Managed  <i class="conum" data-value="2"></i><b>(2)</b>
+    dashboard:
+      managementState: Managed</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>OpenShift AI hands-off queueing to the Red Hat Kueue operator</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>OpenShift AI automatically installs and manages KServe operator</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p><strong>Key benefit:</strong> Instead of manually installing 10+ operators, you install OpenShift AI once, and it orchestrates the dependencies.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_how_the_layers_work_together"><a class="anchor" href="#_how_the_layers_work_together"></a>How the Layers Work Together</h3>
+<div class="paragraph">
+<p><strong>Example: Deploying an InferenceService</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">apiVersion: serving.kserve.io/v1beta1
+kind: InferenceService
+metadata:
+  name: llama-3-8b
+spec:
+  predictor:
+    model:
+      modelFormat: vllm
+      runtime: vllm-runtime
+    resources:
+      limits:
+        nvidia.com/gpu: 1  <i class="conum" data-value="1"></i><b>(1)</b></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Request GPU resource</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p><strong>Workflow across three layers:</strong></p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>Layer 3 (OpenShift AI):</strong> Receives InferenceService creation request</p>
+</li>
+<li>
+<p><strong>Layer 2 (Kueue):</strong> Queues workload if GPUs unavailable, enforces quota</p>
+</li>
+<li>
+<p><strong>Layer 2 (KServe):</strong> Creates inference deployment pods</p>
+</li>
+<li>
+<p><strong>Layer 1 (GPU Operator):</strong> Kubernetes scheduler finds GPU node (via NFD labels), device plugin allocates GPU to pod, DCGM monitors GPU telemetry</p>
+</li>
+<li>
+<p><strong>Layer 2 (Cert-manager):</strong> Issues TLS certificate for inference endpoint</p>
+</li>
+<li>
+<p><strong>Layer 2 (Kuadrant):</strong> Applies rate limiting policies</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>All three layers coordinate to deliver a production-ready inference service with security, monitoring, and resource management.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>┌─────────────────────────────────────────────────┐
+│  Layer 3: Red Hat OpenShift AI Orchestration    │
+│  (DataScienceCluster coordinates dependencies)  │
+└─────────────────────────────────────────────────┘
+                      ↓
+┌─────────────────────────────────────────────────┐
+│  Layer 2: Operators for Inference at Scale      │
+│  (Kueue, KServe, Cert-manager, Kuadrant)        │
+└─────────────────────────────────────────────────┘
+                      ↓
+┌─────────────────────────────────────────────────┐
+│  Layer 1: Core &amp; Infrastructure Operators       │
+│  (NFD, NVIDIA GPU Operator)                     │
+└─────────────────────────────────────────────────┘
+                      ↓
+             GPU Hardware</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_whats_next"><a class="anchor" href="#_whats_next"></a>What&#8217;s Next</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>In the next section, you will learn how Kubernetes operators automate the lifecycle management of these components through OpenShift&#8217;s Operator Lifecycle Manager. You&#8217;ll understand operator subscriptions, channels, self-healing capabilities, and the three-layer operator architecture that powers Models-as-a-Service platforms. Then you&#8217;ll deploy the complete GPU operator stack hands-on.</p>
+</div>
+</div>
+</div>
+<nav class="pagination">
+  <span class="prev"><a href="index.html">Operator Foundations and GPU Stack Deployment</a></span>
+  <span class="next"><a href="s2-operators-overview.html">Understanding Operators and Platform Automation</a></span>
+</nav>
+</article>
+  </div>
+</main>
+</div>
+<footer class="footer">
+  <img src="../../../_/img/rhl-logo-red.png" height="40px" alt="Red Hat"  href="https://redhat.com" >
+</footer><script id="site-script" src="../../../_/js/site.js" data-ui-root-path="../../../_"></script>
+<script async src="../../../_/js/vendor/highlight.js"></script>
+  </body>
+</html>
