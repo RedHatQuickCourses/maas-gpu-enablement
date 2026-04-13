@@ -178,15 +178,25 @@
 <p>The NVIDIA GPU Operator orchestrates several critical components that work together to enable GPU acceleration in containerized environments:</p>
 </div>
 <div class="sect2">
-<h3 id="_node_feature_discovery_nfd"><a class="anchor" href="#_node_feature_discovery_nfd"></a>Node Feature Discovery (NFD)</h3>
+<h3 id="_node_feature_discovery_nfd_operator_dependency"><a class="anchor" href="#_node_feature_discovery_nfd_operator_dependency"></a>Node Feature Discovery (NFD) Operator Dependency</h3>
 <div class="paragraph">
 <p>Node Feature Discovery scans the node&#8217;s hardware via PCI IDs and applies Kubernetes labels to nodes where GPU hardware is detected. This enables the OpenShift scheduler to intelligently place GPU workloads on nodes with the appropriate hardware capabilities.</p>
 </div>
 <div class="paragraph">
-<p>Key responsibilities:
-* Hardware detection via PCI bus scanning
-* Automatic node labeling based on discovered features
-* Integration with Kubernetes scheduler for GPU-aware placement</p>
+<p>Key responsibilities:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Hardware detection via PCI bus scanning</p>
+</li>
+<li>
+<p>Automatic node labeling based on discovered features</p>
+</li>
+<li>
+<p>Integration with Kubernetes scheduler for GPU-aware placement</p>
+</li>
+</ul>
 </div>
 </div>
 <div class="sect2">

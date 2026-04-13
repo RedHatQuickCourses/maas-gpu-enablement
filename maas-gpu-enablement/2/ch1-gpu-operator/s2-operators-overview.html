@@ -183,14 +183,14 @@
 </ol>
 </div>
 <div class="sect2">
-<h3 id="_how_operators_work_a_concrete_example"><a class="anchor" href="#_how_operators_work_a_concrete_example"></a>How Operators Work: A Concrete Example</h3>
+<h3 id="_how_operators_work_example"><a class="anchor" href="#_how_operators_work_example"></a>How Operators Work Example</h3>
 <div class="paragraph">
 <p>Consider GPU driver management on a 100-node cluster. The traditional approach requires:</p>
 </div>
 <div class="ulist">
 <ul>
 <li>
-<p>Writing bash scripts to install drivers on each node</p>
+<p>Writing automation (bash scripts) to install drivers on each node</p>
 </li>
 <li>
 <p>Manually updating when new driver versions are released</p>
@@ -290,7 +290,7 @@ spec:
 <p>Operators don&#8217;t just deploy resources—they continuously monitor and repair them.</p>
 </div>
 <div class="paragraph">
-<p><strong>Scenario:</strong> Admin accidentally deletes the NVIDIA driver DaemonSet</p>
+<p><strong>Scenario:</strong> Admin deletes the NVIDIA driver DaemonSet</p>
 </div>
 <div class="listingblock">
 <div class="content">
