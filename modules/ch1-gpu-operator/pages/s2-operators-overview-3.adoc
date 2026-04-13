@@ -1,0 +1,63 @@
+:time_estimate: 25
+
+= Namespace Organization and Self-Healing
+
+_Estimated reading time: *{time_estimate} minutes*._
+
+Operators use namespace isolation to organize resources and enforce separation between control plane and data plane components.
+
+=== Namespace Separation Pattern
+
+A production MaaS platform typically uses these namespaces:
+
+[source,bash]
+----
+$ oc get namespaces | grep -E '(marketplace|nfd|nvidia|ods|kueue|cert)'
+openshift-marketplace       # <1>
+openshift-nfd               # <2>
+nvidia-gpu-operator         # <3>
+redhat-ods-operator         # <4>
+redhat-ods-applications     # <5>
+kueue-system                # <6>
+cert-manager                # <7>
+----
+<1> CatalogSources - operator discovery
+<2> Node Feature Discovery - hardware detection control plane
+<3> NVIDIA GPU Operator - GPU stack control plane
+<4> OpenShift AI operator control plane
+<5> OpenShift AI dashboard and shared services
+<6> Kueue workload queue management
+<7> Certificate management control plane
+
+**User workload namespaces** are separate (e.g., `ml-team-alpha`, `data-science-prod`) where InferenceServices and training jobs run.
+
+=== Self-Healing Across Namespaces
+
+Operators monitor their namespaces and enforce consistent state:
+
+**Example: Multi-namespace self-healing**
+
+1. **Admin deletes NFD worker DaemonSet** in `openshift-nfd`
+2. **NFD operator** detects missing DaemonSet, recreates it
+3. **GPU Operator** detects nodes losing NFD labels
+4. **GPU Operator** waits for NFD to stabilize, then re-validates ClusterPolicy
+5. **Both operators** return to healthy state without human intervention
+
+This self-healing spans the entire operator stack, maintaining platform integrity even under configuration errors or accidental deletions.
+
+=== Consistent State Enforcement
+
+Operators continuously enforce desired state across namespaces:
+
+* NFD ensures all nodes have accurate hardware labels
+* GPU Operator ensures all GPU nodes run driver, toolkit, device plugin pods
+* OpenShift AI ensures all enabled components have running operators
+* Kueue ensures ResourceFlavors match available GPU node labels
+
+This creates a **resilient platform** where operators collaborate to maintain system health.
+
+== What's Next
+
+In the next lab, you will deploy the foundational Layer 1 operators—Node Feature Discovery and NVIDIA GPU Operator—using OpenShift's Operator Lifecycle Manager. You'll create Subscriptions, configure the ClusterPolicy Custom Resource, and verify the complete GPU software stack is running.
+
+This hands-on experience will reinforce your understanding of OLM workflow, Custom Resource activation, and operator reconciliation in action.

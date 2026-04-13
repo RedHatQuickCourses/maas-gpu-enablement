@@ -1,0 +1,118 @@
+:time_estimate: 28
+
+= Integrating with OpenShift Monitoring
+
+_Estimated reading time: *{time_estimate} minutes*._
+
+GPU telemetry must integrate with OpenShift's monitoring stack for unified observability. The DCGM Exporter exposes GPU metrics in Prometheus format, but these metrics are only collected if the GPU Operator namespace is configured for monitoring.
+
+=== DCGM Exporter and Prometheus Integration
+
+OpenShift's monitoring stack is based on Prometheus for metric collection and Thanos for long-term storage and federated queries. The DCGM Exporter integrates with this stack via ServiceMonitor resources.
+
+**Integration Architecture:**
+
+----
+DCGM Daemon (per GPU node)
+  ↓ collects GPU metrics every 30s
+DCGM Exporter DaemonSet (port 9400/metrics)
+  ↓ exposes Prometheus-format metrics
+ServiceMonitor (nvidia-dcgm-exporter)
+  ↓ discovered by Prometheus Operator
+Prometheus User Workload Monitoring
+  ↓ scrapes endpoints, stores time-series
+Thanos Querier
+  ↓ federated queries, long-term storage
+Grafana (Chapter 3)
+  ↓ visualization and dashboards
+----
+
+The GPU Operator automatically creates a ServiceMonitor resource when `dcgmExporter.enabled: true`. However, Prometheus only scrapes ServiceMonitors in namespaces labeled for monitoring.
+
+=== Enabling Metric Collection
+
+OpenShift's user workload monitoring must be configured to discover ServiceMonitors in the `nvidia-gpu-operator` namespace.
+
+**Apply Monitoring Label to Namespace:**
+
+[source,bash]
+----
+$ oc label namespace nvidia-gpu-operator \
+  openshift.io/cluster-monitoring=true
+----
+
+**Why This Label Matters:**
+
+* Without the label: Prometheus ignores ServiceMonitors in the namespace
+* With the label: Prometheus discovers the `nvidia-dcgm-exporter` ServiceMonitor and begins scraping GPU metrics
+* The label enables user-workload Prometheus to monitor custom applications and operators
+
+**Verify ServiceMonitor Discovery:**
+
+[source,bash]
+----
+$ oc get servicemonitor -n nvidia-gpu-operator
+NAME                   AGE
+nvidia-dcgm-exporter   5m
+
+$ oc describe servicemonitor nvidia-dcgm-exporter -n nvidia-gpu-operator
+...
+Spec:
+  Endpoints:
+    Port:  gpu-metrics  # <1>
+    Path:  /metrics
+  Selector:
+    Match Labels:
+      app:  nvidia-dcgm-exporter
+----
+<1> DCGM Exporter exposes metrics on port 9400 at `/metrics` endpoint
+
+---
+
+=== Verifying Metric Availability
+
+After enabling namespace monitoring, GPU metrics should be available in Prometheus within 30-60 seconds.
+
+**Query Prometheus for GPU Metrics:**
+
+1. Open OpenShift web console
+2. Navigate to **Observe → Metrics**
+3. Enter a DCGM metric query:
+
+[source,promql]
+----
+DCGM_FI_DEV_GPU_UTIL{namespace="nvidia-gpu-operator"}
+----
+
+**Expected Result:**
+
+You should see time-series data for GPU utilization across all GPU nodes. Each series represents one GPU.
+
+**Example Metric Queries:**
+
+[source,promql]
+----
+# GPU utilization percentage
+DCGM_FI_DEV_GPU_UTIL
+
+# GPU memory used (MB)
+DCGM_FI_DEV_FB_USED
+
+# GPU temperature (Celsius)
+DCGM_FI_DEV_GPU_TEMP
+
+# GPU power draw (Watts)
+DCGM_FI_DEV_POWER_USAGE
+----
+
+**Chapter 3 Integration:**
+
+In Chapter 3 (Observability), you will create Grafana dashboards that visualize these metrics with:
+
+* GPU utilization heatmaps across the cluster
+* VRAM usage trends over time
+* Power consumption and cost allocation
+* Temperature and thermal throttling alerts
+* Correlation between GPU metrics and inference latency
+
+The DCGM Exporter configuration you deployed in this lab is the prerequisite for that observability stack.

@@ -1,0 +1,43 @@
+:time_estimate: 20
+
+= MIG Benefits for MaaS
+
+_Estimated reading time: *{time_estimate} minutes*._
+
+For Models-as-a-Service architectures, MIG provides measurable advantages that directly impact platform economics and operational reliability.
+
+=== Cost Efficiency and ROI
+
+* **Deploy 7 concurrent small models** on single A100-40GB (vs. 1 with full GPU allocation)
+* **Reduce per-model GPU cost from $15,000 to $2,143** (7x cost reduction for `1g.5gb` profiles)
+* **Increase cluster-wide GPU utilization from 33% to 78%** (2.4x improvement over exclusive allocation)
+* **Achieve ROI break-even 2.4x faster** than full GPU deployments (10 months vs. 24 months baseline)
+* **Right-size GPU resources** to actual model requirements, eliminating overprovisioning waste
+
+**Concrete example**: Platform serving 21 small models previously required 21x A100 GPUs ($315,000 capital). With MIG `1g.5gb` profiles, same workload runs on 3x A100 GPUs ($45,000 capital), saving $270,000.
+
+=== Performance Isolation and Predictability
+
+* **Guarantee P99 latency variance <1%** (vs. 15-40% with time-slicing)
+* **Hardware-enforced memory isolation** prevents out-of-memory (OOM) crosstalk between workloads
+* **Dedicated streaming multiprocessors** eliminate compute contention and throttling
+* **Enable SLA-backed inference** with measurable, enforceable performance guarantees
+* **Prevent noisy neighbor problems** through physical resource partitioning
+
+Time-slicing workloads experience latency spikes when concurrent requests arrive. MIG instances maintain consistent latency regardless of neighboring workload activity.
+
+=== Operational Flexibility and Multi-Tenancy
+
+* **Scale model instances independently** without affecting neighboring services (e.g., scale LLaMA-7B from 1 to 3 replicas without reprovisioning hardware)
+* **Mix small and large models** on same physical GPU (e.g., `1g.5gb` microservices alongside `3g.20gb` large language models)
+* **Support true multi-tenant deployments** with hardware isolation between teams
+* **Assign dedicated MIG instances** to specific tenants or namespaces for guaranteed capacity
+* **Enable chargeback and cost allocation** with accurate per-MIG-instance metrics from DCGM
+
+=== Resource Predictability and Capacity Planning
+
+* **Guaranteed GPU resources per deployment**: Each InferenceService gets dedicated SMs and VRAM
+* **Reduce capacity planning variance from ±40% to ±5%**: MIG instances have predictable, fixed resource allocations
+* **Simplify quota management**: Assign 2x `2g.10gb` instances per team, enforceable via Kueue (Chapter 4)
+* **Enable accurate per-model billing**: DCGM provides per-MIG-instance utilization metrics for cost tracking
+* **Predictable failure domains**: OOM or crash in one MIG instance doesn't affect others on same GPU

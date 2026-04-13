@@ -1,9 +1,14 @@
 = Nvidia Accelerator Configuration for Scale
 :navtitle: Home
 
+== The GPU Silo Crisis
+
+Organizations investing in GPU infrastructure often face the "GPU Silo" problem where expensive GPU hardware remains underutilized due to complex manual configuration, dependency management, and operational overhead. Red Hat AI and the NVIDIA GPU Operator addresses this challenge by automating the deployment and lifecycle management of all necessary GPU software components.
+
 == Goal
 
 To equip architects, engineers, and administrators with the knowledge and skills required to configure, manage, and monitor NVIDIA GPU Accelerators on OpenShift. This course serves as the foundational hardware enablement layer for a Models-as-a-Service (MaaS) architecture, ensuring teams can utilize and support these components as part of a revenue-generating services business.
+
 
 == Objectives
 
