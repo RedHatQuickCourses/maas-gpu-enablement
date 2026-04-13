@@ -3,9 +3,9 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>GPU Operator Features and Platform Deployment :: Nvidia Accelerator Configuration for Scale</title>
-    <link rel="prev" href="s2-operators-overview-3.html">
-    <link rel="next" href="s3-deploy-operators-lab-1.html">
+    <title>Integrating with OpenShift Monitoring :: Nvidia Accelerator Configuration for Scale</title>
+    <link rel="prev" href="s3-deploy-operators-lab-2.html">
+    <link rel="next" href="s3-deploy-operators-lab-4.html">
     <meta name="generator" content="Antora 3.1.3">
     <link rel="stylesheet" href="../../../_/css/site.css">
     <script>var uiRootPath = '../../../_'</script>
@@ -72,7 +72,7 @@
   </li>
 </ul>
   </li>
-  <li class="nav-item is-current-page" data-depth="2">
+  <li class="nav-item" data-depth="2">
     <button class="nav-item-toggle"></button>
     <a class="nav-link" href="s3-deploy-operators-lab.html">GPU Operator Features and Platform Deployment</a>
 <ul class="nav-list">
@@ -82,7 +82,7 @@
   <li class="nav-item" data-depth="3">
     <a class="nav-link" href="s3-deploy-operators-lab-2.html">ClusterPolicy as the Control Plane</a>
   </li>
-  <li class="nav-item" data-depth="3">
+  <li class="nav-item is-current-page" data-depth="3">
     <a class="nav-link" href="s3-deploy-operators-lab-3.html">Integrating with OpenShift Monitoring</a>
   </li>
   <li class="nav-item" data-depth="3">
@@ -181,6 +181,7 @@
     <li><a href="../index.html">Nvidia Accelerator Configuration for Scale</a></li>
     <li><a href="index.html">Operator Foundations and GPU Stack Deployment</a></li>
     <li><a href="s3-deploy-operators-lab.html">GPU Operator Features and Platform Deployment</a></li>
+    <li><a href="s3-deploy-operators-lab-3.html">Integrating with OpenShift Monitoring</a></li>
   </ul>
 </nav>
 </div>
@@ -189,21 +190,187 @@
   <div class="toc-menu"></div>
 </aside>
 <article class="doc">
-<h1 class="page">GPU Operator Features and Platform Deployment</h1>
-<div class="dlist">
-<dl>
-<dt class="hdlist1">Objective</dt>
-<dd>
-<p>Understand how the NVIDIA GPU Operator transforms raw GPU hardware into a production-ready, multi-tenant compute platform through automated lifecycle management of drivers, device plugins, monitoring, and GPU sharing capabilities. Deploy the complete operator stack using OpenShift Operator Lifecycle Manager, configure GPU sharing strategies (time-slicing preparation, MIG enablement), and integrate GPU telemetry with cluster monitoring for production observability.</p>
-</dd>
-</dl>
+<h1 class="page">Integrating with OpenShift Monitoring</h1>
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p><em>Estimated reading time: <strong>28 minutes</strong>.</em></p>
 </div>
 <div class="paragraph">
-<p>In the previous sections, you learned about the operator pattern for platform automation. This section builds on that foundation by examining GPU Operator features in depth, comparing GPU sharing strategies for multi-tenant platforms, and deploying the complete stack with production-ready configuration.</p>
+<p>GPU telemetry must integrate with OpenShift&#8217;s monitoring stack for unified observability. The DCGM Exporter exposes GPU metrics in Prometheus format, but these metrics are only collected if the GPU Operator namespace is configured for monitoring.</p>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_dcgm_exporter_and_prometheus_integration"><a class="anchor" href="#_dcgm_exporter_and_prometheus_integration"></a>DCGM Exporter and Prometheus Integration</h3>
+<div class="paragraph">
+<p>OpenShift&#8217;s monitoring stack is based on Prometheus for metric collection and Thanos for long-term storage and federated queries. The DCGM Exporter integrates with this stack via ServiceMonitor resources.</p>
+</div>
+<div class="paragraph">
+<p><strong>Integration Architecture:</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>DCGM Daemon (per GPU node)
+  ↓ collects GPU metrics every 30s
+DCGM Exporter DaemonSet (port 9400/metrics)
+  ↓ exposes Prometheus-format metrics
+ServiceMonitor (nvidia-dcgm-exporter)
+  ↓ discovered by Prometheus Operator
+Prometheus User Workload Monitoring
+  ↓ scrapes endpoints, stores time-series
+Thanos Querier
+  ↓ federated queries, long-term storage
+Grafana (Chapter 3)
+  ↓ visualization and dashboards</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The GPU Operator automatically creates a ServiceMonitor resource when <code>dcgmExporter.enabled: true</code>. However, Prometheus only scrapes ServiceMonitors in namespaces labeled for monitoring.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_enabling_metric_collection"><a class="anchor" href="#_enabling_metric_collection"></a>Enabling Metric Collection</h3>
+<div class="paragraph">
+<p>OpenShift&#8217;s user workload monitoring must be configured to discover ServiceMonitors in the <code>nvidia-gpu-operator</code> namespace.</p>
+</div>
+<div class="paragraph">
+<p><strong>Apply Monitoring Label to Namespace:</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ oc label namespace nvidia-gpu-operator \
+  openshift.io/cluster-monitoring=true</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>Why This Label Matters:</strong></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Without the label: Prometheus ignores ServiceMonitors in the namespace</p>
+</li>
+<li>
+<p>With the label: Prometheus discovers the <code>nvidia-dcgm-exporter</code> ServiceMonitor and begins scraping GPU metrics</p>
+</li>
+<li>
+<p>The label enables user-workload Prometheus to monitor custom applications and operators</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>Verify ServiceMonitor Discovery:</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ oc get servicemonitor -n nvidia-gpu-operator
+NAME                   AGE
+nvidia-dcgm-exporter   5m
+
+$ oc describe servicemonitor nvidia-dcgm-exporter -n nvidia-gpu-operator
+...
+Spec:
+  Endpoints:
+    Port:  gpu-metrics  <i class="conum" data-value="1"></i><b>(1)</b>
+    Path:  /metrics
+  Selector:
+    Match Labels:
+      app:  nvidia-dcgm-exporter</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>DCGM Exporter exposes metrics on port 9400 at <code>/metrics</code> endpoint</td>
+</tr>
+</table>
+</div>
+<hr>
+</div>
+<div class="sect2">
+<h3 id="_verifying_metric_availability"><a class="anchor" href="#_verifying_metric_availability"></a>Verifying Metric Availability</h3>
+<div class="paragraph">
+<p>After enabling namespace monitoring, GPU metrics should be available in Prometheus within 30-60 seconds.</p>
+</div>
+<div class="paragraph">
+<p><strong>Query Prometheus for GPU Metrics:</strong></p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Open OpenShift web console</p>
+</li>
+<li>
+<p>Navigate to <strong>Observe → Metrics</strong></p>
+</li>
+<li>
+<p>Enter a DCGM metric query:</p>
+</li>
+</ol>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-promql hljs" data-lang="promql">DCGM_FI_DEV_GPU_UTIL{namespace="nvidia-gpu-operator"}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>Expected Result:</strong></p>
+</div>
+<div class="paragraph">
+<p>You should see time-series data for GPU utilization across all GPU nodes. Each series represents one GPU.</p>
+</div>
+<div class="paragraph">
+<p><strong>Example Metric Queries:</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-promql hljs" data-lang="promql"># GPU utilization percentage
+DCGM_FI_DEV_GPU_UTIL
+
+# GPU memory used (MB)
+DCGM_FI_DEV_FB_USED
+
+# GPU temperature (Celsius)
+DCGM_FI_DEV_GPU_TEMP
+
+# GPU power draw (Watts)
+DCGM_FI_DEV_POWER_USAGE</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>Chapter 3 Integration:</strong></p>
+</div>
+<div class="paragraph">
+<p>In Chapter 3 (Observability), you will create Grafana dashboards that visualize these metrics with:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>GPU utilization heatmaps across the cluster</p>
+</li>
+<li>
+<p>VRAM usage trends over time</p>
+</li>
+<li>
+<p>Power consumption and cost allocation</p>
+</li>
+<li>
+<p>Temperature and thermal throttling alerts</p>
+</li>
+<li>
+<p>Correlation between GPU metrics and inference latency</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>The DCGM Exporter configuration you deployed in this lab is the prerequisite for that observability stack.</p>
+</div>
 </div>
 <nav class="pagination">
-  <span class="prev"><a href="s2-operators-overview-3.html">Namespace Organization and Self-Healing</a></span>
-  <span class="next"><a href="s3-deploy-operators-lab-1.html">The GPU Underutilization Problem</a></span>
+  <span class="prev"><a href="s3-deploy-operators-lab-2.html">ClusterPolicy as the Control Plane</a></span>
+  <span class="next"><a href="s3-deploy-operators-lab-4.html">Hands-On: Deploying the GPU Operator Stack</a></span>
 </nav>
 </article>
   </div>

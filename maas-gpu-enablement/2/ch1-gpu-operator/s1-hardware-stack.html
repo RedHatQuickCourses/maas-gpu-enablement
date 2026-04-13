@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Deconstructing the Hardware Stack :: Nvidia Accelerator Configuration for Scale</title>
+    <title>Deconstructing MaaS Operator Stack :: Nvidia Accelerator Configuration for Scale</title>
     <link rel="prev" href="index.html">
     <link rel="next" href="s2-operators-overview.html">
     <meta name="generator" content="Antora 3.1.3">
@@ -58,13 +58,40 @@
     <a class="nav-link" href="index.html">Operator Foundations and GPU Stack Deployment</a>
 <ul class="nav-list">
   <li class="nav-item is-current-page" data-depth="2">
-    <a class="nav-link" href="s1-hardware-stack.html">Deconstructing the Hardware Stack</a>
-  </li>
-  <li class="nav-item" data-depth="2">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="s1-hardware-stack.html">Deconstructing MaaS Operator Stack</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="3">
     <a class="nav-link" href="s2-operators-overview.html">Understanding Operators and Platform Automation</a>
   </li>
+  <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="s2-operators-overview-2.html">Custom Resources and Controllers</a>
+  </li>
+  <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="s2-operators-overview-3.html">Namespace Organization and Self-Healing</a>
+  </li>
+</ul>
+  </li>
   <li class="nav-item" data-depth="2">
+    <button class="nav-item-toggle"></button>
     <a class="nav-link" href="s3-deploy-operators-lab.html">GPU Operator Features and Platform Deployment</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="s3-deploy-operators-lab-1.html">The GPU Underutilization Problem</a>
+  </li>
+  <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="s3-deploy-operators-lab-2.html">ClusterPolicy as the Control Plane</a>
+  </li>
+  <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="s3-deploy-operators-lab-3.html">Integrating with OpenShift Monitoring</a>
+  </li>
+  <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="s3-deploy-operators-lab-4.html">Hands-On: Deploying the GPU Operator Stack</a>
+  </li>
+  <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="s3-deploy-operators-lab-5.html">Production Operational Considerations</a>
+  </li>
+</ul>
   </li>
 </ul>
   </li>
@@ -77,10 +104,25 @@
     <a class="nav-link" href="../ch2-mig/index.html">Configure Multi-Instance GPU (MIG) for MaaS</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../ch2-mig/s1-mig-overview.html">Maximizing GPU ROI with Multi-Instance GPU</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="../ch2-mig/s1-mig-overview-2.html">MIG Advertisement Strategies</a>
+  </li>
+  <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="../ch2-mig/s1-mig-overview-3.html">How MIG Partitioning Works in Kubernetes</a>
+  </li>
+  <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="../ch2-mig/s1-mig-overview-4.html">MIG Benefits for MaaS</a>
+  </li>
+  <li class="nav-item" data-depth="3">
     <a class="nav-link" href="../ch2-mig/s1-mig-overview.html">Maximizing GPU ROI with Multi-Instance GPU</a>
   </li>
-  <li class="nav-item" data-depth="2">
+  <li class="nav-item" data-depth="3">
     <a class="nav-link" href="../ch2-mig/s2-mig-slicing-lab.html">Lab: MIG Slicing Configuration</a>
+  </li>
+</ul>
   </li>
 </ul>
   </li>
@@ -138,7 +180,7 @@
   <ul>
     <li><a href="../index.html">Nvidia Accelerator Configuration for Scale</a></li>
     <li><a href="index.html">Operator Foundations and GPU Stack Deployment</a></li>
-    <li><a href="s1-hardware-stack.html">Deconstructing the Hardware Stack</a></li>
+    <li><a href="s1-hardware-stack.html">Deconstructing MaaS Operator Stack</a></li>
   </ul>
 </nav>
 </div>
@@ -147,184 +189,332 @@
   <div class="toc-menu"></div>
 </aside>
 <article class="doc">
-<h1 class="page">Deconstructing the Hardware Stack</h1>
+<h1 class="page">Deconstructing MaaS Operator Stack</h1>
 <div id="preamble">
 <div class="sectionbody">
 <div class="paragraph">
 <p><em>Estimated reading time: <strong>15 minutes</strong>.</em></p>
 </div>
-<div class="dlist">
-<dl>
-<dt class="hdlist1">Objective</dt>
-<dd>
-<p>Understand the "GPU Silo" crisis and how the NVIDIA GPU Operator automates the management of NVIDIA software components. Learn the core components that power the GPU stack and their roles in enabling GPU workloads on OpenShift.</p>
-</dd>
-</dl>
-</div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_the_gpu_silo_crisis"><a class="anchor" href="#_the_gpu_silo_crisis"></a>The GPU Silo Crisis</h2>
+<h2 id="_the_three_layer_maas_operator_stack"><a class="anchor" href="#_the_three_layer_maas_operator_stack"></a>The Three-Layer MaaS Operator Stack</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Organizations investing in GPU infrastructure often face the "GPU Silo" problem where expensive GPU hardware remains underutilized due to complex manual configuration, dependency management, and operational overhead. The NVIDIA GPU Operator addresses this challenge by automating the deployment and lifecycle management of all necessary GPU software components.</p>
-</div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_core_components_of_the_gpu_stack"><a class="anchor" href="#_core_components_of_the_gpu_stack"></a>Core Components of the GPU Stack</h2>
-<div class="sectionbody">
-<div class="paragraph">
-<p>The NVIDIA GPU Operator orchestrates several critical components that work together to enable GPU acceleration in containerized environments:</p>
+<p>A production Models-as-a-Service platform requires orchestrating dozens of operators across three functional layers. Red Hat OpenShift AI provides this orchestration.</p>
 </div>
 <div class="sect2">
-<h3 id="_node_feature_discovery_nfd_operator_dependency"><a class="anchor" href="#_node_feature_discovery_nfd_operator_dependency"></a>Node Feature Discovery (NFD) Operator Dependency</h3>
+<h3 id="_layer_1_core_infrastructure_operators"><a class="anchor" href="#_layer_1_core_infrastructure_operators"></a>Layer 1: Core &amp; Infrastructure Operators</h3>
 <div class="paragraph">
-<p>Node Feature Discovery scans the node&#8217;s hardware via PCI IDs and applies Kubernetes labels to nodes where GPU hardware is detected. This enables the OpenShift scheduler to intelligently place GPU workloads on nodes with the appropriate hardware capabilities.</p>
+<p><strong>Purpose:</strong> Enable hardware detection and GPU software stack automation</p>
 </div>
 <div class="paragraph">
-<p>Key responsibilities:</p>
+<p><strong>Operators in this layer:</strong></p>
 </div>
 <div class="ulist">
 <ul>
 <li>
-<p>Hardware detection via PCI bus scanning</p>
+<p><strong>Node Feature Discovery (NFD)</strong></p>
+<div class="ulist">
+<ul>
+<li>
+<p>Scans node hardware via PCI bus</p>
 </li>
 <li>
-<p>Automatic node labeling based on discovered features</p>
+<p>Labels nodes with detected capabilities</p>
 </li>
 <li>
-<p>Integration with Kubernetes scheduler for GPU-aware placement</p>
+<p>Namespace: <code>openshift-nfd</code></p>
+</li>
+<li>
+<p>Catalog: <code>redhat-operators</code></p>
 </li>
 </ul>
 </div>
+</li>
+<li>
+<p><strong>NVIDIA GPU Operator</strong></p>
+<div class="ulist">
+<ul>
+<li>
+<p>Deploys GPU drivers as containers</p>
+</li>
+<li>
+<p>Installs NVIDIA Container Toolkit</p>
+</li>
+<li>
+<p>Manages device plugin for GPU resource allocation</p>
+</li>
+<li>
+<p>Deploys DCGM for monitoring</p>
+</li>
+<li>
+<p>Namespace: <code>nvidia-gpu-operator</code></p>
+</li>
+<li>
+<p>Catalog: <code>certified-operators</code></p>
+</li>
+</ul>
+</div>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>Activation:</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml"># NFD activation
+apiVersion: nfd.openshift.io/v1
+kind: NodeFeatureDiscovery
+metadata:
+  name: nfd-instance
+  namespace: openshift-nfd
+
+# GPU Operator activation
+apiVersion: nvidia.com/v1
+kind: ClusterPolicy
+metadata:
+  name: gpu-cluster-policy</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>You will deploy this layer in the upcoming lab.</strong></p>
+</div>
+<hr>
 </div>
 <div class="sect2">
-<h3 id="_nvidia_driver_container"><a class="anchor" href="#_nvidia_driver_container"></a>NVIDIA Driver Container</h3>
+<h3 id="_layer_2_operators_for_inference_at_scale"><a class="anchor" href="#_layer_2_operators_for_inference_at_scale"></a>Layer 2: Operators for Inference at Scale</h3>
 <div class="paragraph">
-<p>The NVIDIA Driver Container deploys necessary GPU drivers directly via containers, eliminating the need to manually install kernel modules on the host operating system. This containerized approach provides:</p>
+<p><strong>Purpose:</strong> Provide production-grade MaaS capabilities like certificate management, rate limiting, workload queueing, and distributed training.</p>
+</div>
+<div class="paragraph">
+<p><strong>Operators in this layer:</strong></p>
 </div>
 <div class="ulist">
 <ul>
 <li>
-<p>Simplified driver management and updates</p>
+<p><strong>Cert-manager</strong></p>
+<div class="ulist">
+<ul>
+<li>
+<p>Automates TLS certificate issuance and renewal</p>
 </li>
 <li>
-<p>Consistent driver versions across the cluster</p>
+<p>Integrates with Let&#8217;s Encrypt and internal CAs</p>
 </li>
 <li>
-<p>Isolation from host OS dependencies</p>
+<p>Namespace: <code>cert-manager</code></p>
 </li>
 <li>
-<p>Automated driver installation during node provisioning</p>
+<p>Required for secure inference endpoints</p>
 </li>
 </ul>
 </div>
+</li>
+<li>
+<p><strong>Connectivity Link (or Kuadrant)</strong></p>
+<div class="ulist">
+<ul>
+<li>
+<p>Rate limiting for inference requests</p>
+</li>
+<li>
+<p>Authentication and authorization policies</p>
+</li>
+<li>
+<p>API gateway capabilities</p>
+</li>
+<li>
+<p>Namespace: <code>kuadrant-system</code></p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p><strong>LeaderWorkerSet</strong></p>
+<div class="ulist">
+<ul>
+<li>
+<p>Orchestrates distributed training jobs</p>
+</li>
+<li>
+<p>Leader/worker pod coordination</p>
+</li>
+<li>
+<p>Namespace: Workload-specific</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p><strong>Kueue</strong></p>
+<div class="ulist">
+<ul>
+<li>
+<p>Workload queueing and quota management</p>
+</li>
+<li>
+<p>Fair sharing of GPU resources across teams</p>
+</li>
+<li>
+<p>Namespace: <code>kueue-system</code></p>
+</li>
+<li>
+<p>Critical for multi-tenant MaaS platforms</p>
+</li>
+</ul>
+</div>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>Activation:</strong> Each operator has its own Custom Resource for configuration.</p>
+</div>
+<hr>
 </div>
 <div class="sect2">
-<h3 id="_nvidia_container_toolkit"><a class="anchor" href="#_nvidia_container_toolkit"></a>NVIDIA Container Toolkit</h3>
+<h3 id="_layer_3_red_hat_openshift_ai_orchestration"><a class="anchor" href="#_layer_3_red_hat_openshift_ai_orchestration"></a>Layer 3: Red Hat OpenShift AI Orchestration</h3>
 <div class="paragraph">
-<p>The NVIDIA Container Toolkit plugs into the OpenShift container runtime (CRI-O) to ensure pods can securely request and access underlying GPU hardware. It provides:</p>
+<p><strong>Purpose:</strong> Coordinate the complete MaaS ecosystem with unified configuration and dependency management.</p>
+</div>
+<div class="paragraph">
+<p><strong>Red Hat OpenShift AI Operator:</strong></p>
 </div>
 <div class="ulist">
 <ul>
 <li>
-<p>Runtime integration for GPU resource allocation</p>
+<p><strong>Single control point</strong> for MaaS platform lifecycle</p>
 </li>
 <li>
-<p>Secure GPU device passthrough to containers</p>
+<p><strong>Manages Layer 2 operator dependencies</strong> automatically</p>
 </li>
 <li>
-<p>Environment configuration for CUDA applications</p>
+<p><strong>Unified configuration</strong> via DataScienceCluster Custom Resource</p>
 </li>
 <li>
-<p>Resource isolation between containerized workloads</p>
+<p><strong>Coordinates upgrades</strong> across the operator suite</p>
+</li>
+<li>
+<p><strong>Namespace:</strong> <code>redhat-ods-operator</code></p>
+</li>
+<li>
+<p><strong>Catalog:</strong> <code>redhat-operators</code></p>
 </li>
 </ul>
 </div>
-</div>
-<div class="sect2">
-<h3 id="_gpu_feature_discovery_gfd"><a class="anchor" href="#_gpu_feature_discovery_gfd"></a>GPU Feature Discovery (GFD)</h3>
 <div class="paragraph">
-<p>GPU Feature Discovery gathers granular hardware capabilities including GPU model, VRAM size, and MIG profiles, then applies them as specific node labels. This detailed hardware inventory enables:</p>
+<p><strong>DataScienceCluster CR Example:</strong></p>
 </div>
-<div class="ulist">
-<ul>
-<li>
-<p>Fine-grained workload placement decisions</p>
-</li>
-<li>
-<p>MIG-aware scheduling</p>
-</li>
-<li>
-<p>Hardware capability matching for specific workloads</p>
-</li>
-<li>
-<p>Resource inventory and capacity planning</p>
-</li>
-</ul>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">apiVersion: datasciencecluster.opendatahub.io/v1
+kind: DataScienceCluster
+metadata:
+  name: default-dsc
+spec:
+  components:
+    kueue:
+      managementState: Unmanaged  <i class="conum" data-value="1"></i><b>(1)</b>
+    kserve:
+      managementState: Managed  <i class="conum" data-value="2"></i><b>(2)</b>
+    dashboard:
+      managementState: Managed</code></pre>
 </div>
 </div>
-<div class="sect2">
-<h3 id="_data_center_gpu_manager_dcgm"><a class="anchor" href="#_data_center_gpu_manager_dcgm"></a>Data Center GPU Manager (DCGM)</h3>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>OpenShift AI hands-off queueing to the Red Hat Kueue operator</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>OpenShift AI automatically installs and manages KServe operator</td>
+</tr>
+</table>
+</div>
 <div class="paragraph">
-<p>DCGM is a daemon that continuously monitors GPU health, diagnostics, and telemetry. It provides:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>Real-time GPU health monitoring</p>
-</li>
-<li>
-<p>Performance metrics collection</p>
-</li>
-<li>
-<p>Diagnostic capabilities for troubleshooting</p>
-</li>
-<li>
-<p>Integration with cluster monitoring systems</p>
-</li>
-</ul>
+<p><strong>Key benefit:</strong> Instead of manually installing 10+ operators, you install OpenShift AI once, and it orchestrates the dependencies.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_dcgm_exporter"><a class="anchor" href="#_dcgm_exporter"></a>DCGM Exporter</h3>
+<h3 id="_how_the_layers_work_together"><a class="anchor" href="#_how_the_layers_work_together"></a>How the Layers Work Together</h3>
 <div class="paragraph">
-<p>The DCGM Exporter extracts metrics from DCGM and formats them for Prometheus scraping, enabling integration with OpenShift&#8217;s monitoring stack. This component bridges GPU telemetry with cloud-native observability platforms.</p>
+<p><strong>Example: Deploying an InferenceService</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">apiVersion: serving.kserve.io/v1beta1
+kind: InferenceService
+metadata:
+  name: llama-3-8b
+spec:
+  predictor:
+    model:
+      modelFormat: vllm
+      runtime: vllm-runtime
+    resources:
+      limits:
+        nvidia.com/gpu: 1  <i class="conum" data-value="1"></i><b>(1)</b></code></pre>
 </div>
 </div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Request GPU resource</td>
+</tr>
+</table>
 </div>
-</div>
-<div class="sect1">
-<h2 id="_architecture_overview"><a class="anchor" href="#_architecture_overview"></a>Architecture Overview</h2>
-<div class="sectionbody">
 <div class="paragraph">
-<p>Together, these components form a complete GPU enablement stack:</p>
+<p><strong>Workflow across three layers:</strong></p>
 </div>
 <div class="olist arabic">
 <ol class="arabic">
 <li>
-<p><strong>NFD</strong> detects GPU hardware presence</p>
+<p><strong>Layer 3 (OpenShift AI):</strong> Receives InferenceService creation request</p>
 </li>
 <li>
-<p><strong>Driver Container</strong> installs required drivers</p>
+<p><strong>Layer 2 (Kueue):</strong> Queues workload if GPUs unavailable, enforces quota</p>
 </li>
 <li>
-<p><strong>Container Toolkit</strong> enables runtime GPU access</p>
+<p><strong>Layer 2 (KServe):</strong> Creates inference deployment pods</p>
 </li>
 <li>
-<p><strong>GFD</strong> advertises detailed GPU capabilities</p>
+<p><strong>Layer 1 (GPU Operator):</strong> Kubernetes scheduler finds GPU node (via NFD labels), device plugin allocates GPU to pod, DCGM monitors GPU telemetry</p>
 </li>
 <li>
-<p><strong>DCGM</strong> monitors GPU health and performance</p>
+<p><strong>Layer 2 (Cert-manager):</strong> Issues TLS certificate for inference endpoint</p>
 </li>
 <li>
-<p><strong>DCGM Exporter</strong> publishes metrics for observability</p>
+<p><strong>Layer 2 (Kuadrant):</strong> Applies rate limiting policies</p>
 </li>
 </ol>
 </div>
 <div class="paragraph">
-<p>This automated approach transforms GPU infrastructure from manually-managed silos into a fully integrated, cloud-native compute resource suitable for Models-as-a-Service deployments at scale.</p>
+<p>All three layers coordinate to deliver a production-ready inference service with security, monitoring, and resource management.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>┌─────────────────────────────────────────────────┐
+│  Layer 3: Red Hat OpenShift AI Orchestration    │
+│  (DataScienceCluster coordinates dependencies)  │
+└─────────────────────────────────────────────────┘
+                      ↓
+┌─────────────────────────────────────────────────┐
+│  Layer 2: Operators for Inference at Scale      │
+│  (Kueue, KServe, Cert-manager, Kuadrant)        │
+└─────────────────────────────────────────────────┘
+                      ↓
+┌─────────────────────────────────────────────────┐
+│  Layer 1: Core &amp; Infrastructure Operators       │
+│  (NFD, NVIDIA GPU Operator)                     │
+└─────────────────────────────────────────────────┘
+                      ↓
+             GPU Hardware</pre>
+</div>
+</div>
 </div>
 </div>
 </div>

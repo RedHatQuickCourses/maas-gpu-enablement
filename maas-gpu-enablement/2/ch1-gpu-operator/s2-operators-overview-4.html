@@ -3,9 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>GPU Operator Features and Platform Deployment :: Nvidia Accelerator Configuration for Scale</title>
-    <link rel="prev" href="s2-operators-overview-3.html">
-    <link rel="next" href="s3-deploy-operators-lab-1.html">
+    <title>Namespace Organization and Self-Healing :: Nvidia Accelerator Configuration for Scale</title>
     <meta name="generator" content="Antora 3.1.3">
     <link rel="stylesheet" href="../../../_/css/site.css">
     <script>var uiRootPath = '../../../_'</script>
@@ -72,7 +70,7 @@
   </li>
 </ul>
   </li>
-  <li class="nav-item is-current-page" data-depth="2">
+  <li class="nav-item" data-depth="2">
     <button class="nav-item-toggle"></button>
     <a class="nav-link" href="s3-deploy-operators-lab.html">GPU Operator Features and Platform Deployment</a>
 <ul class="nav-list">
@@ -179,8 +177,7 @@
 <nav class="breadcrumbs" aria-label="breadcrumbs">
   <ul>
     <li><a href="../index.html">Nvidia Accelerator Configuration for Scale</a></li>
-    <li><a href="index.html">Operator Foundations and GPU Stack Deployment</a></li>
-    <li><a href="s3-deploy-operators-lab.html">GPU Operator Features and Platform Deployment</a></li>
+    <li><a href="s2-operators-overview-4.html">Namespace Organization and Self-Healing</a></li>
   </ul>
 </nav>
 </div>
@@ -189,22 +186,137 @@
   <div class="toc-menu"></div>
 </aside>
 <article class="doc">
-<h1 class="page">GPU Operator Features and Platform Deployment</h1>
-<div class="dlist">
-<dl>
-<dt class="hdlist1">Objective</dt>
-<dd>
-<p>Understand how the NVIDIA GPU Operator transforms raw GPU hardware into a production-ready, multi-tenant compute platform through automated lifecycle management of drivers, device plugins, monitoring, and GPU sharing capabilities. Deploy the complete operator stack using OpenShift Operator Lifecycle Manager, configure GPU sharing strategies (time-slicing preparation, MIG enablement), and integrate GPU telemetry with cluster monitoring for production observability.</p>
-</dd>
-</dl>
+<h1 class="page">Namespace Organization and Self-Healing</h1>
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p><em>Estimated reading time: <strong>25 minutes</strong>.</em></p>
 </div>
 <div class="paragraph">
-<p>In the previous sections, you learned about the operator pattern for platform automation. This section builds on that foundation by examining GPU Operator features in depth, comparing GPU sharing strategies for multi-tenant platforms, and deploying the complete stack with production-ready configuration.</p>
+<p>Operators use namespace isolation to organize resources and enforce separation between control plane and data plane components.</p>
 </div>
-<nav class="pagination">
-  <span class="prev"><a href="s2-operators-overview-3.html">Namespace Organization and Self-Healing</a></span>
-  <span class="next"><a href="s3-deploy-operators-lab-1.html">The GPU Underutilization Problem</a></span>
-</nav>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_namespace_separation_pattern"><a class="anchor" href="#_namespace_separation_pattern"></a>Namespace Separation Pattern</h3>
+<div class="paragraph">
+<p>A production MaaS platform typically uses these namespaces:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ oc get namespaces | grep -E '(marketplace|nfd|nvidia|ods|kueue|cert)'
+openshift-marketplace       <i class="conum" data-value="1"></i><b>(1)</b>
+openshift-nfd               <i class="conum" data-value="2"></i><b>(2)</b>
+nvidia-gpu-operator         <i class="conum" data-value="3"></i><b>(3)</b>
+redhat-ods-operator         <i class="conum" data-value="4"></i><b>(4)</b>
+redhat-ods-applications     <i class="conum" data-value="5"></i><b>(5)</b>
+kueue-system                <i class="conum" data-value="6"></i><b>(6)</b>
+cert-manager                <i class="conum" data-value="7"></i><b>(7)</b></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>CatalogSources - operator discovery</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Node Feature Discovery - hardware detection control plane</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>NVIDIA GPU Operator - GPU stack control plane</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td>OpenShift AI operator control plane</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="5"></i><b>5</b></td>
+<td>OpenShift AI dashboard and shared services</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="6"></i><b>6</b></td>
+<td>Kueue workload queue management</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="7"></i><b>7</b></td>
+<td>Certificate management control plane</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p><strong>User workload namespaces</strong> are separate (e.g., <code>ml-team-alpha</code>, <code>data-science-prod</code>) where InferenceServices and training jobs run.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_self_healing_across_namespaces"><a class="anchor" href="#_self_healing_across_namespaces"></a>Self-Healing Across Namespaces</h3>
+<div class="paragraph">
+<p>Operators monitor their namespaces and enforce consistent state:</p>
+</div>
+<div class="paragraph">
+<p><strong>Example: Multi-namespace self-healing</strong></p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>Admin deletes NFD worker DaemonSet</strong> in <code>openshift-nfd</code></p>
+</li>
+<li>
+<p><strong>NFD operator</strong> detects missing DaemonSet, recreates it</p>
+</li>
+<li>
+<p><strong>GPU Operator</strong> detects nodes losing NFD labels</p>
+</li>
+<li>
+<p><strong>GPU Operator</strong> waits for NFD to stabilize, then re-validates ClusterPolicy</p>
+</li>
+<li>
+<p><strong>Both operators</strong> return to healthy state without human intervention</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>This self-healing spans the entire operator stack, maintaining platform integrity even under configuration errors or accidental deletions.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_consistent_state_enforcement"><a class="anchor" href="#_consistent_state_enforcement"></a>Consistent State Enforcement</h3>
+<div class="paragraph">
+<p>Operators continuously enforce desired state across namespaces:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>NFD ensures all nodes have accurate hardware labels</p>
+</li>
+<li>
+<p>GPU Operator ensures all GPU nodes run driver, toolkit, device plugin pods</p>
+</li>
+<li>
+<p>OpenShift AI ensures all enabled components have running operators</p>
+</li>
+<li>
+<p>Kueue ensures ResourceFlavors match available GPU node labels</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>This creates a <strong>resilient platform</strong> where operators collaborate to maintain system health.</p>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_whats_next"><a class="anchor" href="#_whats_next"></a>What&#8217;s Next</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>In the next lab, you will deploy the foundational Layer 1 operators—Node Feature Discovery and NVIDIA GPU Operator—using OpenShift&#8217;s Operator Lifecycle Manager. You&#8217;ll create Subscriptions, configure the ClusterPolicy Custom Resource, and verify the complete GPU software stack is running.</p>
+</div>
+<div class="paragraph">
+<p>This hands-on experience will reinforce your understanding of OLM workflow, Custom Resource activation, and operator reconciliation in action.</p>
+</div>
+</div>
+</div>
 </article>
   </div>
 </main>

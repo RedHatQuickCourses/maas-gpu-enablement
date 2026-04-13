@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>Understanding Operators and Platform Automation :: Nvidia Accelerator Configuration for Scale</title>
     <link rel="prev" href="s1-hardware-stack.html">
-    <link rel="next" href="s3-deploy-operators-lab.html">
+    <link rel="next" href="s2-operators-overview-2.html">
     <meta name="generator" content="Antora 3.1.3">
     <link rel="stylesheet" href="../../../_/css/site.css">
     <script>var uiRootPath = '../../../_'</script>
@@ -58,13 +58,40 @@
     <a class="nav-link" href="index.html">Operator Foundations and GPU Stack Deployment</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="s1-hardware-stack.html">Deconstructing the Hardware Stack</a>
-  </li>
-  <li class="nav-item is-current-page" data-depth="2">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="s1-hardware-stack.html">Deconstructing MaaS Operator Stack</a>
+<ul class="nav-list">
+  <li class="nav-item is-current-page" data-depth="3">
     <a class="nav-link" href="s2-operators-overview.html">Understanding Operators and Platform Automation</a>
   </li>
+  <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="s2-operators-overview-2.html">Custom Resources and Controllers</a>
+  </li>
+  <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="s2-operators-overview-3.html">Namespace Organization and Self-Healing</a>
+  </li>
+</ul>
+  </li>
   <li class="nav-item" data-depth="2">
+    <button class="nav-item-toggle"></button>
     <a class="nav-link" href="s3-deploy-operators-lab.html">GPU Operator Features and Platform Deployment</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="s3-deploy-operators-lab-1.html">The GPU Underutilization Problem</a>
+  </li>
+  <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="s3-deploy-operators-lab-2.html">ClusterPolicy as the Control Plane</a>
+  </li>
+  <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="s3-deploy-operators-lab-3.html">Integrating with OpenShift Monitoring</a>
+  </li>
+  <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="s3-deploy-operators-lab-4.html">Hands-On: Deploying the GPU Operator Stack</a>
+  </li>
+  <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="s3-deploy-operators-lab-5.html">Production Operational Considerations</a>
+  </li>
+</ul>
   </li>
 </ul>
   </li>
@@ -77,10 +104,25 @@
     <a class="nav-link" href="../ch2-mig/index.html">Configure Multi-Instance GPU (MIG) for MaaS</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../ch2-mig/s1-mig-overview.html">Maximizing GPU ROI with Multi-Instance GPU</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="../ch2-mig/s1-mig-overview-2.html">MIG Advertisement Strategies</a>
+  </li>
+  <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="../ch2-mig/s1-mig-overview-3.html">How MIG Partitioning Works in Kubernetes</a>
+  </li>
+  <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="../ch2-mig/s1-mig-overview-4.html">MIG Benefits for MaaS</a>
+  </li>
+  <li class="nav-item" data-depth="3">
     <a class="nav-link" href="../ch2-mig/s1-mig-overview.html">Maximizing GPU ROI with Multi-Instance GPU</a>
   </li>
-  <li class="nav-item" data-depth="2">
+  <li class="nav-item" data-depth="3">
     <a class="nav-link" href="../ch2-mig/s2-mig-slicing-lab.html">Lab: MIG Slicing Configuration</a>
+  </li>
+</ul>
   </li>
 </ul>
   </li>
@@ -138,6 +180,7 @@
   <ul>
     <li><a href="../index.html">Nvidia Accelerator Configuration for Scale</a></li>
     <li><a href="index.html">Operator Foundations and GPU Stack Deployment</a></li>
+    <li><a href="s1-hardware-stack.html">Deconstructing MaaS Operator Stack</a></li>
     <li><a href="s2-operators-overview.html">Understanding Operators and Platform Automation</a></li>
   </ul>
 </nav>
@@ -326,6 +369,7 @@ nvidia-driver-daemonset     3         3         3       3            23s</code><
 <div class="paragraph">
 <p>This self-healing capability transforms GPU infrastructure from fragile, manually-managed silos into resilient, declarative systems suitable for enterprise AI platforms at scale.</p>
 </div>
+<hr>
 </div>
 </div>
 </div>
@@ -449,14 +493,18 @@ redhat-marketplace    Red Hat Marketplace   grpc   Red Hat     45d</code></pre>
 gpu-operator-certified     Certified Operators   23h</code></pre>
 </div>
 </div>
+<hr>
 </div>
-<div class="sect2">
-<h3 id="_core_olm_resources"><a class="anchor" href="#_core_olm_resources"></a>Core OLM Resources</h3>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_core_olm_resources"><a class="anchor" href="#_core_olm_resources"></a>Core OLM Resources</h2>
+<div class="sectionbody">
 <div class="paragraph">
 <p>OLM uses five core resource types to manage operator lifecycle:</p>
 </div>
-<div class="sect3">
-<h4 id="_subscription"><a class="anchor" href="#_subscription"></a>Subscription</h4>
+<div class="sect2">
+<h3 id="_subscription"><a class="anchor" href="#_subscription"></a>Subscription</h3>
 <div class="paragraph">
 <p>A <strong>Subscription</strong> declares your intent to install and maintain an operator. It specifies:</p>
 </div>
@@ -487,7 +535,7 @@ metadata:
   name: gpu-operator-certified
   namespace: nvidia-gpu-operator
 spec:
-  channel: "v23.9"                           <i class="conum" data-value="1"></i><b>(1)</b>
+  channel: "v26.3"                           <i class="conum" data-value="1"></i><b>(1)</b>
   name: gpu-operator-certified               <i class="conum" data-value="2"></i><b>(2)</b>
   source: certified-operators                <i class="conum" data-value="3"></i><b>(3)</b>
   sourceNamespace: openshift-marketplace     <i class="conum" data-value="4"></i><b>(4)</b>
@@ -498,7 +546,7 @@ spec:
 <table>
 <tr>
 <td><i class="conum" data-value="1"></i><b>1</b></td>
-<td>Update channel - tracks v23.9.x versions</td>
+<td>Update channel - tracks v26.3.x versions</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="2"></i><b>2</b></td>
@@ -526,15 +574,16 @@ spec:
 </td>
 <td class="content">
 <div class="paragraph">
-<p><strong>Production Best Practice:</strong> Always configure <code>installPlanApproval: Manual</code> and pin to version-specific channels (e.g., <code>channel: "v23.9"</code>) for revenue-generating MaaS platforms. This gives you control over when driver and operator upgrades occur, allowing you to test in development environments first.</p>
+<p><strong>Production Best Practice:</strong> Always configure <code>installPlanApproval: Manual</code> and pin to version-specific channels (e.g., <code>channel: "v26.3"</code>) for revenue-generating MaaS platforms. This gives you control over when driver and operator upgrades occur, allowing you to test in development environments first.</p>
 </div>
 </td>
 </tr>
 </table>
 </div>
+<hr>
 </div>
-<div class="sect3">
-<h4 id="_clusterserviceversion_csv"><a class="anchor" href="#_clusterserviceversion_csv"></a>ClusterServiceVersion (CSV)</h4>
+<div class="sect2">
+<h3 id="_clusterserviceversion_csv"><a class="anchor" href="#_clusterserviceversion_csv"></a>ClusterServiceVersion (CSV)</h3>
 <div class="paragraph">
 <p>A <strong>ClusterServiceVersion (CSV)</strong> represents a specific version of an installed operator. It contains:</p>
 </div>
@@ -601,12 +650,13 @@ spec:
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ oc get csv -n nvidia-gpu-operator
 NAME                               DISPLAY              VERSION   PHASE
-gpu-operator-certified.v23.9.0     NVIDIA GPU Operator  23.9.0    Succeeded</code></pre>
+gpu-operator-certified.v26.3.0     NVIDIA GPU Operator  26.3.0    Succeeded</code></pre>
 </div>
 </div>
+<hr>
 </div>
-<div class="sect3">
-<h4 id="_operatorgroup"><a class="anchor" href="#_operatorgroup"></a>OperatorGroup</h4>
+<div class="sect2">
+<h3 id="_operatorgroup"><a class="anchor" href="#_operatorgroup"></a>OperatorGroup</h3>
 <div class="paragraph">
 <p>An <strong>OperatorGroup</strong> defines the scope where an operator can manage resources. It configures:</p>
 </div>
@@ -643,9 +693,10 @@ spec:
 </tr>
 </table>
 </div>
+<hr>
 </div>
-<div class="sect3">
-<h4 id="_installplan"><a class="anchor" href="#_installplan"></a>InstallPlan</h4>
+<div class="sect2">
+<h3 id="_installplan"><a class="anchor" href="#_installplan"></a>InstallPlan</h3>
 <div class="paragraph">
 <p>An <strong>InstallPlan</strong> is OLM&#8217;s execution plan for installing or upgrading an operator. It lists:</p>
 </div>
@@ -683,17 +734,18 @@ spec:
 <pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># View pending upgrades
 $ oc get installplan -n nvidia-gpu-operator
 NAME            CSV                                  APPROVAL   APPROVED
-install-xxxxx   gpu-operator-certified.v23.9.0      Automatic  true      # Current
-install-yyyyy   gpu-operator-certified.v23.9.2      Manual     false     # Pending
+install-xxxxx   gpu-operator-certified.v26.3.0      Automatic  true      # Current
+install-yyyyy   gpu-operator-certified.v26.3.2      Manual     false     # Pending
 
 # Approve the upgrade
 $ oc patch installplan install-yyyyy -n nvidia-gpu-operator \
   --type merge --patch '{"spec":{"approved":true}}'</code></pre>
 </div>
 </div>
+<hr>
 </div>
-<div class="sect3">
-<h4 id="_catalogsource"><a class="anchor" href="#_catalogsource"></a>CatalogSource</h4>
+<div class="sect2">
+<h3 id="_catalogsource"><a class="anchor" href="#_catalogsource"></a>CatalogSource</h3>
 <div class="paragraph">
 <p>A <strong>CatalogSource</strong> represents a repository of available operators. It points to a catalog index container image that OLM queries to discover operators.</p>
 </div>
@@ -717,8 +769,10 @@ spec:
 </div>
 </div>
 </div>
-<div class="sect2">
-<h3 id="_olm_workflow_how_these_resources_work_together"><a class="anchor" href="#_olm_workflow_how_these_resources_work_together"></a>OLM Workflow: How These Resources Work Together</h3>
+</div>
+<div class="sect1">
+<h2 id="_olm_workflow_how_these_resources_work_together"><a class="anchor" href="#_olm_workflow_how_these_resources_work_together"></a>OLM Workflow: How These Resources Work Together</h2>
+<div class="sectionbody">
 <div class="paragraph">
 <p>The complete OLM workflow when you create a Subscription:</p>
 </div>
@@ -746,7 +800,6 @@ spec:
 10. Operator pod starts, begins watching for Custom Resources</pre>
 </div>
 </div>
-</div>
 <div class="sect2">
 <h3 id="_update_strategies_and_channels"><a class="anchor" href="#_update_strategies_and_channels"></a>Update Strategies and Channels</h3>
 <div class="paragraph">
@@ -761,7 +814,7 @@ spec:
 <p><strong><code>fast</code>:</strong> Latest features, less testing (early access)</p>
 </li>
 <li>
-<p><strong><code>v23.9</code>, <code>v24.3</code>:</strong> Version-specific channels (pin to major.minor)</p>
+<p><strong><code>v26.3</code>, <code>v25.4</code>:</strong> Version-specific channels (pin to major.minor)</p>
 </li>
 </ul>
 </div>
@@ -793,870 +846,21 @@ spec:
 <td class="tableblock halign-left valign-top"><p class="tableblock">❌ Too risky for revenue-generating platforms</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>v23.9</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Only v23.9.x updates (e.g., 23.9.0 → 23.9.2)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>v26.3</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Only v26.3.x updates (e.g., 26.3.0 → 26.3.2)</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">✅ <strong>Recommended - predictable minor updates only</strong></p></td>
 </tr>
 </tbody>
 </table>
 <div class="paragraph">
-<p><strong>Best practice:</strong> Pin to version-specific channels (<code>v23.9</code>) with <code>installPlanApproval: Manual</code> to control exactly when upgrades occur.</p>
+<p><strong>Best practice:</strong> Pin to version-specific channels (<code>v26.3</code>) with <code>installPlanApproval: Manual</code> to control exactly when upgrades occur.</p>
 </div>
-</div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_custom_resources_and_controllers"><a class="anchor" href="#_custom_resources_and_controllers"></a>Custom Resources and Controllers</h2>
-<div class="sectionbody">
-<div class="paragraph">
-<p>Kubernetes provides generic resources (Pods, Services, Deployments), but AI platforms need domain-specific concepts like GPU driver configurations, inference services, and workload queues. Custom Resources extend Kubernetes to support these use cases.</p>
-</div>
-<div class="sect2">
-<h3 id="_the_problem_crds_solve"><a class="anchor" href="#_the_problem_crds_solve"></a>The Problem CRDs Solve</h3>
-<div class="paragraph">
-<p><strong>Without CRDs:</strong> You would store GPU configuration in ConfigMaps and write custom scripts to parse and apply them. No validation, no versioning, no integration with <code>oc</code> CLI.</p>
-</div>
-<div class="paragraph">
-<p><strong>With CRDs:</strong> You define a new resource type that Kubernetes understands natively.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_custom_resource_definition_crd"><a class="anchor" href="#_custom_resource_definition_crd"></a>Custom Resource Definition (CRD)</h3>
-<div class="paragraph">
-<p>A <strong>CRD</strong> is a schema that defines a new resource type. It specifies:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>API group and version</p>
-</li>
-<li>
-<p>Resource kind (singular and plural names)</p>
-</li>
-<li>
-<p>Fields allowed in the spec</p>
-</li>
-<li>
-<p>Validation rules</p>
-</li>
-</ul>
-</div>
-<div class="paragraph">
-<p><strong>Example: Viewing the ClusterPolicy CRD</strong></p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ oc get crd clusterpolicies.nvidia.com
-NAME                          CREATED AT
-clusterpolicies.nvidia.com    2024-04-10T14:23:45Z
-
-$ oc describe crd clusterpolicies.nvidia.com
-...
-spec:
-  group: nvidia.com
-  names:
-    kind: ClusterPolicy
-    plural: clusterpolicies
-  scope: Cluster
-  versions:
-  - name: v1
-    schema:
-      openAPIV3Schema:
-        properties:
-          spec:
-            properties:
-              driver:
-                properties:
-                  enabled:
-                    type: boolean
-                  version:
-                    type: string</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>This CRD tells Kubernetes: "There is a new resource type called <code>ClusterPolicy</code> in the <code>nvidia.com</code> API group. It has fields like <code>driver.enabled</code> and <code>driver.version</code>."</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_custom_resource_cr"><a class="anchor" href="#_custom_resource_cr"></a>Custom Resource (CR)</h3>
-<div class="paragraph">
-<p>A <strong>CR</strong> is an instance of a CRD—your actual configuration.</p>
-</div>
-<div class="paragraph">
-<p><strong>Example ClusterPolicy Custom Resource:</strong></p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">apiVersion: nvidia.com/v1           <i class="conum" data-value="1"></i><b>(1)</b>
-kind: ClusterPolicy                 <i class="conum" data-value="2"></i><b>(2)</b>
-metadata:
-  name: gpu-cluster-policy          <i class="conum" data-value="3"></i><b>(3)</b>
-spec:                               <i class="conum" data-value="4"></i><b>(4)</b>
-  driver:
-    enabled: true
-    version: "535.129.03"
-  dcgm:
-    enabled: true
-  migManager:
-    enabled: true
-  nodeStatusExporter:
-    enabled: true</code></pre>
-</div>
-</div>
-<div class="colist arabic">
-<table>
-<tr>
-<td><i class="conum" data-value="1"></i><b>1</b></td>
-<td>API group and version from CRD</td>
-</tr>
-<tr>
-<td><i class="conum" data-value="2"></i><b>2</b></td>
-<td>Resource kind from CRD</td>
-</tr>
-<tr>
-<td><i class="conum" data-value="3"></i><b>3</b></td>
-<td>Name of this specific ClusterPolicy</td>
-</tr>
-<tr>
-<td><i class="conum" data-value="4"></i><b>4</b></td>
-<td>Your desired GPU stack configuration</td>
-</tr>
-</table>
-</div>
-<div class="paragraph">
-<p>You can interact with CRs using <code>oc</code> just like any native Kubernetes resource:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ oc get clusterpolicies
-NAME                 AGE
-gpu-cluster-policy   5d
-
-$ oc describe clusterpolicy gpu-cluster-policy
-
-$ oc edit clusterpolicy gpu-cluster-policy  # Make live changes</code></pre>
-</div>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_controller_the_reconciliation_engine"><a class="anchor" href="#_controller_the_reconciliation_engine"></a>Controller: The Reconciliation Engine</h3>
-<div class="paragraph">
-<p>A <strong>controller</strong> is software that:</p>
-</div>
-<div class="olist arabic">
-<ol class="arabic">
-<li>
-<p>Watches for changes to Custom Resources</p>
-</li>
-<li>
-<p>Compares desired state (CR spec) to actual state (cluster resources)</p>
-</li>
-<li>
-<p>Takes actions to reconcile differences</p>
-</li>
-<li>
-<p>Continuously repeats this loop</p>
-</li>
-</ol>
-</div>
-<div class="paragraph">
-<p><strong>Controller Reconciliation Example:</strong></p>
-</div>
-<div class="paragraph">
-<p><strong>Scenario:</strong> Admin accidentally deletes the DCGM DaemonSet</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ oc delete daemonset nvidia-dcgm -n nvidia-gpu-operator
-daemonset.apps "nvidia-dcgm" deleted</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p><strong>Controller detects the mismatch:</strong></p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><strong>Desired state (ClusterPolicy):</strong> <code>dcgm.enabled: true</code></p>
-</li>
-<li>
-<p><strong>Actual state (cluster):</strong> No DCGM DaemonSet exists</p>
-</li>
-</ul>
-</div>
-<div class="paragraph">
-<p><strong>Controller acts within ~30 seconds:</strong></p>
-</div>
-<div class="olist arabic">
-<ol class="arabic">
-<li>
-<p>Detects missing DaemonSet</p>
-</li>
-<li>
-<p>Reads ClusterPolicy spec</p>
-</li>
-<li>
-<p>Recreates DCGM DaemonSet</p>
-</li>
-<li>
-<p>Updates ClusterPolicy status to reflect reconciliation</p>
-</li>
-</ol>
-</div>
-<div class="paragraph">
-<p><strong>Result:</strong></p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ oc get daemonset nvidia-dcgm -n nvidia-gpu-operator
-NAME          DESIRED   CURRENT   READY   UP-TO-DATE   AGE
-nvidia-dcgm   3         3         3       3            18s</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>No human intervention required. The controller self-healed the system.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_cr_controller_self_healing_automation"><a class="anchor" href="#_cr_controller_self_healing_automation"></a>CR + Controller = Self-Healing Automation</h3>
-<div class="paragraph">
-<p>The power of operators comes from combining CRs with controllers:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><strong>CR</strong> provides declarative desired state (WHAT you want)</p>
-</li>
-<li>
-<p><strong>Controller</strong> implements continuous reconciliation (HOW to maintain it)</p>
-</li>
-<li>
-<p><strong>Result</strong> is self-healing infrastructure that resists drift</p>
-</li>
-</ul>
-</div>
-<div class="paragraph">
-<p>This pattern scales from single-node test clusters to 1000-node production AI platforms.</p>
-</div>
-</div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_cluster_operators_vs_add_on_operators"><a class="anchor" href="#_cluster_operators_vs_add_on_operators"></a>Cluster Operators vs. Add-on Operators</h2>
-<div class="sectionbody">
-<div class="paragraph">
-<p>OpenShift distinguishes between two categories of operators based on their role and lifecycle management.</p>
-</div>
-<div class="sect2">
-<h3 id="_cluster_operators"><a class="anchor" href="#_cluster_operators"></a>Cluster Operators</h3>
-<div class="paragraph">
-<p><strong>Cluster operators</strong> are core OpenShift platform components managed by the <strong>Cluster Version Operator (CVO)</strong>. They provide essential platform services.</p>
-</div>
-<div class="paragraph">
-<p><strong>Examples:</strong></p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><code>authentication</code> - OAuth and identity management</p>
-</li>
-<li>
-<p><code>dns</code> - Cluster DNS (CoreDNS)</p>
-</li>
-<li>
-<p><code>ingress</code> - Cluster ingress routing</p>
-</li>
-<li>
-<p><code>network</code> - Pod networking (OpenShift SDN or OVN-Kubernetes)</p>
-</li>
-<li>
-<p><code>storage</code> - Persistent volume management</p>
-</li>
-</ul>
-</div>
-<div class="paragraph">
-<p><strong>Key characteristics:</strong></p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><strong>Cannot be uninstalled</strong> - They are part of the OpenShift control plane</p>
-</li>
-<li>
-<p><strong>Automatically upgraded</strong> when you upgrade OpenShift</p>
-</li>
-<li>
-<p><strong>Managed by CVO</strong> - You don&#8217;t control their lifecycle individually</p>
-</li>
-<li>
-<p><strong>Located in <code>openshift-*</code> namespaces</strong></p>
-</li>
-</ul>
-</div>
-<div class="paragraph">
-<p><strong>Viewing cluster operators:</strong></p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ oc get clusteroperators
-NAME                 VERSION   AVAILABLE   PROGRESSING   DEGRADED
-authentication       4.14.0    True        False         False
-dns                  4.14.0    True        False         False
-ingress              4.14.0    True        False         False
-network              4.14.0    True        False         False</code></pre>
-</div>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_add_on_operators"><a class="anchor" href="#_add_on_operators"></a>Add-on Operators</h3>
-<div class="paragraph">
-<p><strong>Add-on operators</strong> extend OpenShift with additional capabilities. They are <strong>user-managed</strong> through OLM.</p>
-</div>
-<div class="paragraph">
-<p><strong>Examples:</strong></p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>Node Feature Discovery (NFD)</p>
-</li>
-<li>
-<p>NVIDIA GPU Operator</p>
-</li>
-<li>
-<p>Red Hat OpenShift AI</p>
-</li>
-<li>
-<p>Cert-manager</p>
-</li>
-<li>
-<p>Kueue</p>
-</li>
-</ul>
-</div>
-<div class="paragraph">
-<p><strong>Key characteristics:</strong></p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><strong>User-controlled lifecycle</strong> - You decide when to install, upgrade, remove</p>
-</li>
-<li>
-<p><strong>Managed through OLM</strong> - Use Subscriptions, CSVs, InstallPlans</p>
-</li>
-<li>
-<p><strong>Located in user-created namespaces</strong> (e.g., <code>nvidia-gpu-operator</code>, <code>redhat-ods-operator</code>)</p>
-</li>
-<li>
-<p><strong>Optional</strong> - Only install what your platform needs</p>
-</li>
-</ul>
-</div>
-<div class="paragraph">
-<p><strong>Viewing add-on operators:</strong></p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ oc get csv -A | grep -v openshift
-NAMESPACE               NAME                               VERSION   PHASE
-nvidia-gpu-operator     gpu-operator-certified.v23.9.0     23.9.0    Succeeded
-openshift-nfd           nfd.v4.14.0                        4.14.0    Succeeded
-redhat-ods-operator     rhods-operator.3.3.0               3.3.0     Succeeded</code></pre>
-</div>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_decision_matrix_for_production_ai_platforms"><a class="anchor" href="#_decision_matrix_for_production_ai_platforms"></a>Decision Matrix for Production AI Platforms</h3>
-<table class="tableblock frame-all grid-all stretch">
-<colgroup>
-<col style="width: 20%;">
-<col style="width: 40%;">
-<col style="width: 40%;">
-</colgroup>
-<thead>
-<tr>
-<th class="tableblock halign-left valign-top">Operator Type</th>
-<th class="tableblock halign-left valign-top">Installation Method</th>
-<th class="tableblock halign-left valign-top">Use Case</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Cluster Operators</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Pre-installed with OpenShift, CVO-managed</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Core platform services (DNS, networking, auth)</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Add-on Operators from <code>redhat-operators</code></strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">OLM Subscription with Red Hat support</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Red Hat platform extensions (NFD, OpenShift AI)</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Add-on Operators from <code>certified-operators</code></strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">OLM Subscription with vendor support</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Third-party vendor software (NVIDIA GPU Operator)</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Community operators</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">❌ Never in production</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">❌ No support, potential security risks</p></td>
-</tr>
-</tbody>
-</table>
-</div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_the_three_layer_maas_operator_stack"><a class="anchor" href="#_the_three_layer_maas_operator_stack"></a>The Three-Layer MaaS Operator Stack</h2>
-<div class="sectionbody">
-<div class="paragraph">
-<p>A production Models-as-a-Service platform requires orchestrating dozens of operators across three functional layers. Red Hat OpenShift AI provides this orchestration.</p>
-</div>
-<div class="sect2">
-<h3 id="_layer_1_core_infrastructure_operators"><a class="anchor" href="#_layer_1_core_infrastructure_operators"></a>Layer 1: Core &amp; Infrastructure Operators</h3>
-<div class="paragraph">
-<p><strong>Purpose:</strong> Enable hardware detection and GPU software stack automation</p>
-</div>
-<div class="paragraph">
-<p><strong>Operators in this layer:</strong></p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><strong>Node Feature Discovery (NFD)</strong></p>
-<div class="ulist">
-<ul>
-<li>
-<p>Scans node hardware via PCI bus</p>
-</li>
-<li>
-<p>Labels nodes with detected capabilities</p>
-</li>
-<li>
-<p>Namespace: <code>openshift-nfd</code></p>
-</li>
-<li>
-<p>Catalog: <code>redhat-operators</code></p>
-</li>
-</ul>
-</div>
-</li>
-<li>
-<p><strong>NVIDIA GPU Operator</strong></p>
-<div class="ulist">
-<ul>
-<li>
-<p>Deploys GPU drivers as containers</p>
-</li>
-<li>
-<p>Installs NVIDIA Container Toolkit</p>
-</li>
-<li>
-<p>Manages device plugin for GPU resource allocation</p>
-</li>
-<li>
-<p>Deploys DCGM for monitoring</p>
-</li>
-<li>
-<p>Namespace: <code>nvidia-gpu-operator</code></p>
-</li>
-<li>
-<p>Catalog: <code>certified-operators</code></p>
-</li>
-</ul>
-</div>
-</li>
-</ul>
-</div>
-<div class="paragraph">
-<p><strong>Activation:</strong></p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml"># NFD activation
-apiVersion: nfd.openshift.io/v1
-kind: NodeFeatureDiscovery
-metadata:
-  name: nfd-instance
-  namespace: openshift-nfd
-
-# GPU Operator activation
-apiVersion: nvidia.com/v1
-kind: ClusterPolicy
-metadata:
-  name: gpu-cluster-policy</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p><strong>You will deploy this layer in the next lab.</strong></p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_layer_2_operators_for_inference_at_scale"><a class="anchor" href="#_layer_2_operators_for_inference_at_scale"></a>Layer 2: Operators for Inference at Scale</h3>
-<div class="paragraph">
-<p><strong>Purpose:</strong> Provide production-grade MaaS capabilities like certificate management, rate limiting, workload queueing, and distributed training.</p>
-</div>
-<div class="paragraph">
-<p><strong>Operators in this layer:</strong></p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><strong>Cert-manager</strong></p>
-<div class="ulist">
-<ul>
-<li>
-<p>Automates TLS certificate issuance and renewal</p>
-</li>
-<li>
-<p>Integrates with Let&#8217;s Encrypt and internal CAs</p>
-</li>
-<li>
-<p>Namespace: <code>cert-manager</code></p>
-</li>
-<li>
-<p>Required for secure inference endpoints</p>
-</li>
-</ul>
-</div>
-</li>
-<li>
-<p><strong>Connectivity Link (or Kuadrant)</strong></p>
-<div class="ulist">
-<ul>
-<li>
-<p>Rate limiting for inference requests</p>
-</li>
-<li>
-<p>Authentication and authorization policies</p>
-</li>
-<li>
-<p>API gateway capabilities</p>
-</li>
-<li>
-<p>Namespace: <code>kuadrant-system</code></p>
-</li>
-</ul>
-</div>
-</li>
-<li>
-<p><strong>LeaderWorkerSet</strong></p>
-<div class="ulist">
-<ul>
-<li>
-<p>Orchestrates distributed training jobs</p>
-</li>
-<li>
-<p>Leader/worker pod coordination</p>
-</li>
-<li>
-<p>Namespace: Workload-specific</p>
-</li>
-</ul>
-</div>
-</li>
-<li>
-<p><strong>Kueue</strong></p>
-<div class="ulist">
-<ul>
-<li>
-<p>Workload queueing and quota management</p>
-</li>
-<li>
-<p>Fair sharing of GPU resources across teams</p>
-</li>
-<li>
-<p>Namespace: <code>kueue-system</code></p>
-</li>
-<li>
-<p>Critical for multi-tenant MaaS platforms</p>
-</li>
-</ul>
-</div>
-</li>
-</ul>
-</div>
-<div class="paragraph">
-<p><strong>Activation:</strong> Each operator has its own Custom Resource for configuration.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_layer_3_red_hat_openshift_ai_orchestration"><a class="anchor" href="#_layer_3_red_hat_openshift_ai_orchestration"></a>Layer 3: Red Hat OpenShift AI Orchestration</h3>
-<div class="paragraph">
-<p><strong>Purpose:</strong> Coordinate the complete MaaS ecosystem with unified configuration and dependency management.</p>
-</div>
-<div class="paragraph">
-<p><strong>Red Hat OpenShift AI Operator:</strong></p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><strong>Single control point</strong> for MaaS platform lifecycle</p>
-</li>
-<li>
-<p><strong>Manages Layer 2 operator dependencies</strong> automatically</p>
-</li>
-<li>
-<p><strong>Unified configuration</strong> via DataScienceCluster Custom Resource</p>
-</li>
-<li>
-<p><strong>Coordinates upgrades</strong> across the operator suite</p>
-</li>
-<li>
-<p><strong>Namespace:</strong> <code>redhat-ods-operator</code></p>
-</li>
-<li>
-<p><strong>Catalog:</strong> <code>redhat-operators</code></p>
-</li>
-</ul>
-</div>
-<div class="paragraph">
-<p><strong>DataScienceCluster CR Example:</strong></p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">apiVersion: datasciencecluster.opendatahub.io/v1
-kind: DataScienceCluster
-metadata:
-  name: default-dsc
-spec:
-  components:
-    kueue:
-      managementState: Unmanaged  <i class="conum" data-value="1"></i><b>(1)</b>
-    kserve:
-      managementState: Managed  <i class="conum" data-value="2"></i><b>(2)</b>
-    dashboard:
-      managementState: Managed</code></pre>
-</div>
-</div>
-<div class="colist arabic">
-<table>
-<tr>
-<td><i class="conum" data-value="1"></i><b>1</b></td>
-<td>OpenShift AI hand off Queueing to the Red Hat Kueue operator</td>
-</tr>
-<tr>
-<td><i class="conum" data-value="2"></i><b>2</b></td>
-<td>OpenShift AI automatically installs and manages KServe operator</td>
-</tr>
-</table>
-</div>
-<div class="paragraph">
-<p><strong>Key benefit:</strong> Instead of manually installing 10+ operators, you install OpenShift AI once, and it orchestrates the dependencies.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_how_the_layers_work_together"><a class="anchor" href="#_how_the_layers_work_together"></a>How the Layers Work Together</h3>
-<div class="paragraph">
-<p><strong>Example: Deploying an InferenceService</strong></p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">apiVersion: serving.kserve.io/v1beta1
-kind: InferenceService
-metadata:
-  name: llama-3-8b
-spec:
-  predictor:
-    model:
-      modelFormat: vllm
-      runtime: vllm-runtime
-    resources:
-      limits:
-        nvidia.com/gpu: 1  <i class="conum" data-value="1"></i><b>(1)</b></code></pre>
-</div>
-</div>
-<div class="colist arabic">
-<table>
-<tr>
-<td><i class="conum" data-value="1"></i><b>1</b></td>
-<td>Request GPU resource</td>
-</tr>
-</table>
-</div>
-<div class="paragraph">
-<p><strong>Workflow across three layers:</strong></p>
-</div>
-<div class="olist arabic">
-<ol class="arabic">
-<li>
-<p><strong>Layer 3 (OpenShift AI):</strong> Receives InferenceService creation request</p>
-</li>
-<li>
-<p><strong>Layer 2 (Kueue):</strong> Queues workload if GPUs unavailable, enforces quota</p>
-</li>
-<li>
-<p><strong>Layer 2 (KServe):</strong> Creates inference deployment pods</p>
-</li>
-<li>
-<p><strong>Layer 1 (GPU Operator):</strong> Kubernetes scheduler finds GPU node (via NFD labels), device plugin allocates GPU to pod, DCGM monitors GPU telemetry</p>
-</li>
-<li>
-<p><strong>Layer 2 (Cert-manager):</strong> Issues TLS certificate for inference endpoint</p>
-</li>
-<li>
-<p><strong>Layer 2 (Kuadrant):</strong> Applies rate limiting policies</p>
-</li>
-</ol>
-</div>
-<div class="paragraph">
-<p>All three layers coordinate to deliver a production-ready inference service with security, monitoring, and resource management.</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre>┌─────────────────────────────────────────────────┐
-│  Layer 3: Red Hat OpenShift AI Orchestration    │
-│  (DataScienceCluster coordinates dependencies)  │
-└─────────────────────────────────────────────────┘
-                      ↓
-┌─────────────────────────────────────────────────┐
-│  Layer 2: Operators for Inference at Scale      │
-│  (Kueue, KServe, Cert-manager, Kuadrant)        │
-└─────────────────────────────────────────────────┘
-                      ↓
-┌─────────────────────────────────────────────────┐
-│  Layer 1: Core &amp; Infrastructure Operators       │
-│  (NFD, NVIDIA GPU Operator)                     │
-└─────────────────────────────────────────────────┘
-                      ↓
-             GPU Hardware</pre>
-</div>
-</div>
-</div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_namespace_organization_and_self_healing"><a class="anchor" href="#_namespace_organization_and_self_healing"></a>Namespace Organization and Self-Healing</h2>
-<div class="sectionbody">
-<div class="paragraph">
-<p>Operators use namespace isolation to organize resources and enforce separation between control plane and data plane components.</p>
-</div>
-<div class="sect2">
-<h3 id="_namespace_separation_pattern"><a class="anchor" href="#_namespace_separation_pattern"></a>Namespace Separation Pattern</h3>
-<div class="paragraph">
-<p>A production MaaS platform typically uses these namespaces:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ oc get namespaces | grep -E '(marketplace|nfd|nvidia|ods|kueue|cert)'
-openshift-marketplace       <i class="conum" data-value="1"></i><b>(1)</b>
-openshift-nfd               <i class="conum" data-value="2"></i><b>(2)</b>
-nvidia-gpu-operator         <i class="conum" data-value="3"></i><b>(3)</b>
-redhat-ods-operator         <i class="conum" data-value="4"></i><b>(4)</b>
-redhat-ods-applications     <i class="conum" data-value="5"></i><b>(5)</b>
-kueue-system                <i class="conum" data-value="6"></i><b>(6)</b>
-cert-manager                <i class="conum" data-value="7"></i><b>(7)</b></code></pre>
-</div>
-</div>
-<div class="colist arabic">
-<table>
-<tr>
-<td><i class="conum" data-value="1"></i><b>1</b></td>
-<td>CatalogSources - operator discovery</td>
-</tr>
-<tr>
-<td><i class="conum" data-value="2"></i><b>2</b></td>
-<td>Node Feature Discovery - hardware detection control plane</td>
-</tr>
-<tr>
-<td><i class="conum" data-value="3"></i><b>3</b></td>
-<td>NVIDIA GPU Operator - GPU stack control plane</td>
-</tr>
-<tr>
-<td><i class="conum" data-value="4"></i><b>4</b></td>
-<td>OpenShift AI operator control plane</td>
-</tr>
-<tr>
-<td><i class="conum" data-value="5"></i><b>5</b></td>
-<td>OpenShift AI dashboard and shared services</td>
-</tr>
-<tr>
-<td><i class="conum" data-value="6"></i><b>6</b></td>
-<td>Kueue workload queue management</td>
-</tr>
-<tr>
-<td><i class="conum" data-value="7"></i><b>7</b></td>
-<td>Certificate management control plane</td>
-</tr>
-</table>
-</div>
-<div class="paragraph">
-<p><strong>User workload namespaces</strong> are separate (e.g., <code>ml-team-alpha</code>, <code>data-science-prod</code>) where InferenceServices and training jobs run.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_self_healing_across_namespaces"><a class="anchor" href="#_self_healing_across_namespaces"></a>Self-Healing Across Namespaces</h3>
-<div class="paragraph">
-<p>Operators monitor their namespaces and enforce consistent state:</p>
-</div>
-<div class="paragraph">
-<p><strong>Example: Multi-namespace self-healing</strong></p>
-</div>
-<div class="olist arabic">
-<ol class="arabic">
-<li>
-<p><strong>Admin deletes NFD worker DaemonSet</strong> in <code>openshift-nfd</code></p>
-</li>
-<li>
-<p><strong>NFD operator</strong> detects missing DaemonSet, recreates it</p>
-</li>
-<li>
-<p><strong>GPU Operator</strong> detects nodes losing NFD labels</p>
-</li>
-<li>
-<p><strong>GPU Operator</strong> waits for NFD to stabilize, then re-validates ClusterPolicy</p>
-</li>
-<li>
-<p><strong>Both operators</strong> return to healthy state without human intervention</p>
-</li>
-</ol>
-</div>
-<div class="paragraph">
-<p>This self-healing spans the entire operator stack, maintaining platform integrity even under configuration errors or accidental deletions.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_consistent_state_enforcement"><a class="anchor" href="#_consistent_state_enforcement"></a>Consistent State Enforcement</h3>
-<div class="paragraph">
-<p>Operators continuously enforce desired state across namespaces:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>NFD ensures all nodes have accurate hardware labels</p>
-</li>
-<li>
-<p>GPU Operator ensures all GPU nodes run driver, toolkit, device plugin pods</p>
-</li>
-<li>
-<p>OpenShift AI ensures all enabled components have running operators</p>
-</li>
-<li>
-<p>Kueue ensures ResourceFlavors match available GPU node labels</p>
-</li>
-</ul>
-</div>
-<div class="paragraph">
-<p>This creates a <strong>resilient platform</strong> where operators collaborate to maintain system health.</p>
-</div>
-</div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_whats_next"><a class="anchor" href="#_whats_next"></a>What&#8217;s Next</h2>
-<div class="sectionbody">
-<div class="paragraph">
-<p>In the next lab, you will deploy the foundational Layer 1 operators—Node Feature Discovery and NVIDIA GPU Operator—using OpenShift&#8217;s Operator Lifecycle Manager. You&#8217;ll create Subscriptions, configure the ClusterPolicy Custom Resource, and verify the complete GPU software stack is running.</p>
-</div>
-<div class="paragraph">
-<p>This hands-on experience will reinforce your understanding of OLM workflow, Custom Resource activation, and operator reconciliation in action.</p>
 </div>
 </div>
 </div>
 <nav class="pagination">
-  <span class="prev"><a href="s1-hardware-stack.html">Deconstructing the Hardware Stack</a></span>
-  <span class="next"><a href="s3-deploy-operators-lab.html">GPU Operator Features and Platform Deployment</a></span>
+  <span class="prev"><a href="s1-hardware-stack.html">Deconstructing MaaS Operator Stack</a></span>
+  <span class="next"><a href="s2-operators-overview-2.html">Custom Resources and Controllers</a></span>
 </nav>
 </article>
   </div>
