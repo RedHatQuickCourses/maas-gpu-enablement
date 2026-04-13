@@ -55,7 +55,7 @@ Check canonical definitions in:
 
 ## Content Request
 
-**GOAL**: Create a single comprehensive page on Multi-Instance GPU (MIG) fundamentals
+**GOAL**: Create a single comprehensive page on Multi-Instance GPU (MIG) fundamentals include a lab. 
 
 **TARGET AUDIENCE**:
 - Role: Platform Engineer

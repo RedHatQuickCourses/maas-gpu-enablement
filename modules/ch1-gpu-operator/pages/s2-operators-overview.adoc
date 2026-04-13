@@ -16,11 +16,11 @@ Kubernetes operators extend Kubernetes automation by encoding human operational 
 2. **Controller:** Software that watches CRs and reconciles actual cluster state to match
 3. **Reconciliation Loop:** Continuous monitoring that detects and corrects drift
 
-=== How Operators Work: A Concrete Example
+=== How Operators Work Example
 
 Consider GPU driver management on a 100-node cluster. The traditional approach requires:
 
-* Writing bash scripts to install drivers on each node
+* Writing automation (bash scripts) to install drivers on each node
 * Manually updating when new driver versions are released
 * Detecting and recovering from driver crashes
 * Ensuring consistent versions across all nodes
@@ -93,7 +93,7 @@ The operator approach eliminates 90% of operational toil while providing self-he
 
 Operators don't just deploy resources—they continuously monitor and repair them.
 
-**Scenario:** Admin accidentally deletes the NVIDIA driver DaemonSet
+**Scenario:** Admin deletes the NVIDIA driver DaemonSet
 
 [source,bash]
 ----

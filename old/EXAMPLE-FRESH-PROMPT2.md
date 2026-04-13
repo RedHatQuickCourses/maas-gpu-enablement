@@ -14,8 +14,8 @@ I'm creating content for the **maas-gpu-enablement** course. This is part of an 
 
 **Course**: Nvidia Accelerator Configuration for Scale (maas-gpu-enablement)
 **Working Directory**: `/Users/kaknox/Documents/GitHub/maas-gpu-enablement/`
-**Current Chapter**: Chapter 2 - Multi-Instance GPU (MIG)
-**Target Section**: s1-mig-overview.adoc (new section)
+**Current Chapter**: Chapter 1 - Operator Foundations and GPU Stack Deployment
+**Target Section**: s3-deploy-operators-lab.adoc (update section)
 
 ## Style and Quality Standards
 
@@ -55,36 +55,29 @@ Check canonical definitions in:
 
 ## Content Request
 
-**GOAL**: Create a single comprehensive page on Multi-Instance GPU (MIG) fundamentals
+**GOAL**: Create a single comprehensive page on Nvidia GPU OPerator and the features that can be enabled, how they work and build from fundamentals.
 
 **TARGET AUDIENCE**:
 - Role: Platform Engineer
-- Expertise Level: Intermediate (completed Chapter 1 on operators and GPU stack)
-- Use Case Context: Production enterprise AI platform with multi-tenant workloads needing efficient GPU sharing
+- Expertise Level: Intermediate (completed Chapter 1 on operators section)
+- Use Case Context: Production enterprise AI platform with multi-tenant workloads needing efficient GPU sharing, maximize GPU ROI for Enterprise.
 
 **SCOPE**:
 
 Must Cover:
-- What is MIG and why it exists (business driver: GPU utilization, multi-tenancy)
-- The problem MIG solves (underutilized GPUs, inability to share across teams)
-- MIG profiles and their characteristics (1g.5gb, 2g.10gb, 3g.20gb, 4g.20gb, 7g.40gb on A100)
-- MIG modes: Single vs. Mixed (what they mean, when to use each)
-- How MIG partitions work (memory isolation, compute isolation)
-- Enabling MIG via ClusterPolicy (building on Chapter 1 knowledge)
+- Nvidia GPU Operation (driver: dcgm, dcgm exporter, container toolkit, dfg, MIG Manager, Sharing)
+- The problem Operator solves (underutilized GPUs, inability to share across teams)
 - Node labeling and scheduling with MIG instances
-- Trade-offs: MIG vs. time-slicing vs. full GPU allocation (decision matrix)
+- Trade-offs: Utilizing the various features and resource consumption
 - Production considerations (reconfiguration downtime, workload placement)
+-Export GPU metrics to OpenShift Dashboard
+- Export GPU and cluster and node metrics to Grafana Operator Dashboard using template dashboard. 
 
-Must Exclude:
-- MIG performance benchmarking (defer to Chapter 3 observability)
-- Advanced MIG partitioning strategies beyond standard profiles (out of scope for this course)
-- MIG on GPU models other than A100 (keep focused)
-- GPU virtualization technologies other than MIG
 
 Placement:
 - Course: maas-gpu-enablement
-- Chapter: ch2-mig
-- Position: First section after chapter index (s1-mig-overview.adoc)
+- Chapter: ch1-lab
+- Position: Next page after chapter index (s2-operators-overview.adoc)
 
 **REFERENCE MATERIALS**:
 
@@ -93,17 +86,15 @@ Style Reference:
 - Pattern to match: Section 5 "Three-Layer MaaS Operator Stack" shows good depth for technical architecture
 
 Content Reference:
-- Check if `mig-reference/` directory exists with vendor documentation
-- NVIDIA MIG User Guide: https://docs.nvidia.com/datacenter/tesla/mig-user-guide/
-- GPU Operator MIG documentation: https://docs.nvidia.com/datacenter/cloud-native/gpu-operator/latest/gpu-operator-mig.html
+look in teh operator-reference directory for additional context documents. 
 
 **DEPTH AND STYLE**:
 
 Reading Time: 20 minutes
 
 Content Balance:
-- Conceptual (WHY): 30% - Business case for MIG (utilization metrics, cost savings)
-- Architectural (WHAT): 40% - MIG profiles, modes, how partitioning works
+- Conceptual (WHY): 30% - Business case  (utilization metrics, cost savings)
+- Architectural (WHAT): 40% -Enable Operator features - how  works
 - Practical (HOW): 30% - Configuration examples, verification commands
 
 Tone:
@@ -111,39 +102,27 @@ Tone:
 - [X] Production-ready guidance (production decision matrices)
 - [X] Self-contained (assumes Chapter 1 knowledge of operators and ClusterPolicy)
 
-Required Elements:
-- [ ] Concrete example: Multi-tenant inference platform sharing A100-40GB across 3 teams
-- [ ] Before/After comparison: Cluster GPU utilization with/without MIG
-- [ ] ASCII diagram: MIG profile partitioning visualization on single A100
-- [ ] Decision matrix: When to use MIG vs. time-slicing vs. full GPU (production decision point)
-- [ ] Callouts: TIP for production MIG mode selection, WARNING about reconfiguration downtime
-- [ ] Annotated ClusterPolicy YAML with MIG configuration enabled
-- [ ] Specific metrics: "7x higher utilization", "reduces idle time from 60% to 15%" (not vague)
-- [ ] Integration: Reference ClusterPolicy from Chapter 1, build on operator knowledge
 
 **SUCCESS CRITERIA**:
 
 Learning Objectives - Students should be able to:
-- Explain what MIG is and articulate business value (improved GPU utilization, multi-tenant isolation)
-- Identify appropriate MIG profiles for given workload requirements (memory, compute)
-- Choose between MIG modes (Single vs. Mixed) for production use cases
-- Understand how to enable MIG via ClusterPolicy Custom Resource (building on Chapter 1)
+- Explain what Nvidia GPU Operator does and articulate business value (improved GPU utilization, multi-tenant isolation)
+- Identify appropriate Operator settings  given workload requirements (memory, compute)
 - Explain trade-offs between MIG, time-slicing, and full GPU allocation
-- Make informed production decisions about MIG configuration
+- Make informed production decisions about configuration
 
 Verification:
-- Students can determine correct MIG profile for workload with specific memory/compute needs
-- Students can explain when MIG is appropriate vs. when time-slicing or full GPU is better
-- Students can configure MIG in ClusterPolicy YAML
+- Students can determine correct policies for workload with specific GPU needs
+- Students can explain how metrics collection works and view gpu information and stats
+- Students can configure Nvidia GPU Operator Policies YAML
 
 Integration Points:
-- Builds on: Chapter 1 ClusterPolicy configuration, operator reconciliation concepts
 - Prepares for: Chapter 2 MIG deployment lab, Chapter 3 monitoring MIG instances
 - Cross-references: ClusterPolicy (ch1-gpu-operator/s2-operators-overview.adoc)
 
 ## Reference Materials
 
-If `mig-reference/` directory exists in the repository, please read all files there to understand MIG concepts and configuration examples.
+If `operatopr-reference/` directory exists in the repository, please read all files there to understand concepts and configuration examples.
 
 If not, use the online NVIDIA documentation URLs provided above as reference for technical accuracy.
 
@@ -161,8 +140,7 @@ If not, use the online NVIDIA documentation URLs provided above as reference for
    - MIG configuration builds on Chapter 1 operator knowledge
    - Transitions to next section are smooth
 9. **Update files**:
-   - Create `modules/ch2-mig/pages/s1-mig-overview.adoc`
-   - Update `modules/ch2-mig/nav.adoc` to include new section
+   - Update `modules/ch1-gpu-operator/pages/s3-deploy-operators.adoc` to include new section
    - Update chapter index if needed
 10. **Build and verify** with `npm run build` to ensure no errors
 
