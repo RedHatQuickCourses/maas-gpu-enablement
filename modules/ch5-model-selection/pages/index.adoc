@@ -1,0 +1,9 @@
+= Model Selection Strategy
+
+Goal::
+
+Gain the technical expertise to select optimal model architectures based on customer needs, quantization, and hardware impact
+
+Explore Gen AI model types include Dense versus Sparse models, when to select one over teh other.  Well look into how to sizing our Gen AI models to insure they run efficiently and provide the SLOs required of the Inference Service.  
+
+This chapter explores model selection, quanitzation, model sizing, single or multi-node inference, and a section on how the Red Hat AI model repository can assist. 

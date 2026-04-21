@@ -1,0 +1,7 @@
+* xref:index.adoc[]
+** xref:s5-selection-overview.adoc[]
+** xref:s5-model-sizing.adoc[]
+** xref:s5-val_models.adoc[]
+** xref:s5-model_types.adoc[]
+** xref:s5-quantize.adoc[]
+** xref:s5-tensor-pipeline.adoc[]
