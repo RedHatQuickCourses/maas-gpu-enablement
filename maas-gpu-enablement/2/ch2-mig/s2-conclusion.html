@@ -1,0 +1,1108 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Conclusion and Knowledge Check :: Nvidia Accelerator Configuration for Scale</title>
+    <link rel="prev" href="s2-mig-lab.html">
+    <link rel="next" href="../ch3-observability/index.html">
+    <meta name="generator" content="Antora 3.1.3">
+    <link rel="stylesheet" href="../../../_/css/site.css">
+    <script>var uiRootPath = '../../../_'</script>
+  </head>
+  <body class="article">
+<header class="header">
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="https://www.redhat.com" target="_blank"><img src="../../../_/img/redhat-logo.png" height="40px" alt="Red Hat"></a>
+      <a class="navbar-item" style="font-size: 24px; color: white" href="../../..">Nvidia Accelerator Configuration for Scale</a>
+      <button class="navbar-burger" data-target="topbar-nav">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+    <div id="topbar-nav" class="navbar-menu">
+      <div class="navbar-end">
+        <a class="navbar-item" href="https://github.com/RedHatQuickCourses/REPLACEREPONAME/issues" target="_blank">Report Issues</a>
+      </div>
+    </div>
+  </nav>
+</header>
+<div class="body">
+<div class="nav-container" data-component="maas-gpu-enablement" data-version="2">
+  <aside class="nav">
+    <div class="panels">
+<div class="nav-panel-menu is-active" data-panel="menu">
+  <nav class="nav-menu">
+    <h3 class="title"><a href="../index.html">Nvidia Accelerator Configuration for Scale</a></h3>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../index.html">Home</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../LABENV/index.html">Lab Environment</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../ch1-gpu-operator/index.html">Operator Foundations and GPU Stack Deployment</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../ch1-gpu-operator/s1-hardware-stack.html">Deconstructing MaaS Operator Stack</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="../ch1-gpu-operator/s2-operators-overview.html">Understanding Operators and Platform Automation</a>
+  </li>
+  <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="../ch1-gpu-operator/s2-operators-overview-2.html">Custom Resources and Controllers</a>
+  </li>
+  <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="../ch1-gpu-operator/s2-operators-overview-3.html">Namespace Organization and Self-Healing</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../ch1-gpu-operator/s3-deploy-operators-lab.html">GPU Operator Features and Platform Deployment</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="../ch1-gpu-operator/s3-deploy-operators-lab-1.html">The GPU Underutilization Problem</a>
+  </li>
+  <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="../ch1-gpu-operator/s3-deploy-operators-lab-2.html">ClusterPolicy as the Control Plane</a>
+  </li>
+  <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="../ch1-gpu-operator/s3-deploy-operators-lab-3.html">Integrating with OpenShift Monitoring</a>
+  </li>
+  <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="../ch1-gpu-operator/s3-deploy-operators-lab-4.html">Hands-On: Deploying the GPU Operator Stack</a>
+  </li>
+  <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="../ch1-gpu-operator/s3-deploy-operators-lab-5.html">Production Operational Considerations</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="index.html">Multi-Instance GPU (MIG) Configuration</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="s2-mig-fundamentals.html">MIG Fundamentals</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="s2-mig-lab.html">(Lab) MIG Configuration</a>
+  </li>
+  <li class="nav-item is-current-page" data-depth="2">
+    <a class="nav-link" href="s2-conclusion.html">Conclusion and Knowledge Check</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../ch3-observability/index.html">Monitor GPU Telemetry and Health</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch3-observability/s1-observability-stack.html">The MaaS Observability Stack</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch3-observability/s2-expose-metrics-lab.html">Lab: Exposing GPU Metrics</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch3-observability/s3-grafana-setup-lab.html">Lab: Deploying the Grafana Operator and Setting Up Access</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch3-observability/s4-dashboards-lab.html">Lab: Visualizing GPU Hardware</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../ch5-model-selection/index.html">Model Selection Strategy</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch5-model-selection/s6-model-evaluation.html">Evaluating Models and Optimizing Weights</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch5-model-selection/s6-sizing-lab.html">(Lab) Sizing and Parallelism Configuration</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch5-model-selection/s6-conclusion.html">Conclusion and Knowledge Check</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+</ul>
+  </nav>
+</div>
+<div class="nav-panel-explore" data-panel="explore">
+  <div class="context">
+    <span class="title">Nvidia Accelerator Configuration for Scale</span>
+    <span class="version">2</span>
+  </div>
+  <ul class="components">
+    <li class="component is-current">
+      <a class="title" href="../index.html">Nvidia Accelerator Configuration for Scale</a>
+      <ul class="versions">
+        <li class="version is-current is-latest">
+          <a href="../index.html">2</a>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</div>
+    </div>
+  </aside>
+</div>
+<main class="article">
+<div class="toolbar" role="navigation">
+<button class="nav-toggle"></button>
+  <a href="../index.html" class="home-link"></a>
+<nav class="breadcrumbs" aria-label="breadcrumbs">
+  <ul>
+    <li><a href="../index.html">Nvidia Accelerator Configuration for Scale</a></li>
+    <li><a href="index.html">Multi-Instance GPU (MIG) Configuration</a></li>
+    <li><a href="s2-conclusion.html">Conclusion and Knowledge Check</a></li>
+  </ul>
+</nav>
+</div>
+  <div class="content">
+<aside class="toc sidebar" data-title="Contents" data-levels="2">
+  <div class="toc-menu"></div>
+</aside>
+<article class="doc">
+<h1 class="page">Conclusion and Knowledge Check</h1>
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p><em>Estimated reading time: <strong>10 minutes</strong>.</em></p>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1">Objective</dt>
+<dd>
+<p>Validate your MIG configuration expertise through production scenario assessments and review key concepts.</p>
+</dd>
+</dl>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_what_youve_learned"><a class="anchor" href="#_what_youve_learned"></a>What You&#8217;ve Learned</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>You now have practical decision frameworks for MIG configuration:</p>
+</div>
+<div class="paragraph">
+<p>✅ <strong>MIG vs Alternatives:</strong> Choose MIG for hardware isolation with high density (A30/A100/H100 only)</p>
+</div>
+<div class="paragraph">
+<p>✅ <strong>Profile Selection:</strong> Match workload VRAM requirements to profiles (1g.5gb through 7g.40gb)</p>
+</div>
+<div class="paragraph">
+<p>✅ <strong>Advertisement Strategy:</strong> Single for uniform workloads, Mixed for heterogeneous multi-tenancy</p>
+</div>
+<div class="paragraph">
+<p>✅ <strong>Configuration Workflow:</strong> Label-driven MIG enablement with 10-20 minute reconfiguration time</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_production_scenario_assessments"><a class="anchor" href="#_production_scenario_assessments"></a>Production Scenario Assessments</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Test your ability to apply these concepts to real-world challenges.</p>
+</div>
+<div class="sect2">
+<h3 id="_scenario_1_mig_vs_time_slicing_decision"><a class="anchor" href="#_scenario_1_mig_vs_time_slicing_decision"></a>Scenario 1: MIG vs Time-Slicing Decision</h3>
+<div class="paragraph">
+<p><strong>Situation:</strong> Your platform serves 15 inference models with varying resource requirements:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>8 small models: 3-5GB VRAM each, &lt;20% GPU compute</p>
+</li>
+<li>
+<p>5 medium models: 8-12GB VRAM each, ~30% GPU compute</p>
+</li>
+<li>
+<p>2 large models: 18-22GB VRAM each, ~50% GPU compute</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>Available Hardware Options:</strong></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Option A:</strong> 5× NVIDIA T4-16GB ($5K each = $25K total)</p>
+</li>
+<li>
+<p><strong>Option B:</strong> 2× NVIDIA A100-40GB ($15K each = $30K total)</p>
+</li>
+<li>
+<p><strong>Option C:</strong> 4× NVIDIA A100-40GB ($15K each = $60K total)</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>Business Requirements:</strong></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>SLA-backed P99 latency &lt;100ms</p>
+</li>
+<li>
+<p>99.9% uptime requirement</p>
+</li>
+<li>
+<p>Budget: $30-40K preferred, $60K maximum</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>Questions:</strong></p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Which option provides best performance isolation?</p>
+</li>
+<li>
+<p>Which option maximizes cost efficiency within budget?</p>
+</li>
+<li>
+<p>What GPU sharing strategy should you use for each option?</p>
+</li>
+</ol>
+</div>
+<details>
+<summary class="title">Reveal Analysis</summary>
+<div class="content">
+<div class="paragraph">
+<p><strong>Analysis:</strong></p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>Best performance isolation:</strong> Option B (A100 with MIG)</p>
+<div class="ulist">
+<ul>
+<li>
+<p>MIG provides hardware-guaranteed isolation (&lt;1% P99 variance)</p>
+</li>
+<li>
+<p>T4 only supports time-slicing (15-40% P99 variance)</p>
+</li>
+<li>
+<p>Meets SLA requirement with margin</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p><strong>Maximum cost efficiency within budget:</strong> Option B (A100 with MIG)</p>
+<div class="ulist">
+<ul>
+<li>
+<p>Cost: $30K (within preferred budget)</p>
+</li>
+<li>
+<p>Capacity: 2× A100 with MIG can support all 15 models</p>
+</li>
+<li>
+<p>MIG configuration per GPU:</p>
+<div class="ulist">
+<ul>
+<li>
+<p>2× <code>1g.5gb</code> for 4 small models = 8 small models total</p>
+</li>
+<li>
+<p>2× <code>2g.10gb</code> for 4 medium models (pair small models) = 5 medium (1 shared)</p>
+</li>
+<li>
+<p>1× <code>3g.20gb</code> for 1 large model = 2 large models total</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p>Achieves 7-8 workloads per GPU vs 1 with full allocation</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p><strong>GPU sharing strategies:</strong></p>
+<div class="paragraph">
+<p><strong>Option A (T4 GPUs):</strong>
+<strong> </strong>Time-slicing<strong> (T4 doesn&#8217;t support MIG)
+</strong> Configure 3x oversubscription per GPU
+<strong> </strong>Problem:<strong> Cannot meet SLA requirement (no hardware isolation)
+</strong> Only suitable for dev/test, not production</p>
+</div>
+<div class="paragraph">
+<p>+
+<strong>Option B (2× A100):</strong></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>MIG with Mixed strategy</strong></p>
+</li>
+<li>
+<p>Profile: <code>all-balanced</code> (2x 1g.5gb + 1x 2g.10gb + 1x 3g.20gb per GPU)</p>
+</li>
+<li>
+<p>Meets SLA with hardware isolation</p>
+</li>
+<li>
+<p><strong>Recommended solution</strong> ✓</p>
+<div class="paragraph">
+<p><strong>Option C (4× A100):</strong></p>
+</div>
+</li>
+<li>
+<p><strong>Full GPU allocation</strong> or <strong>MIG</strong></p>
+</li>
+<li>
+<p>Exceeds budget by 100% ($60K vs $30K)</p>
+</li>
+<li>
+<p>Over-provisioned for current workload</p>
+</li>
+<li>
+<p>Only choose if expecting 2x growth within 12 months</p>
+</li>
+</ul>
+</div>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p><strong>Recommended:</strong> Option B with MIG mixed strategy - balances performance isolation, cost efficiency, and SLA compliance.</p>
+</div>
+</div>
+</details>
+</div>
+<div class="sect2">
+<h3 id="_scenario_2_profile_selection_problem"><a class="anchor" href="#_scenario_2_profile_selection_problem"></a>Scenario 2: Profile Selection Problem</h3>
+<div class="paragraph">
+<p><strong>Situation:</strong> A customer has three workload tiers they want to consolidate on a single NVIDIA A100-40GB GPU:</p>
+</div>
+<div class="paragraph">
+<p><strong>Workload Requirements (measured):</strong></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Small tier:</strong> 4GB VRAM actual usage, 15% GPU compute utilization</p>
+</li>
+<li>
+<p><strong>Medium tier:</strong> 9GB VRAM actual usage, 25% GPU compute utilization</p>
+</li>
+<li>
+<p><strong>Large tier:</strong> 18GB VRAM actual usage, 45% GPU compute utilization</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>Customer Constraints:</strong></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Must run at least 1 instance of each tier concurrently</p>
+</li>
+<li>
+<p>Prefer maximum total instances for redundancy</p>
+</li>
+<li>
+<p>Using Mixed advertisement strategy</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>Questions:</strong></p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Which MIG profile should you use for each tier (accounting for 20% overhead)?</p>
+</li>
+<li>
+<p>Can you fit one instance of each tier on a single A100-40GB?</p>
+</li>
+<li>
+<p>What is the maximum number of total instances you can fit?</p>
+</li>
+</ol>
+</div>
+<details>
+<summary class="title">Reveal Solution</summary>
+<div class="content">
+<div class="paragraph">
+<p><strong>Solution:</strong></p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>Profile selection with 20% overhead buffer:</strong></p>
+<div class="paragraph">
+<p><strong>Small tier:</strong>
+<strong> 4GB actual + 20% overhead = 4.8GB required
+</strong> <strong>Profile:</strong> <code>1g.5gb</code> (5GB VRAM, 1/7 compute) ✓</p>
+</div>
+<div class="paragraph">
+<p>+
+<strong>Medium tier:</strong></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>9GB actual + 20% overhead = 10.8GB required</p>
+</li>
+<li>
+<p><strong>Profile:</strong> <code>2g.10gb</code> would be insufficient (10GB &lt; 10.8GB) ❌</p>
+</li>
+<li>
+<p><strong>Profile:</strong> <code>3g.20gb</code> (20GB VRAM, 3/7 compute) ✓</p>
+<div class="paragraph">
+<p><strong>Large tier:</strong></p>
+</div>
+</li>
+<li>
+<p>18GB actual + 20% overhead = 21.6GB required</p>
+</li>
+<li>
+<p><strong>Profile:</strong> <code>3g.20gb</code> would be insufficient (20GB &lt; 21.6GB) ❌</p>
+</li>
+<li>
+<p><strong>Profile:</strong> <code>4g.20gb</code> or higher required</p>
+</li>
+<li>
+<p><strong>Problem:</strong> No <code>4g.20gb</code> profile exists on A100-40GB</p>
+</li>
+<li>
+<p><strong>Alternative:</strong> Large tier requires full GPU or A100-80GB with <code>3g.40gb</code></p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p><strong>Can you fit one of each tier on single A100-40GB?</strong></p>
+<div class="paragraph">
+<p><strong>No</strong> - The large tier (21.6GB after overhead) exceeds the largest available profile on A100-40GB (<code>3g.20gb</code> = 20GB).</p>
+</div>
+<div class="paragraph">
+<p><strong>Options:</strong></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Option A:</strong> Use A100-80GB with <code>3g.40gb</code> profile (40GB VRAM)</p>
+<div class="ulist">
+<ul>
+<li>
+<p>Small: <code>1g.10gb</code> (10GB)</p>
+</li>
+<li>
+<p>Medium: <code>2g.20gb</code> (20GB)</p>
+</li>
+<li>
+<p>Large: <code>3g.40gb</code> (40GB)</p>
+</li>
+<li>
+<p>Total: 1g + 2g + 3g = 6g (fits within 7g limit) ✓</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p><strong>Option B:</strong> Split across 2× A100-40GB GPUs</p>
+<div class="ulist">
+<ul>
+<li>
+<p>GPU 1: 1× <code>3g.20gb</code> (large tier) + 2× <code>2g.10gb</code> (medium tier instances)</p>
+</li>
+<li>
+<p>GPU 2: 7× <code>1g.5gb</code> (small tier instances)</p>
+</li>
+</ul>
+</div>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p><strong>Maximum instances (using Option A on A100-80GB):</strong></p>
+<div class="paragraph">
+<p>With compute limit of 7g total:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>1× <code>3g.40gb</code> (large) = 3g used</p>
+</li>
+<li>
+<p>1× <code>2g.20gb</code> (medium) = 2g used</p>
+</li>
+<li>
+<p>2× <code>1g.10gb</code> (small) = 2g used</p>
+</li>
+<li>
+<p><strong>Total: 3g + 2g + 2g = 7g</strong> (maximum utilization)</p>
+<div class="paragraph">
+<p><strong>Result:</strong> 4 total instances (1 large + 1 medium + 2 small)</p>
+</div>
+</li>
+</ul>
+</div>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p><strong>Key Lesson:</strong> Always add 20-25% overhead buffer and round UP to next profile. Undersizing profiles leads to OOM failures. For workloads &gt;20GB with overhead, consider A100-80GB or splitting across multiple GPUs.</p>
+</div>
+</div>
+</details>
+</div>
+<div class="sect2">
+<h3 id="_scenario_3_reconfiguration_planning"><a class="anchor" href="#_scenario_3_reconfiguration_planning"></a>Scenario 3: Reconfiguration Planning</h3>
+<div class="paragraph">
+<p><strong>Situation:</strong> Your production cluster has 8 GPU nodes running MIG with <code>all-2g.10gb</code> profile. Business needs have changed and you need to reconfigure to <code>all-balanced</code> to support heterogeneous workloads.</p>
+</div>
+<div class="paragraph">
+<p><strong>Current State:</strong></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>8× worker nodes with A100-40GB GPUs</p>
+</li>
+<li>
+<p>Each node: 3× <code>2g.10gb</code> instances = 24 total instances cluster-wide</p>
+</li>
+<li>
+<p>Current workload: 18 active inference services using MIG instances</p>
+</li>
+<li>
+<p>Spare capacity: 6 unused instances</p>
+</li>
+<li>
+<p>SLA requirement: No more than 3 concurrent services offline</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>Questions:</strong></p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>What is the step-by-step reconfiguration procedure for one node?</p>
+</li>
+<li>
+<p>How much downtime per node?</p>
+</li>
+<li>
+<p>What is the safest rolling update strategy to maintain SLA compliance?</p>
+</li>
+</ol>
+</div>
+<details>
+<summary class="title">Reveal Solution</summary>
+<div class="content">
+<div class="paragraph">
+<p><strong>Solution:</strong></p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>Reconfiguration procedure for one node:</strong></p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Step 1: Cordon node (prevent new scheduling)
+$ oc adm cordon worker-gpu-0.example.com
+
+# Step 2: Drain node (evict running pods, 5-10 min)
+$ oc adm drain worker-gpu-0.example.com \
+  --ignore-daemonsets --delete-emptydir-data
+
+# Step 3: Apply new label
+$ oc label node worker-gpu-0.example.com \
+  nvidia.com/mig.config=all-balanced --overwrite
+
+# Step 4: Monitor MIG Manager (10-20 min wait)
+$ oc logs -n nvidia-gpu-operator \
+  -l app=nvidia-mig-manager -f
+
+# Step 5: Verify configuration success
+$ oc get node worker-gpu-0.example.com \
+  -o jsonpath='{.metadata.labels.nvidia\.com/mig\.config\.state}'
+# Expected: "success"
+
+# Step 6: Verify new resources advertised
+$ oc describe node worker-gpu-0.example.com | \
+  grep nvidia.com/mig
+# Expected:
+#   nvidia.com/mig-1g.5gb:  2
+#   nvidia.com/mig-2g.10gb: 1
+#   nvidia.com/mig-3g.20gb: 1
+
+# Step 7: Uncordon node (allow new workloads)
+$ oc adm uncordon worker-gpu-0.example.com</code></pre>
+</div>
+</div>
+</li>
+<li>
+<p><strong>Downtime per node:</strong></p>
+<div class="ulist">
+<ul>
+<li>
+<p>Cordon: Immediate (prevents new scheduling only)</p>
+</li>
+<li>
+<p>Drain: 5-10 minutes (waiting for pod eviction and rescheduling)</p>
+</li>
+<li>
+<p>MIG reconfiguration: 10-20 minutes (GPU reset + instance creation + GFD rescan)</p>
+</li>
+<li>
+<p>Uncordon + scheduling: 30-60 seconds</p>
+<div class="paragraph">
+<p><strong>Total downtime: 15-30 minutes per node</strong></p>
+</div>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p><strong>Safe rolling update strategy maintaining SLA (≤3 services offline):</strong></p>
+<div class="paragraph">
+<p><strong>Strategy: Batched Rolling Update with Capacity Buffer</strong></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Batch size:</strong> 2 nodes at a time (max 6 instances offline, supports 6 service migrations)</p>
+</li>
+<li>
+<p><strong>Total batches:</strong> 8 nodes ÷ 2 = 4 batches</p>
+</li>
+<li>
+<p><strong>Total time:</strong> 4 batches × 30 min = ~2 hours</p>
+<div class="paragraph">
+<p><strong>Procedure:</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Batch 1: Nodes 0-1 (Cordon + Drain + Relabel + Wait + Uncordon)
+oc adm cordon worker-gpu-0.example.com worker-gpu-1.example.com
+oc adm drain worker-gpu-0.example.com --ignore-daemonsets
+oc adm drain worker-gpu-1.example.com --ignore-daemonsets
+# Apply labels and wait 20 minutes
+oc adm uncordon worker-gpu-0.example.com worker-gpu-1.example.com
+
+# Wait 5 minutes for workloads to stabilize
+
+# Batch 2: Nodes 2-3
+# ... repeat process ...
+
+# Batch 3: Nodes 4-5
+# Batch 4: Nodes 6-7</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>SLA Compliance Validation:</strong></p>
+</div>
+</li>
+<li>
+<p>Each batch affects 6 instances (2 nodes × 3 instances)</p>
+</li>
+<li>
+<p>18 active services can reschedule to 6 remaining nodes (18 instances)</p>
+</li>
+<li>
+<p>During drain, max 6 services temporarily offline (meets ≤3 SLA requirement only if services can queue)</p>
+<div class="paragraph">
+<p><strong>Improved Strategy (Safer):</strong></p>
+</div>
+</li>
+<li>
+<p><strong>Batch size:</strong> 1 node at a time</p>
+</li>
+<li>
+<p>Affects only 3 instances per batch</p>
+</li>
+<li>
+<p>18 services reschedule to 21 remaining instances (7 nodes × 3)</p>
+</li>
+<li>
+<p><strong>Total time:</strong> 8 batches × 30 min = ~4 hours</p>
+</li>
+<li>
+<p><strong>Guarantees:</strong> Never more than 3 services offline</p>
+</li>
+</ul>
+</div>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p><strong>Recommended:</strong> 1-node batches for strict SLA compliance, schedule during low-traffic window (weekend).</p>
+</div>
+</div>
+</details>
+</div>
+<div class="sect2">
+<h3 id="_scenario_4_scheduling_failure_debugging"><a class="anchor" href="#_scenario_4_scheduling_failure_debugging"></a>Scenario 4: Scheduling Failure Debugging</h3>
+<div class="paragraph">
+<p><strong>Situation:</strong> After configuring MIG on your cluster, a developer reports their pod is stuck in <code>Pending</code> state for 15 minutes.</p>
+</div>
+<div class="paragraph">
+<p><strong>Pod Specification:</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">apiVersion: v1
+kind: Pod
+metadata:
+  name: llama-7b-inference
+spec:
+  containers:
+  - name: vllm-server
+    image: vllm/vllm-openai:latest
+    resources:
+      limits:
+        nvidia.com/mig-2g.10gb: 1</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>Error Event:</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">0/4 nodes are available: 4 Insufficient nvidia.com/mig-2g.10gb.</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>Cluster State:</strong></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>4 GPU worker nodes, all with A100-40GB GPUs</p>
+</li>
+<li>
+<p>ClusterPolicy MIG strategy: <code>mixed</code></p>
+</li>
+<li>
+<p>All nodes labeled with MIG configuration</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>Questions:</strong></p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>What are the three most likely causes of this scheduling failure?</p>
+</li>
+<li>
+<p>What commands would you run to diagnose each cause?</p>
+</li>
+<li>
+<p>How would you fix each cause?</p>
+</li>
+</ol>
+</div>
+<details>
+<summary class="title">Reveal Solution</summary>
+<div class="content">
+<div class="paragraph">
+<p><strong>Solution:</strong></p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>Three most likely causes:</strong></p>
+<div class="paragraph">
+<p><strong>Cause 1:</strong> Nodes have different MIG profile (not <code>all-2g.10gb</code>)</p>
+</div>
+<div class="paragraph">
+<p><strong>Cause 2:</strong> MIG configuration not completed (still in <code>pending</code> state)</p>
+</div>
+<div class="paragraph">
+<p><strong>Cause 3:</strong> All <code>2g.10gb</code> instances already allocated to other pods</p>
+</div>
+</li>
+<li>
+<p><strong>Diagnostic commands for each cause:</strong></p>
+<div class="paragraph">
+<p><strong>Diagnose Cause 1: Check node MIG profiles</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ oc get nodes -o custom-columns=\
+NAME:.metadata.name,\
+MIG-1G:.status.allocatable.nvidia\\.com/mig-1g\\.5gb,\
+MIG-2G:.status.allocatable.nvidia\\.com/mig-2g\\.10gb,\
+MIG-3G:.status.allocatable.nvidia\\.com/mig-3g\\.20gb
+
+NAME                       MIG-1G   MIG-2G   MIG-3G
+worker-gpu-0.example.com   &lt;none&gt;   &lt;none&gt;   2
+worker-gpu-1.example.com   &lt;none&gt;   &lt;none&gt;   2
+worker-gpu-2.example.com   7        &lt;none&gt;   &lt;none&gt;
+worker-gpu-3.example.com   7        &lt;none&gt;   &lt;none&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>Finding:</strong> Nodes 0-1 have <code>3g.20gb</code> instances, nodes 2-3 have <code>1g.5gb</code> instances. <strong>No nodes have <code>2g.10gb</code> instances!</strong></p>
+</div>
+<div class="paragraph">
+<p><strong>Diagnose Cause 2: Check MIG config state</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ oc get nodes -o custom-columns=\
+NAME:.metadata.name,\
+CONFIG:.metadata.labels.nvidia\\.com/mig\\.config,\
+STATE:.metadata.labels.nvidia\\.com/mig\\.config\\.state
+
+NAME                       CONFIG         STATE
+worker-gpu-0.example.com   all-2g.10gb    pending
+worker-gpu-1.example.com   all-2g.10gb    success
+worker-gpu-2.example.com   all-2g.10gb    success
+worker-gpu-3.example.com   all-2g.10gb    failed</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>Finding:</strong> Node 0 still pending (wait longer), Node 3 failed (check logs)</p>
+</div>
+<div class="paragraph">
+<p><strong>Diagnose Cause 3: Check instance allocation</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ oc describe node worker-gpu-1.example.com | \
+  grep -A 5 "Allocated resources:"
+
+Allocated resources:
+  Resource                 Requests    Limits
+  nvidia.com/mig-2g.10gb   3           3
+
+$ oc get pods -A -o wide | \
+  grep worker-gpu-1.example.com | \
+  grep nvidia.com/mig</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>Finding:</strong> All 3 instances on node already allocated to running pods</p>
+</div>
+</li>
+<li>
+<p><strong>Fix for each cause:</strong></p>
+<div class="paragraph">
+<p><strong>Fix Cause 1: Relabel nodes to correct profile</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Apply all-2g.10gb profile to all nodes
+$ oc label node worker-gpu-0.example.com \
+  nvidia.com/mig.config=all-2g.10gb --overwrite
+$ oc label node worker-gpu-1.example.com \
+  nvidia.com/mig.config=all-2g.10gb --overwrite
+$ oc label node worker-gpu-2.example.com \
+  nvidia.com/mig.config=all-2g.10gb --overwrite
+$ oc label node worker-gpu-3.example.com \
+  nvidia.com/mig.config=all-2g.10gb --overwrite
+
+# Wait 10-20 minutes per node for reconfiguration</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>Fix Cause 2a: Wait for pending reconfiguration</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># For "pending" state, wait full 20 minutes
+$ watch 'oc get node worker-gpu-0.example.com \
+  -o jsonpath="{.metadata.labels.nvidia\.com/mig\.config\.state}"'</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>Fix Cause 2b: Debug failed reconfiguration</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Check MIG Manager logs for errors
+$ oc logs -n nvidia-gpu-operator \
+  -l app=nvidia-mig-manager --tail=100 | \
+  grep -i error
+
+# Common failures:
+# - GPU doesn't support MIG (check nvidia-smi -i 0 --query-gpu=mig.mode.current)
+# - Invalid profile name (typo in label)
+# - GPU in use by running workload (drain node first)</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>Fix Cause 3: Scale down lower-priority workloads or add capacity</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Option A: Scale down lower-priority deployments
+$ oc scale deployment low-priority-inference --replicas=0
+
+# Option B: Add more GPU nodes to cluster
+# (infrastructure change)
+
+# Option C: Wait for pods to complete
+$ oc get pods -A | grep Completed | wc -l</code></pre>
+</div>
+</div>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p><strong>Root Cause in This Scenario:</strong> Most likely <strong>Cause 1</strong> - nodes configured with wrong profiles. The developer requested <code>2g.10gb</code> but nodes have <code>1g.5gb</code> or <code>3g.20gb</code> instances.</p>
+</div>
+<div class="paragraph">
+<p><strong>Recommended Fix:</strong> Standardize all nodes on <code>all-balanced</code> profile for heterogeneous workload support, or use <code>all-2g.10gb</code> if all workloads are similar size.</p>
+</div>
+</div>
+</details>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_key_takeaways"><a class="anchor" href="#_key_takeaways"></a>Key Takeaways</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p><strong>Decision Framework:</strong></p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>Use MIG when:</strong> You have A30/A100/H100 GPUs, need hardware isolation with SLA guarantees, and workloads under-utilize full GPU</p>
+</li>
+<li>
+<p><strong>Profile Selection:</strong> Measure actual VRAM, add 20-25% overhead, round UP to next profile</p>
+</li>
+<li>
+<p><strong>Advertisement Strategy:</strong> Single for uniform workloads, Mixed for multi-tenant heterogeneous platforms</p>
+</li>
+<li>
+<p><strong>Reconfiguration:</strong> Plan for 10-20 min downtime per node, use batched rolling updates for production</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p><strong>Common Mistakes to Avoid:</strong></p>
+</div>
+<div class="paragraph">
+<p>❌ Not accounting for 20-25% VRAM overhead (leads to OOM failures)</p>
+</div>
+<div class="paragraph">
+<p>❌ Using Mixed strategy without updating pod resource requests</p>
+</div>
+<div class="paragraph">
+<p>❌ Changing MIG profiles on production nodes without draining workloads first</p>
+</div>
+<div class="paragraph">
+<p>❌ Not verifying MIG config state before assuming resources are available</p>
+</div>
+<div class="paragraph">
+<p>❌ Forgetting that MIG requires 10-20 min reconfiguration time</p>
+</div>
+<div class="paragraph">
+<p><strong>Production Best Practices:</strong></p>
+</div>
+<div class="paragraph">
+<p>✅ Enable MIG Manager in ClusterPolicy early (even if not using MIG immediately)</p>
+</div>
+<div class="paragraph">
+<p>✅ Use <code>all-balanced</code> profile for multi-tenant platforms with diverse workload sizes</p>
+</div>
+<div class="paragraph">
+<p>✅ Always verify <code>mig.config.state=success</code> before deploying workloads</p>
+</div>
+<div class="paragraph">
+<p>✅ Monitor per-MIG-instance utilization with DCGM metrics (Chapter 3)</p>
+</div>
+<div class="paragraph">
+<p>✅ Plan MIG profile changes during maintenance windows with batched rolling updates</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_whats_next"><a class="anchor" href="#_whats_next"></a>What&#8217;s Next</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>You&#8217;ve mastered MIG configuration for maximizing GPU ROI. The next chapter covers GPU observability and monitoring, where you&#8217;ll learn to:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Monitor per-MIG-instance utilization with DCGM</p>
+</li>
+<li>
+<p>Create alerts for MIG instance oversubscription</p>
+</li>
+<li>
+<p>Build dashboards visualizing ROI gains from MIG (33% → 78% utilization)</p>
+</li>
+<li>
+<p>Track MIG reconfiguration events and workload performance</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>The observability stack validates the performance isolation and resource efficiency benefits you configured in this chapter, and provides the data needed for capacity planning and optimization decisions.</p>
+</div>
+</div>
+</div>
+<nav class="pagination">
+  <span class="prev"><a href="s2-mig-lab.html">(Lab) MIG Configuration</a></span>
+  <span class="next"><a href="../ch3-observability/index.html">Monitor GPU Telemetry and Health</a></span>
+</nav>
+</article>
+  </div>
+</main>
+</div>
+<footer class="footer">
+  <img src="../../../_/img/rhl-logo-red.png" height="40px" alt="Red Hat"  href="https://redhat.com" >
+</footer><script id="site-script" src="../../../_/js/site.js" data-ui-root-path="../../../_"></script>
+<script async src="../../../_/js/vendor/highlight.js"></script>
+  </body>
+</html>

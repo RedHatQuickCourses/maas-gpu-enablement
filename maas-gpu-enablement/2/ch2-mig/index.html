@@ -3,9 +3,9 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Configure Multi-Instance GPU (MIG) for MaaS :: Nvidia Accelerator Configuration for Scale</title>
+    <title>Multi-Instance GPU (MIG) Configuration :: Nvidia Accelerator Configuration for Scale</title>
     <link rel="prev" href="../ch1-gpu-operator/s3-deploy-operators-lab-5.html">
-    <link rel="next" href="s1-mig-overview.html">
+    <link rel="next" href="s2-mig-fundamentals.html">
     <meta name="generator" content="Antora 3.1.3">
     <link rel="stylesheet" href="../../../_/css/site.css">
     <script>var uiRootPath = '../../../_'</script>
@@ -101,31 +101,16 @@
 <ul class="nav-list">
   <li class="nav-item is-current-page" data-depth="1">
     <button class="nav-item-toggle"></button>
-    <a class="nav-link" href="index.html">Configure Multi-Instance GPU (MIG) for MaaS</a>
+    <a class="nav-link" href="index.html">Multi-Instance GPU (MIG) Configuration</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
-    <button class="nav-item-toggle"></button>
-    <a class="nav-link" href="s1-mig-overview.html">Maximizing GPU ROI with Multi-Instance GPU</a>
-<ul class="nav-list">
-  <li class="nav-item" data-depth="3">
-    <a class="nav-link" href="s1-mig-overview-2.html">MIG Advertisement Strategies</a>
+    <a class="nav-link" href="s2-mig-fundamentals.html">MIG Fundamentals</a>
   </li>
-  <li class="nav-item" data-depth="3">
-    <a class="nav-link" href="s1-mig-overview-3.html">How MIG Partitioning Works in Kubernetes</a>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="s2-mig-lab.html">(Lab) MIG Configuration</a>
   </li>
-  <li class="nav-item" data-depth="3">
-    <a class="nav-link" href="s1-mig-overview-4.html">MIG Benefits for MaaS</a>
-  </li>
-  <li class="nav-item" data-depth="3">
-    <a class="nav-link" href="s1-mig-overview-5.html">Production Considerations and Gotchas</a>
-  </li>
-  <li class="nav-item" data-depth="3">
-    <a class="nav-link" href="s2-mig-slicing-lab.html">Lab: MIG Slicing Configuration</a>
-  </li>
-  <li class="nav-item" data-depth="3">
-    <a class="nav-link" href="s2-mig-slicing-lab-2.html">Troubleshooting Common Issues</a>
-  </li>
-</ul>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="s2-conclusion.html">Conclusion and Knowledge Check</a>
   </li>
 </ul>
   </li>
@@ -201,7 +186,7 @@
 <nav class="breadcrumbs" aria-label="breadcrumbs">
   <ul>
     <li><a href="../index.html">Nvidia Accelerator Configuration for Scale</a></li>
-    <li><a href="index.html">Configure Multi-Instance GPU (MIG) for MaaS</a></li>
+    <li><a href="index.html">Multi-Instance GPU (MIG) Configuration</a></li>
   </ul>
 </nav>
 </div>
@@ -210,21 +195,52 @@
   <div class="toc-menu"></div>
 </aside>
 <article class="doc">
-<h1 class="page">Configure Multi-Instance GPU (MIG) for MaaS</h1>
+<h1 class="page">Multi-Instance GPU (MIG) Configuration</h1>
+<div id="preamble">
+<div class="sectionbody">
 <div class="dlist">
 <dl>
-<dt class="hdlist1">Goal</dt>
+<dt class="hdlist1">Objective</dt>
 <dd>
-<p>Maximize GPU return on investment by understanding how the Multi-Instance GPU (MIG) feature splits hardware resources into multiple GPU instances that operate with complete isolation from each other. Learn to configure and apply MIG partitioning profiles to optimize GPU utilization for Models-as-a-Service deployments.</p>
+<p>Learn how to partition GPUs into isolated instances to maximize hardware utilization and reduce per-workload costs.</p>
 </dd>
 </dl>
 </div>
 <div class="paragraph">
-<p>This chapter explores MIG advertisement strategies including Single (homogeneous) and Mixed (heterogeneous) slicing approaches, and provides hands-on experience with configuring MIG partitions on supported NVIDIA hardware.</p>
+<p>As a platform engineer, you need to maximize GPU return on investment. Multi-Instance GPU (MIG) allows you to partition a single physical GPU into multiple isolated instances, each with dedicated compute resources and memory. This chapter provides practical frameworks for deciding when to use MIG and how to configure it.</p>
+</div>
+<div class="paragraph">
+<p>This chapter contains three focused sections:</p>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong><a href="s2-mig-fundamentals.html" class="xref page">Section 1: MIG Fundamentals</a></strong> (20 min reading)</dt>
+<dd>
+<p>Learn what MIG is, when to use it, how to select profiles, and how to enable it in Kubernetes. Understand the difference between Single and Mixed advertisement strategies.</p>
+</dd>
+<dt class="hdlist1"><strong><a href="s2-mig-lab.html" class="xref page">Section 2: (Lab) MIG Configuration</a></strong> (35 min hands-on)</dt>
+<dd>
+<p>Configure MIG profiles on GPU nodes, deploy multi-tenant workloads with hardware isolation, and troubleshoot common configuration issues.</p>
+</dd>
+<dt class="hdlist1"><strong><a href="s2-conclusion.html" class="xref page">Section 3: Conclusion and Knowledge Check</a></strong> (10 min reading)</dt>
+<dd>
+<p>Validate your MIG expertise through production scenarios covering strategy selection, profile planning, reconfiguration, and debugging.</p>
+</dd>
+</dl>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_whats_next"><a class="anchor" href="#_whats_next"></a>What&#8217;s Next</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Ready to start? Begin with <a href="s2-mig-fundamentals.html" class="xref page">Section 1: MIG Fundamentals</a> to learn when MIG provides ROI and how to plan your configuration.</p>
+</div>
+</div>
 </div>
 <nav class="pagination">
   <span class="prev"><a href="../ch1-gpu-operator/s3-deploy-operators-lab-5.html">Production Operational Considerations</a></span>
-  <span class="next"><a href="s1-mig-overview.html">Maximizing GPU ROI with Multi-Instance GPU</a></span>
+  <span class="next"><a href="s2-mig-fundamentals.html">MIG Fundamentals</a></span>
 </nav>
 </article>
   </div>
