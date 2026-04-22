@@ -1,0 +1,574 @@
+:time_estimate: 12
+
+= Model Selection Mastery: Validation and Next Steps
+
+_Estimated reading time: *{time_estimate} minutes*._
+
+Objective::
+Validate model selection expertise through production scenario assessments, integrate concepts across GPU Operator (Ch1), MIG (Ch2), and Observability (Ch3), and prepare for inference serving deployment (Ch4).
+
+== What You've Accomplished
+
+You now possess systematic decision frameworks for production model selection:
+
+✅ **Architecture Selection Expertise**
+
+* Choose Dense vs MoE based on VRAM budget, workload characteristics, and infrastructure constraints
+* Calculate Total Cost of Ownership for architecture decisions (hardware, throughput, complexity)
+* Validate architecture alignment via DCGM GPU utilization metrics (target: >75%)
+
+✅ **VRAM Sizing Mastery**
+
+* Apply 5-step formula: weights + KV cache + framework overhead + safety margin
+* Account for context window impact on KV cache (1 GB per 8K tokens for 70B baseline)
+* Map sizing calculations to available hardware (H100-80GB, A100-40GB, MIG profiles)
+* Validate predictions post-deployment using `DCGM_FI_DEV_FB_USED` queries
+
+✅ **Quantization Strategy Proficiency**
+
+* Match precision formats to GPU architecture (Hopper FP8, Ampere INT8, universal INT4)
+* Evaluate accuracy vs performance trade-offs using validated benchmarks
+* Apply 3-stage production testing protocol (accuracy, performance, stability)
+* Verify driver version requirements for FP8 support (≥525.60.13)
+
+✅ **Multi-GPU Parallelism Planning**
+
+* Configure Tensor Parallelism for intra-node NVLink deployments
+* Design Pipeline Parallelism for inter-node scaling across InfiniBand networks
+* Verify network topology with `nvidia-smi topo -m` before configuration
+* Understand failure modes (TP across Ethernet causes 80-90% GPU utilization loss)
+
+✅ **Validated Model Repository Navigation**
+
+* Select pre-tested quantization variants from Red Hat AI Hugging Face
+* Apply hardware alignment decision framework (4-question process)
+* Reduce validation time from 40 hours (custom quantization) to 4 hours (validated models)
+* Calculate TCO comparing deployment options over 12-month period
+
+== Knowledge Check: Production Scenario Assessments
+
+Test your ability to apply model selection frameworks to real-world platform engineering challenges.
+
+=== Scenario 1: Emergency Capacity Planning
+
+**Friday, 4:00 PM:** Operations team escalates P1 incident - customer chatbot service experiencing degraded performance.
+
+**Current State:**
+
+* Deployment: Llama-7B-FP16 on 1× A100-40GB
+* DCGM metrics: `DCGM_FI_DEV_GPU_UTIL` = 85% sustained
+* Customer complaints: Response times increased from 50ms to 200ms during peak hours
+* Business impact: 500+ concurrent users during launch week (traffic 5× higher than projected)
+
+**Customer Demand:** "Add capacity immediately to handle 50 additional concurrent users by Monday morning."
+
+**Your Response Checklist:**
+
+Use your model selection expertise to formulate emergency response plan:
+
+**[ ] Step 1: Calculate current capacity headroom**
+
+* Reference Chapter 3 DCGM metrics:
+** `DCGM_FI_DEV_FB_USED` shows current VRAM usage
+** `DCGM_FI_DEV_GPU_UTIL` at 85% indicates near-saturation
+* **Question:** Can current hardware handle 50 additional users without changes?
+
+**[ ] Step 2: Evaluate MIG partitioning option**
+
+* Reference Chapter 2 MIG profiles for A100-40GB:
+** Could deploy second Llama-7B instance in separate MIG profile?
+** What MIG profile would fit? (calculate 7B × 2 bytes FP16 = 14 GB requirement)
+** Would MIG provide sufficient isolation and guaranteed performance?
+
+**[ ] Step 3: Consider quantization to free VRAM**
+
+* Calculate VRAM savings:
+** Current: 7B × 2 bytes (FP16) = 14 GB
+** INT8 quantization: 7B × 1 byte = 7 GB (**50% reduction**)
+** FP8 quantization: 7B × 1 byte = 7 GB (if A100 supports FP8 - does it?)
+* **Question:** Does quantization provide enough headroom for KV cache growth?
+
+**[ ] Step 4: Estimate new throughput capacity**
+
+* If quantizing to INT8 frees 7 GB VRAM:
+** More headroom for KV cache = larger batch sizes = higher throughput
+** Estimate: ~30-40% throughput increase without hardware changes
+* **Question:** Is this sufficient for 50 additional concurrent users (10% growth)?
+
+**[ ] Step 5: Document recommendation with risk assessment**
+
+**Recommended Emergency Response:**
+
+```
+EMERGENCY CAPACITY PLAN - Llama-7B Chatbot Service
+
+Immediate Action (Deploy by Saturday 10 AM):
+- Quantize model from FP16 to INT8 (validated model: redhatai/llama-7b-int8)
+- Expected VRAM reduction: 14 GB → 7 GB (frees 7 GB for KV cache)
+- Expected throughput increase: ~35% (validated via Red Hat benchmarks)
+- Risk: Minimal (<0.5% accuracy degradation for 7B models with INT8)
+
+Validation Before Production Promotion:
+- DCGM_FI_DEV_FB_USED: expect ~7-8 GB (vs current 14 GB)
+- DCGM_FI_DEV_GPU_UTIL: expect 75-80% (vs current 85%)
+- Load testing: confirm 550 concurrent users × 50ms P99 latency
+
+Fallback Plan:
+- If quantization insufficient: Deploy second A100-40GB GPU ($20K emergency procurement)
+- Use Data Parallelism to distribute load across 2 GPUs
+- Timeline: 48 hours for hardware delivery + deployment
+
+Long-Term Mitigation (Week 2):
+- Review capacity planning assumptions (projected 100 users, actual 500)
+- Implement autoscaling policy based on DCGM GPU utilization thresholds
+- Reference Chapter 4 inference serving for autoscaling configuration
+```
+
+**Reflection Questions:**
+
+1. Why is quantization faster to deploy than adding hardware (hours vs days)?
+2. How does Chapter 2 MIG knowledge inform this decision (why not partition the GPU)?
+3. What Chapter 3 DCGM metrics would you monitor during rollout?
+
+---
+
+=== Scenario 2: New MoE Model Selection
+
+**Request:** Data science team wants to deploy **DeepSeek-V3** (671B total parameters, 37B active parameters per token, MoE architecture) for research assistant chatbot.
+
+**Available Infrastructure:**
+
+* Current: 8× H100-80GB cluster (single node, NVLink-connected) = 640 GB total VRAM
+* Budget: $0 for new hardware (must use existing cluster)
+
+**Data Science Team Claim:** "DeepSeek-V3 only activates 37B parameters per token, so it should run like Llama-37B which fits on 1-2 GPUs easily."
+
+**Your Assessment Checklist:**
+
+**[ ] Step 1: Calculate actual VRAM requirement**
+
+* **Common mistake:** Confusing "active parameters" with "loaded parameters"
+* MoE models require **ALL parameters** in VRAM for router access
+* Total parameters: 671B
+* Precision: Assume INT8 deployment (best case)
+* **VRAM calculation:** 671B × 1 byte = _____ GB
+
+**[ ] Step 2: Compare to available hardware**
+
+* Available VRAM: 8× 80 GB = 640 GB total
+* Required VRAM: _____ GB (from Step 1)
+* **Does model fit?** ✅ / ❌
+
+**[ ] Step 3: Account for KV cache and overhead**
+
+* Model weights alone: 671 GB
+* KV cache for 32K context: ~40 GB (estimated for 671B model)
+* Framework overhead (12%): (671 + 40) × 0.12 = _____ GB
+* Safety margin (10%): (671 + 40 + overhead) × 0.10 = _____ GB
+* **Total VRAM required:** _____ GB
+
+**[ ] Step 4: Determine parallelism strategy**
+
+* Total requirement: _____ GB
+* Available hardware: 640 GB (8× H100)
+* **Conclusion:** Model does not fit current hardware in INT8
+
+**Options:**
+
+* [ ] **INT4 quantization:** 671B × 0.5 bytes = 336 GB (would fit with headroom)
+** Risk: INT4 causes 1-3% accuracy degradation (may not meet research quality requirements)
+** Validation time: 40+ hours testing accuracy on research datasets
+* [ ] **Reject deployment:** Model exceeds cluster capacity even with aggressive quantization
+** Recommend smaller MoE: Mixtral 8×22B (141B total, 39B active) fits comfortably
+* [ ] **Expand cluster:** Procure 4 additional H100-80GB GPUs ($128K investment)
+** New capacity: 12× 80GB = 960 GB (accommodates model in INT8 with margin)
+
+**[ ] Step 5: Document recommendation**
+
+**Recommended Response to Data Science Team:**
+
+```
+DeepSeek-V3 Deployment Feasibility Analysis
+
+Current Cluster Capacity: 8× H100-80GB = 640 GB VRAM
+
+Model VRAM Requirement Analysis:
+- Total Parameters: 671B (ALL must load into VRAM, not just 37B active)
+- INT8 Quantization: 671B × 1 byte = 671 GB weights
+- KV Cache (32K context): ~40 GB
+- Framework Overhead: ~85 GB
+- Safety Margin: ~80 GB
+- Total Requirement: ~876 GB
+
+Conclusion: Model DOES NOT FIT current infrastructure (876 GB > 640 GB).
+
+Alternative Recommendations:
+
+Option 1: Deploy Smaller MoE Model (RECOMMENDED)
+- Model: Mixtral 8×22B (141B total, 39B active)
+- VRAM Requirement: ~200 GB in INT8 (fits comfortably on 8× H100)
+- Performance: Similar active parameter count (37B vs 39B)
+- Timeline: Deploy within 2 days using validated model
+
+Option 2: INT4 Quantization (HIGH RISK)
+- Would fit: 671B × 0.5 bytes = 336 GB weights (~450 GB total)
+- Risk: 1-3% accuracy degradation unacceptable for research use case
+- Validation time: 40+ hours testing required
+- Not recommended for research assistant requirements
+
+Option 3: Cluster Expansion
+- Add: 4× H100-80GB ($128K hardware investment)
+- New capacity: 12× 80GB = 960 GB (accommodates DeepSeek-V3 in INT8)
+- Timeline: 6-8 weeks for procurement and deployment
+- Recommended only if DeepSeek-V3 provides significant value over Mixtral 8×22B
+```
+
+**Reflection Questions:**
+
+1. What is the critical mistake in the data science team's reasoning (active vs total parameters)?
+2. Why does MoE architecture require all parameters in VRAM despite sparse activation?
+3. How would you use Chapter 3 DCGM metrics to demonstrate VRAM exhaustion if deployment was attempted?
+
+---
+
+=== Scenario 3: Performance Troubleshooting
+
+**Alert:** Production model deployment showing degraded performance despite "successful" deployment.
+
+**Deployed Configuration:**
+
+* Model: Llama-405B-INT8 (~405 GB)
+* Hardware: 2 nodes, each with 8× H100-80GB
+* Configuration: `--tensor-parallel-size=16` (TP across all 16 GPUs)
+* Network: Nodes connected via 200 Gb InfiniBand
+
+**Observed Symptoms:**
+
+* Expected P99 latency: 65ms (based on benchmark for 8× H100 single-node)
+* **Actual P99 latency:** 950ms (14.6× worse than expected)
+* DCGM metrics: `DCGM_FI_DEV_GPU_UTIL` = 18% (GPUs mostly idle)
+* DCGM metrics: `DCGM_FI_DEV_POWER_USAGE` = 310W per GPU (high power despite low utilization)
+
+**Your Diagnostic Process:**
+
+**[ ] Step 1: Verify network topology**
+
+* Run: `oc debug node/<gpu-node> -- chroot /host nvidia-smi topo -m`
+* **Expected for TP=16:** All 16 GPUs should show `NV18` (NVLink) between each other
+* **Actual observation:** GPUs within each node show `NV18`, but across nodes show `SYS` (system connection via InfiniBand)
+
+**Root Cause Identified:** TP is spanning nodes connected by InfiniBand (not NVLink).
+
+**[ ] Step 2: Calculate synchronization overhead**
+
+* Tensor Parallelism performs all-reduce after **every transformer layer** (Llama-405B: ~80 layers)
+* InfiniBand latency: ~2-5 microseconds per sync operation
+* Total sync overhead: 80 layers × 3 μs (average) = _____ μs per forward pass
+* Actual compute time: ~10ms per forward pass
+* **Percentage of time waiting for network:** _____ %
+
+**[ ] Step 3: Explain low GPU utilization**
+
+* GPUs idle 82% of time (100% - 18% utilization)
+* **Reason:** Tensor Parallelism requires synchronization before proceeding to next layer
+** All 16 GPUs must wait for slowest sync operation to complete
+** Network latency dominates compute time
+** GPUs sit idle waiting for cross-node synchronization
+
+**[ ] Step 4: Explain high power consumption despite low utilization**
+
+* Power usage: 310W per GPU despite 18% compute utilization
+* **Reason:** GPUs consume power even when idle waiting for network
+** CUDA kernels remain loaded in memory
+** GPU cores ready to compute (consuming power) but blocked on network I/O
+** Power consumption closer to idle power (~100W) + waiting overhead (~200W)
+
+**[ ] Step 5: Recommend corrected configuration**
+
+**Corrected Deployment Configuration:**
+
+```yaml
+# INCORRECT (current):
+vllm_args:
+  --tensor-parallel-size=16  # TP across InfiniBand - WRONG
+
+# CORRECT (hybrid TP+PP):
+vllm_args:
+  --tensor-parallel-size=8      # TP within each node (NVLink)
+  --pipeline-parallel-size=2    # PP across nodes (InfiniBand)
+  --model=/models/llama-405b-int8
+```
+
+**Expected Performance After Fix:**
+
+* **Latency:** ~95ms P99 (vs 950ms current, vs 65ms single-node baseline)
+** Pipeline Parallelism adds ~30ms overhead ("bubble" between stages)
+** Still 10× better than misconfigured TP=16
+* **Throughput:** ~7,000 tokens/sec (vs ~400 tokens/sec current)
+** 16 GPUs process more concurrent requests via pipeline
+** Network latency no longer dominates (1× PP communication per pipeline stage, not 80× TP per forward pass)
+* **GPU Utilization:** 80-85% (vs 18% current)
+** GPUs spend <10% time on network synchronization (PP less frequent than TP)
+
+**[ ] Step 6: Validation post-fix**
+
+After deploying corrected configuration, confirm metrics improve:
+
+[source,promql]
+----
+# Verify GPU utilization increases
+DCGM_FI_DEV_GPU_UTIL{deployment="llama-405b-corrected"}
+# Target: >80% (vs 18% with misconfigured TP)
+
+# Verify latency improvement
+histogram_quantile(0.99,
+  rate(vllm_time_to_first_token_seconds_bucket{deployment="llama-405b-corrected"}[5m])
+)
+# Target: <100ms (vs 950ms with misconfigured TP)
+
+# Verify throughput increase
+rate(vllm_request_success_total{deployment="llama-405b-corrected"}[5m])
+# Target: >6,000 tokens/sec (vs ~400 tokens/sec with misconfigured TP)
+----
+
+**Reflection Questions:**
+
+1. Why does TP perform poorly across InfiniBand despite "only" 2-5 μs latency per sync?
+2. How does Pipeline Parallelism tolerate higher network latency than Tensor Parallelism?
+3. What Chapter 3 DCGM metrics immediately revealed the misconfiguration (before even checking network topology)?
+
+---
+
+== Integration with Course Concepts
+
+Model selection decisions integrate knowledge across all prior chapters:
+
+=== Chapter 1: GPU Operator and Infrastructure
+
+**Driver Version Requirements**
+
+* **FP8 quantization** requires CUDA 12.0+ support (driver ≥525.60.13)
+* Check current driver: `nvidia-smi --query-gpu=driver_version`
+* Update via ClusterPolicy if needed: `spec.driver.version: "535.129.03"`
+* **Impact:** Hopper GPU with old driver cannot leverage FP8 Tensor Cores (loses 2× throughput advantage)
+
+**ClusterPolicy Configuration**
+
+* Model selection influences ClusterPolicy settings:
+** MIG mode enabled/disabled based on model size (large models require `enabled: false` for full GPU access)
+** Driver version selection based on quantization requirements
+** DCGM enablement mandatory for model selection validation (metrics-driven decisions)
+
+**Reference:** xref:../ch1-gpu-operator/s2-operators-overview.adoc[Chapter 1: GPU Operator and ClusterPolicy Configuration]
+
+=== Chapter 2: MIG and Multi-Tenant Resource Allocation
+
+**Large Model Constraints**
+
+* Models >70B parameters **cannot use MIG instances** for multi-GPU parallelism:
+** Largest MIG profile: `3g.40gb` = 40 GB VRAM per instance
+** Llama-405B requires 405 GB (would need 11 MIG instances minimum)
+** **Technical barrier:** Tensor Parallelism requires NVLink between GPUs; MIG instances have separate CUDA contexts (no inter-instance NVLink)
+
+**When MIG Enables Model Serving**
+
+* **Small models (<13B parameters)** benefit from MIG:
+** Deploy 7× Llama-7B instances in separate `1g.10gb` profiles on single H100
+** Multi-tenant isolation (different teams/customers per MIG instance)
+** Cost optimization (maximize GPU utilization via multiple concurrent models)
+
+**MIG Profile Selection Decision Matrix**
+
+[cols="2,2,2", options="header"]
+|===
+| Model Size | MIG Viable? | Recommended Approach
+
+| 7B-13B parameters
+| ✅ Yes
+| MIG profiles: `1g.10gb` or `2g.20gb` for multi-tenant serving
+
+| 70B parameters
+| ⚠️ Marginal
+| Full GPU or MIG `3g.40gb` (borderline fit with INT8)
+
+| 135B+ parameters
+| ❌ No
+| Full GPU allocation with TP across multiple GPUs
+|===
+
+**Reference:** xref:../ch2-mig/s1-mig-overview.adoc#selecting-mig-profiles[Chapter 2: MIG Profile Selection and Constraints]
+
+=== Chapter 3: Observability and Metrics-Driven Validation
+
+**DCGM Metrics Validate Model Selection Decisions**
+
+Every model selection framework in this chapter relies on Chapter 3 observability:
+
+**VRAM Sizing Validation**
+
+[source,promql]
+----
+# Confirm sizing calculation accuracy
+DCGM_FI_DEV_FB_USED{deployment="model-name"} / (1024^3)
+
+# Expected: matches sizing formula prediction ±10%
+# If higher: KV cache larger than estimated (longer contexts in production)
+# If lower: Model may not be loading correctly (investigate deployment)
+----
+
+**Architecture Selection Validation**
+
+[source,promql]
+----
+# Healthy GPU utilization indicates good architecture match
+DCGM_FI_DEV_GPU_UTIL{deployment="model-name"}
+
+# Target: >75% for well-matched architecture
+# If <50%: Architecture likely mismatched (memory-bandwidth bound, not compute-bound)
+----
+
+**Quantization Performance Validation**
+
+[source,promql]
+----
+# Verify quantization doesn't cause thermal throttling
+DCGM_FI_DEV_GPU_TEMP{deployment="model-name"}
+
+# Target: <80°C sustained under load
+# If >85°C: Quantization may increase compute intensity; review cooling/clocks
+----
+
+**Parallelism Configuration Validation**
+
+[source,promql]
+----
+# Detect network bottleneck in TP/PP configuration
+DCGM_FI_DEV_GPU_UTIL{deployment="model-name"} < 50
+
+# If utilization <50%: Network likely bottleneck (check topology with nvidia-smi topo -m)
+# If utilization >80%: Parallelism configured correctly
+----
+
+**Reference:** xref:../ch3-observability/s1-observability-stack.adoc[Chapter 3: DCGM Observability Stack and Metrics]
+
+=== Chapter 4 (Preview): Inference Serving Deployment
+
+**Model Selection Feeds Directly Into Deployment Configuration**
+
+Your model selection decisions from this chapter become deployment parameters in Chapter 4:
+
+**VRAM Sizing → Resource Limits**
+
+```yaml
+resources:
+  limits:
+    nvidia.com/gpu: 4  # From sizing calculation: model requires 4× H100 with TP=4
+```
+
+**Quantization Selection → Model Loading**
+
+```yaml
+vllm_args:
+  --model=/models/llama-135b-int8  # From quantization decision framework
+  --dtype=int8                      # Precision format aligned to GPU architecture
+```
+
+**Parallelism Planning → vLLM Configuration**
+
+```yaml
+vllm_args:
+  --tensor-parallel-size=8      # From network topology validation
+  --pipeline-parallel-size=2    # From multi-node scaling requirements
+```
+
+**Context Window Sizing → Max Token Configuration**
+
+```yaml
+vllm_args:
+  --max-model-len=131072  # 128K context window from KV cache sizing calculation
+```
+
+**Connection:** Your Exercise 1 VRAM calculations become Chapter 4's `resources.limits`. Your Exercise 2 parallelism planning becomes Chapter 4's TP/PP configuration. Your Exercise 3 validated model selection becomes Chapter 4's model path.
+
+---
+
+== Success Criteria Self-Assessment
+
+Rate your confidence (1-5 scale) on each model selection capability:
+
+**1 = Not confident (need to review chapter)**
+**3 = Moderately confident (can do with reference material)**
+**5 = Highly confident (can execute independently in production)**
+
+[cols="3,1,2", options="header"]
+|===
+| Capability | Confidence (1-5) | Evidence of Mastery
+
+| **Calculate VRAM requirements** for any model
+| _____
+| Completed Exercise 1 with <10% error from solution
+
+| **Choose Dense vs MoE** based on workload characteristics
+| _____
+| Correctly analyzed Scenario 2 (DeepSeek-V3 MoE VRAM requirement)
+
+| **Match quantization to GPU architecture** (Hopper FP8, Ampere INT8)
+| _____
+| Selected correct quantization in Exercise 3 (FP8 for H100)
+
+| **Design TP/PP configuration** for multi-GPU deployments
+| _____
+| Completed Exercise 2 with correct parallelism strategy
+
+| **Navigate validated model repository** to reduce deployment risk
+| _____
+| Successfully applied 4-question decision framework in Exercise 3
+
+| **Diagnose parallelism misconfiguration** using DCGM metrics
+| _____
+| Identified root cause in Scenario 3 (TP across InfiniBand)
+
+| **Integrate concepts** from Ch1 (GPU Operator), Ch2 (MIG), Ch3 (DCGM)
+| _____
+| Answered integration questions referencing prior chapters
+|===
+
+**Target for Chapter Completion:** All scores ≥4 before proceeding to Chapter 4 (Inference Serving).
+
+**If any score <4:**
+
+* **Score 1-2:** Re-read relevant section in xref:s6-model-evaluation.adoc[Section 1: Evaluating Models] and rework lab exercise
+* **Score 3:** Review lab exercise solution guides and practice on additional scenarios
+* **Score 4-5:** Ready to apply these skills in production deployments and Chapter 4 labs
+
+---
+
+== What's Next: Inference Serving Deployment
+
+With model selection mastery achieved, you're ready to deploy selected models as production inference services.
+
+**Chapter 4: Inference Serving on OpenShift AI** (coming next)
+
+You will learn:
+
+* **vLLM deployment configuration:** Apply your VRAM sizing calculations as Kubernetes resource limits
+* **Model server setup:** Configure inference servers with your selected quantization and parallelism strategies
+* **Autoscaling policies:** Design horizontal pod autoscaling based on DCGM GPU utilization thresholds from Chapter 3
+* **Load balancing:** Distribute inference requests across multiple model replicas for high availability
+* **Performance tuning:** Optimize batch sizes, KV cache settings, and request scheduling for target SLA compliance
+
+**Key Connection to This Chapter:**
+
+Every decision you made in model selection directly configures inference serving:
+
+* **Your Exercise 1 VRAM calculations** → vLLM `resources.limits.nvidia.com/gpu: 4`
+* **Your Exercise 2 parallelism planning** → vLLM `--tensor-parallel-size=8 --pipeline-parallel-size=2`
+* **Your Exercise 3 quantization selection** → vLLM `--dtype=float8` and model path
+* **Your context window sizing** → vLLM `--max-model-len=131072`
+* **Your DCGM validation queries** → Prometheus alerts and autoscaling triggers
+
+**Preparation for Chapter 4:**
+
+Review your lab exercise documentation (Exercise 1 Part D recommendation template). This becomes your deployment runbook for Chapter 4 inference serving configuration.
+
+**Continue Learning:** Proceed to Chapter 4 to deploy your selected models as production inference services, completing the end-to-end MaaS platform delivery workflow.

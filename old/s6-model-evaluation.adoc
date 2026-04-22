@@ -1,0 +1,967 @@
+:time_estimate: 25
+
+= Evaluating Models and Optimizing Weights
+
+_Estimated reading time: *{time_estimate} minutes*._
+
+Objective::
+Master the decision frameworks for selecting optimal model architectures, quantization strategies, and multi-GPU configurations that balance performance, cost, and hardware constraints for production MaaS deployments.
+
+== The Business Impact of Model Selection
+
+// SUGGESTION: Added business context showing real-world consequences of systematic vs ad-hoc model selection
+Model selection is not an academic exercise in comparing benchmark scores. Every architecture, quantization, and parallelism decision directly impacts infrastructure costs, customer SLO compliance, and platform competitiveness.
+
+**The cost of ad-hoc model selection:**
+Consider a platform engineering team that selects models reactively—choosing the "largest available model" without sizing calculations, deploying FP16 precision "because it's the default," or configuring multi-GPU parallelism by trial-and-error.
+
+Over 12 months, this approach compounds into:
+
+* **$200K in overprovisioned GPU hardware** (deploying 12× H100s when 8× would suffice with proper quantization)
+* **40 hours per model validating custom quantization schemes** (instead of 4 hours using pre-validated models)
+* **Production failures from VRAM exhaustion** during peak load when KV cache wasn't sized correctly
+* **SLA breaches from network misconfiguration** (80% GPU utilization loss when TP runs across Ethernet instead of NVLink)
+
+**The value of systematic model selection:**
+
+The same team, applying the decision frameworks in this chapter:
+
+* **Calculates exact VRAM requirements** preventing deployment failures and emergency hardware purchases
+* **Aligns quantization to GPU architecture** (Hopper FP8 vs Ampere INT8) achieving 35% higher throughput
+* **Validates parallelism against network topology** before deployment, avoiding latency collapse
+* **Leverages pre-tested model repositories** reducing validation cycles from weeks to days
+
+
+== Architecture Selection: Dense vs Mixture-of-Experts
+
+=== **Dense Models**
+
+In a dense model, every parameter activates for every token generated. A 70B parameter model performs 70 billion calculations per token, using all weights simultaneously.
+
+**Characteristics:**
+
+* **Predictable performance:** Compute and memory requirements scale linearly with parameter count
+* **Robust sequential reasoning:** All parameters available for every decision, enabling deep multi-step synthesis
+* **Easier optimization:** Fits standard inference engines (vLLM, TGI) with minimal tuning
+* **Lower total VRAM footprint:** Only store parameters actually used
+
+**Trade-offs:**
+
+* **Higher compute cost per token:** Processing 70B parameters for simple queries wastes resources
+* **Lower throughput:** Memory bandwidth becomes bottleneck before compute saturation
+* **Scaling requires larger models:** Improving capability requires training bigger models (linear cost increase)
+
+=== **Sparse (Mixture-of-Experts) Models**
+
+An MoE model contains multiple "expert" sub-networks. For each token, a router selects which experts to activate (typically 2-8 experts from a pool of 8-64 total experts).
+
+**Example:** Mixtral 8×7B has 8 expert networks of 7B parameters each (56B total), plus shared layers (≈14B), totaling 70B parameters. Per token, the router activates 2 experts (14B active parameters) plus shared layers.
+
+**Characteristics:**
+
+* **Massive total parameter count, small active count:** DeepSeek-V3: 671B total, 37B active per token
+* **Specialization via routing:** Coding queries route to "coding expert," creative tasks to "language expert"
+* **High throughput per GPU:** Less compute per token enables faster generation
+* **Lower compute cost per token:** Only 5-20% of parameters activate per inference
+
+**Trade-offs:**
+
+* **Large VRAM requirement:** Must load ALL parameters into memory for router accessibility
+* **Routing dependency:** Incorrect expert selection degrades reasoning (router becomes single point of failure)
+* **Complex memory management:** Requires tensor parallelism across multiple GPUs for large models
+* **Infrastructure complexity:** Multi-node clusters and specialized partitioning often mandatory
+
+== Systematic Architecture Selection
+
+Use this decision framework to align architecture to workload characteristics:
+
+**Step 1: Define workload profile**
+
+Characterize your use case across four dimensions:
+
+[cols="2,3,3", options="header"]
+|===
+| Dimension | Dense Model Indicator | MoE Model Indicator
+
+| **User concurrency**
+| Low-to-medium (1-50 concurrent users)
+| High (50+ concurrent users)
+
+| **Query complexity**
+| Multi-step reasoning, deep analysis, chain-of-thought requirements
+| Diverse task types (coding, writing, analysis, summarization in same deployment)
+
+| **Latency sensitivity**
+| Moderate (100-200ms P99 acceptable)
+| Critical (<50ms P99 required for user experience)
+
+| **VRAM availability**
+| Limited (single GPU or 2-4× GPU cluster)
+| Abundant (8+ GPU clusters with NVLink)
+|===
+
+**Step 2: Apply decision matrix**
+
+[cols="1,2,2", options="header"]
+|===
+| Workload Need | Recommended Architecture | Reasoning
+
+| **Highest throughput**
+| MoE (Mixtral, Gemini, DeepSeek)
+| Lower active compute per token; bandwidth-optimized
+
+| **Limited VRAM budget** (single GPU or small cluster)
+| Dense (Llama, Mistral, Phi)
+| Fits in smaller total VRAM envelope
+
+| **Complex sequential reasoning** (legal analysis, scientific research)
+| Dense (high parameter count: 70B+)
+| Global weight access for every token enables deep synthesis
+
+| **Mixture of Experts** (code + writing + analysis)
+| MoE
+| Expert specialization handles diverse task types efficiently
+
+| **Cost-per-token optimization**
+| MoE (for high-volume workloads)
+| Process more tokens per second per GPU
+|===
+
+
+
+== Model Sizing: Calculating GPU Memory Requirements
+
+
+=== VRAM Components and Calculation Formula
+
+Total VRAM requirement consists of four components:
+
+*VRAM_total = weights + KV_cache + overhead + margin*
+
+
+**Component 1: Model Weights** (VRAM~weights~)
+
+Calculate based on parameter count and precision:
+
+[cols="2,1,2", options="header"]
+|===
+| Precision | Bytes per Parameter | Example: 70B Model
+
+| **FP16 / BF16**
+| 2 bytes
+| 70B × 2 = **140 GB**
+
+| **INT8 / FP8**
+| 1 byte
+| 70B × 1 = **70 GB**
+
+| **INT4**
+| 0.5 bytes
+| 70B × 0.5 = **35 GB**
+|===
+
+**Component 2: KV Cache** (VRAM~KV_cache~)
+
+The "memory" of conversation context. Stores attention keys and values for each token processed.
+
+**Estimation rule for 70B-class models:**
+
+* **1 GB per 8,000 tokens** of context window at FP16 precision
+* **0.5 GB per 8,000 tokens** at INT8/FP8 precision
+
+**Example:** Llama-70B with 128K context window at FP16:
+
+KV_cache = (128,000 \div 8,000) * 1GB = 16GB
+
+
+**Scaling for different model sizes:**
+
+KV cache scales with number of layers and hidden dimensions, not just parameters. For rough estimates:
+
+* **7B-13B models:** KV cache ≈ 30% of 70B model KV cache
+* **135B-175B models:** KV cache ≈ 2× to 2.5× of 70B model KV cache
+* **400B+ models:** KV cache ≈ 5× to 6× of 70B model KV cache
+
+**Component 3: Framework Overhead** (VRAM~overhead~)
+
+Inference frameworks (vLLM, TGI, TensorRT-LLM) require additional memory:
+
+* **vLLM typical overhead:** 10-15% of (weights + KV cache)
+* **TGI typical overhead:** 8-12% of (weights + KV cache)
+* **Buffer allocations, CUDA kernels, scheduler state:** Varies by batch size and concurrency
+
+**Component 4: Safety Margin** (VRAM~margin~)
+
+Production deployments should never run at 100% VRAM utilization.
+
+**Recommended margin:** 10-15% of total VRAM capacity
+
+**Reason:** Prevents CUDA OOM errors during traffic spikes, allows for KV cache growth with longer-than-expected queries, provides buffer for framework version updates that may increase overhead.
+
+=== HOW: Step-by-Step VRAM Sizing Procedure
+
+// SUGGESTION: Added systematic 5-step procedure with validation integration
+Follow this procedure for every model deployment decision:
+
+**Step 1: Calculate base weight requirement**
+
+Identify model parameter count and target quantization precision:
+
+[source,text]
+----
+Example: Llama-135B model, INT8 quantization target
+VRAM_weights = 135B parameters × 1 byte = 135 GB
+----
+
+**Step 2: Calculate KV cache overhead**
+
+Determine maximum context window requirement from customer specifications:
+
+[source,text]
+----
+Example: 128K context window required for RAG application
+
+For 135B model (scales as ~2× the 70B baseline):
+VRAM_KV_cache = (128K ÷ 8K) × 1 GB × 2.0 = 32 GB
+----
+
+**Important:** Use production context window length, not development/testing length. Testing with 2K context then deploying for 128K context is a common failure mode.
+
+**Step 3: Add framework overhead**
+
+Apply percentage to base + KV cache:
+
+[source,text]
+----
+Example: vLLM deployment (assume 12% overhead)
+Base + KV = 135 GB + 32 GB = 167 GB
+VRAM_overhead = 167 GB × 0.12 = 20 GB
+----
+
+**Step 4: Add safety margin**
+
+Reserve capacity for unexpected scenarios:
+
+[source,text]
+----
+Example: 10% safety margin
+Subtotal = 135 + 32 + 20 = 187 GB
+VRAM_margin = 187 GB × 0.10 = 19 GB
+
+Total VRAM requirement = 187 + 19 = 206 GB
+----
+
+**Step 5: Map to available hardware**
+
+Compare requirement to GPU inventory:
+
+[cols="2,1,1,2", options="header"]
+|===
+| Hardware Option | VRAM per GPU | Total VRAM | Deployment Viable?
+
+| 1× H100-80GB
+| 80 GB
+| 80 GB
+| ❌ Insufficient (need 206 GB)
+
+| 2× H100-80GB
+| 80 GB
+| 160 GB
+| ❌ Insufficient
+
+| 3× H100-80GB
+| 80 GB
+| 240 GB
+| ✅ **Viable** (206 GB fits with 34 GB headroom)
+
+| 4× A100-40GB
+| 40 GB
+| 160 GB
+| ❌ Insufficient
+|===
+
+**Decision:** Deploy on 3× H100-80GB cluster using Tensor Parallelism (TP=3).
+
+**Step 6: Validate prediction post-deployment**
+
+After deployment, confirm sizing accuracy using DCGM metrics from Chapter 3:
+
+[source,promql]
+----
+# Check actual VRAM usage per GPU
+DCGM_FI_DEV_FB_USED{deployment="llama-135b"} / (1024^3)
+
+# Expected: ~69 GB per GPU (206 GB ÷ 3 GPUs)
+# Acceptable range: 62-76 GB (±10% variance)
+----
+
+If actual VRAM usage differs significantly from prediction:
+
+* **Higher than expected:** KV cache may be larger (longer contexts in production), or framework overhead higher than estimated
+* **Lower than expected:** Model may not be loading correctly, or KV cache disabled (check vLLM `--max-model-len` parameter)
+// END SUGGESTION
+
+[WARNING]
+====
+**Common Sizing Mistake: Ignoring KV Cache for Long-Context Models**
+
+For context windows beyond 32K tokens, KV cache can **exceed model weight size**.
+
+**Example: Llama-70B-INT8 with 256K context**
+
+* **Weights:** 70 GB
+* **KV cache:** (256K ÷ 8K) × 1 GB = 32 GB
+* **Total:** 102 GB (KV cache is 46% of total VRAM)
+
+**For 512K context:** KV cache grows to 64 GB, nearly matching weight size.
+
+**Mitigation strategies:**
+
+1. **Quantize KV cache:** vLLM supports `--kv-cache-dtype fp8` reducing KV cache by 50%
+2. **Page attention:** vLLM's PagedAttention manages KV cache more efficiently than naive implementations
+3. **Shorter context windows:** Question whether 512K context is truly required, or if 128K suffices
+
+Always size for **production context window length**, not development testing length (2-4K tokens).
+====
+
+[NOTE]
+====
+**MIG Constraints for Large Models**
+
+Reference your Chapter 2 MIG knowledge: Why can't this Llama-135B model use MIG instances?
+
+**MIG Profile Limits (H100-80GB):**
+
+* Largest profile: `3g.40gb` = 40 GB VRAM per instance
+* Maximum instances: 2 per H100
+
+**Calculation:**
+
+* Model requirement: 206 GB total
+* MIG allocation: 2 instances × 40 GB = 80 GB maximum per GPU
+* Required GPUs with MIG: 206 GB ÷ 40 GB = 6 MIG instances minimum
+
+**Problem:** Tensor Parallelism cannot span MIG instances (separate CUDA contexts, no NVLink between instances).
+
+**Design rule:** Models requiring >70 GB typically need full GPU allocation or multi-GPU TP, not MIG partitioning.
+
+**When MIG is viable for model serving:**
+
+* **Small models:** 7B-13B parameter models (7-26 GB) fit in `1g.10gb` or `2g.20gb` profiles
+* **Multi-tenant serving:** Deploy multiple 7B models in separate MIG instances on same physical GPU
+* **Development/testing:** Use MIG to partition GPUs for parallel testing of different quantization variants
+====
+
+== Quantization Strategies: Matching Precision to Hardware
+
+=== WHY: Quantization as Infrastructure Cost Optimization
+
+Quantization reduces the numerical precision of model weights and activations, enabling powerful models to fit on cost-effective hardware. This is not optional optimization—it's mandatory for production-scale deployments.
+
+**Business case:**
+
+Llama-405B model in FP16 precision requires 810 GB VRAM (405B × 2 bytes). Deployment options:
+
+* **11× H100-80GB** at $32K each = **$352K hardware cost**
+* **OR: Quantize to INT8** (405B × 1 byte = 405 GB) → **5× H100-80GB = $160K hardware cost**
+
+Quantization saves $192K in initial hardware procurement while typically introducing <1% accuracy degradation for well-optimized models.
+
+=== WHAT: Quantization Precision Formats and Hardware Alignment
+
+Understanding quantization naming conventions from Red Hat AI repository:
+
+**Naming Convention Examples:**
+
+* **`.w4a16`**: Weights quantized to 4-bit, activations at 16-bit (FP16/BF16) - "weight-only quantization"
+* **`.w8a8-INT8`**: Both weights and activations at 8-bit integer precision
+* **`.w8a8-FP8`**: Weights and activations at 8-bit floating-point format
+
+**Precision Comparison with Hardware Alignment:**
+
+[cols="1,2,2,2", options="header"]
+|===
+| Precision | Best Use Case | Hardware Acceleration | Accuracy Risk
+
+| **FP16 / BF16**
+| Baseline accuracy, maximum precision
+| All modern GPUs (universal support)
+| **None** (baseline reference)
+
+| **FP8**
+| Optimal balance of speed and accuracy for Hopper/Blackwell GPUs
+| Natively accelerated on **H100 (Hopper), L4/L40S (Ada), B100 (Blackwell)** - 2× throughput vs FP16
+| **Low** (~0.1-0.3% perplexity degradation)
+
+| **INT8**
+| Good speed and memory savings on Ampere architecture
+| **A100 (Ampere)** has INT8 Tensor Cores; widely supported across GPU generations
+| **Medium** (~0.3-0.8% perplexity degradation with proper calibration)
+
+| **INT4**
+| Maximum memory reduction for fitting large models on limited hardware
+| Supported via software (vLLM, TGI); no dedicated hardware acceleration
+| **Highest** (~1-3% perplexity degradation; requires advanced quantization methods like GPTQ/AWQ)
+|===
+
+**Critical insight:** Quantization effectiveness depends on **alignment between precision format and GPU hardware capabilities**.
+
+**Example:**
+
+* **H100 deployment with INT8 quantization:** Misses native FP8 Tensor Core acceleration (2× speed advantage unused)
+* **A100 deployment with FP8 quantization:** No native hardware support; runs at FP16 speed despite memory savings
+
+=== HOW: Systematic Quantization Selection
+
+// SUGGESTION: Added client decision framework adapted from s5-quantize.adoc with concrete example
+**Step-by-Step Quantization Decision Process**
+
+Use this 4-question framework to select optimal quantization:
+
+**Question 1: What is your target GPU architecture?**
+
+[cols="2,3", options="header"]
+|===
+| GPU Architecture | Recommended Quantization
+
+| **Hopper (H100, H200)**
+| **FP8** (native Tensor Core acceleration, 2× throughput vs FP16)
+
+| **Ada (L4, L40S)**
+| **FP8** (native support) or **INT8** (if tooling simpler)
+
+| **Ampere (A100, A30)**
+| **INT8** (native Tensor Core support)
+
+| **Turing/Volta (V100, T4)**
+| **INT8** (widely supported) or **INT4** (for max memory reduction)
+|===
+
+**Question 2: What is your inference workload pattern?**
+
+[cols="2,3", options="header"]
+|===
+| Workload Pattern | Quantization Strategy
+
+| **Online (latency-critical, <50ms P99)**
+| **Weight-only quantization** (w4a16 or w8a16) - activations stay FP16 for speed
+
+| **Offline (throughput-critical batch processing)**
+| **Weight + activation quantization** (w8a8) - maximize Tensor Core utilization
+
+| **Mixed (interactive + batch)**
+| **FP8** on Hopper/Ada (best of both worlds)
+|===
+
+**Question 3: What is your accuracy tolerance?**
+
+[cols="2,3", options="header"]
+|===
+| Accuracy Requirement | Quantization Approach
+
+| **<0.5% accuracy loss acceptable**
+| FP8 (Hopper/Ada) or carefully calibrated INT8 with GPTQ/SmoothQuant
+
+| **<1% accuracy loss acceptable**
+| INT8 with standard calibration, or INT4 with AWQ/GPTQ methods
+
+| **Strict accuracy requirement**
+| FP16/BF16 baseline, or extensive testing of quantized variants
+|===
+
+**Question 4: What is your VRAM budget?**
+
+[cols="2,3", options="header"]
+|===
+| VRAM Constraint | Quantization Choice
+
+| **Model barely fits in FP16**
+| INT8 (50% memory reduction) or FP8 (50% reduction + acceleration)
+
+| **Model doesn't fit even in INT8**
+| INT4 (75% memory reduction) with quality trade-off awareness
+
+| **Model fits comfortably**
+| Optimize for speed: FP8 on Hopper, INT8 on Ampere, FP16 elsewhere
+|===
+
+**Concrete Example: Llama-405B Quantization Decision**
+
+**Scenario:** Deploy Llama-405B on 8× H100-80GB cluster (640 GB total VRAM).
+
+**Step 1: Calculate FP16 baseline**
+
+```
+VRAM_weights = 405B × 2 bytes = 810 GB
+```
+
+**Result:** Doesn't fit available hardware (810 GB > 640 GB).
+
+**Step 2: Evaluate quantization options**
+
+[cols="1,1,1,2,2", options="header"]
+|===
+| Quantization | VRAM | Fits 8× H100? | Hopper Acceleration? | Accuracy Impact
+
+| FP16
+| 810 GB
+| ❌ Needs 11 GPUs
+| N/A
+| Baseline
+
+| INT8
+| 405 GB
+| ✅ Fits
+| ⚠️ Limited (no native INT8 on Hopper)
+| -0.3% perplexity
+
+| FP8
+| 405 GB
+| ✅ Fits
+| ✅ Native acceleration (2× throughput)
+| -0.1% perplexity
+|===
+
+**Step 3: Apply decision framework**
+
+* **Target GPU:** H100 (Hopper) → Prefer FP8
+* **Workload:** Online customer chatbot (latency-critical) → FP8 optimal
+* **Accuracy tolerance:** <0.5% acceptable → FP8 meets threshold
+* **VRAM budget:** 640 GB available, 405 GB required → **34% headroom for KV cache** ✅
+
+**Decision:** Deploy with **FP8 quantization** because:
+
+1. Fits available hardware: 405 GB < 640 GB (leaves 235 GB for KV cache + overhead)
+2. H100 native FP8 Tensor Cores provide 2× throughput vs INT8
+3. Minimal accuracy loss (0.1% perplexity) validated by Red Hat AI benchmarks
+4. Enables larger batch sizes (more KV cache headroom = more concurrent users)
+
+**Step 4: Validate post-deployment**
+
+After deploying with FP8 quantization, confirm performance using DCGM:
+
+[source,promql]
+----
+# Verify VRAM usage per GPU
+DCGM_FI_DEV_FB_USED{deployment="llama-405b-fp8"} / (1024^3)
+# Expected: ~51 GB per GPU (405 GB ÷ 8)
+
+# Confirm no thermal throttling from quantization workload
+DCGM_FI_DEV_GPU_TEMP{deployment="llama-405b-fp8"}
+# Target: <80°C under sustained load
+
+# Verify high GPU utilization (confirms efficient quantization)
+DCGM_FI_DEV_GPU_UTIL{deployment="llama-405b-fp8"}
+# Target: >80% (indicates compute-bound, not memory-bound)
+----
+// END SUGGESTION
+
+[TIP]
+====
+**Production Quantization Testing Checklist**
+
+Before deploying quantized models to production serving customer traffic:
+
+**Stage 1: Accuracy Validation** (4-6 hours)
+
+* Run LM Eval Harness benchmarks comparing FP16 baseline vs quantized variant
+* **Target:** <1% accuracy degradation on task-relevant benchmarks (not just MMLU)
+* Test on representative customer dataset (not generic academic benchmarks)
+
+**Stage 2: Performance Validation** (24-hour period)
+
+* Deploy in staging environment with production-like traffic patterns
+* Measure via DCGM over 24-hour monitoring window:
+** Throughput matches Red Hat AI validation benchmarks ± 10%
+** P99 latency meets SLA requirements under peak load
+** GPU utilization >75% (confirms efficient hardware usage)
+
+**Stage 3: Stability Validation** (7-day soak test)
+
+* Run extended load testing before production promotion:
+** Monitor for memory leaks: `DCGM_FI_DEV_FB_USED` should remain stable (no upward trend)
+** Check thermal stability: `DCGM_FI_DEV_GPU_TEMP` should not exceed 80°C sustained
+** Validate no ECC errors: `DCGM_FI_DEV_XID_ERRORS` should remain at zero
+
+**Production promotion criteria:** All three validation stages pass acceptance thresholds.
+
+// SUGGESTION: Added production testing protocol based on field deployment experience
+====
+
+[TIP]
+====
+**Driver Version Requirements for FP8 Quantization**
+
+FP8 quantization requires CUDA 12.0+ support, which depends on GPU driver version.
+
+**Minimum driver version:** 525.60.13 (CUDA 12.0 support)
+
+**Verify current driver on GPU nodes:**
+
+[source,bash]
+----
+oc exec -n nvidia-gpu-operator \
+  $(oc get pod -n nvidia-gpu-operator -l app=nvidia-driver-daemonset -o name | head -1) \
+  -- nvidia-smi --query-gpu=driver_version --format=csv,noheader
+----
+
+**Expected output:** `535.129.03` or higher ✅ (supports FP8)
+
+**If driver version <525.60.13:**
+
+Reference your Chapter 1 ClusterPolicy configuration to upgrade GPU Operator driver version:
+
+```yaml
+apiVersion: nvidia.com/v1
+kind: ClusterPolicy
+spec:
+  driver:
+    version: "535.129.03"  # Update to FP8-compatible version
+```
+
+**Production caution:** Test driver upgrades in non-production environment first. Use Chapter 1 manual approval strategy for production GPU Operator updates.
+
+// SUGGESTION: Added driver compatibility check linking to Ch1 ClusterPolicy
+====
+
+== Multi-GPU Strategies: Tensor and Pipeline Parallelism
+
+=== WHY: When Single-GPU Capacity Is Exhausted
+
+// SUGGESTION: Added business context for multi-GPU deployment necessity
+**Scenario: The 405B model scaling challenge**
+
+Customer requires Llama-405B deployment (405 GB in INT8) for enterprise knowledge base serving 200 concurrent users. Single H100-80GB provides only 80 GB VRAM.
+
+**Naive approach:** "We'll add more GPUs using any parallelism strategy."
+
+**Cost of network misconfiguration:**
+
+Platform team configures Tensor Parallelism across 8 GPUs in two servers connected by 10 Gbps Ethernet (not NVLink). Deployment starts but performance collapses:
+
+* **Expected throughput:** 4,000 tokens/sec (based on single-GPU benchmarks × 8)
+* **Actual throughput:** 400 tokens/sec (10% of expected)
+* **GPU utilization:** 15% (DCGM shows GPUs idle 85% of time)
+* **P99 latency:** 950 ms (vs 65 ms target)
+
+**Root cause:** Tensor Parallelism performs all-reduce synchronization after every transformer layer (80+ times per forward pass). Over 10 Gbps Ethernet:
+
+* Synchronization latency: ~100 microseconds per layer
+* Total sync overhead: 80 layers × 100 μs = 8,000 μs (8 ms)
+* Actual compute time: ~1 ms per layer
+* **GPUs spend 88% of time waiting for network synchronization**
+
+**Business impact:** $240K GPU hardware investment (8× H100) delivering 10% of expected capacity. Customer demo fails SLA requirements. Project credibility destroyed.
+
+**Correct approach (from this section):** Verify network topology before parallelism configuration. Use Tensor Parallelism only within NVLink-connected GPUs (single node), Pipeline Parallelism across nodes with slower interconnects.
+// END SUGGESTION
+
+=== WHAT: Understanding Tensor and Pipeline Parallelism
+
+**Tensor Parallelism (TP): "Splitting the Layer"**
+
+Tensor Parallelism distributes individual weight matrices across multiple GPUs. Each GPU computes a portion of each layer's operations in parallel.
+
+**How it works:**
+
+* Each GPU holds a "shard" of layer weights (e.g., 4 GPUs each hold 25% of weights)
+* During forward pass, GPUs perform partial matrix multiplications simultaneously
+* Results are synchronized via all-reduce operations before proceeding to next layer
+* Synchronization occurs **after every layer** (80-100 times per model forward pass)
+
+**Best for:**
+
+* **Intra-node scaling:** GPUs within same physical server connected by NVLink (900 GB/s bidirectional bandwidth)
+* **Latency-critical workloads:** Parallel computation reduces time-per-token significantly
+* **Models too large for single GPU:** Splits model across available VRAM without layer-wise dependencies
+
+**Pipeline Parallelism (PP): "Splitting the Stack"**
+
+Pipeline Parallelism divides model by layers. Different GPUs process different layer ranges sequentially.
+
+**How it works:**
+
+* Model's 80 layers split across GPUs (e.g., GPU 0: layers 1-40, GPU 1: layers 41-80)
+* GPU 0 processes input through its layers, passes activations to GPU 1
+* GPU 1 processes activations through its layers, produces final output
+* Uses micro-batching to keep all GPUs busy (process multiple requests in pipeline stages)
+
+**The "bubble" problem:**
+
+Without micro-batching, GPU 1 sits idle while GPU 0 processes first half of model. Micro-batching splits each request into smaller chunks, pipelining them so GPU 1 starts processing chunk 1 while GPU 0 processes chunk 2.
+
+**Best for:**
+
+* **Inter-node scaling:** Multiple servers connected by InfiniBand or high-speed Ethernet (200-400 Gbps)
+* **Throughput-critical workloads:** Process many requests in parallel through pipeline stages
+* **Models requiring multi-node deployment:** When model exceeds capacity of largest single node
+
+**Networking Requirements: Critical Performance Factor**
+
+[cols="2,2,2", options="header"]
+|===
+| Characteristic | Tensor Parallelism (TP) | Pipeline Parallelism (PP)
+
+| **Communication Frequency**
+| **Extremely High** (every layer: 80-100× per forward pass)
+| **Low** (once per pipeline stage)
+
+| **Data Volume Transferred**
+| Large (activation tensors, gradients)
+| Small (activations only)
+
+| **Required Latency**
+| <1-2 microseconds
+| Milliseconds (more tolerant)
+
+| **Ideal Network Hardware**
+| **NVLink / NVSwitch** (900 GB/s, <1 μs latency)
+| **InfiniBand / RoCE / 400G Ethernet** (200-400 Gbps, 1-5 μs latency)
+
+| **Deployment Scope**
+| **Intra-node only** (inside single server)
+| **Inter-node** (across servers)
+|===
+
+=== HOW: Configuring Tensor Parallelism for Production
+
+// SUGGESTION: Added step-by-step TP configuration procedure with validation commands
+**Prerequisites:**
+
+* Model VRAM requirement calculated from "Model Sizing" section above
+* NVLink topology verified (see Step 1 below)
+* Single-node deployment confirmed (TP does not cross node boundaries)
+
+**Step 1: Verify NVLink Topology**
+
+Before configuring Tensor Parallelism, confirm GPUs are NVLink-connected (not PCIe only):
+
+[source,bash]
+----
+oc debug node/<gpu-worker-node> -- chroot /host nvidia-smi topo -m
+----
+
+**Expected output for NVLink-connected GPUs:**
+
+```
+        GPU0    GPU1    GPU2    GPU3    GPU4    GPU5    GPU6    GPU7
+GPU0     X      NV18    NV18    NV18    NV18    NV18    NV18    NV18
+GPU1    NV18     X      NV18    NV18    NV18    NV18    NV18    NV18
+GPU2    NV18    NV18     X      NV18    NV18    NV18    NV18    NV18
+...
+```
+
+**Key indicator:**
+
+* ✅ **`NV18`** = NVLink connection (18 lanes, 900 GB/s bidirectional bandwidth) - **TP viable**
+* ❌ **`PHB`** = PCIe Host Bridge only (no NVLink) - **TP NOT viable, use Data Parallelism instead**
+
+**Step 2: Calculate TP Degree**
+
+TP degree = number of GPUs sharing tensor shards (must all be on same node).
+
+**Formula:**
+
+[stem]
+++++
+TP_{degree} = \lceil VRAM_{model} \div VRAM_{per\_GPU} \rceil
+++++
+
+**Example:** Llama-405B-INT8 on H100-80GB cluster
+
+```
+Model VRAM: 405 GB (from Step 5 of sizing procedure)
+Available VRAM per GPU: 80 GB
+Minimum TP degree: 405 ÷ 80 = 5.06 → round up to 6 GPUs
+```
+
+**Validate headroom for KV cache:**
+
+```
+VRAM per GPU with TP=6: 405 GB ÷ 6 = 67.5 GB
+Remaining for KV cache: 80 GB - 67.5 GB = 12.5 GB per GPU
+Total KV cache capacity: 12.5 GB × 6 = 75 GB
+```
+
+**For 128K context:** Requires ~80 GB KV cache total (from sizing formula). **TP=6 is marginal.**
+
+**Revised decision:** Use TP=8 for comfortable headroom:
+
+```
+VRAM per GPU with TP=8: 405 GB ÷ 8 = 50.6 GB
+Remaining for KV cache: 80 GB - 50.6 GB = 29.4 GB per GPU
+Total KV cache capacity: 29.4 GB × 8 = 235 GB (sufficient for 128K context)
+```
+
+**Step 3: Configure vLLM Deployment with TP**
+
+Apply TP configuration in model server deployment (preview of Chapter 4 inference serving):
+
+[source,yaml]
+----
+apiVersion: v1
+kind: Pod
+metadata:
+  name: llama-405b-int8-tp8
+  namespace: model-serving
+spec:
+  containers:
+  - name: vllm-server
+    image: vllm/vllm-openai:v0.6.0
+    command:
+    - python
+    - -m
+    - vllm.entrypoints.openai.api_server
+    - --model=/models/llama-405b-int8  # <1>
+    - --tensor-parallel-size=8          # <2>
+    - --dtype=int8                      # <3>
+    - --max-model-len=131072            # <4>
+    resources:
+      limits:
+        nvidia.com/gpu: 8                # <5>
+    volumeMounts:
+    - name: model-storage
+      mountPath: /models
+----
+<1> Path to quantized model weights (INT8 from quantization section)
+<2> TP degree matches GPU count for single-node deployment
+<3> Must match quantization precision from decision framework
+<4> Maximum context length (128K = 131,072 tokens)
+<5> Request all 8 GPUs on single node (scheduler ensures co-location)
+
+**Step 4: Validate Deployment via DCGM**
+
+After deployment, confirm even load distribution across all TP GPUs:
+
+[source,promql]
+----
+# Check VRAM usage is balanced across GPUs
+DCGM_FI_DEV_FB_USED{pod="llama-405b-int8-tp8"} / (1024^3)
+----
+
+**Expected result:** All 8 GPUs show ~51 GB ± 2 GB
+
+**Healthy indicators:**
+
+* **VRAM variance <5%** across GPUs (confirms even tensor shard distribution)
+* **GPU utilization 80-95%** on all GPUs (confirms parallel compute efficiency)
+* **Temperature <80°C** on all GPUs (confirms thermal headroom)
+
+**Unhealthy indicators:**
+
+* **One GPU shows much higher VRAM** (misconfigured sharding)
+* **GPU utilization <50%** (network bottleneck likely)
+* **High temperature variance** (cooling issue or imbalanced load)
+// END SUGGESTION
+
+[WARNING]
+====
+**Critical: Never Use Tensor Parallelism Across Slow Networks**
+
+**Never configure TP across:**
+
+* Standard Ethernet (1 GbE, 10 GbE, even 100 GbE)
+* PCIe connections between GPUs (without NVLink)
+* Inter-node connections (even with InfiniBand)
+
+**Why this configuration fails catastrophically:**
+
+Tensor Parallelism performs all-reduce synchronization **after every transformer layer**. For typical 80-layer model:
+
+* **NVLink latency:** <1 microsecond per sync → 80 μs total overhead per forward pass
+* **10 GbE latency:** ~100 microseconds per sync → 8,000 μs (8 ms) total overhead
+* **Actual compute time per forward pass:** ~10 ms
+
+**Performance calculation:**
+
+* **With NVLink:** 80 μs sync + 10 ms compute = ~10 ms total (sync is 0.8% overhead)
+* **With 10 GbE:** 8 ms sync + 10 ms compute = ~18 ms total (sync is 44% overhead, but actually worse due to blocking)
+
+**Observed failure mode in production:**
+
+* GPU utilization drops to <20% (GPUs idle waiting for network 80% of time)
+* Throughput collapses to <10% of single-GPU performance
+* Token generation appears "stuttering" or "frozen" to end users
+* DCGM shows low compute utilization despite high power draw (GPUs waiting consumes power)
+
+**Correct approach:**
+
+* **TP only within single node** connected by NVLink (verify with `nvidia-smi topo -m`)
+* **Use Pipeline Parallelism** for inter-node scaling (tolerates millisecond-scale latency)
+* **Hybrid TP+PP:** TP=8 within each node (NVLink), PP=2 across nodes (InfiniBand)
+
+// SUGGESTION: Added network misconfiguration warning (common field failure mode)
+====
+
+**Multi-Node Scaling: Hybrid TP+PP Strategy**
+
+For models requiring multiple nodes (>8 GPUs with NVLink per node):
+
+**Example:** Llama-405B deployment on 2 nodes, each with 8× H100-80GB NVLink-connected
+
+**Configuration:**
+
+[source,yaml]
+----
+vllm_args:
+  --tensor-parallel-size=8      # TP within each node (NVLink)
+  --pipeline-parallel-size=2    # PP across 2 nodes (InfiniBand)
+  # Total GPUs: 8 × 2 = 16 GPUs
+----
+
+**How layers are distributed:**
+
+* **Node 1:** Layers 1-63 (first half), each layer sharded across 8 GPUs via TP
+* **Node 2:** Layers 64-126 (second half), each layer sharded across 8 GPUs via TP
+
+**Performance characteristics:**
+
+* **Latency:** Higher than single-node TP=8 (pipeline introduces "bubble" overhead ~30 ms)
+* **Throughput:** Much higher (16 GPUs process more concurrent requests)
+* **Best for:** Batch workloads prioritizing throughput over latency
+
+[NOTE]
+====
+**MIG Limitations for Multi-GPU Deployments**
+
+Reference Chapter 2 MIG constraints: Why can't Tensor Parallelism span MIG instances?
+
+**Technical reason:**
+
+* Each MIG instance has separate CUDA context (isolated GPU partition)
+* NVLink operates at physical GPU level, not between MIG instances
+* TP all-reduce requires direct GPU-to-GPU communication via NVLink
+* MIG instances on same physical GPU cannot communicate via NVLink (architectural isolation)
+
+**Implication:** Models requiring multi-GPU TP (>70B parameters typically) must use full GPU allocation, not MIG instances.
+
+**When to use MIG for model serving:**
+
+* **Multiple small models:** Deploy 7× Llama-7B instances in separate MIG profiles (7× `1g.10gb` instances)
+* **Multi-tenant isolation:** Different teams/customers get dedicated MIG instances with guaranteed resources
+* **Development/testing:** Partition GPU for parallel experimentation (different quantizations, hyperparameters)
+
+**Design rule:** Large models (>70B) requiring multi-GPU → use full GPUs with TP/PP. Small models (<13B) in multi-tenant environments → consider MIG for cost efficiency and isolation.
+
+// SUGGESTION: Added MIG constraint guidance preventing common misconfiguration
+====
+
+== Summary and What's Next
+
+You now have systematic decision frameworks for production model selection:
+
+✅ **Architecture Selection:** Choose Dense vs MoE based on VRAM budget, workload characteristics (latency vs throughput), and infrastructure complexity tolerance
+
+✅ **VRAM Sizing:** Calculate exact requirements accounting for weights, KV cache (scales with context window), framework overhead, and safety margins
+
+✅ **Quantization Strategy:** Align precision format to GPU architecture (Hopper FP8, Ampere INT8) and validate accuracy trade-offs via production testing checklist
+
+✅ **Multi-GPU Parallelism:** Configure TP for intra-node NVLink deployments, PP for inter-node scaling, and validate network topology before deployment
+
+**Integration with prior chapters:**
+
+* **Chapter 1 (GPU Operator):** Driver versions for FP8 support, ClusterPolicy configuration impacts quantization capabilities
+* **Chapter 2 (MIG):** Large models (>70B) cannot use MIG instances; MIG viable for multi-tenant small model serving
+* **Chapter 3 (Observability):** DCGM metrics validate sizing predictions, quantization performance, and parallelism efficiency post-deployment
+
+Ready to apply these frameworks hands-on? Proceed to xref:s6-sizing-lab.adoc[Section 2: (Lab) Sizing and Parallelism Configuration] for three production-scenario exercises with calculation worksheets, DCGM validation queries, and decision documentation templates.

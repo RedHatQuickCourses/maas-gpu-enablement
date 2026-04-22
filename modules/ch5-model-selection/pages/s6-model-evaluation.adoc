@@ -1,0 +1,491 @@
+:time_estimate: 20
+
+= Model Selection and Optimization Strategy
+
+_Estimated reading time: *{time_estimate} minutes*._
+
+Objective::
+Learn the practical decision frameworks for choosing model architectures, calculating GPU memory requirements, selecting quantization strategies, and determining when multi-GPU configurations are necessary.
+
+== Model Selection: Dense vs Mixture-of-Experts (MoE)
+
+As a platform engineer, choosing between Dense and MoE architectures is about managing your GPU compute and VRAM budget effectively.
+
+=== Dense Models
+
+In a dense model, every parameter is activated for every token generated. If you have a 70B parameter model, every word processed involves 70B calculations.
+
+**Pros:**
+
+* Highly predictable performance
+* Easier to optimize for specific hardware
+* Better for complex, multi-step reasoning tasks
+* Lower total VRAM footprint
+
+**Cons:**
+
+* Computationally expensive per token
+* Scaling intelligence linearly increases cost
+
+
+=== Mixture-of-Experts (MoE) Models
+
+An MoE model has a massive total parameter count (e.g., 600B+), but for any given token, only a small fraction (the "experts") are activated by a router.
+
+**Example:** Mixtral 8×7B has 8 experts of 7B parameters each (56B total), but only activates 2 experts per token (14B active).
+
+**Pros:**
+
+* You get the "intelligence" of a massive model with the "compute cost" of a much smaller one
+* Faster generation (higher throughput)
+* Excellent for specialized tasks (coding, writing, analysis)
+
+**Cons:**
+
+* Enormous VRAM footprint—ALL parameters must reside in memory
+* Complex infrastructure requirements
+* Router mistakes can degrade performance
+
+image::moe-architecture.png[Mixture of Experts Architecture]
+
+=== Decision Framework
+
+Use this matrix to select the right architecture:
+
+[cols="1,2,2", options="header"]
+|===
+| Need | Recommended Architecture | Reasoning
+
+| **Highest Speed/Throughput**
+| MoE (Mixtral, DeepSeek-V3)
+| Lower active compute per token
+
+| **Limited GPU Memory**
+| Dense (Llama, Mistral)
+| Fits in smaller total VRAM
+
+| **Complex Multi-Step Logic**
+| Dense (Large Parameter)
+| All weights available for every token
+
+| **Diverse Multi-Tasking**
+| MoE
+| Specialization via expert routing
+
+| **High Concurrency (50+ users)**
+| MoE
+| Better throughput per GPU
+
+| **Low Concurrency (<50 users)**
+| Dense
+| Don't pay for idle VRAM
+|===
+
+[TIP]
+====
+If you have high traffic with many concurrent users, MoE is usually cheaper because you can process more tokens per second per GPU. If you have low, intermittent traffic, Dense is better because you aren't paying to keep massive weights "idle" in VRAM.
+====
+
+== Model Sizing: Calculating VRAM Requirements
+
+Before deployment, you must calculate if the model fits in available GPU memory. The total VRAM required is:
+
+[stem]
+++++
+VRAM_{total} = M_{weights} + M_{kv_cache} + M_{overhead}
+++++
+
+=== Component 1: Model Weights
+
+Calculate based on **Total Parameters** and **Precision (bits per parameter)**.
+
+[cols="1,1,2", options="header"]
+|===
+| Precision | Bytes per Parameter | Example: 70B Model
+
+| **FP16 / BF16**
+| 2 bytes
+| 70B × 2 = **140 GB**
+
+| **INT8 / FP8**
+| 1 byte
+| 70B × 1 = **70 GB**
+
+| **INT4**
+| 0.5 bytes
+| 70B × 0.5 = **35 GB**
+|===
+
+=== Component 2: KV Cache
+
+The "memory" of the conversation. This stores keys and values from the attention mechanism for all previous tokens in the context.
+
+**Calculation Formula:**
+
+
+
+**KV_cache = 2 * batch * context * layers * hidden\_dim * bytes**
+
+
+Where:
+
+* **2** = Keys + Values (stored separately)
+* **batch** = concurrent sequences (use 1 for sizing)
+* **context** = context window length in tokens
+* **layers** = number of transformer layers
+* **hidden_dim** = model hidden dimension
+* **bytes** = precision (FP16=2, FP8=1, INT8=1)
+
+**Common Model Architectures:**
+
+Llama models use **Grouped Query Attention (GQA)** which reduces KV cache size:
+
+[cols="1,1,1,1,2", options="header"]
+|===
+| Model | Layers | KV Heads | Head Dim | KV Cache (128K, FP8)
+
+| **Llama-7B**
+| 32
+| 8
+| 128
+| ~8 GB
+
+| **Llama-70B**
+| 80
+| 8
+| 128
+| ~20 GB
+
+| **Llama-135B**
+| 120
+| 8
+| 128
+| ~30 GB
+|===
+
+**Example: Llama-70B at different context lengths (FP8 KV cache)**
+
+* **12K context:** 2 × 1 × 12,000 × 80 × 8 × 128 × 1 ≈ **2 GB**
+* **32K context:** 2 × 1 × 32,000 × 80 × 8 × 128 × 1 ≈ **5 GB**
+* **128K context:** 2 × 1 × 128,000 × 80 × 8 × 128 × 1 ≈ **20 GB**
+
+[TIP]
+====
+**FP8 KV cache is industry standard:** Modern inference engines (vLLM, TGI) default to FP8 precision for KV cache even when model weights are FP16/INT8. This saves significant memory with negligible accuracy impact. Example: Llama-70B FP16 (140 GB weights) + 128K context = 140 GB + 20 GB = **160 GB total**.
+====
+
+[WARNING]
+====
+KV cache grows linearly with context length. For very long contexts (512K+ tokens), KV cache can exceed model weight size. Always account for KV cache in sizing calculations.
+====
+
+=== Component 3: Overhead
+
+Framework overhead includes:
+
+* CUDA kernels and runtime (~2-3 GB)
+* Intermediate activations
+* Operating system overhead
+
+**Rule of thumb:** Add **10-15% safety margin** to your total calculation.
+
+=== Complete Sizing Example
+
+**Scenario:** Deploy Llama-70B model with FP16 weights and 128K context window
+
+**Model Specs:**
+
+* Parameters: 70B
+* Layers: 80
+* KV heads: 8 (Grouped Query Attention)
+* Head dimension: 128
+
+**Calculation:**
+
+**Weights (FP16):**
+```
+70B × 2 bytes = 140 GB
+```
+
+**KV Cache (FP8, standard for inference):**
+```
+2 × 1 × 128,000 × 80 × 8 × 128 × 1 byte = 20,971,520,000 bytes ≈ 20 GB
+```
+
+**Overhead (10% margin):**
+```
+(140 + 20) × 0.10 ≈ 16 GB
+```
+
+**Total VRAM Required:**
+```
+140 + 20 + 16 = 176 GB
+```
+
+**Hardware Decision:**
+
+* Single H100-80GB? **No** (80 GB < 176 GB)
+* Two H100-80GB via NVLink? **Yes** (160 GB capacity - **tight fit, not recommended**)
+* Three H100-80GB via NVLink? **Yes** (240 GB with 64 GB margin) ✓
+* Two A100-80GB? **No** (160 GB insufficient)
+* Three A100-80GB? **Yes** (240 GB with 64 GB margin) ✓
+
+**Best choice:** 3× H100-80GB or 3× A100-80GB with TP=3 for safe production margin
+
+== Quantization: Trading Precision for Efficiency
+
+Quantization reduces the precision of model weights and activations, lowering memory requirements and potentially increasing speed.
+
+=== Why Quantize?
+
+**Memory Savings Example:** Llama-405B model
+
+[cols="2,2,2", options="header"]
+|===
+| Precision | Model Size | GPUs Required (80GB)
+
+| **FP16**
+| 810 GB
+| 11 GPUs
+
+| **INT8/FP8**
+| 405 GB
+| 6 GPUs
+
+| **INT4**
+| 203 GB
+| 3 GPUs
+|===
+
+**Benefits:**
+
+* **Reduces GPU count:** Lower hardware costs
+* **Increases batch size:** More memory for KV cache
+* **Can improve speed:** Low-precision tensor cores accelerate computation
+* **Enables deployment:** Models that wouldn't fit now fit
+
+**Trade-offs:**
+
+* **Potential accuracy loss:** Lower precision can reduce model quality
+* **Not all models quantize well:** Some architectures more sensitive than others
+* **Requires validation:** Must test accuracy on your specific tasks
+
+=== Quantization Formats and Hardware Alignment
+
+Different GPU architectures have specialized hardware for different precision formats:
+
+[cols="1,2,3", options="header"]
+|===
+| Quantization Format | Best Hardware | Use Case
+
+| **W4A16**
+(4-bit weights, FP16 activations)
+| Any GPU
+| Memory-constrained deployments, edge devices
+
+| **W8A8-INT8**
+(8-bit weights, INT8 activations)
+| Ampere, Turing
+| High-throughput inference on older GPUs
+
+| **W8A8-FP8**
+(8-bit weights, FP8 activations)
+| Hopper, Blackwell 
+| Accuracy-sensitive with speed requirements
+
+| **FP8 with 2:4 Sparsity**
+| Hopper, Blackwell
+| Maximum performance on modern hardware
+|===
+
+[TIP]
+====
+**Hardware Alignment Matters:** Using INT8 on Ampere GPUs or FP8 on Hopper GPUs leverages dedicated tensor cores for maximum acceleration. Mismatched quantization formats run on standard CUDA cores, losing performance benefits.
+====
+
+=== Quantization Decision Framework
+
+Ask these questions to select the right quantization scheme:
+
+[cols="2,3", options="header"]
+|===
+| Question | How It Drives the Decision
+
+| **1. What GPU architecture?**
+| Ampere/Turing → INT8
+
+Hopper/Blackwell → FP8
+
+| **2. How much accuracy loss is acceptable?**
+| <0.5% drop → W8A8 with GPTQ
+
+1-3% acceptable → W4A16 with AWQ
+
+3-5% acceptable → INT4
+
+| **3. What's the workload type?**
+| Online/interactive → Weight-only quantization
+
+Batch/offline → Weight + activation quantization
+
+| **4. How much VRAM do you have?**
+| Severely limited → INT4
+
+Moderately limited → INT8/FP8
+
+Abundant → Consider staying FP16
+|===
+
+[IMPORTANT]
+====
+Always validate quantized model accuracy on your specific tasks before production deployment. Benchmark scores don't guarantee performance on your use cases.
+====
+
+== GPU Parallelism: When and How to Use Multiple GPUs
+
+When a model doesn't fit on a single GPU, you need to split it across multiple GPUs using parallelism strategies.
+
+=== When Do You Need Multi-GPU?
+
+**Single GPU sufficiency check:**
+
+. Calculate total VRAM needed (weights + KV cache + overhead)
+. Compare to largest available GPU (e.g., H100-80GB)
+. If model fits with 20% margin → single GPU deployment
+. If model doesn't fit → multi-GPU required
+
+**Example:** Llama-70B in FP16
+
+* VRAM needed: 140 GB (weights) + 16 GB (128K context) + 15 GB (overhead) = 171 GB
+* H100-80GB capacity: 80 GB
+* **Verdict:** Requires multi-GPU (171 GB doesn't fit in 80 GB)
+
+=== Tensor Parallelism (TP)
+
+**What it does:** Splits each model layer across multiple GPUs. All GPUs work on the same batch of tokens simultaneously.
+
+**When to use:**
+
+* Model is too large for single GPU
+* GPUs are connected via high-speed interconnect (NVLink, NVSwitch)
+* All GPUs are in the same physical node
+
+**Network requirements:**
+
+* **NVLink (900 GB/s):** Excellent for TP
+* **PCIe (64 GB/s):** Acceptable for TP but slower
+* **Ethernet (10-100 Gb/s):** **Too slow for TP**
+
+**Configuration:**
+
+* TP degree must divide evenly into number of attention heads
+* Common TP degrees: 2, 4, 8
+
+**Example:** Llama-70B across 4× H100 via NVLink
+
+* Each GPU holds 1/4 of each layer (~17.5 GB per GPU for weights)
+* All 4 GPUs process each token together
+* Total VRAM per GPU: ~43 GB (fits comfortably in 80 GB)
+
+[WARNING]
+====
+**Never use Tensor Parallelism across slow networks (Ethernet/PCIe Gen3).** TP requires constant communication between GPUs during every forward pass. Slow networks cause 80-90% GPU utilization loss.
+====
+
+=== Pipeline Parallelism (PP)
+
+**What it does:** Splits model layers sequentially across GPUs. Each GPU holds complete layers and processes tokens in pipeline fashion.
+
+Instead of splitting a single layer across multiple GPUs (as in Tensor Parallelism), Pipeline Parallelism splits the entire model vertically by groups of layers. For example, in a 40-layer model, GPU 0 might handle layers 1–10, GPU 1 handles 11–20, and so on.
+
+**When to use:**
+
+* Model spans multiple physical nodes
+* Interconnect is slower (InfiniBand, Ethernet)
+* Prefer batch throughput over latency
+
+**Network requirements:**
+
+* **InfiniBand (100-400 Gb/s):** Good for PP
+* **Ethernet (100+ Gb/s):** Acceptable for PP
+
+**Trade-offs:**
+
+* Higher latency than TP (tokens pass through GPUs sequentially)
+* Better batch efficiency
+* Works across nodes
+
+=== Choosing the Right Parallelism Strategy
+
+[cols="1,2,2,2", options="header"]
+|===
+| Scenario | Recommended Strategy | Configuration | Reasoning
+
+| **Model barely doesn't fit single GPU**
+| Consider quantization first
+| INT8 or FP8
+| Simpler than multi-GPU
+
+| **Model fits on 2-8 GPUs in same node**
+| Tensor Parallelism (TP)
+| TP=2 to TP=8 via NVLink
+| Best latency, simple setup
+
+| **Model requires 8+ GPUs across nodes**
+| Hybrid TP+PP
+| TP=8 per node, PP=2+ across nodes
+| Balance latency and scale
+
+| **Slow interconnect between nodes**
+| Pipeline Parallelism (PP)
+| PP across nodes
+| Avoid TP communication overhead
+
+|===
+
+[TIP]
+====
+**Before configuring multi-GPU parallelism, always consider quantization first.** A 70B model in FP16 requiring 2 GPUs might fit on a single GPU with INT8 quantization, simplifying deployment significantly.
+====
+
+=== Verifying Network Topology
+
+Before configuring Tensor Parallelism, verify your GPUs have high-speed interconnects:
+
+[source,bash]
+----
+nvidia-smi topo -m
+----
+
+**Look for NVLink connections:**
+
+* `NV#` = NVLink connection (excellent for TP)
+* `SYS` = PCIe/system connection (slower, avoid for TP)
+
+== Summary: Putting It All Together
+
+When deploying a new model, follow this decision sequence:
+
+. **Select architecture** (Dense vs MoE) based on workload characteristics
+. **Calculate VRAM requirements** (weights + KV cache + overhead)
+. **Evaluate quantization options** aligned to your GPU hardware
+. **Determine GPU configuration:**
+* Single GPU if model fits with margin
+* Multi-GPU with TP if NVLink available
+* Multi-GPU with PP if spanning nodes
+. **Validate** the configuration with test deployment
+
+**Key takeaways:**
+
+* Dense models: predictable, easier to deploy, better for reasoning
+* MoE models: faster, higher throughput, require more VRAM
+* Always calculate VRAM before deployment to avoid surprises
+* Quantization can reduce GPU count significantly
+* Match quantization format to GPU architecture (INT8 for Ampere, FP8 for Hopper)
+* Use TP for single-node, high-speed interconnect scenarios
+* Use PP for multi-node or slower interconnect scenarios
+* Consider quantization before multi-GPU as a simpler solution
+
+== What's Next
+
+Ready to practice these concepts? Continue to xref:s6-sizing-lab.adoc[Section 2: Sizing and Parallelism Lab] for hands-on exercises in VRAM calculation, parallelism planning, and quantization selection.
