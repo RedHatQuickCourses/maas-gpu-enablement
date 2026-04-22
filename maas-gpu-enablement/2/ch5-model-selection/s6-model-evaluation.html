@@ -1,0 +1,1224 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Model Selection and Optimization Strategy :: Nvidia Accelerator Configuration for Scale</title>
+    <link rel="prev" href="index.html">
+    <link rel="next" href="s6-sizing-lab.html">
+    <meta name="generator" content="Antora 3.1.3">
+    <link rel="stylesheet" href="../../../_/css/site.css">
+    <script>var uiRootPath = '../../../_'</script>
+  </head>
+  <body class="article">
+<header class="header">
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="https://www.redhat.com" target="_blank"><img src="../../../_/img/redhat-logo.png" height="40px" alt="Red Hat"></a>
+      <a class="navbar-item" style="font-size: 24px; color: white" href="../../..">Nvidia Accelerator Configuration for Scale</a>
+      <button class="navbar-burger" data-target="topbar-nav">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+    <div id="topbar-nav" class="navbar-menu">
+      <div class="navbar-end">
+        <a class="navbar-item" href="https://github.com/RedHatQuickCourses/REPLACEREPONAME/issues" target="_blank">Report Issues</a>
+      </div>
+    </div>
+  </nav>
+</header>
+<div class="body">
+<div class="nav-container" data-component="maas-gpu-enablement" data-version="2">
+  <aside class="nav">
+    <div class="panels">
+<div class="nav-panel-menu is-active" data-panel="menu">
+  <nav class="nav-menu">
+    <h3 class="title"><a href="../index.html">Nvidia Accelerator Configuration for Scale</a></h3>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../index.html">Home</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../LABENV/index.html">Lab Environment</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../ch1-gpu-operator/index.html">Operator Foundations and GPU Stack Deployment</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../ch1-gpu-operator/s1-hardware-stack.html">Deconstructing MaaS Operator Stack</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="../ch1-gpu-operator/s2-operators-overview.html">Understanding Operators and Platform Automation</a>
+  </li>
+  <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="../ch1-gpu-operator/s2-operators-overview-2.html">Custom Resources and Controllers</a>
+  </li>
+  <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="../ch1-gpu-operator/s2-operators-overview-3.html">Namespace Organization and Self-Healing</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../ch1-gpu-operator/s3-deploy-operators-lab.html">GPU Operator Features and Platform Deployment</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="../ch1-gpu-operator/s3-deploy-operators-lab-1.html">The GPU Underutilization Problem</a>
+  </li>
+  <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="../ch1-gpu-operator/s3-deploy-operators-lab-2.html">ClusterPolicy as the Control Plane</a>
+  </li>
+  <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="../ch1-gpu-operator/s3-deploy-operators-lab-3.html">Integrating with OpenShift Monitoring</a>
+  </li>
+  <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="../ch1-gpu-operator/s3-deploy-operators-lab-4.html">Hands-On: Deploying the GPU Operator Stack</a>
+  </li>
+  <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="../ch1-gpu-operator/s3-deploy-operators-lab-5.html">Production Operational Considerations</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../ch2-mig/index.html">Configure Multi-Instance GPU (MIG) for MaaS</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../ch2-mig/s1-mig-overview.html">Maximizing GPU ROI with Multi-Instance GPU</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="../ch2-mig/s1-mig-overview-2.html">MIG Advertisement Strategies</a>
+  </li>
+  <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="../ch2-mig/s1-mig-overview-3.html">How MIG Partitioning Works in Kubernetes</a>
+  </li>
+  <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="../ch2-mig/s1-mig-overview-4.html">MIG Benefits for MaaS</a>
+  </li>
+  <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="../ch2-mig/s1-mig-overview-5.html">Production Considerations and Gotchas</a>
+  </li>
+  <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="../ch2-mig/s2-mig-slicing-lab.html">Lab: MIG Slicing Configuration</a>
+  </li>
+  <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="../ch2-mig/s2-mig-slicing-lab-2.html">Troubleshooting Common Issues</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../ch3-observability/index.html">Monitor GPU Telemetry and Health</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch3-observability/s1-observability-stack.html">The MaaS Observability Stack</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch3-observability/s2-expose-metrics-lab.html">Lab: Exposing GPU Metrics</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch3-observability/s3-grafana-setup-lab.html">Lab: Deploying the Grafana Operator and Setting Up Access</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch3-observability/s4-dashboards-lab.html">Lab: Visualizing GPU Hardware</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="index.html">Model Selection Strategy</a>
+<ul class="nav-list">
+  <li class="nav-item is-current-page" data-depth="2">
+    <a class="nav-link" href="s6-model-evaluation.html">Evaluating Models and Optimizing Weights</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="s6-sizing-lab.html">(Lab) Sizing and Parallelism Configuration</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="s6-conclusion.html">Conclusion and Knowledge Check</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+</ul>
+  </nav>
+</div>
+<div class="nav-panel-explore" data-panel="explore">
+  <div class="context">
+    <span class="title">Nvidia Accelerator Configuration for Scale</span>
+    <span class="version">2</span>
+  </div>
+  <ul class="components">
+    <li class="component is-current">
+      <a class="title" href="../index.html">Nvidia Accelerator Configuration for Scale</a>
+      <ul class="versions">
+        <li class="version is-current is-latest">
+          <a href="../index.html">2</a>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</div>
+    </div>
+  </aside>
+</div>
+<main class="article">
+<div class="toolbar" role="navigation">
+<button class="nav-toggle"></button>
+  <a href="../index.html" class="home-link"></a>
+<nav class="breadcrumbs" aria-label="breadcrumbs">
+  <ul>
+    <li><a href="../index.html">Nvidia Accelerator Configuration for Scale</a></li>
+    <li><a href="index.html">Model Selection Strategy</a></li>
+    <li><a href="s6-model-evaluation.html">Evaluating Models and Optimizing Weights</a></li>
+  </ul>
+</nav>
+</div>
+  <div class="content">
+<aside class="toc sidebar" data-title="Contents" data-levels="2">
+  <div class="toc-menu"></div>
+</aside>
+<article class="doc">
+<h1 class="page">Model Selection and Optimization Strategy</h1>
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p><em>Estimated reading time: <strong>20 minutes</strong>.</em></p>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1">Objective</dt>
+<dd>
+<p>Learn the practical decision frameworks for choosing model architectures, calculating GPU memory requirements, selecting quantization strategies, and determining when multi-GPU configurations are necessary.</p>
+</dd>
+</dl>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_model_selection_dense_vs_mixture_of_experts_moe"><a class="anchor" href="#_model_selection_dense_vs_mixture_of_experts_moe"></a>Model Selection: Dense vs Mixture-of-Experts (MoE)</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>As a platform engineer, choosing between Dense and MoE architectures is about managing your GPU compute and VRAM budget effectively.</p>
+</div>
+<div class="sect2">
+<h3 id="_dense_models"><a class="anchor" href="#_dense_models"></a>Dense Models</h3>
+<div class="paragraph">
+<p>In a dense model, every parameter is activated for every token generated. If you have a 70B parameter model, every word processed involves 70B calculations.</p>
+</div>
+<div class="paragraph">
+<p><strong>Pros:</strong></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Highly predictable performance</p>
+</li>
+<li>
+<p>Easier to optimize for specific hardware</p>
+</li>
+<li>
+<p>Better for complex, multi-step reasoning tasks</p>
+</li>
+<li>
+<p>Lower total VRAM footprint</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>Cons:</strong></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Computationally expensive per token</p>
+</li>
+<li>
+<p>Scaling intelligence linearly increases cost</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_mixture_of_experts_moe_models"><a class="anchor" href="#_mixture_of_experts_moe_models"></a>Mixture-of-Experts (MoE) Models</h3>
+<div class="paragraph">
+<p>An MoE model has a massive total parameter count (e.g., 600B+), but for any given token, only a small fraction (the "experts") are activated by a router.</p>
+</div>
+<div class="paragraph">
+<p><strong>Example:</strong> Mixtral 8×7B has 8 experts of 7B parameters each (56B total), but only activates 2 experts per token (14B active).</p>
+</div>
+<div class="paragraph">
+<p><strong>Pros:</strong></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>You get the "intelligence" of a massive model with the "compute cost" of a much smaller one</p>
+</li>
+<li>
+<p>Faster generation (higher throughput)</p>
+</li>
+<li>
+<p>Excellent for specialized tasks (coding, writing, analysis)</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>Cons:</strong></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Enormous VRAM footprint—ALL parameters must reside in memory</p>
+</li>
+<li>
+<p>Complex infrastructure requirements</p>
+</li>
+<li>
+<p>Router mistakes can degrade performance</p>
+</li>
+</ul>
+</div>
+<div class="imageblock unresolved">
+<div class="content">
+<img src="moe-architecture.png" alt="Mixture of Experts Architecture">
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_decision_framework"><a class="anchor" href="#_decision_framework"></a>Decision Framework</h3>
+<div class="paragraph">
+<p>Use this matrix to select the right architecture:</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 20%;">
+<col style="width: 40%;">
+<col style="width: 40%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Need</th>
+<th class="tableblock halign-left valign-top">Recommended Architecture</th>
+<th class="tableblock halign-left valign-top">Reasoning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Highest Speed/Throughput</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">MoE (Mixtral, DeepSeek-V3)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Lower active compute per token</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Limited GPU Memory</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Dense (Llama, Mistral)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Fits in smaller total VRAM</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Complex Multi-Step Logic</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Dense (Large Parameter)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">All weights available for every token</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Diverse Multi-Tasking</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">MoE</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Specialization via expert routing</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>High Concurrency (50+ users)</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">MoE</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Better throughput per GPU</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Low Concurrency (&lt;50 users)</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Dense</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Don&#8217;t pay for idle VRAM</p></td>
+</tr>
+</tbody>
+</table>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>If you have high traffic with many concurrent users, MoE is usually cheaper because you can process more tokens per second per GPU. If you have low, intermittent traffic, Dense is better because you aren&#8217;t paying to keep massive weights "idle" in VRAM.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_model_sizing_calculating_vram_requirements"><a class="anchor" href="#_model_sizing_calculating_vram_requirements"></a>Model Sizing: Calculating VRAM Requirements</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Before deployment, you must calculate if the model fits in available GPU memory. The total VRAM required is:</p>
+</div>
+<div class="stemblock">
+<div class="content">
+\$VRAM_{total} = M_{weights} + M_{kv_cache} + M_{overhead}\$
+</div>
+</div>
+<div class="sect2">
+<h3 id="_component_1_model_weights"><a class="anchor" href="#_component_1_model_weights"></a>Component 1: Model Weights</h3>
+<div class="paragraph">
+<p>Calculate based on <strong>Total Parameters</strong> and <strong>Precision (bits per parameter)</strong>.</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Precision</th>
+<th class="tableblock halign-left valign-top">Bytes per Parameter</th>
+<th class="tableblock halign-left valign-top">Example: 70B Model</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>FP16 / BF16</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2 bytes</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">70B × 2 = <strong>140 GB</strong></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>INT8 / FP8</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1 byte</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">70B × 1 = <strong>70 GB</strong></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>INT4</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.5 bytes</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">70B × 0.5 = <strong>35 GB</strong></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect2">
+<h3 id="_component_2_kv_cache"><a class="anchor" href="#_component_2_kv_cache"></a>Component 2: KV Cache</h3>
+<div class="paragraph">
+<p>The "memory" of the conversation. This stores keys and values from the attention mechanism for all previous tokens in the context.</p>
+</div>
+<div class="paragraph">
+<p><strong>Calculation Formula:</strong></p>
+</div>
+<div class="paragraph">
+<p><strong>KV_cache = 2 * batch * context * layers * hidden\_dim * bytes</strong></p>
+</div>
+<div class="paragraph">
+<p>Where:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>2</strong> = Keys + Values (stored separately)</p>
+</li>
+<li>
+<p><strong>batch</strong> = concurrent sequences (use 1 for sizing)</p>
+</li>
+<li>
+<p><strong>context</strong> = context window length in tokens</p>
+</li>
+<li>
+<p><strong>layers</strong> = number of transformer layers</p>
+</li>
+<li>
+<p><strong>hidden_dim</strong> = model hidden dimension</p>
+</li>
+<li>
+<p><strong>bytes</strong> = precision (FP16=2, FP8=1, INT8=1)</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>Common Model Architectures:</strong></p>
+</div>
+<div class="paragraph">
+<p>Llama models use <strong>Grouped Query Attention (GQA)</strong> which reduces KV cache size:</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 16.6666%;">
+<col style="width: 16.6666%;">
+<col style="width: 16.6666%;">
+<col style="width: 16.6666%;">
+<col style="width: 33.3336%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Model</th>
+<th class="tableblock halign-left valign-top">Layers</th>
+<th class="tableblock halign-left valign-top">KV Heads</th>
+<th class="tableblock halign-left valign-top">Head Dim</th>
+<th class="tableblock halign-left valign-top">KV Cache (128K, FP8)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Llama-7B</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">32</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">8</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">128</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">~8 GB</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Llama-70B</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">80</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">8</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">128</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">~20 GB</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Llama-135B</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">120</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">8</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">128</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">~30 GB</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p><strong>Example: Llama-70B at different context lengths (FP8 KV cache)</strong></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>12K context:</strong> 2 × 1 × 12,000 × 80 × 8 × 128 × 1 ≈ <strong>2 GB</strong></p>
+</li>
+<li>
+<p><strong>32K context:</strong> 2 × 1 × 32,000 × 80 × 8 × 128 × 1 ≈ <strong>5 GB</strong></p>
+</li>
+<li>
+<p><strong>128K context:</strong> 2 × 1 × 128,000 × 80 × 8 × 128 × 1 ≈ <strong>20 GB</strong></p>
+</li>
+</ul>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p><strong>FP8 KV cache is industry standard:</strong> Modern inference engines (vLLM, TGI) default to FP8 precision for KV cache even when model weights are FP16/INT8. This saves significant memory with negligible accuracy impact. Example: Llama-70B FP16 (140 GB weights) + 128K context = 140 GB + 20 GB = <strong>160 GB total</strong>.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-warning" title="Warning"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>KV cache grows linearly with context length. For very long contexts (512K+ tokens), KV cache can exceed model weight size. Always account for KV cache in sizing calculations.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_component_3_overhead"><a class="anchor" href="#_component_3_overhead"></a>Component 3: Overhead</h3>
+<div class="paragraph">
+<p>Framework overhead includes:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>CUDA kernels and runtime (~2-3 GB)</p>
+</li>
+<li>
+<p>Intermediate activations</p>
+</li>
+<li>
+<p>Operating system overhead</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>Rule of thumb:</strong> Add <strong>10-15% safety margin</strong> to your total calculation.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_complete_sizing_example"><a class="anchor" href="#_complete_sizing_example"></a>Complete Sizing Example</h3>
+<div class="paragraph">
+<p><strong>Scenario:</strong> Deploy Llama-70B model with FP16 weights and 128K context window</p>
+</div>
+<div class="paragraph">
+<p><strong>Model Specs:</strong></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Parameters: 70B</p>
+</li>
+<li>
+<p>Layers: 80</p>
+</li>
+<li>
+<p>KV heads: 8 (Grouped Query Attention)</p>
+</li>
+<li>
+<p>Head dimension: 128</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>Calculation:</strong></p>
+</div>
+<div class="paragraph">
+<p><strong>Weights (FP16):</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">70B × 2 bytes = 140 GB</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>KV Cache (FP8, standard for inference):</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">2 × 1 × 128,000 × 80 × 8 × 128 × 1 byte = 20,971,520,000 bytes ≈ 20 GB</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>Overhead (10% margin):</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">(140 + 20) × 0.10 ≈ 16 GB</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>Total VRAM Required:</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">140 + 20 + 16 = 176 GB</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>Hardware Decision:</strong></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Single H100-80GB? <strong>No</strong> (80 GB &lt; 176 GB)</p>
+</li>
+<li>
+<p>Two H100-80GB via NVLink? <strong>Yes</strong> (160 GB capacity - <strong>tight fit, not recommended</strong>)</p>
+</li>
+<li>
+<p>Three H100-80GB via NVLink? <strong>Yes</strong> (240 GB with 64 GB margin) ✓</p>
+</li>
+<li>
+<p>Two A100-80GB? <strong>No</strong> (160 GB insufficient)</p>
+</li>
+<li>
+<p>Three A100-80GB? <strong>Yes</strong> (240 GB with 64 GB margin) ✓</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>Best choice:</strong> 3× H100-80GB or 3× A100-80GB with TP=3 for safe production margin</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_quantization_trading_precision_for_efficiency"><a class="anchor" href="#_quantization_trading_precision_for_efficiency"></a>Quantization: Trading Precision for Efficiency</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Quantization reduces the precision of model weights and activations, lowering memory requirements and potentially increasing speed.</p>
+</div>
+<div class="sect2">
+<h3 id="_why_quantize"><a class="anchor" href="#_why_quantize"></a>Why Quantize?</h3>
+<div class="paragraph">
+<p><strong>Memory Savings Example:</strong> Llama-405B model</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Precision</th>
+<th class="tableblock halign-left valign-top">Model Size</th>
+<th class="tableblock halign-left valign-top">GPUs Required (80GB)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>FP16</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">810 GB</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">11 GPUs</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>INT8/FP8</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">405 GB</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">6 GPUs</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>INT4</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">203 GB</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">3 GPUs</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p><strong>Benefits:</strong></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Reduces GPU count:</strong> Lower hardware costs</p>
+</li>
+<li>
+<p><strong>Increases batch size:</strong> More memory for KV cache</p>
+</li>
+<li>
+<p><strong>Can improve speed:</strong> Low-precision tensor cores accelerate computation</p>
+</li>
+<li>
+<p><strong>Enables deployment:</strong> Models that wouldn&#8217;t fit now fit</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>Trade-offs:</strong></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Potential accuracy loss:</strong> Lower precision can reduce model quality</p>
+</li>
+<li>
+<p><strong>Not all models quantize well:</strong> Some architectures more sensitive than others</p>
+</li>
+<li>
+<p><strong>Requires validation:</strong> Must test accuracy on your specific tasks</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_quantization_formats_and_hardware_alignment"><a class="anchor" href="#_quantization_formats_and_hardware_alignment"></a>Quantization Formats and Hardware Alignment</h3>
+<div class="paragraph">
+<p>Different GPU architectures have specialized hardware for different precision formats:</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 16.6666%;">
+<col style="width: 33.3333%;">
+<col style="width: 50.0001%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Quantization Format</th>
+<th class="tableblock halign-left valign-top">Best Hardware</th>
+<th class="tableblock halign-left valign-top">Use Case</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>W4A16</strong>
+(4-bit weights, FP16 activations)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Any GPU</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Memory-constrained deployments, edge devices</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>W8A8-INT8</strong>
+(8-bit weights, INT8 activations)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Ampere, Turing</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">High-throughput inference on older GPUs</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>W8A8-FP8</strong>
+(8-bit weights, FP8 activations)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Hopper, Blackwell</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Accuracy-sensitive with speed requirements</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>FP8 with 2:4 Sparsity</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Hopper, Blackwell</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Maximum performance on modern hardware</p></td>
+</tr>
+</tbody>
+</table>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p><strong>Hardware Alignment Matters:</strong> Using INT8 on Ampere GPUs or FP8 on Hopper GPUs leverages dedicated tensor cores for maximum acceleration. Mismatched quantization formats run on standard CUDA cores, losing performance benefits.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_quantization_decision_framework"><a class="anchor" href="#_quantization_decision_framework"></a>Quantization Decision Framework</h3>
+<div class="paragraph">
+<p>Ask these questions to select the right quantization scheme:</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 40%;">
+<col style="width: 60%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Question</th>
+<th class="tableblock halign-left valign-top">How It Drives the Decision</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>1. What GPU architecture?</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Ampere/Turing → INT8</p>
+<p class="tableblock">Hopper/Blackwell → FP8</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>2. How much accuracy loss is acceptable?</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">&lt;0.5% drop → W8A8 with GPTQ</p>
+<p class="tableblock">1-3% acceptable → W4A16 with AWQ</p>
+<p class="tableblock">3-5% acceptable → INT4</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>3. What&#8217;s the workload type?</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Online/interactive → Weight-only quantization</p>
+<p class="tableblock">Batch/offline → Weight + activation quantization</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>4. How much VRAM do you have?</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Severely limited → INT4</p>
+<p class="tableblock">Moderately limited → INT8/FP8</p>
+<p class="tableblock">Abundant → Consider staying FP16</p></td>
+</tr>
+</tbody>
+</table>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>Always validate quantized model accuracy on your specific tasks before production deployment. Benchmark scores don&#8217;t guarantee performance on your use cases.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_gpu_parallelism_when_and_how_to_use_multiple_gpus"><a class="anchor" href="#_gpu_parallelism_when_and_how_to_use_multiple_gpus"></a>GPU Parallelism: When and How to Use Multiple GPUs</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>When a model doesn&#8217;t fit on a single GPU, you need to split it across multiple GPUs using parallelism strategies.</p>
+</div>
+<div class="sect2">
+<h3 id="_when_do_you_need_multi_gpu"><a class="anchor" href="#_when_do_you_need_multi_gpu"></a>When Do You Need Multi-GPU?</h3>
+<div class="paragraph">
+<p><strong>Single GPU sufficiency check:</strong></p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Calculate total VRAM needed (weights + KV cache + overhead)</p>
+</li>
+<li>
+<p>Compare to largest available GPU (e.g., H100-80GB)</p>
+</li>
+<li>
+<p>If model fits with 20% margin → single GPU deployment</p>
+</li>
+<li>
+<p>If model doesn&#8217;t fit → multi-GPU required</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p><strong>Example:</strong> Llama-70B in FP16</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>VRAM needed: 140 GB (weights) + 16 GB (128K context) + 15 GB (overhead) = 171 GB</p>
+</li>
+<li>
+<p>H100-80GB capacity: 80 GB</p>
+</li>
+<li>
+<p><strong>Verdict:</strong> Requires multi-GPU (171 GB doesn&#8217;t fit in 80 GB)</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_tensor_parallelism_tp"><a class="anchor" href="#_tensor_parallelism_tp"></a>Tensor Parallelism (TP)</h3>
+<div class="paragraph">
+<p><strong>What it does:</strong> Splits each model layer across multiple GPUs. All GPUs work on the same batch of tokens simultaneously.</p>
+</div>
+<div class="paragraph">
+<p><strong>When to use:</strong></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Model is too large for single GPU</p>
+</li>
+<li>
+<p>GPUs are connected via high-speed interconnect (NVLink, NVSwitch)</p>
+</li>
+<li>
+<p>All GPUs are in the same physical node</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>Network requirements:</strong></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>NVLink (900 GB/s):</strong> Excellent for TP</p>
+</li>
+<li>
+<p><strong>PCIe (64 GB/s):</strong> Acceptable for TP but slower</p>
+</li>
+<li>
+<p><strong>Ethernet (10-100 Gb/s):</strong> <strong>Too slow for TP</strong></p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>Configuration:</strong></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>TP degree must divide evenly into number of attention heads</p>
+</li>
+<li>
+<p>Common TP degrees: 2, 4, 8</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>Example:</strong> Llama-70B across 4× H100 via NVLink</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Each GPU holds 1/4 of each layer (~17.5 GB per GPU for weights)</p>
+</li>
+<li>
+<p>All 4 GPUs process each token together</p>
+</li>
+<li>
+<p>Total VRAM per GPU: ~43 GB (fits comfortably in 80 GB)</p>
+</li>
+</ul>
+</div>
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-warning" title="Warning"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p><strong>Never use Tensor Parallelism across slow networks (Ethernet/PCIe Gen3).</strong> TP requires constant communication between GPUs during every forward pass. Slow networks cause 80-90% GPU utilization loss.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_pipeline_parallelism_pp"><a class="anchor" href="#_pipeline_parallelism_pp"></a>Pipeline Parallelism (PP)</h3>
+<div class="paragraph">
+<p><strong>What it does:</strong> Splits model layers sequentially across GPUs. Each GPU holds complete layers and processes tokens in pipeline fashion.</p>
+</div>
+<div class="paragraph">
+<p>Instead of splitting a single layer across multiple GPUs (as in Tensor Parallelism), Pipeline Parallelism splits the entire model vertically by groups of layers. For example, in a 40-layer model, GPU 0 might handle layers 1–10, GPU 1 handles 11–20, and so on.</p>
+</div>
+<div class="paragraph">
+<p><strong>When to use:</strong></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Model spans multiple physical nodes</p>
+</li>
+<li>
+<p>Interconnect is slower (InfiniBand, Ethernet)</p>
+</li>
+<li>
+<p>Prefer batch throughput over latency</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>Network requirements:</strong></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>InfiniBand (100-400 Gb/s):</strong> Good for PP</p>
+</li>
+<li>
+<p><strong>Ethernet (100+ Gb/s):</strong> Acceptable for PP</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>Trade-offs:</strong></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Higher latency than TP (tokens pass through GPUs sequentially)</p>
+</li>
+<li>
+<p>Better batch efficiency</p>
+</li>
+<li>
+<p>Works across nodes</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_choosing_the_right_parallelism_strategy"><a class="anchor" href="#_choosing_the_right_parallelism_strategy"></a>Choosing the Right Parallelism Strategy</h3>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 14.2857%;">
+<col style="width: 28.5714%;">
+<col style="width: 28.5714%;">
+<col style="width: 28.5715%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Scenario</th>
+<th class="tableblock halign-left valign-top">Recommended Strategy</th>
+<th class="tableblock halign-left valign-top">Configuration</th>
+<th class="tableblock halign-left valign-top">Reasoning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Model barely doesn&#8217;t fit single GPU</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Consider quantization first</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">INT8 or FP8</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Simpler than multi-GPU</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Model fits on 2-8 GPUs in same node</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Tensor Parallelism (TP)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">TP=2 to TP=8 via NVLink</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Best latency, simple setup</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Model requires 8+ GPUs across nodes</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Hybrid TP+PP</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">TP=8 per node, PP=2+ across nodes</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Balance latency and scale</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Slow interconnect between nodes</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Pipeline Parallelism (PP)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">PP across nodes</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Avoid TP communication overhead</p></td>
+</tr>
+</tbody>
+</table>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p><strong>Before configuring multi-GPU parallelism, always consider quantization first.</strong> A 70B model in FP16 requiring 2 GPUs might fit on a single GPU with INT8 quantization, simplifying deployment significantly.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_verifying_network_topology"><a class="anchor" href="#_verifying_network_topology"></a>Verifying Network Topology</h3>
+<div class="paragraph">
+<p>Before configuring Tensor Parallelism, verify your GPUs have high-speed interconnects:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">nvidia-smi topo -m</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>Look for NVLink connections:</strong></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>NV#</code> = NVLink connection (excellent for TP)</p>
+</li>
+<li>
+<p><code>SYS</code> = PCIe/system connection (slower, avoid for TP)</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_summary_putting_it_all_together"><a class="anchor" href="#_summary_putting_it_all_together"></a>Summary: Putting It All Together</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>When deploying a new model, follow this decision sequence:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>Select architecture</strong> (Dense vs MoE) based on workload characteristics</p>
+</li>
+<li>
+<p><strong>Calculate VRAM requirements</strong> (weights + KV cache + overhead)</p>
+</li>
+<li>
+<p><strong>Evaluate quantization options</strong> aligned to your GPU hardware</p>
+</li>
+<li>
+<p><strong>Determine GPU configuration:</strong></p>
+<div class="ulist">
+<ul>
+<li>
+<p>Single GPU if model fits with margin</p>
+</li>
+<li>
+<p>Multi-GPU with TP if NVLink available</p>
+</li>
+<li>
+<p>Multi-GPU with PP if spanning nodes</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p><strong>Validate</strong> the configuration with test deployment</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p><strong>Key takeaways:</strong></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Dense models: predictable, easier to deploy, better for reasoning</p>
+</li>
+<li>
+<p>MoE models: faster, higher throughput, require more VRAM</p>
+</li>
+<li>
+<p>Always calculate VRAM before deployment to avoid surprises</p>
+</li>
+<li>
+<p>Quantization can reduce GPU count significantly</p>
+</li>
+<li>
+<p>Match quantization format to GPU architecture (INT8 for Ampere, FP8 for Hopper)</p>
+</li>
+<li>
+<p>Use TP for single-node, high-speed interconnect scenarios</p>
+</li>
+<li>
+<p>Use PP for multi-node or slower interconnect scenarios</p>
+</li>
+<li>
+<p>Consider quantization before multi-GPU as a simpler solution</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_whats_next"><a class="anchor" href="#_whats_next"></a>What&#8217;s Next</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Ready to practice these concepts? Continue to <a href="s6-sizing-lab.html" class="xref page">Section 2: Sizing and Parallelism Lab</a> for hands-on exercises in VRAM calculation, parallelism planning, and quantization selection.</p>
+</div>
+</div>
+</div>
+<nav class="pagination">
+  <span class="prev"><a href="index.html">Model Selection Strategy</a></span>
+  <span class="next"><a href="s6-sizing-lab.html">(Lab) Sizing and Parallelism Configuration</a></span>
+</nav>
+</article>
+  </div>
+</main>
+</div>
+<footer class="footer">
+  <img src="../../../_/img/rhl-logo-red.png" height="40px" alt="Red Hat"  href="https://redhat.com" >
+</footer><script id="site-script" src="../../../_/js/site.js" data-ui-root-path="../../../_"></script>
+<script async src="../../../_/js/vendor/highlight.js"></script>
+  </body>
+</html>

@@ -3,9 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Monitor GPU Telemetry and Health :: Nvidia Accelerator Configuration for Scale</title>
-    <link rel="prev" href="../ch2-mig/s2-mig-slicing-lab-2.html">
-    <link rel="next" href="s1-observability-stack.html">
+    <title>The Red Hat AI Validated Model Repository :: Nvidia Accelerator Configuration for Scale</title>
     <meta name="generator" content="Antora 3.1.3">
     <link rel="stylesheet" href="../../../_/css/site.css">
     <script>var uiRootPath = '../../../_'</script>
@@ -133,21 +131,21 @@
   </li>
   <li class="nav-item" data-depth="0">
 <ul class="nav-list">
-  <li class="nav-item is-current-page" data-depth="1">
+  <li class="nav-item" data-depth="1">
     <button class="nav-item-toggle"></button>
-    <a class="nav-link" href="index.html">Monitor GPU Telemetry and Health</a>
+    <a class="nav-link" href="../ch3-observability/index.html">Monitor GPU Telemetry and Health</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="s1-observability-stack.html">The MaaS Observability Stack</a>
+    <a class="nav-link" href="../ch3-observability/s1-observability-stack.html">The MaaS Observability Stack</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="s2-expose-metrics-lab.html">Lab: Exposing GPU Metrics</a>
+    <a class="nav-link" href="../ch3-observability/s2-expose-metrics-lab.html">Lab: Exposing GPU Metrics</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="s3-grafana-setup-lab.html">Lab: Deploying the Grafana Operator and Setting Up Access</a>
+    <a class="nav-link" href="../ch3-observability/s3-grafana-setup-lab.html">Lab: Deploying the Grafana Operator and Setting Up Access</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="s4-dashboards-lab.html">Lab: Visualizing GPU Hardware</a>
+    <a class="nav-link" href="../ch3-observability/s4-dashboards-lab.html">Lab: Visualizing GPU Hardware</a>
   </li>
 </ul>
   </li>
@@ -157,16 +155,16 @@
 <ul class="nav-list">
   <li class="nav-item" data-depth="1">
     <button class="nav-item-toggle"></button>
-    <a class="nav-link" href="../ch5-model-selection/index.html">Model Selection Strategy</a>
+    <a class="nav-link" href="index.html">Model Selection Strategy</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../ch5-model-selection/s6-model-evaluation.html">Evaluating Models and Optimizing Weights</a>
+    <a class="nav-link" href="s6-model-evaluation.html">Evaluating Models and Optimizing Weights</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../ch5-model-selection/s6-sizing-lab.html">(Lab) Sizing and Parallelism Configuration</a>
+    <a class="nav-link" href="s6-sizing-lab.html">(Lab) Sizing and Parallelism Configuration</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../ch5-model-selection/s6-conclusion.html">Conclusion and Knowledge Check</a>
+    <a class="nav-link" href="s6-conclusion.html">Conclusion and Knowledge Check</a>
   </li>
 </ul>
   </li>
@@ -201,7 +199,7 @@
 <nav class="breadcrumbs" aria-label="breadcrumbs">
   <ul>
     <li><a href="../index.html">Nvidia Accelerator Configuration for Scale</a></li>
-    <li><a href="index.html">Monitor GPU Telemetry and Health</a></li>
+    <li><a href="s5-model_types.html">The Red Hat AI Validated Model Repository</a></li>
   </ul>
 </nav>
 </div>
@@ -210,22 +208,132 @@
   <div class="toc-menu"></div>
 </aside>
 <article class="doc">
-<h1 class="page">Monitor GPU Telemetry and Health</h1>
-<div class="dlist">
-<dl>
-<dt class="hdlist1">Goal</dt>
-<dd>
-<p>Build a comprehensive observability stack for GPU infrastructure by integrating NVIDIA DCGM telemetry with OpenShift&#8217;s monitoring platform and Grafana. Understand how hardware telemetry flows to the platform observability plane and learn to correlate platform, node, and accelerator metrics for effective MaaS operations.</p>
-</dd>
-</dl>
+<h1 class="page">The Red Hat AI Validated Model Repository</h1>
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>The open-source AI landscape, particularly on platforms like Hugging Face, presents a vast and often challenging environment due to the sheer number of available models, making it difficult to discern which are performant, accurate, or truly ready for enterprise use. To address this complexity, the <strong>Red Hat AI Validated Model Repository</strong> emerges as a curated ecosystem designed to streamline model selection and deployment.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_what_is_the_red_hat_ai_validated_model_repository"><a class="anchor" href="#_what_is_the_red_hat_ai_validated_model_repository"></a>What is the Red Hat AI Validated Model Repository?</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>It is an open-source initiative stemming from a deep collaboration between IBM and Red Hat. Its primary mission is to <strong>bridge the gap between cutting-edge research and robust production deployments</strong> by offering open, accessible, and community-driven AI solutions. Far from being just a list of models, it functions as a strategic solution to <strong>de-risk AI projects</strong> by providing models that have been pre-vetted for performance, accuracy, and overall enterprise readiness.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_why_use_a_validated_model"><a class="anchor" href="#_why_use_a_validated_model"></a>Why Use a Validated Model?</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>For AI platform delivery engineers, utilizing models from this repository offers significant advantages:</p>
+</div>
+<div class="sidebarblock">
+<div class="content">
+<div class="title">Key Benefits of Using a Validated Model</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Reduces Guesswork:</strong> Provides reliable performance expectations and recommended deployment settings, eliminating the need for extensive trial-and-error.</p>
+</li>
+<li>
+<p><strong>Ensures Enterprise Readiness:</strong> Validates that models perform well under load using enterprise-grade tools like vLLM.</p>
+</li>
+<li>
+<p><strong>Optimizes for Cost:</strong> Offers clear guidance on pairing models with the right hardware, maximizing inference efficiency and lowering Total Cost of Ownership (TCO).</p>
+</li>
+<li>
+<p><strong>Provides Flexibility:</strong> Offers a range of popular models in various optimized formats to meet diverse project requirements.</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_the_rigorous_validation_process"><a class="anchor" href="#_the_rigorous_validation_process"></a>The Rigorous Validation Process</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The confidence in Red Hat&#8217;s validated models stems from a rigorous and transparent validation process that employs industry-standard open-source tooling, ensuring reproducibility of results. The key tools involved are:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>GuideLLM</strong>: A powerful benchmarking tool used for capacity planning. It simulates real-world traffic to assess a model’s throughput, latency, and resource utilization across different hardware configurations.</p>
+</li>
+<li>
+<p><strong>Language Model Evaluation Harness (LM Eval Harness)</strong>: This is the industry standard for <strong>accuracy evaluation</strong>. It measures a model’s reasoning and generalization capabilities across a wide range of academic benchmarks.</p>
+</li>
+<li>
+<p><strong>vLLM</strong>: This specific inference engine is used during the performance validation itself, ensuring that the benchmarks reflect the performance achievable when deploying with vLLM on OpenShift AI.</p>
+</li>
+</ul>
 </div>
 <div class="paragraph">
-<p>This chapter covers enabling user-workload monitoring in OpenShift, exposing GPU metrics via DCGM Exporter, deploying and configuring the Grafana Operator, and creating custom dashboards that visualize GPU health, performance, and utilization metrics alongside standard infrastructure metrics.</p>
+<p>This thorough validation process provides the transparent data necessary for making informed decisions and setting realistic expectations for model performance on target hardware.</p>
 </div>
-<nav class="pagination">
-  <span class="prev"><a href="../ch2-mig/s2-mig-slicing-lab-2.html">Troubleshooting Common Issues</a></span>
-  <span class="next"><a href="s1-observability-stack.html">The MaaS Observability Stack</a></span>
-</nav>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_v1_0_collection_of_red_hat_ai_validated_models"><a class="anchor" href="#_v1_0_collection_of_red_hat_ai_validated_models"></a>v1.0 Collection of Red Hat AI Validated Models</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>This initial collection features leading third-party generative AI models rigorously validated for efficient use across the Red Hat AI Product Portfolio. Each model listed below has associated configurations for various quantization levels (e.g., <code>w4a16</code> for 4-bit weights and 16-bit activations, <code>w8a8</code> for 8-bit weights and 8-bit activations, or <code>FP8-dynamic</code> for dynamic FP8 quantization).</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Gemma-3 Quantized</p>
+</li>
+<li>
+<p>Whisper Quantized (Note: Whisper is typically an ASR model, but its text-generation component is relevant)</p>
+</li>
+<li>
+<p>Llama 4 Quantized</p>
+</li>
+<li>
+<p>Qwen3 Quantized</p>
+</li>
+<li>
+<p>Mistral Small-3.1 Instruct Quantized</p>
+</li>
+<li>
+<p>Phi-4 Quantized</p>
+</li>
+<li>
+<p>Llama 3.3 70B Instruct Quantized</p>
+</li>
+<li>
+<p>Qwen 2.5 Quantized</p>
+</li>
+<li>
+<p>Granite Quantized</p>
+</li>
+</ul>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+The specific quantization scheme (e.g., <code>w4a16</code>, <code>w8a8</code>, <code>FP8-dynamic</code>) for each model is typically indicated in its full name or metadata within the Red Hat AI Hugging Face repository. These notations signify the precision used for weights (w) and activations (a), or the dynamic FP8 method.
+</td>
+</tr>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_availability_and_selection_criteria"><a class="anchor" href="#_availability_and_selection_criteria"></a>Availability and Selection Criteria</h4>
+<div class="paragraph">
+<p>While Red Hat AI focuses on validated models, other models may also be available in the repository but have not undergone the full validation process.</p>
+</div>
+</div>
+</div>
+</div>
 </article>
   </div>
 </main>

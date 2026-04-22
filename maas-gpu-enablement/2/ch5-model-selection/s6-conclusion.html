@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Conclusion and Knowledge Check :: Nvidia Accelerator Configuration for Scale</title>
+    <link rel="prev" href="s6-sizing-lab.html">
+    <meta name="generator" content="Antora 3.1.3">
+    <link rel="stylesheet" href="../../../_/css/site.css">
+    <script>var uiRootPath = '../../../_'</script>
+  </head>
+  <body class="article">
+<header class="header">
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="https://www.redhat.com" target="_blank"><img src="../../../_/img/redhat-logo.png" height="40px" alt="Red Hat"></a>
+      <a class="navbar-item" style="font-size: 24px; color: white" href="../../..">Nvidia Accelerator Configuration for Scale</a>
+      <button class="navbar-burger" data-target="topbar-nav">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+    <div id="topbar-nav" class="navbar-menu">
+      <div class="navbar-end">
+        <a class="navbar-item" href="https://github.com/RedHatQuickCourses/REPLACEREPONAME/issues" target="_blank">Report Issues</a>
+      </div>
+    </div>
+  </nav>
+</header>
+<div class="body">
+<div class="nav-container" data-component="maas-gpu-enablement" data-version="2">
+  <aside class="nav">
+    <div class="panels">
+<div class="nav-panel-menu is-active" data-panel="menu">
+  <nav class="nav-menu">
+    <h3 class="title"><a href="../index.html">Nvidia Accelerator Configuration for Scale</a></h3>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../index.html">Home</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../LABENV/index.html">Lab Environment</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../ch1-gpu-operator/index.html">Operator Foundations and GPU Stack Deployment</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../ch1-gpu-operator/s1-hardware-stack.html">Deconstructing MaaS Operator Stack</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="../ch1-gpu-operator/s2-operators-overview.html">Understanding Operators and Platform Automation</a>
+  </li>
+  <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="../ch1-gpu-operator/s2-operators-overview-2.html">Custom Resources and Controllers</a>
+  </li>
+  <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="../ch1-gpu-operator/s2-operators-overview-3.html">Namespace Organization and Self-Healing</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../ch1-gpu-operator/s3-deploy-operators-lab.html">GPU Operator Features and Platform Deployment</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="../ch1-gpu-operator/s3-deploy-operators-lab-1.html">The GPU Underutilization Problem</a>
+  </li>
+  <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="../ch1-gpu-operator/s3-deploy-operators-lab-2.html">ClusterPolicy as the Control Plane</a>
+  </li>
+  <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="../ch1-gpu-operator/s3-deploy-operators-lab-3.html">Integrating with OpenShift Monitoring</a>
+  </li>
+  <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="../ch1-gpu-operator/s3-deploy-operators-lab-4.html">Hands-On: Deploying the GPU Operator Stack</a>
+  </li>
+  <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="../ch1-gpu-operator/s3-deploy-operators-lab-5.html">Production Operational Considerations</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../ch2-mig/index.html">Configure Multi-Instance GPU (MIG) for MaaS</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../ch2-mig/s1-mig-overview.html">Maximizing GPU ROI with Multi-Instance GPU</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="../ch2-mig/s1-mig-overview-2.html">MIG Advertisement Strategies</a>
+  </li>
+  <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="../ch2-mig/s1-mig-overview-3.html">How MIG Partitioning Works in Kubernetes</a>
+  </li>
+  <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="../ch2-mig/s1-mig-overview-4.html">MIG Benefits for MaaS</a>
+  </li>
+  <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="../ch2-mig/s1-mig-overview-5.html">Production Considerations and Gotchas</a>
+  </li>
+  <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="../ch2-mig/s2-mig-slicing-lab.html">Lab: MIG Slicing Configuration</a>
+  </li>
+  <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="../ch2-mig/s2-mig-slicing-lab-2.html">Troubleshooting Common Issues</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../ch3-observability/index.html">Monitor GPU Telemetry and Health</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch3-observability/s1-observability-stack.html">The MaaS Observability Stack</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch3-observability/s2-expose-metrics-lab.html">Lab: Exposing GPU Metrics</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch3-observability/s3-grafana-setup-lab.html">Lab: Deploying the Grafana Operator and Setting Up Access</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch3-observability/s4-dashboards-lab.html">Lab: Visualizing GPU Hardware</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="index.html">Model Selection Strategy</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="s6-model-evaluation.html">Evaluating Models and Optimizing Weights</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="s6-sizing-lab.html">(Lab) Sizing and Parallelism Configuration</a>
+  </li>
+  <li class="nav-item is-current-page" data-depth="2">
+    <a class="nav-link" href="s6-conclusion.html">Conclusion and Knowledge Check</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+</ul>
+  </nav>
+</div>
+<div class="nav-panel-explore" data-panel="explore">
+  <div class="context">
+    <span class="title">Nvidia Accelerator Configuration for Scale</span>
+    <span class="version">2</span>
+  </div>
+  <ul class="components">
+    <li class="component is-current">
+      <a class="title" href="../index.html">Nvidia Accelerator Configuration for Scale</a>
+      <ul class="versions">
+        <li class="version is-current is-latest">
+          <a href="../index.html">2</a>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</div>
+    </div>
+  </aside>
+</div>
+<main class="article">
+<div class="toolbar" role="navigation">
+<button class="nav-toggle"></button>
+  <a href="../index.html" class="home-link"></a>
+<nav class="breadcrumbs" aria-label="breadcrumbs">
+  <ul>
+    <li><a href="../index.html">Nvidia Accelerator Configuration for Scale</a></li>
+    <li><a href="index.html">Model Selection Strategy</a></li>
+    <li><a href="s6-conclusion.html">Conclusion and Knowledge Check</a></li>
+  </ul>
+</nav>
+</div>
+  <div class="content">
+<aside class="toc sidebar" data-title="Contents" data-levels="2">
+  <div class="toc-menu"></div>
+</aside>
+<article class="doc">
+<h1 class="page">Conclusion and Knowledge Check</h1>
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p><em>Estimated reading time: <strong>10 minutes</strong>.</em></p>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1">Objective</dt>
+<dd>
+<p>Validate your model selection expertise through production scenario assessments and review key concepts.</p>
+</dd>
+</dl>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_what_youve_learned"><a class="anchor" href="#_what_youve_learned"></a>What You&#8217;ve Learned</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>You now have practical decision frameworks for model selection:</p>
+</div>
+<div class="paragraph">
+<p>✅ <strong>Model Selection:</strong> Choose Dense vs MoE based on VRAM budget, concurrency, and workload characteristics</p>
+</div>
+<div class="paragraph">
+<p>✅ <strong>VRAM Sizing:</strong> Calculate total memory requirements (weights + KV cache + overhead)</p>
+</div>
+<div class="paragraph">
+<p>✅ <strong>Quantization:</strong> Match precision formats to GPU architecture and accuracy requirements</p>
+</div>
+<div class="paragraph">
+<p>✅ <strong>Multi-GPU Parallelism:</strong> Choose TP vs PP based on network topology</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_production_scenario_assessments"><a class="anchor" href="#_production_scenario_assessments"></a>Production Scenario Assessments</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Test your ability to apply these concepts to real-world challenges.</p>
+</div>
+<div class="sect2">
+<h3 id="_scenario_1_capacity_planning"><a class="anchor" href="#_scenario_1_capacity_planning"></a>Scenario 1: Capacity Planning</h3>
+<div class="paragraph">
+<p><strong>Situation:</strong> Your customer wants to deploy a chatbot service and expects 100 concurrent users during peak hours.</p>
+</div>
+<div class="paragraph">
+<p><strong>Available Options:</strong></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Option A:</strong> Llama-70B-FP16 on 4× A100-80GB</p>
+</li>
+<li>
+<p><strong>Option B:</strong> Mixtral-8×7B-FP16 (70B total, 14B active) on 4× A100-80GB</p>
+</li>
+<li>
+<p><strong>Option C:</strong> Llama-70B-INT8 on 2× H100-80GB</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>Questions:</strong></p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Which option provides the best latency for interactive chat?</p>
+</li>
+<li>
+<p>Which option maximizes throughput for high concurrency?</p>
+</li>
+<li>
+<p>Which option has the lowest hardware cost?</p>
+</li>
+</ol>
+</div>
+<details>
+<summary class="title">Reveal Analysis</summary>
+<div class="content">
+<div class="paragraph">
+<p><strong>Analysis:</strong></p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>Best latency:</strong> Option B (Mixtral)</p>
+<div class="ulist">
+<ul>
+<li>
+<p>MoE models have lower active compute per token</p>
+</li>
+<li>
+<p>Only 14B parameters active vs 70B for dense models</p>
+</li>
+<li>
+<p>Faster token generation = lower latency</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p><strong>Maximum throughput:</strong> Option B (Mixtral)</p>
+<div class="ulist">
+<ul>
+<li>
+<p>Lower compute per token = more tokens/second per GPU</p>
+</li>
+<li>
+<p>Better for high concurrency (100 users)</p>
+</li>
+<li>
+<p>Can handle more concurrent requests</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p><strong>Lowest hardware cost:</strong> Option C (Llama-70B-INT8)</p>
+<div class="ulist">
+<ul>
+<li>
+<p>Only requires 2 GPUs vs 4 GPUs for other options</p>
+</li>
+<li>
+<p>Quantization reduces VRAM requirements</p>
+</li>
+<li>
+<p>Llama-70B-INT8: ~70 GB weights fits on 2× H100-80GB</p>
+</li>
+<li>
+<p>Llama-70B-FP16: ~140 GB weights requires 4 GPUs</p>
+</li>
+</ul>
+</div>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p><strong>Trade-offs:</strong></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Option A: Most predictable performance, easier to optimize</p>
+</li>
+<li>
+<p>Option B: Fastest but requires most VRAM (all 70B parameters loaded)</p>
+</li>
+<li>
+<p>Option C: Most cost-effective but potential minor accuracy loss from quantization</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>Recommended:</strong> Option B (Mixtral) for high concurrency + low latency requirements</p>
+</div>
+</div>
+</details>
+</div>
+<div class="sect2">
+<h3 id="_scenario_2_emergency_sizing_problem"><a class="anchor" href="#_scenario_2_emergency_sizing_problem"></a>Scenario 2: Emergency Sizing Problem</h3>
+<div class="paragraph">
+<p><strong>Friday 4 PM:</strong> A customer deployed Llama-70B-FP16 on a cluster and the deployment is failing with "CUDA out of memory" errors.</p>
+</div>
+<div class="paragraph">
+<p><strong>Their Setup:</strong></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>2× A100-80GB (160 GB total)</p>
+</li>
+<li>
+<p>Model configured with TP=2</p>
+</li>
+<li>
+<p>Expected context: 128K tokens</p>
+</li>
+<li>
+<p>Using default FP8 KV cache</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>Model Specs:</strong>
+* Layers: 80
+* KV heads: 8 (GQA)
+* Head dimension: 128</p>
+</div>
+<div class="paragraph">
+<p><strong>Questions:</strong></p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Why is the deployment failing?</p>
+</li>
+<li>
+<p>Calculate the actual VRAM required</p>
+</li>
+<li>
+<p>What would you recommend to fix it?</p>
+</li>
+</ol>
+</div>
+<details>
+<summary class="title">Reveal Solution</summary>
+<div class="content">
+<div class="paragraph">
+<p><strong>Solution:</strong></p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>Why failing:</strong> Insufficient VRAM (total requirements exceed 160 GB)</p>
+</li>
+<li>
+<p><strong>Calculate actual VRAM required:</strong></p>
+<div class="paragraph">
+<p><strong>Weights (FP16):</strong> 70B × 2 bytes = 140 GB</p>
+</div>
+<div class="paragraph">
+<p><strong>KV cache (FP8, 128K context with GQA):</strong></p>
+</div>
+</li>
+</ol>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">2 × 1 × 128,000 × 80 × 8 × 128 × 1 = ~20 GB</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>+
+<strong>Overhead (10%):</strong> (140 + 20) × 0.10 = ~16 GB</p>
+</div>
+<div class="paragraph">
+<p>+
+<strong>Total needed:</strong> 140 + 20 + 16 = <strong>~176 GB</strong></p>
+</div>
+<div class="paragraph">
+<p>+
+<strong>Available:</strong> 160 GB</p>
+</div>
+<div class="paragraph">
+<p>+
+<strong>Shortfall:</strong> 16 GB ❌</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>Recommendations (in order of preference):</strong></p>
+<div class="paragraph">
+<p><strong>Option 1: Use INT8 quantization for weights</strong>
+<strong> Weights: 70B × 1 byte = 70 GB
+</strong> KV cache (FP8): 20 GB
+<strong> Overhead: ~9 GB
+</strong> Total: ~99 GB
+<strong> </strong>Fits on 2× A100-80GB with 61 GB margin** ✓</p>
+</div>
+<div class="paragraph">
+<p>+
+<strong>Option 2: Reduce context window to 96K</strong></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Weights (FP16): 140 GB</p>
+</li>
+<li>
+<p>KV cache (FP8, 96K): ~15 GB</p>
+</li>
+<li>
+<p>Overhead: ~15.5 GB</p>
+</li>
+<li>
+<p>Total: ~170.5 GB</p>
+</li>
+<li>
+<p><strong>Might fit but very tight margin</strong></p>
+<div class="paragraph">
+<p><strong>Option 3: Add one more GPU</strong></p>
+</div>
+</li>
+<li>
+<p>Use 3× A100-80GB (240 GB total)</p>
+</li>
+<li>
+<p>TP=3 configuration</p>
+</li>
+<li>
+<p>More expensive, but safe margin</p>
+</li>
+</ul>
+</div>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p><strong>Best solution:</strong> Option 1 (INT8 weights) — fits comfortably on existing hardware, maintains 128K context</p>
+</div>
+</div>
+</details>
+</div>
+<div class="sect2">
+<h3 id="_scenario_3_network_topology_problem"><a class="anchor" href="#_scenario_3_network_topology_problem"></a>Scenario 3: Network Topology Problem</h3>
+<div class="paragraph">
+<p><strong>Situation:</strong> You deployed Llama-70B with TP=4 across 4× H100 GPUs. The model loads successfully but GPU utilization is only 20% and inference is very slow.</p>
+</div>
+<div class="paragraph">
+<p><strong>Your Investigation:</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ nvidia-smi topo -m
+
+        GPU0    GPU1    GPU2    GPU3
+GPU0     X      SYS     SYS     SYS
+GPU1    SYS      X      SYS     SYS
+GPU2    SYS     SYS      X      SYS
+GPU3    SYS     SYS     SYS      X</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>Questions:</strong></p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>What does "SYS" in the topology matrix mean?</p>
+</li>
+<li>
+<p>What&#8217;s causing the low GPU utilization?</p>
+</li>
+<li>
+<p>How would you fix this?</p>
+</li>
+</ol>
+</div>
+<details>
+<summary class="title">Reveal Solution</summary>
+<div class="content">
+<div class="paragraph">
+<p><strong>Solution:</strong></p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>"SYS" meaning:</strong></p>
+<div class="ulist">
+<ul>
+<li>
+<p>System/PCIe connection between GPUs</p>
+</li>
+<li>
+<p>No direct NVLink connection</p>
+</li>
+<li>
+<p>Much slower than NVLink (PCIe ~64 GB/s vs NVLink 900 GB/s)</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p><strong>Cause of low utilization:</strong></p>
+<div class="ulist">
+<ul>
+<li>
+<p>Tensor Parallelism requires constant GPU-to-GPU communication</p>
+</li>
+<li>
+<p>Every forward pass requires synchronizing all 4 GPUs</p>
+</li>
+<li>
+<p>Slow PCIe connections create bottleneck</p>
+</li>
+<li>
+<p>GPUs spend most time waiting for network, not computing</p>
+</li>
+<li>
+<p>Result: &lt;20% GPU utilization</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p><strong>Fixes (in order of preference):</strong></p>
+<div class="paragraph">
+<p><strong>Option 1: Use quantization to fit on single GPU</strong>
+<strong> Llama-70B-INT4: ~35 GB → fits on single H100-80GB
+</strong> Eliminates need for TP
+** Best solution if accuracy acceptable</p>
+</div>
+<div class="paragraph">
+<p>+
+<strong>Option 2: Use Pipeline Parallelism instead</strong></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>PP is more tolerant of slow interconnects</p>
+</li>
+<li>
+<p>Higher latency but better throughput than current setup</p>
+</li>
+<li>
+<p>Configure: <code>--pipeline-parallel-size 4</code></p>
+<div class="paragraph">
+<p><strong>Option 3: Request GPUs with NVLink</strong></p>
+</div>
+</li>
+<li>
+<p>Proper hardware for TP deployment</p>
+</li>
+<li>
+<p>Topology should show <code>NV#</code> instead of <code>SYS</code></p>
+</li>
+</ul>
+</div>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p><strong>Best solution:</strong> Option 1 (quantization) unless customer requires FP16 precision</p>
+</div>
+<div class="paragraph">
+<p><strong>Key lesson:</strong> Always verify network topology before configuring Tensor Parallelism</p>
+</div>
+</div>
+</details>
+</div>
+<div class="sect2">
+<h3 id="_scenario_4_quantization_selection"><a class="anchor" href="#_scenario_4_quantization_selection"></a>Scenario 4: Quantization Selection</h3>
+<div class="paragraph">
+<p><strong>Customer Requirements:</strong></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Deploy Llama-70B for code generation</p>
+</li>
+<li>
+<p>Accuracy-critical use case (financial code analysis)</p>
+</li>
+<li>
+<p>Acceptable accuracy loss: &lt;1%</p>
+</li>
+<li>
+<p>Available hardware: 2× H100-80GB or 4× A100-80GB</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>Questions:</strong></p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>If deploying on 2× H100-80GB, what quantization scheme should you use?</p>
+</li>
+<li>
+<p>If deploying on 4× A100-80GB, what quantization scheme should you use?</p>
+</li>
+<li>
+<p>Why does the GPU architecture matter for quantization selection?</p>
+</li>
+</ol>
+</div>
+<details>
+<summary class="title">Reveal Solution</summary>
+<div class="content">
+<div class="paragraph">
+<p><strong>Solution:</strong></p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>On 2× H100-80GB:</strong> Use <strong>FP8 (W8A8-FP8)</strong></p>
+<div class="ulist">
+<ul>
+<li>
+<p>H100 has native FP8 Tensor Cores (Hopper architecture)</p>
+</li>
+<li>
+<p>FP8 provides &lt;0.5% accuracy loss (within &lt;1% requirement)</p>
+</li>
+<li>
+<p>Llama-70B-FP8: ~70 GB weights + KV cache fits on 2× H100</p>
+</li>
+<li>
+<p>Leverages hardware acceleration for best performance</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p><strong>On 4× A100-80GB:</strong> Use <strong>INT8 (W8A8-INT8)</strong></p>
+<div class="ulist">
+<ul>
+<li>
+<p>A100 has INT8 Tensor Cores (Ampere architecture)</p>
+</li>
+<li>
+<p>No native FP8 support on Ampere</p>
+</li>
+<li>
+<p>INT8 provides ~1% accuracy loss (at boundary of requirement)</p>
+</li>
+<li>
+<p>Should validate on customer&#8217;s financial code dataset</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p><strong>Why architecture matters:</strong></p>
+<div class="ulist">
+<ul>
+<li>
+<p>Different GPU generations have different tensor core capabilities:</p>
+<div class="ulist">
+<ul>
+<li>
+<p>Hopper (H100): Native FP8 Tensor Cores</p>
+</li>
+<li>
+<p>Ampere (A100): INT8 Tensor Cores</p>
+</li>
+<li>
+<p>Older: INT8 support, no FP8</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p>Using the "wrong" quantization format runs on standard CUDA cores</p>
+</li>
+<li>
+<p>Miss out on 2-3× speedup from tensor core acceleration</p>
+</li>
+<li>
+<p><strong>Matching quantization to hardware = maximum performance</strong></p>
+</li>
+</ul>
+</div>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p><strong>Validation required:</strong></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Test on customer&#8217;s financial code dataset</p>
+</li>
+<li>
+<p>Verify &lt;1% accuracy loss before production</p>
+</li>
+<li>
+<p>Benchmark performance under expected load</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>Key principle:</strong> Always align quantization format to GPU architecture for best performance</p>
+</div>
+</div>
+</details>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_key_takeaways"><a class="anchor" href="#_key_takeaways"></a>Key Takeaways</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p><strong>Decision Framework:</strong></p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>Architecture (Dense vs MoE):</strong> Based on concurrency, VRAM budget, and task specialization needs</p>
+</li>
+<li>
+<p><strong>VRAM Sizing:</strong> Always account for weights + KV cache + overhead before deployment</p>
+</li>
+<li>
+<p><strong>Quantization:</strong> Match to GPU architecture (FP8 for Hopper, INT8 for Ampere)</p>
+</li>
+<li>
+<p><strong>Parallelism:</strong> Use TP for NVLink, PP for slower interconnects, consider quantization first</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p><strong>Common Mistakes to Avoid:</strong></p>
+</div>
+<div class="paragraph">
+<p>❌ Not accounting for KV cache in VRAM calculations</p>
+</div>
+<div class="paragraph">
+<p>❌ Using TP across slow networks (Ethernet/PCIe)</p>
+</div>
+<div class="paragraph">
+<p>❌ Selecting quantization based only on memory savings</p>
+</div>
+<div class="paragraph">
+<p>❌ Not validating accuracy after quantization</p>
+</div>
+<div class="paragraph">
+<p>❌ Deploying without checking network topology</p>
+</div>
+<div class="paragraph">
+<p><strong>Critical Questions Before Every Deployment:</strong></p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Does the model fit? (Calculate VRAM: weights + KV cache + overhead)</p>
+</li>
+<li>
+<p>Should I quantize? (Check if fits on fewer GPUs with quantization)</p>
+</li>
+<li>
+<p>Do I need multi-GPU? (Only if doesn&#8217;t fit on single GPU after quantization)</p>
+</li>
+<li>
+<p>What&#8217;s my network topology? (Verify NVLink for TP, InfiniBand for PP)</p>
+</li>
+</ol>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_whats_next"><a class="anchor" href="#_whats_next"></a>What&#8217;s Next</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>You&#8217;ve mastered model selection foundations. The next step is deploying these models for inference serving:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>vLLM Configuration:</strong> Applying TP/PP configurations you&#8217;ve learned</p>
+</li>
+<li>
+<p><strong>Resource Limits:</strong> Using VRAM calculations to set Kubernetes resource limits</p>
+</li>
+<li>
+<p><strong>Performance Optimization:</strong> Tuning batch sizes and KV cache allocation</p>
+</li>
+<li>
+<p><strong>Autoscaling:</strong> Scaling model deployments based on load</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>The model selection decisions you make directly feed into your inference deployment configuration. Accurate VRAM sizing prevents deployment failures. Proper parallelism configuration prevents performance issues. Validated quantization reduces validation time from weeks to days.</p>
+</div>
+<div class="paragraph">
+<p>Continue building on these foundations as you advance to inference serving and production model operations.</p>
+</div>
+</div>
+</div>
+<nav class="pagination">
+  <span class="prev"><a href="s6-sizing-lab.html">(Lab) Sizing and Parallelism Configuration</a></span>
+</nav>
+</article>
+  </div>
+</main>
+</div>
+<footer class="footer">
+  <img src="../../../_/img/rhl-logo-red.png" height="40px" alt="Red Hat"  href="https://redhat.com" >
+</footer><script id="site-script" src="../../../_/js/site.js" data-ui-root-path="../../../_"></script>
+<script async src="../../../_/js/vendor/highlight.js"></script>
+  </body>
+</html>

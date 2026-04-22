@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Model optimization (QUANTIZATION) :: Nvidia Accelerator Configuration for Scale</title>
+    <meta name="generator" content="Antora 3.1.3">
+    <link rel="stylesheet" href="../../../_/css/site.css">
+    <script>var uiRootPath = '../../../_'</script>
+  </head>
+  <body class="article">
+<header class="header">
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="https://www.redhat.com" target="_blank"><img src="../../../_/img/redhat-logo.png" height="40px" alt="Red Hat"></a>
+      <a class="navbar-item" style="font-size: 24px; color: white" href="../../..">Nvidia Accelerator Configuration for Scale</a>
+      <button class="navbar-burger" data-target="topbar-nav">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+    <div id="topbar-nav" class="navbar-menu">
+      <div class="navbar-end">
+        <a class="navbar-item" href="https://github.com/RedHatQuickCourses/REPLACEREPONAME/issues" target="_blank">Report Issues</a>
+      </div>
+    </div>
+  </nav>
+</header>
+<div class="body">
+<div class="nav-container" data-component="maas-gpu-enablement" data-version="2">
+  <aside class="nav">
+    <div class="panels">
+<div class="nav-panel-menu is-active" data-panel="menu">
+  <nav class="nav-menu">
+    <h3 class="title"><a href="../index.html">Nvidia Accelerator Configuration for Scale</a></h3>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../index.html">Home</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../LABENV/index.html">Lab Environment</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../ch1-gpu-operator/index.html">Operator Foundations and GPU Stack Deployment</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../ch1-gpu-operator/s1-hardware-stack.html">Deconstructing MaaS Operator Stack</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="../ch1-gpu-operator/s2-operators-overview.html">Understanding Operators and Platform Automation</a>
+  </li>
+  <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="../ch1-gpu-operator/s2-operators-overview-2.html">Custom Resources and Controllers</a>
+  </li>
+  <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="../ch1-gpu-operator/s2-operators-overview-3.html">Namespace Organization and Self-Healing</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../ch1-gpu-operator/s3-deploy-operators-lab.html">GPU Operator Features and Platform Deployment</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="../ch1-gpu-operator/s3-deploy-operators-lab-1.html">The GPU Underutilization Problem</a>
+  </li>
+  <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="../ch1-gpu-operator/s3-deploy-operators-lab-2.html">ClusterPolicy as the Control Plane</a>
+  </li>
+  <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="../ch1-gpu-operator/s3-deploy-operators-lab-3.html">Integrating with OpenShift Monitoring</a>
+  </li>
+  <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="../ch1-gpu-operator/s3-deploy-operators-lab-4.html">Hands-On: Deploying the GPU Operator Stack</a>
+  </li>
+  <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="../ch1-gpu-operator/s3-deploy-operators-lab-5.html">Production Operational Considerations</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../ch2-mig/index.html">Configure Multi-Instance GPU (MIG) for MaaS</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../ch2-mig/s1-mig-overview.html">Maximizing GPU ROI with Multi-Instance GPU</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="../ch2-mig/s1-mig-overview-2.html">MIG Advertisement Strategies</a>
+  </li>
+  <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="../ch2-mig/s1-mig-overview-3.html">How MIG Partitioning Works in Kubernetes</a>
+  </li>
+  <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="../ch2-mig/s1-mig-overview-4.html">MIG Benefits for MaaS</a>
+  </li>
+  <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="../ch2-mig/s1-mig-overview-5.html">Production Considerations and Gotchas</a>
+  </li>
+  <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="../ch2-mig/s2-mig-slicing-lab.html">Lab: MIG Slicing Configuration</a>
+  </li>
+  <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="../ch2-mig/s2-mig-slicing-lab-2.html">Troubleshooting Common Issues</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../ch3-observability/index.html">Monitor GPU Telemetry and Health</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch3-observability/s1-observability-stack.html">The MaaS Observability Stack</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch3-observability/s2-expose-metrics-lab.html">Lab: Exposing GPU Metrics</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch3-observability/s3-grafana-setup-lab.html">Lab: Deploying the Grafana Operator and Setting Up Access</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch3-observability/s4-dashboards-lab.html">Lab: Visualizing GPU Hardware</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="index.html">Model Selection Strategy</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="s6-model-evaluation.html">Evaluating Models and Optimizing Weights</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="s6-sizing-lab.html">(Lab) Sizing and Parallelism Configuration</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="s6-conclusion.html">Conclusion and Knowledge Check</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+</ul>
+  </nav>
+</div>
+<div class="nav-panel-explore" data-panel="explore">
+  <div class="context">
+    <span class="title">Nvidia Accelerator Configuration for Scale</span>
+    <span class="version">2</span>
+  </div>
+  <ul class="components">
+    <li class="component is-current">
+      <a class="title" href="../index.html">Nvidia Accelerator Configuration for Scale</a>
+      <ul class="versions">
+        <li class="version is-current is-latest">
+          <a href="../index.html">2</a>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</div>
+    </div>
+  </aside>
+</div>
+<main class="article">
+<div class="toolbar" role="navigation">
+<button class="nav-toggle"></button>
+  <a href="../index.html" class="home-link"></a>
+<nav class="breadcrumbs" aria-label="breadcrumbs">
+  <ul>
+    <li><a href="../index.html">Nvidia Accelerator Configuration for Scale</a></li>
+    <li><a href="s5-quantize.html">Model optimization (QUANTIZATION)</a></li>
+  </ul>
+</nav>
+</div>
+  <div class="content">
+<aside class="toc sidebar" data-title="Contents" data-levels="2">
+  <div class="toc-menu"></div>
+</aside>
+<article class="doc">
+<h1 class="page">Model optimization (QUANTIZATION)</h1>
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph lead">
+<p><strong>Quantization is the Key to Cost-Efficiency:</strong> Reducing a model&#8217;s precision is the most effective strategy for fitting powerful models onto cost-effective hardware. We explored the trade-offs between the main strategies: FP8, INT8, and INT4.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_challenges_with_running_larger_models"><a class="anchor" href="#_challenges_with_running_larger_models"></a>Challenges with running larger models</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Even with the latest hardware like NVIDIA B200 GPUs offering up to 192GB of memory, the rapid increase in model sizes (e.g., GPT MoE 1.8T parameters) means that many state-of-the-art models cannot fit into a single GPU or even across multiple GPUs without optimization.</p>
+</div>
+<div class="imageblock unresolved">
+<div class="content">
+<img src="why-optimize.png" alt="why_optimize">
+</div>
+</div>
+<div class="paragraph">
+<p>Give below are simple examples that shows how much memory is required just for storing parameters in GPUs for larger models.</p>
+</div>
+<div class="paragraph">
+<p>Llama 4 Scout: 109B params</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Optimization</th>
+<th class="tableblock halign-left valign-top">Params Size (GB)</th>
+<th class="tableblock halign-left valign-top">GPUs Required</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">BFloat16</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">109 * 2 ≈ 220GB</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">3 x 80GB</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">INT8/FP8</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">109 * 1 ≈ 109GB</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2 x 80GB</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">INT4</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">109 * 0.5 ≈ 55GB</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1 x 80GB</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>Llama 4 Maverick: 400B params</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Optimization</th>
+<th class="tableblock halign-left valign-top">Params Size (GB)</th>
+<th class="tableblock halign-left valign-top">GPUs Required</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">BFloat16</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">400 * 2 ~= 800GB</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">10 x 80GB ← requires multi-node!</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">INT8/FP8</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">400 * 1 ~= 400GB</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">5 x 80GB</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">INT4</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">400 * 0.5 ~= 200GB</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">3 x 80GB</p></td>
+</tr>
+</tbody>
+</table>
+<div class="sect2">
+<h3 id="_what_optimized_models_offer"><a class="anchor" href="#_what_optimized_models_offer"></a>What optimized models offer:</h3>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Reduces GPU Memory requirements</strong></p>
+<div class="ulist">
+<ul>
+<li>
+<p>Model parameters account for the majority of GPU RAM usage at typical sequence lengths.</p>
+</li>
+<li>
+<p>Optimization allows you to allocate more memory to the KV cache, enabling longer context windows or larger batch sizes.</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p><strong>Accelerates linear layers</strong></p>
+<div class="ulist">
+<ul>
+<li>
+<p>Minimizes data movement, which is a major bottleneck in large models.</p>
+</li>
+<li>
+<p>Enables the use of low-precision tensor cores (as supported by the underlying hardwares), significantly speeding up matrix multiplications and inference.</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p><strong>Maintains model quality</strong></p>
+<div class="ulist">
+<ul>
+<li>
+<p>Fine-grained quantization techniques can compress models with minimal or negligible impact on accuracy, preserving performance while reducing resource needs.</p>
+</li>
+</ul>
+</div>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Below is an example of the DeepSeek R1 model, showing how different quantization methods impact evaluation results after compression. It&#8217;s important to note that not all quantization methods are equal and model quality can vary significantly depending on the quantization scheme used. So, it&#8217;s important to consider the impact on accuracy when choosing a quantization scheme.</p>
+</div>
+<div class="imageblock unresolved">
+<div class="content">
+<img src="deepseek-r1-compress.png" alt="deepseek">
+</div>
+</div>
+<div class="paragraph">
+<p>In addition to the improvements described above, it also offers the following advantages:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Cost efficiency</strong>: Running large models requires expensive hardware. By optimizing and compressing models, you can reduce the required resources, leading to significant cost savings in both cloud and on-premise deployments.</p>
+</li>
+<li>
+<p><strong>Faster inference</strong>: Smaller, optimized models can process requests faster, reducing latency and improving user experience, especially in real-time applications.</p>
+</li>
+<li>
+<p><strong>Energy efficiency</strong>: Compressing models reduces the computational load, which in turn lowers power consumption and helps meet sustainability goals.</p>
+</li>
+<li>
+<p><strong>Deployment flexibility</strong>: Optimized models are easier to deploy on a wider range of devices, including edge devices and environments with limited resources.</p>
+</li>
+<li>
+<p><strong>Scalability</strong>: Smaller models allow you to serve more concurrent users or run more instances on the same hardware, improving scalability.</p>
+</li>
+<li>
+<p><strong>Bandwidth savings</strong>: Transferring large models over the network can be slow and costly. Compressed models are smaller and easier to distribute.</p>
+</li>
+<li>
+<p><strong>Regulatory and security constraints</strong>: Cases where data and models must remain on-premise or on specific hardware, optimization enables running advanced models within these constraints.</p>
+</li>
+<li>
+<p><strong>Enabling new use cases</strong>: By reducing the size and resource requirements, model optimization makes it feasible to use advanced LLMs in scenarios previously not possible, such as mobile, IoT, or embedded systems.</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_quantization_in_practice"><a class="anchor" href="#_quantization_in_practice"></a>Quantization in practice</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_quantization_types_in_vllm_llm_compressor"><a class="anchor" href="#_quantization_types_in_vllm_llm_compressor"></a>Quantization types in vLLM &amp; LLM Compressor:</h3>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 10%;">
+<col style="width: 20%;">
+<col style="width: 30%;">
+<col style="width: 40%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Type of Quantization</th>
+<th class="tableblock halign-left valign-top">What it does</th>
+<th class="tableblock halign-left valign-top">Example impact</th>
+<th class="tableblock halign-left valign-top">Quantization schemes supported</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Weight quantization</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Reduces the precision of model weights, lowering storage and memory requirements; LLM Compressor for weights quantization; Requires calibration dataset for weight quantization</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">100B model: BFloat16 → 200GB, FP8 → 100GB</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">W8A16, W4A16, WNA16</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Weight and activation quantization</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Reduces model size and improves inference performance; LLM Compressor for weights quantization and vllm for activation quantization during inference; Requires calibration dataset for weight quantization</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Smaller activation memory footprint, faster inference</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">W8A8, W4A8, W4A4</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">KV Cache quantization</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Reduced KV cache footprint &amp; faster attention and crucial for <strong>large context workloads</strong>; Requires calibration dataset; LLM Compressor for scales calibration and vLLM to use the scales</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Enables longer context or larger batch sizes with same hardware</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">FP8</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect2">
+<h3 id="_supported_quantization_schemes_and_when_to_use_what"><a class="anchor" href="#_supported_quantization_schemes_and_when_to_use_what"></a>Supported quantization schemes and when to use what?</h3>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>Red Hat Consulting and customers <strong>should not perform custom quantization runs without an existing, validated recipe</strong>. Only use the provided recipes for supported models and quantization schemes. Custom quantization is complex, error-prone and can result in significant accuracy loss or unsupported models.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 10%;">
+<col style="width: 20%;">
+<col style="width: 30%;">
+<col style="width: 40%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Format</th>
+<th class="tableblock halign-left valign-top">Description</th>
+<th class="tableblock halign-left valign-top">Use Case(s)</th>
+<th class="tableblock halign-left valign-top">Recommended GPU type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">W4A16</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">4-bit weights, FP16 activations. High compression, fits small deployments; Requires calibration dataset for weight quantization.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Memory-constrained inference at low QPS /online inferencing; edge devices; low memory/containerized apps.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Recommended for any GPUs types.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">W8A8-INT8</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">8-bit weights, INT8 activations (per-token, runtime); Requires calibration dataset for weight quantization.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">High-QPS or offline serving; general purpose inference on any GPU; high-throughput inference on older GPUs.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Recommended for NVIDIA GPUs with compute capability &lt;8.9 (Ampere, Turing, Volta, Pascal, or older).</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">W8A8-FP8</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">8-bit weights, FP8 activations (runtime). Preserves precision while gaining speed. Requires calibration dataset for weight quantization.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">High-QPS or offline serving; accuracy-sensitive with memory constraints;</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Recommended for NVIDIA GPUs with compute capability &gt;=9.0 (Hopper and Blackwell).</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2:4 Sparsity (FP8 Weights/Activations)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Structured sparsity + FP8 weights/activations. Uses sparsity acceleration. Very high performance.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Speed-focused inference on modern hardware;</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Recommended for compute capability &gt;=9.0 (Hopper and Blackwell).</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>For a full list of supported hardware vs quantization scheme mapping, refer to the <a href="https://docs.vllm.ai/en/latest/features/quantization/supported_hardware.html#supported-hardware">vLLM documentation</a>.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_supported_quantization_methodsrecipies_and_when_to_use_what"><a class="anchor" href="#_supported_quantization_methodsrecipies_and_when_to_use_what"></a>Supported quantization methods/recipies and when to use what?</h3>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 14.2857%;">
+<col style="width: 42.8571%;">
+<col style="width: 42.8572%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Method</th>
+<th class="tableblock halign-left valign-top">Description</th>
+<th class="tableblock halign-left valign-top">Use case / Accuracy needs</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">GPTQ</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Utilizes second-order layer-wise optimizations to prioritize important weights/activations and enables updates to remaining weights</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">High accuracy recovery; best for scenarios where accuracy is critical and longer quantization time is acceptable</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">AWQ</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Uses channelwise scaling to better preserve important outliers in weights and activations</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Moderate accuracy recovery; suitable when faster quantization is needed with reasonable accuracy</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">SmoothQuant</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Smooths outliers in activations by folding them into weights, ensuring better accuracy for weight and activation quantized models</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Good accuracy recovery with minimal calibration time; can be combined with other methods for efficiency</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">SparseGPT</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">One‑shot pruning method that solves layer‑wise sparse regression to set weights to zero while readjusting survivors; supports unstructured sparsity up to ≈ 50–60 % without any retraining and 2 : 4 semi‑structured (N:M) sparsity for hardware‑friendly acceleration; can be stacked with low‑bit quantization</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">When latency/throughput or memory footprint must drop quickly and some accuracy loss is acceptable: 2 : 4 mode on Hopper/Blackwell‑class GPUs for ~1.5–2× speed‑up with near‑AWQ accuracy on large‑scale models; small models (&lt;7 B) may see noticeable drops</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect2">
+<h3 id="_lets_help_a_client_select_the_quantization_method_and_scheme"><a class="anchor" href="#_lets_help_a_client_select_the_quantization_method_and_scheme"></a>Let&#8217;s help a client select the quantization method and scheme</h3>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Question</th>
+<th class="tableblock halign-left valign-top">Example client answer</th>
+<th class="tableblock halign-left valign-top">How the client&#8217;s answer drives the decision</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>1. Inference style</strong>
+Is the workload <strong>online</strong> (latency‑critical, interactive) or <strong>offline</strong> (throughput‑critical, batch)?</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>e.g. “online customer‑service chatbot”</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">• <strong>Online</strong> ⇒ Memory‑bandwidth bound ⇒ <strong>Weight‑only quantization</strong> (activations stay FP16).
+• <strong>Offline</strong> ⇒ Compute bound ⇒ <strong>Weight + activation quantization</strong> (both operands low‑precision).</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>2. Target GPU architecture</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>e.g. “Ampere A100”</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">• <strong>Turing/Ampere</strong> have INT8 Tensor Cores ⇒ pick INT8 for speeds.
+• <strong>Hopper/H100</strong> have native FP8 ⇒ pick FP8 (or INT8 if tooling is simpler).</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>3. Expected concurrency / batch size</strong>
+Enough requests to saturate matrix‑mult units?</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>e.g. “≈5 concurrent users; GPU often idle”</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">• If GPU <strong>not fully busy</strong>, you gain more by cutting <strong>memory traffic</strong> (weight‑only).
+• If GPU <strong>fully busy</strong>, you gain more by lowering <strong>compute cost</strong> (weight + activation).</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>4. Accuracy head‑room / SLA</strong>
+“How much accuracy can I lose?”</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>e.g. “&lt;0.5 pp drop allowed”</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Tight budgets push you toward higher‑accuracy methods (GPTQ, SmoothQuant + GPTQ).</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect2">
+<h3 id="_example_decision_cheat_sheet"><a class="anchor" href="#_example_decision_cheat_sheet"></a>Example decision cheat sheet</h3>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 20%;">
+<col style="width: 20%;">
+<col style="width: 20%;">
+<col style="width: 40%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Chosen answers</th>
+<th class="tableblock halign-left valign-top">Quantization scheme</th>
+<th class="tableblock halign-left valign-top">Recommended method(s)</th>
+<th class="tableblock halign-left valign-top">Why this combination?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Online</strong>, Ampere/Turing, few users, strict latency</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">W4 / W8 – A16 (weight-only)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">AWQ (fast), or GPTQ (max accuracy)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Data-movement is the bottleneck; compute is "free". Weight-only avoids per-token FP16→INT8 converts on activations.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Online</strong>, Hopper, few users</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">W4 / W8 – A16 weight-only (still)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">AWQ or GPTQ</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Hopper can run FP8 activations, but if users are few, activation traffic is tiny—stick to weight-only.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Offline</strong>, Ampere/Turing, large batch</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">W8 – A8 (INT8/INT8)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">SmoothQuant + GPTQ (fold activation outliers, then weight-quant)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Matrix-multiplication dominates; lowering both operands to INT8 doubles Tensor-Core throughput.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Offline</strong>, Hopper, massive batch</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">W8 – A8 or FP8/FP8</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">SmoothQuant + SparseGPT (optional pruning)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Hopper’s FP8 Tensor Cores peak at ~2× A100 throughput. SmoothQuant tames activation outliers; SparseGPT can prune 2:4 (semi-structured) for more speed.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect2">
+<h3 id="_quantization_workflow"><a class="anchor" href="#_quantization_workflow"></a>Quantization workflow</h3>
+<div class="imageblock unresolved">
+<div class="content">
+<img src="quantization_flow.png" alt="quantization_flow">
+</div>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Model selection and loading</p>
+</li>
+</ul>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>model = AutoModelForCausalLM.from_pretrained("your-model")
+tokenizer = AutoTokenizer.from_pretrained("your-model")</pre>
+</div>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Choosing the quantization scheme (<a href="#_supported_quantization_schemes_when_to_use_what">Supported quantization schemes</a>)</p>
+</li>
+<li>
+<p>Choosing the quantization method (<a href="#_supported_quantization_methods_recipies_and_when_to_use_what">Supported quantization methods</a>)</p>
+</li>
+<li>
+<p>Preparing calibration data</p>
+<div class="ulist">
+<ul>
+<li>
+<p>Ensure the calibration data contains a high variety of samples to prevent overfitting towards a specific use case.</p>
+</li>
+<li>
+<p>If the model was fine-tuned, use the sample datasets from the fine-tuning training data for calibration.</p>
+</li>
+<li>
+<p>Employ the chat template or instruction template that the model was trained with.</p>
+</li>
+<li>
+<p>Start with 512 samples for calibration data, and increase if accuracy drops.</p>
+</li>
+<li>
+<p>Use a sequence length of 2048 as a starting point.</p>
+</li>
+<li>
+<p>Tune key hyperparameters to the quantization algorithm:</p>
+<div class="ulist">
+<ul>
+<li>
+<p><code>dampening_frac</code> sets how much influence the GPTQ algorithm has. Lower values can improve accuracy, but can lead to numerical instabilities that cause the algorithm to fail.</p>
+</li>
+<li>
+<p><code>actorder</code> sets the activation ordering. When compressing the weights of a layer, the order in which channels are quantized matters. Setting <code>actorder="weight"</code> can improve accuracy without added latency.</p>
+</li>
+</ul>
+</div>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p>Applying quantization</p>
+<div class="ulist">
+<ul>
+<li>
+<p>After preparing your calibration data and tuning the key quantization hyperparameters, the next step is to actually apply quantization to your model. The recommended and most reliable way to do this is by using the <strong>oneshot</strong> API provided by LLM Compressor. This approach ties together all the previous steps—model loading, calibration and quantization—into a single, reproducible workflow driven by a recipe file.</p>
+</li>
+</ul>
+</div>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_oneshot_quantization"><a class="anchor" href="#_oneshot_quantization"></a>Oneshot Quantization</h3>
+<div class="paragraph">
+<p>The <strong>oneshot</strong> entrypoint in LLM Compressor provides a streamlined, recipe-driven approach to quantization. It applies a pre-defined quantization method (such as GPTQ, AWQ, or SmoothQuant) to a model in a single step, using a calibration dataset and configuration specified in the recipe. Technically, oneshot:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Loads the model and calibration data</p>
+</li>
+<li>
+<p>Applies the quantization method as defined in the recipe (e.g., GPTQ for weight quantization, SmoothQuant for activation smoothing)</p>
+</li>
+<li>
+<p>Calibrates quantization parameters (scales, zero points) in one pass</p>
+</li>
+<li>
+<p>Exports the quantized model for deployment</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>This approach ensures reproducibility and minimizes the risk of accuracy loss, as all parameters and steps are controlled by the recipe. <strong>Do not attempt manual or custom quantization without a validated recipe.</strong></p>
+</div>
+<div class="paragraph">
+<p>Shown below is an example of how to use oneshot API and provide the recipies to quantize and/or apply sparsity to the model given a dataset</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-python hljs" data-lang="python">from llmcompressor import oneshot
+
+recipe = """
+quant_stage:
+    quant_modifiers:
+        QuantizationModifier:
+            ignore: ["lm_head"]
+            config_groups:
+                group_0:
+                    weights:
+                        num_bits: 8
+                        type: float
+                        strategy: tensor
+                        dynamic: false
+                        symmetric: true
+                    input_activations:
+                        num_bits: 8
+                        type: float
+                        strategy: tensor
+                        dynamic: false
+                        symmetric: true
+                    targets: ["Linear"]
+            kv_cache_scheme:
+                num_bits: 8
+                type: float
+                strategy: tensor
+                dynamic: false
+                symmetric: true
+"""
+
+oneshot(
+    model=model,
+    dataset=ds,
+    recipe=recipe,
+    max_seq_length=MAX_SEQUENCE_LENGTH,
+    num_calibration_samples=NUM_CALIBRATION_SAMPLES,
+)</code></pre>
+</div>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Saving the model</p>
+</li>
+</ul>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>SAVE_DIR = MODEL_ID.split("/")[1] + "-FP8-KV"
+model.save_pretrained(SAVE_DIR, save_compressed=True)
+tokenizer.save_pretrained(SAVE_DIR)</pre>
+</div>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Evaluating accuracy of the quantized model</p>
+</li>
+</ul>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>lm_eval \
+  --model vllm \
+  --model_args pretrained=$MODEL,kv_cache_dtype=fp8,add_bos_token=True \
+  --tasks gsm8k --num_fewshot 5 --batch_size auto</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+</article>
+  </div>
+</main>
+</div>
+<footer class="footer">
+  <img src="../../../_/img/rhl-logo-red.png" height="40px" alt="Red Hat"  href="https://redhat.com" >
+</footer><script id="site-script" src="../../../_/js/site.js" data-ui-root-path="../../../_"></script>
+<script async src="../../../_/js/vendor/highlight.js"></script>
+  </body>
+</html>
