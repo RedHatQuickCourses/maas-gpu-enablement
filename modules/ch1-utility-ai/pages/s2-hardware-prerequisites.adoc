@@ -49,7 +49,7 @@ Missing any of these causes deployment failures. The error messages can be crypt
 ----
 $ oc get datasciencecluster
 NAME    PHASE    AGE
-maas    Failed   2m
+maas    UNKNOWN   2m
 ----
 
 == Hardware Certification Requirements
