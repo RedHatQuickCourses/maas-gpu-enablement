@@ -1,0 +1,107 @@
+= 3.4: Publish model to the MaaS catalog
+
+Now that the model is deployed, verify it appears in the Gen AI Studio catalog and is accessible through the MaaS gateway.
+
+The `publishToGenAIStudio: true` setting in the LLMInferenceService manifest automatically registers the model with MaaS.
+
+=== Verify model registration in MaaS
+
+Check that the model was registered with the MaaS API:
+
+[source,role="execute"]
+----
+oc get maasmodel -n chocotech-models
+----
+
+Expected output:
+
+----
+NAME          MODEL                                    STATUS    AGE
+llama-3-8b    meta-llama/Meta-Llama-3-8B-Instruct     Published   5m
+----
+
+Describe the MaaSModel resource:
+
+[source,role="execute"]
+----
+oc describe maasmodel llama-3-8b -n chocotech-models
+----
+
+Look for:
+
+* `Status: Published` - Model is available in catalog
+* `Gateway Endpoint` - External URL for model access
+* `Tier Access` - bronze, silver, gold, platinum
+* `Integration Status` - Kuadrant policies applied
+
+=== Access the Gen AI Studio catalog
+
+. Open the OpenShift AI dashboard in your browser (or use Showroom "OpenShift AI" tab)
+. Navigate to **Gen AI Studio** in the left menu
+. Click on the **Models** tab
+
+You should now see Llama-3 8B in the model catalog:
+
+----
+Model Name: meta-llama/Meta-Llama-3-8B-Instruct
+Status: Available
+Tier Access: Bronze, Silver, Gold, Platinum
+Endpoint: https://maas-default-gateway.{cluster_domain}/v1/chat/completions
+----
+
+// TODO: Add screenshot of model in Gen AI Studio catalog
+image::genai-studio-model-catalog.png[Gen AI Studio catalog showing Llama-3 8B model with tier access and endpoint information,link=self,window=blank,width=800,title="Model Catalog in Gen AI Studio Dashboard"]
+
+=== Test model accessibility through MaaS gateway
+
+Get the MaaS gateway endpoint:
+
+[source,role="execute"]
+----
+oc get route maas-default-gateway -n redhat-ods-applications -o jsonpath='{.spec.host}'
+----
+
+Expected output:
+
+----
+maas-default-gateway.apps.{cluster_domain}
+----
+
+Generate an API token (covered in Module 5) or use a test token:
+
+Note: In Module 5, you'll learn how to generate proper Bearer tokens. For now, verify the model endpoint is reachable.
+
+Check the models list endpoint (no auth required for list):
+
+[source,role="execute"]
+----
+curl https://$(oc get route maas-default-gateway -n redhat-ods-applications -o jsonpath='{.spec.host}')/v1/models
+----
+
+Expected output:
+
+----
+{
+  "object": "list",
+  "data": [
+    {
+      "id": "meta-llama/Meta-Llama-3-8B-Instruct",
+      "object": "model",
+      "created": 1714345678,
+      "owned_by": "chocotech-models"
+    }
+  ]
+}
+----
+
+Your model appears in the API response, confirming MaaS integration is working.
+
+=== Verification
+
+Confirm MaaS catalog publication:
+
+* MaaSModel resource exists with Status=Published
+* Model appears in Gen AI Studio Models tab
+* Model shows correct tier access permissions (bronze/silver/gold/platinum)
+* MaaS gateway `/v1/models` endpoint returns the model
+* Gateway endpoint URL is accessible

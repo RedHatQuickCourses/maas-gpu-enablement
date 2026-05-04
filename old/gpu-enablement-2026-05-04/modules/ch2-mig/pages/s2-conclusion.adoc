@@ -1,0 +1,495 @@
+:time_estimate: 10
+
+= Conclusion and Knowledge Check
+
+_Estimated reading time: *{time_estimate} minutes*._
+
+Objective::
+Validate your MIG configuration expertise through production scenario assessments and review key concepts.
+
+== What You've Learned
+
+You now have practical decision frameworks for MIG configuration:
+
+✅ **MIG vs Alternatives:** Choose MIG for hardware isolation with high density (A30/A100/H100 only)
+
+✅ **Profile Selection:** Match workload VRAM requirements to profiles (1g.5gb through 7g.40gb)
+
+✅ **Advertisement Strategy:** Single for uniform workloads, Mixed for heterogeneous multi-tenancy
+
+✅ **Configuration Workflow:** Label-driven MIG enablement with 10-20 minute reconfiguration time
+
+== Production Scenario Assessments
+
+Test your ability to apply these concepts to real-world challenges.
+
+=== Scenario 1: MIG vs Time-Slicing Decision
+
+**Situation:** Your platform serves 15 inference models with varying resource requirements:
+
+* 8 small models: 3-5GB VRAM each, <20% GPU compute
+* 5 medium models: 8-12GB VRAM each, ~30% GPU compute
+* 2 large models: 18-22GB VRAM each, ~50% GPU compute
+
+**Available Hardware Options:**
+
+* **Option A:** 5× NVIDIA T4-16GB ($5K each = $25K total)
+* **Option B:** 2× NVIDIA A100-40GB ($15K each = $30K total)
+* **Option C:** 4× NVIDIA A100-40GB ($15K each = $60K total)
+
+**Business Requirements:**
+
+* SLA-backed P99 latency <100ms
+* 99.9% uptime requirement
+* Budget: $30-40K preferred, $60K maximum
+
+**Questions:**
+
+. Which option provides best performance isolation?
+. Which option maximizes cost efficiency within budget?
+. What GPU sharing strategy should you use for each option?
+
+.Reveal Analysis
+[%collapsible]
+=====
+**Analysis:**
+
+. **Best performance isolation:** Option B (A100 with MIG)
+** MIG provides hardware-guaranteed isolation (<1% P99 variance)
+** T4 only supports time-slicing (15-40% P99 variance)
+** Meets SLA requirement with margin
+
+. **Maximum cost efficiency within budget:** Option B (A100 with MIG)
+** Cost: $30K (within preferred budget)
+** Capacity: 2× A100 with MIG can support all 15 models
+** MIG configuration per GPU:
+*** 2× `1g.5gb` for 4 small models = 8 small models total
+*** 2× `2g.10gb` for 4 medium models (pair small models) = 5 medium (1 shared)
+*** 1× `3g.20gb` for 1 large model = 2 large models total
+** Achieves 7-8 workloads per GPU vs 1 with full allocation
+
+. **GPU sharing strategies:**
++
+**Option A (T4 GPUs):**
+** **Time-slicing** (T4 doesn't support MIG)
+** Configure 3x oversubscription per GPU
+** **Problem:** Cannot meet SLA requirement (no hardware isolation)
+** Only suitable for dev/test, not production
++
+**Option B (2× A100):**
+** **MIG with Mixed strategy**
+** Profile: `all-balanced` (2x 1g.5gb + 1x 2g.10gb + 1x 3g.20gb per GPU)
+** Meets SLA with hardware isolation
+** **Recommended solution** ✓
++
+**Option C (4× A100):**
+** **Full GPU allocation** or **MIG**
+** Exceeds budget by 100% ($60K vs $30K)
+** Over-provisioned for current workload
+** Only choose if expecting 2x growth within 12 months
+
+**Recommended:** Option B with MIG mixed strategy - balances performance isolation, cost efficiency, and SLA compliance.
+=====
+
+=== Scenario 2: Profile Selection Problem
+
+**Situation:** A customer has three workload tiers they want to consolidate on a single NVIDIA A100-40GB GPU:
+
+**Workload Requirements (measured):**
+
+* **Small tier:** 4GB VRAM actual usage, 15% GPU compute utilization
+* **Medium tier:** 9GB VRAM actual usage, 25% GPU compute utilization
+* **Large tier:** 18GB VRAM actual usage, 45% GPU compute utilization
+
+**Customer Constraints:**
+
+* Must run at least 1 instance of each tier concurrently
+* Prefer maximum total instances for redundancy
+* Using Mixed advertisement strategy
+
+**Questions:**
+
+. Which MIG profile should you use for each tier (accounting for 20% overhead)?
+. Can you fit one instance of each tier on a single A100-40GB?
+. What is the maximum number of total instances you can fit?
+
+.Reveal Solution
+[%collapsible]
+=====
+**Solution:**
+
+. **Profile selection with 20% overhead buffer:**
++
+**Small tier:**
+** 4GB actual + 20% overhead = 4.8GB required
+** **Profile:** `1g.5gb` (5GB VRAM, 1/7 compute) ✓
++
+**Medium tier:**
+** 9GB actual + 20% overhead = 10.8GB required
+** **Profile:** `2g.10gb` would be insufficient (10GB < 10.8GB) ❌
+** **Profile:** `3g.20gb` (20GB VRAM, 3/7 compute) ✓
++
+**Large tier:**
+** 18GB actual + 20% overhead = 21.6GB required
+** **Profile:** `3g.20gb` would be insufficient (20GB < 21.6GB) ❌
+** **Profile:** `4g.20gb` or higher required
+** **Problem:** No `4g.20gb` profile exists on A100-40GB
+** **Alternative:** Large tier requires full GPU or A100-80GB with `3g.40gb`
+
+. **Can you fit one of each tier on single A100-40GB?**
++
+**No** - The large tier (21.6GB after overhead) exceeds the largest available profile on A100-40GB (`3g.20gb` = 20GB).
++
+**Options:**
++
+** **Option A:** Use A100-80GB with `3g.40gb` profile (40GB VRAM)
+*** Small: `1g.10gb` (10GB)
+*** Medium: `2g.20gb` (20GB)
+*** Large: `3g.40gb` (40GB)
+*** Total: 1g + 2g + 3g = 6g (fits within 7g limit) ✓
++
+** **Option B:** Split across 2× A100-40GB GPUs
+*** GPU 1: 1× `3g.20gb` (large tier) + 2× `2g.10gb` (medium tier instances)
+*** GPU 2: 7× `1g.5gb` (small tier instances)
+
+. **Maximum instances (using Option A on A100-80GB):**
++
+With compute limit of 7g total:
++
+** 1× `3g.40gb` (large) = 3g used
+** 1× `2g.20gb` (medium) = 2g used
+** 2× `1g.10gb` (small) = 2g used
+** **Total: 3g + 2g + 2g = 7g** (maximum utilization)
++
+**Result:** 4 total instances (1 large + 1 medium + 2 small)
+
+**Key Lesson:** Always add 20-25% overhead buffer and round UP to next profile. Undersizing profiles leads to OOM failures. For workloads >20GB with overhead, consider A100-80GB or splitting across multiple GPUs.
+=====
+
+=== Scenario 3: Reconfiguration Planning
+
+**Situation:** Your production cluster has 8 GPU nodes running MIG with `all-2g.10gb` profile. Business needs have changed and you need to reconfigure to `all-balanced` to support heterogeneous workloads.
+
+**Current State:**
+
+* 8× worker nodes with A100-40GB GPUs
+* Each node: 3× `2g.10gb` instances = 24 total instances cluster-wide
+* Current workload: 18 active inference services using MIG instances
+* Spare capacity: 6 unused instances
+* SLA requirement: No more than 3 concurrent services offline
+
+**Questions:**
+
+. What is the step-by-step reconfiguration procedure for one node?
+. How much downtime per node?
+. What is the safest rolling update strategy to maintain SLA compliance?
+
+.Reveal Solution
+[%collapsible]
+=====
+**Solution:**
+
+. **Reconfiguration procedure for one node:**
++
+[source,bash]
+----
+# Step 1: Cordon node (prevent new scheduling)
+$ oc adm cordon worker-gpu-0.example.com
+
+# Step 2: Drain node (evict running pods, 5-10 min)
+$ oc adm drain worker-gpu-0.example.com \
+  --ignore-daemonsets --delete-emptydir-data
+
+# Step 3: Apply new label
+$ oc label node worker-gpu-0.example.com \
+  nvidia.com/mig.config=all-balanced --overwrite
+
+# Step 4: Monitor MIG Manager (10-20 min wait)
+$ oc logs -n nvidia-gpu-operator \
+  -l app=nvidia-mig-manager -f
+
+# Step 5: Verify configuration success
+$ oc get node worker-gpu-0.example.com \
+  -o jsonpath='{.metadata.labels.nvidia\.com/mig\.config\.state}'
+# Expected: "success"
+
+# Step 6: Verify new resources advertised
+$ oc describe node worker-gpu-0.example.com | \
+  grep nvidia.com/mig
+# Expected:
+#   nvidia.com/mig-1g.5gb:  2
+#   nvidia.com/mig-2g.10gb: 1
+#   nvidia.com/mig-3g.20gb: 1
+
+# Step 7: Uncordon node (allow new workloads)
+$ oc adm uncordon worker-gpu-0.example.com
+----
+
+. **Downtime per node:**
++
+** Cordon: Immediate (prevents new scheduling only)
+** Drain: 5-10 minutes (waiting for pod eviction and rescheduling)
+** MIG reconfiguration: 10-20 minutes (GPU reset + instance creation + GFD rescan)
+** Uncordon + scheduling: 30-60 seconds
++
+**Total downtime: 15-30 minutes per node**
+
+. **Safe rolling update strategy maintaining SLA (≤3 services offline):**
++
+**Strategy: Batched Rolling Update with Capacity Buffer**
++
+** **Batch size:** 2 nodes at a time (max 6 instances offline, supports 6 service migrations)
+** **Total batches:** 8 nodes ÷ 2 = 4 batches
+** **Total time:** 4 batches × 30 min = ~2 hours
++
+**Procedure:**
++
+[source,bash]
+----
+# Batch 1: Nodes 0-1 (Cordon + Drain + Relabel + Wait + Uncordon)
+oc adm cordon worker-gpu-0.example.com worker-gpu-1.example.com
+oc adm drain worker-gpu-0.example.com --ignore-daemonsets
+oc adm drain worker-gpu-1.example.com --ignore-daemonsets
+# Apply labels and wait 20 minutes
+oc adm uncordon worker-gpu-0.example.com worker-gpu-1.example.com
+
+# Wait 5 minutes for workloads to stabilize
+
+# Batch 2: Nodes 2-3
+# ... repeat process ...
+
+# Batch 3: Nodes 4-5
+# Batch 4: Nodes 6-7
+----
++
+**SLA Compliance Validation:**
++
+** Each batch affects 6 instances (2 nodes × 3 instances)
+** 18 active services can reschedule to 6 remaining nodes (18 instances)
+** During drain, max 6 services temporarily offline (meets ≤3 SLA requirement only if services can queue)
++
+**Improved Strategy (Safer):**
++
+** **Batch size:** 1 node at a time
+** Affects only 3 instances per batch
+** 18 services reschedule to 21 remaining instances (7 nodes × 3)
+** **Total time:** 8 batches × 30 min = ~4 hours
+** **Guarantees:** Never more than 3 services offline
+
+**Recommended:** 1-node batches for strict SLA compliance, schedule during low-traffic window (weekend).
+=====
+
+=== Scenario 4: Scheduling Failure Debugging
+
+**Situation:** After configuring MIG on your cluster, a developer reports their pod is stuck in `Pending` state for 15 minutes.
+
+**Pod Specification:**
+
+[source,yaml]
+----
+apiVersion: v1
+kind: Pod
+metadata:
+  name: llama-7b-inference
+spec:
+  containers:
+  - name: vllm-server
+    image: vllm/vllm-openai:latest
+    resources:
+      limits:
+        nvidia.com/mig-2g.10gb: 1
+----
+
+**Error Event:**
+
+```
+0/4 nodes are available: 4 Insufficient nvidia.com/mig-2g.10gb.
+```
+
+**Cluster State:**
+
+* 4 GPU worker nodes, all with A100-40GB GPUs
+* ClusterPolicy MIG strategy: `mixed`
+* All nodes labeled with MIG configuration
+
+**Questions:**
+
+. What are the three most likely causes of this scheduling failure?
+. What commands would you run to diagnose each cause?
+. How would you fix each cause?
+
+.Reveal Solution
+[%collapsible]
+=====
+**Solution:**
+
+. **Three most likely causes:**
++
+**Cause 1:** Nodes have different MIG profile (not `all-2g.10gb`)
++
+**Cause 2:** MIG configuration not completed (still in `pending` state)
++
+**Cause 3:** All `2g.10gb` instances already allocated to other pods
+
+. **Diagnostic commands for each cause:**
++
+**Diagnose Cause 1: Check node MIG profiles**
++
+[source,bash]
+----
+$ oc get nodes -o custom-columns=\
+NAME:.metadata.name,\
+MIG-1G:.status.allocatable.nvidia\\.com/mig-1g\\.5gb,\
+MIG-2G:.status.allocatable.nvidia\\.com/mig-2g\\.10gb,\
+MIG-3G:.status.allocatable.nvidia\\.com/mig-3g\\.20gb
+
+NAME                       MIG-1G   MIG-2G   MIG-3G
+worker-gpu-0.example.com   <none>   <none>   2
+worker-gpu-1.example.com   <none>   <none>   2
+worker-gpu-2.example.com   7        <none>   <none>
+worker-gpu-3.example.com   7        <none>   <none>
+----
++
+**Finding:** Nodes 0-1 have `3g.20gb` instances, nodes 2-3 have `1g.5gb` instances. **No nodes have `2g.10gb` instances!**
++
+**Diagnose Cause 2: Check MIG config state**
++
+[source,bash]
+----
+$ oc get nodes -o custom-columns=\
+NAME:.metadata.name,\
+CONFIG:.metadata.labels.nvidia\\.com/mig\\.config,\
+STATE:.metadata.labels.nvidia\\.com/mig\\.config\\.state
+
+NAME                       CONFIG         STATE
+worker-gpu-0.example.com   all-2g.10gb    pending
+worker-gpu-1.example.com   all-2g.10gb    success
+worker-gpu-2.example.com   all-2g.10gb    success
+worker-gpu-3.example.com   all-2g.10gb    failed
+----
++
+**Finding:** Node 0 still pending (wait longer), Node 3 failed (check logs)
++
+**Diagnose Cause 3: Check instance allocation**
++
+[source,bash]
+----
+$ oc describe node worker-gpu-1.example.com | \
+  grep -A 5 "Allocated resources:"
+
+Allocated resources:
+  Resource                 Requests    Limits
+  nvidia.com/mig-2g.10gb   3           3
+
+$ oc get pods -A -o wide | \
+  grep worker-gpu-1.example.com | \
+  grep nvidia.com/mig
+----
++
+**Finding:** All 3 instances on node already allocated to running pods
+
+. **Fix for each cause:**
++
+**Fix Cause 1: Relabel nodes to correct profile**
++
+[source,bash]
+----
+# Apply all-2g.10gb profile to all nodes
+$ oc label node worker-gpu-0.example.com \
+  nvidia.com/mig.config=all-2g.10gb --overwrite
+$ oc label node worker-gpu-1.example.com \
+  nvidia.com/mig.config=all-2g.10gb --overwrite
+$ oc label node worker-gpu-2.example.com \
+  nvidia.com/mig.config=all-2g.10gb --overwrite
+$ oc label node worker-gpu-3.example.com \
+  nvidia.com/mig.config=all-2g.10gb --overwrite
+
+# Wait 10-20 minutes per node for reconfiguration
+----
++
+**Fix Cause 2a: Wait for pending reconfiguration**
++
+[source,bash]
+----
+# For "pending" state, wait full 20 minutes
+$ watch 'oc get node worker-gpu-0.example.com \
+  -o jsonpath="{.metadata.labels.nvidia\.com/mig\.config\.state}"'
+----
++
+**Fix Cause 2b: Debug failed reconfiguration**
++
+[source,bash]
+----
+# Check MIG Manager logs for errors
+$ oc logs -n nvidia-gpu-operator \
+  -l app=nvidia-mig-manager --tail=100 | \
+  grep -i error
+
+# Common failures:
+# - GPU doesn't support MIG (check nvidia-smi -i 0 --query-gpu=mig.mode.current)
+# - Invalid profile name (typo in label)
+# - GPU in use by running workload (drain node first)
+----
++
+**Fix Cause 3: Scale down lower-priority workloads or add capacity**
++
+[source,bash]
+----
+# Option A: Scale down lower-priority deployments
+$ oc scale deployment low-priority-inference --replicas=0
+
+# Option B: Add more GPU nodes to cluster
+# (infrastructure change)
+
+# Option C: Wait for pods to complete
+$ oc get pods -A | grep Completed | wc -l
+----
+
+**Root Cause in This Scenario:** Most likely **Cause 1** - nodes configured with wrong profiles. The developer requested `2g.10gb` but nodes have `1g.5gb` or `3g.20gb` instances.
+
+**Recommended Fix:** Standardize all nodes on `all-balanced` profile for heterogeneous workload support, or use `all-2g.10gb` if all workloads are similar size.
+=====
+
+== Key Takeaways
+
+**Decision Framework:**
+
+. **Use MIG when:** You have A30/A100/H100 GPUs, need hardware isolation with SLA guarantees, and workloads under-utilize full GPU
+. **Profile Selection:** Measure actual VRAM, add 20-25% overhead, round UP to next profile
+. **Advertisement Strategy:** Single for uniform workloads, Mixed for multi-tenant heterogeneous platforms
+. **Reconfiguration:** Plan for 10-20 min downtime per node, use batched rolling updates for production
+
+**Common Mistakes to Avoid:**
+
+❌ Not accounting for 20-25% VRAM overhead (leads to OOM failures)
+
+❌ Using Mixed strategy without updating pod resource requests
+
+❌ Changing MIG profiles on production nodes without draining workloads first
+
+❌ Not verifying MIG config state before assuming resources are available
+
+❌ Forgetting that MIG requires 10-20 min reconfiguration time
+
+**Production Best Practices:**
+
+✅ Enable MIG Manager in ClusterPolicy early (even if not using MIG immediately)
+
+✅ Use `all-balanced` profile for multi-tenant platforms with diverse workload sizes
+
+✅ Always verify `mig.config.state=success` before deploying workloads
+
+✅ Monitor per-MIG-instance utilization with DCGM metrics (Chapter 3)
+
+✅ Plan MIG profile changes during maintenance windows with batched rolling updates
+
+== What's Next
+
+You've mastered MIG configuration for maximizing GPU ROI. The next chapter covers GPU observability and monitoring, where you'll learn to:
+
+* Monitor per-MIG-instance utilization with DCGM
+* Create alerts for MIG instance oversubscription
+* Build dashboards visualizing ROI gains from MIG (33% → 78% utilization)
+* Track MIG reconfiguration events and workload performance
+
+The observability stack validates the performance isolation and resource efficiency benefits you configured in this chapter, and provides the data needed for capacity planning and optimization decisions.

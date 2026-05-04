@@ -1,0 +1,375 @@
+:time_estimate: 20
+
+= Lab: Visualizing GPU Hardware
+
+_Estimated reading time: *{time_estimate} minutes*._
+
+Objective::
+
+Import and customize NVIDIA DCGM Exporter dashboards to visualize interconnected metrics, mapping standard node resources (CPU, RAM) alongside accelerator metrics including GPU power usage, temperature, tensor core utilization, and MIG instance allocations.
+
+== Before you begin
+
+This lab requires:
+
+* Completed Grafana installation and datasource configuration
+* GPU metrics actively being collected by Prometheus
+* Access to the Grafana web interface
+
+== Instructions
+
+=== 1. Import NVIDIA DCGM Exporter Dashboard
+
+NVIDIA provides official Grafana dashboards designed for DCGM metrics visualization.
+
+. Download the official NVIDIA DCGM dashboard JSON
++
+[source,console,subs="verbatim,quotes"]
+----
+$ *curl -O https://raw.githubusercontent.com/NVIDIA/dcgm-exporter/main/grafana/dcgm-exporter-dashboard.json*
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100 45328  100 45328    0     0   187k      0 --:--:-- --:--:-- --:--:--  187k
+----
+
+. Create a ConfigMap with the dashboard JSON
++
+[source,console,subs="verbatim,quotes"]
+----
+$ *oc create configmap dcgm-dashboard --from-file=dcgm-exporter-dashboard.json -n grafana*
+configmap/dcgm-dashboard created
+----
+
+. Create a GrafanaDashboard CR to import it
++
+[source,console,subs="verbatim,quotes"]
+----
+$ *cat <<EOF | oc apply -f -*
+*apiVersion: grafana.integreatly.org/v1beta1*
+*kind: GrafanaDashboard*
+*metadata:*
+*  name: dcgm-exporter-dashboard*
+*  namespace: grafana*
+*spec:*
+*  instanceSelector:*
+*    matchLabels:*
+*      dashboards: "grafana"*
+*  configMapRef:*
+*    name: dcgm-dashboard*
+*    key: dcgm-exporter-dashboard.json*
+*EOF*
+grafanadashboard.grafana.integreatly.org/dcgm-exporter-dashboard created
+----
+
+. Verify the dashboard was imported
++
+Log in to Grafana and navigate to **Dashboards** → **Browse**. You should see "DCGM Exporter Dashboard" in the list.
+
+=== 2. Explore GPU Utilization Metrics
+
+. Open the DCGM Exporter Dashboard in Grafana
+
+. Review the key panels:
+
+**GPU Utilization**::
+Shows real-time GPU compute usage percentage across all devices. Useful for identifying idle GPUs or oversubscribed instances.
++
+Query example:
++
+[source,promql]
+----
+DCGM_FI_DEV_GPU_UTIL{job="nvidia-dcgm-exporter"}
+----
+
+**GPU Memory Usage**::
+Displays allocated GPU memory (framebuffer) usage. Critical for identifying memory-constrained workloads.
++
+Query example:
++
+[source,promql]
+----
+DCGM_FI_DEV_FB_USED{job="nvidia-dcgm-exporter"}
+----
+
+**GPU Temperature**::
+Monitors thermal performance. High temperatures may indicate cooling issues or need for throttling.
++
+Query example:
++
+[source,promql]
+----
+DCGM_FI_DEV_GPU_TEMP{job="nvidia-dcgm-exporter"}
+----
+
+**Power Usage**::
+Tracks power consumption in watts. Useful for cost modeling and capacity planning.
++
+Query example:
++
+[source,promql]
+----
+DCGM_FI_DEV_POWER_USAGE{job="nvidia-dcgm-exporter"}
+----
+
+=== 3. Create a Custom GPU Overview Dashboard
+
+Build a custom dashboard that correlates GPU metrics with node-level infrastructure metrics.
+
+. In Grafana, click **Dashboards** → **New** → **New Dashboard**
+
+. Click **Add visualization**
+
+. Select the **Prometheus** datasource
+
+. Create the first panel: **GPU Utilization by Node**
++
+* Panel type: **Time series**
+* Query:
++
+[source,promql]
+----
+avg by (exported_pod) (DCGM_FI_DEV_GPU_UTIL)
+----
++
+* Legend: `{{exported_pod}}`
+* Panel title: "GPU Utilization by Node"
+* Y-axis: 0-100 (percentage)
+
+. Add a second panel: **GPU Memory Utilization**
++
+* Panel type: **Time series**
+* Query:
++
+[source,promql]
+----
+(DCGM_FI_DEV_FB_USED / (DCGM_FI_DEV_FB_USED + DCGM_FI_DEV_FB_FREE)) * 100
+----
++
+* Panel title: "GPU Memory Utilization %"
+* Y-axis: 0-100
+
+. Add a panel for **Node CPU vs GPU Correlation**
++
+* Panel type: **Time series**
+* Add two queries:
++
+Query A (Node CPU):
++
+[source,promql]
+----
+100 - (avg by (node) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100)
+----
++
+Query B (GPU Utilization):
++
+[source,promql]
+----
+avg by (node) (DCGM_FI_DEV_GPU_UTIL)
+----
++
+* Panel title: "CPU vs GPU Utilization"
+* This visualization helps identify whether GPU or CPU is the bottleneck
+
+. Add a panel for **GPU Power and Temperature**
++
+* Panel type: **Time series**
+* Query A (Power):
++
+[source,promql]
+----
+DCGM_FI_DEV_POWER_USAGE
+----
++
+* Query B (Temperature):
++
+[source,promql]
+----
+DCGM_FI_DEV_GPU_TEMP
+----
++
+* Use dual Y-axis: left for Power (W), right for Temperature (°C)
+
+. Add a stat panel for **Total GPUs Available**
++
+* Panel type: **Stat**
+* Query:
++
+[source,promql]
+----
+count(DCGM_FI_DEV_GPU_UTIL)
+----
++
+* Panel title: "Total GPU Devices"
+
+. Save the dashboard with name: "GPU Infrastructure Overview"
+
+=== 4. Create MIG Instance Monitoring Dashboard
+
+For clusters using Multi-Instance GPU, create a dashboard to monitor MIG allocations.
+
+. Create a new dashboard: **MIG Instance Utilization**
+
+. Add panel: **MIG Instance Allocation**
++
+* Panel type: **Gauge**
+* Query:
++
+[source,promql]
+----
+sum by (GPU_I_ID, GPU_I_PROFILE) (DCGM_FI_PROF_GR_ENGINE_ACTIVE)
+----
++
+* Group by MIG profile and instance ID
+* Panel title: "MIG Instance Activity"
+
+. Add panel: **MIG Memory Usage by Profile**
++
+* Panel type: **Bar gauge**
+* Query:
++
+[source,promql]
+----
+sum by (GPU_I_PROFILE) (DCGM_FI_DEV_FB_USED{GPU_I_PROFILE!=""})
+----
++
+* Panel title: "Memory Usage by MIG Profile"
+* Shows memory consumption per MIG profile type (1g.10gb, 2g.20gb, etc.)
+
+. Add panel: **MIG Instances per Node**
++
+* Panel type: **Table**
+* Query:
++
+[source,promql]
+----
+count by (node, GPU_I_PROFILE) (DCGM_FI_DEV_FB_USED{GPU_I_PROFILE!=""})
+----
++
+* Format: Table
+* Shows distribution of MIG instances across nodes
+
+=== 5. Set Up GPU Health Alerts
+
+Configure alerts for critical GPU conditions.
+
+. Navigate to **Alerting** → **Alert rules** → **New alert rule**
+
+. Create alert: **High GPU Temperature**
++
+* Alert name: `GPU High Temperature`
+* Query:
++
+[source,promql]
+----
+DCGM_FI_DEV_GPU_TEMP > 85
+----
++
+* Condition: Alert if query returns value above 85°C
+* Evaluation interval: 1 minute
+* Pending period: 5 minutes
+* Summary: "GPU {{$labels.device}} temperature is {{$value}}°C"
+
+. Create alert: **GPU Memory Exhaustion**
++
+* Alert name: `GPU Memory Near Full`
+* Query:
++
+[source,promql]
+----
+(DCGM_FI_DEV_FB_USED / (DCGM_FI_DEV_FB_USED + DCGM_FI_DEV_FB_FREE)) > 0.9
+----
++
+* Condition: Alert if memory usage exceeds 90%
+* Summary: "GPU {{$labels.device}} memory usage at {{$value}}%"
+
+. Create alert: **GPU Utilization Anomaly**
++
+* Alert name: `GPU Idle Despite Workload`
+* Query:
++
+[source,promql]
+----
+DCGM_FI_DEV_GPU_UTIL < 10 and on(node) kube_pod_container_resource_requests{resource="nvidia.com/gpu"} > 0
+----
++
+* Condition: GPU allocated but utilization < 10%
+* Summary: "GPU allocated but underutilized on {{$labels.node}}"
+
+=== 6. Create an Executive Summary Dashboard
+
+Build a high-level dashboard for management visibility.
+
+. Create dashboard: **GPU Fleet Overview**
+
+. Add panel: **Total GPU Capacity**
++
+* Panel type: **Stat**
+* Query:
++
+[source,promql]
+----
+count(DCGM_FI_DEV_GPU_UTIL)
+----
++
+* Large font, prominent display
+
+. Add panel: **Average GPU Utilization**
++
+* Panel type: **Gauge**
+* Query:
++
+[source,promql]
+----
+avg(DCGM_FI_DEV_GPU_UTIL)
+----
++
+* Thresholds: Green (>70%), Yellow (40-70%), Red (<40%)
+
+. Add panel: **GPU Hours Consumed (24h)**
++
+* Panel type: **Stat**
+* Query:
++
+[source,promql]
+----
+sum(increase(DCGM_FI_DEV_GPU_UTIL[24h])) / 100
+----
++
+* Shows total GPU-hours used in last 24 hours
+
+. Add panel: **Cost Projection**
++
+If you have cost-per-GPU-hour defined (e.g., $0.50/hour for A100):
++
+* Panel type: **Stat**
+* Query:
++
+[source,promql]
+----
+(sum(increase(DCGM_FI_DEV_GPU_UTIL[24h])) / 100) * 0.50 * 30
+----
++
+* Shows estimated monthly cost at current utilization
+* Panel title: "Estimated Monthly GPU Cost"
+
+You have successfully created comprehensive GPU observability dashboards that visualize hardware telemetry, correlate infrastructure metrics, monitor MIG instances, configure health alerts, and provide executive-level reporting. This observability foundation enables data-driven optimization of your Models-as-a-Service GPU infrastructure.
+
+== What's next
+
+Congratulations! You have completed the NVIDIA Accelerator Configuration for Scale course. You now have the skills to:
+
+* Deploy and configure the NVIDIA GPU Operator stack
+* Implement Multi-Instance GPU partitioning for efficient resource utilization
+* Build comprehensive GPU observability with Prometheus, Grafana, and DCGM
+
+**Next steps in your MaaS journey:**
+
+* Explore the companion course on GPU quota management and job scheduling with Kueue
+* Learn about LLM deployment with vLLM and GPU acceleration
+* Study cost allocation and chargeback models for multi-tenant GPU infrastructure
+* Investigate advanced MIG strategies for heterogeneous workload patterns
+
+////
+**Visualizing the Hardware:**
+Access the custom Grafana instance route. Import and customize the NVIDIA DCGM Exporter Dashboards to view interconnected metrics, mapping standard node resources (CPU/RAM) alongside accelerator metrics (GPU Power Usage, Temperature, Tensor Core Utilization, and MIG instance allocations).
+////

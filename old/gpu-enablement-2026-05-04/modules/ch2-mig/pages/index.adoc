@@ -1,0 +1,23 @@
+:time_estimate: 3
+
+= Multi-Instance GPU (MIG) Configuration
+
+Objective::
+Learn how to partition GPUs into isolated instances to maximize hardware utilization and reduce per-workload costs.
+
+As a platform engineer, you need to maximize GPU return on investment. Multi-Instance GPU (MIG) allows you to partition a single physical GPU into multiple isolated instances, each with dedicated compute resources and memory. This chapter provides practical frameworks for deciding when to use MIG and how to configure it.
+
+This chapter contains three focused sections:
+
+**xref:s2-mig-fundamentals.adoc[Section 1: MIG Fundamentals]** (20 min reading)::
+Learn what MIG is, when to use it, how to select profiles, and how to enable it in Kubernetes. Understand the difference between Single and Mixed advertisement strategies.
+
+**xref:s2-mig-lab.adoc[Section 2: (Lab) MIG Configuration]** (35 min hands-on)::
+Configure MIG profiles on GPU nodes, deploy multi-tenant workloads with hardware isolation, and troubleshoot common configuration issues.
+
+**xref:s2-conclusion.adoc[Section 3: Conclusion and Knowledge Check]** (10 min reading)::
+Validate your MIG expertise through production scenarios covering strategy selection, profile planning, reconfiguration, and debugging.
+
+== What's Next
+
+Ready to start? Begin with xref:s2-mig-fundamentals.adoc[Section 1: MIG Fundamentals] to learn when MIG provides ROI and how to plan your configuration.

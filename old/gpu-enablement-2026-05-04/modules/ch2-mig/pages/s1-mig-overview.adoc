@@ -1,0 +1,275 @@
+:time_estimate: 20
+
+= Maximizing GPU ROI with Multi-Instance GPU
+
+_Estimated reading time: *{time_estimate} minutes*._
+
+
+== The GPU Utilization Challenge
+
+High-performance GPUs like the NVIDIA A100 and H100 represent significant capital investment, often costing $10,000-$30,000 per unit. However, many AI inference workloads don't require the full computational capacity of these GPUs, leading to resource underutilization and poor return on investment.
+
+=== The Multi-Tenant Platform Scenario
+
+Consider a production AI platform serving three teams with a single NVIDIA A100-40GB GPU ($15,000 investment):
+
+* **Team A (ML Platform)**: LLaMA-7B inference service requiring 14GB VRAM and 50% compute capacity
+* **Team B (Data Science)**: BERT embedding generation requiring 4GB VRAM and 10% compute capacity
+* **Team C (Computer Vision)**: ResNet-50 image classification requiring 3GB VRAM and 15% compute capacity
+
+**Total actual requirements**: 21GB VRAM (53% of available 40GB) and 75% compute capacity
+
+**Traditional approach (full GPU allocation)**: Only one team can use the GPU at any given time, forcing the other teams to wait in queue or requiring purchase of additional GPUs.
+
+=== Before and After MIG: Resource Utilization
+
+[cols="2,2,2",options="header"]
+|===
+|Metric |Without MIG (Full GPU) |With MIG (3g.20gb + 2g.10gb + 2g.10gb)
+
+|**GPU Utilization**
+|33% average (only Team A runs)
+|78% average (all 3 teams concurrent)
+
+|**Workloads Supported**
+|1 at a time (serialized)
+|3 concurrent (isolated)
+
+|**Idle Time**
+|60% (waiting for availability)
+|15% (near-continuous utilization)
+
+|**Cost per Workload**
+|$15,000 / 1 = $15,000
+|$15,000 / 3 = $5,000
+
+|**Performance Isolation**
+|N/A (exclusive access)
+|✅ Hardware-guaranteed (<1% P99 variance)
+
+|**ROI Achievement**
+|24 months baseline
+|10 months (2.4x faster)
+|===
+
+This represents a **7x improvement in workload density** and **$10,000 cost savings per additional workload** compared to purchasing separate GPUs.
+
+=== Traditional GPU Sharing Approaches
+
+Before MIG, platform engineers faced limited options:
+
+* **Time-slicing**: Multiple workloads share a GPU through temporal scheduling, but suffer 15-40% P99 latency variance due to resource contention
+* **GPU passthrough**: Each workload gets exclusive access to a full GPU, maximizing performance but achieving only 20-40% utilization for inference workloads
+* **Virtual GPUs (vGPU)**: Requires additional NVIDIA licensing and virtualization overhead, adding operational complexity
+
+Multi-Instance GPU (MIG) provides a hardware-level solution that balances performance isolation with resource efficiency, achieving the utilization benefits of time-slicing while maintaining the predictable performance of full GPU allocation.
+
+== What is Multi-Instance GPU?
+
+Multi-Instance GPU is a hardware capability available on NVIDIA Ampere and Hopper architecture GPUs (A30, A100, H100, etc.) that partitions a single physical GPU into multiple isolated GPU instances. Each instance has:
+
+* **Dedicated GPU compute resources** (streaming multiprocessors)
+* **Dedicated memory** (a slice of the total GPU VRAM)
+* **Dedicated memory bandwidth** (isolated memory controllers)
+* **Complete fault isolation** (errors in one instance don't affect others)
+
+From the perspective of containerized workloads, each MIG instance appears as a separate GPU device with predictable, guaranteed performance.
+
+=== How MIG Partitions Physical Hardware
+
+Understanding MIG at the hardware level clarifies why it provides true performance isolation unlike software-based approaches.
+
+**A100-40GB Architecture**:
+
+* **108 Streaming Multiprocessors (SMs)**: The compute units that execute CUDA kernels
+* **40GB HBM2 memory**: High-bandwidth GPU framebuffer
+* **8 memory controllers**: Provide memory bandwidth to SMs
+
+When MIG mode is enabled, NVIDIA reserves one compute unit for resource management. The remaining 7/8ths of resources are available for partitioning.
+
+**Example: 3g.20gb Profile**:
+
+* Allocates 3/7ths of usable SMs (approximately 46 streaming multiprocessors)
+* Allocates 20GB dedicated VRAM partition
+* Allocates dedicated memory controllers for isolated bandwidth
+* Creates hardware-enforced barriers preventing cross-instance interference
+
+[NOTE]
+====
+**MIG vs. Time-Slicing: A Critical Difference**
+
+* **Time-slicing**: Software multiplexing where workloads share the same physical resources temporally. Workload A uses the GPU for 100ms, then Workload B, then Workload A again. All 108 SMs and 40GB are shared.
+
+* **MIG**: Physical partitioning where resources are dedicated. Workload A always uses its 46 SMs and 20GB. Workload B uses different physical SMs and memory regions. No temporal sharing—workloads run truly concurrently.
+
+This architectural difference is why MIG achieves <1% P99 latency variance while time-slicing experiences 15-40% variance.
+====
+
+=== MIG Partition Visualization
+
+----
+Physical A100-40GB GPU Partitioning Example:
+
+┌─────────────────────────────────────────────────┐
+│  Physical GPU: A100-40GB (108 SMs, 40GB VRAM)   │
+│  MIG Mode: Enabled (7/8 available for slicing)  │
+├─────────────────────────────────────────────────┤
+│                                                 │
+│  ┌──────────────────────────┐  MIG Instance 0  │
+│  │  3g.20gb Profile         │  ~46 SMs         │
+│  │  Team A: LLaMA-7B        │  20GB VRAM       │
+│  │                          │  Dedicated       │
+│  └──────────────────────────┘  Memory BW       │
+│                                                 │
+│  ┌─────────────┐              MIG Instance 1  │
+│  │ 2g.10gb     │              ~31 SMs         │
+│  │ Team B:     │              10GB VRAM       │
+│  │ BERT        │              Dedicated       │
+│  └─────────────┘              Memory BW       │
+│                                                 │
+│  ┌─────────────┐              MIG Instance 2  │
+│  │ 2g.10gb     │              ~31 SMs         │
+│  │ Team C:     │              10GB VRAM       │
+│  │ ResNet-50   │              Dedicated       │
+│  └─────────────┘              Memory BW       │
+│                                                 │
+│  Reserved: ~4 SMs for MIG management            │
+└─────────────────────────────────────────────────┘
+----
+
+=== Kubernetes Integration
+
+From Kubernetes' perspective, MIG instances appear as distinct allocatable resources. The GPU Operator components from Chapter 1 coordinate to discover and advertise these resources:
+
+1. **MIG Manager**: Applies MIG configuration based on node labels (e.g., `nvidia.com/mig.config=all-2g.10gb`)
+2. **GPU Feature Discovery (GFD)**: Scans GPU capabilities using `nvidia-smi`, detects MIG instances, applies node labels like `nvidia.com/mig-2g.10gb.count=3`
+3. **Device Plugin**: Reads GFD labels and advertises MIG instances as allocatable resources to the Kubernetes scheduler
+4. **Scheduler**: Places pods requesting `nvidia.com/mig-2g.10gb: 1` on nodes with available instances
+
+This integration means MIG instances work with standard Kubernetes resource requests—no custom schedulers or admission controllers required for basic functionality.
+
+== MIG Profile Architecture and Planning
+
+A physical GPU can be partitioned into MIG instances with different profiles. Understanding profile characteristics and planning your partitioning strategy is essential for maximizing utilization while meeting workload requirements.
+
+=== MIG Profile Characteristics
+
+The profile naming convention `Xg.YYgb` encodes key resource allocations:
+
+* **X**: Compute slice size (in 1/7ths of total usable GPU compute)
+* **YY**: Memory allocation in gigabytes
+
+For example, `3g.20gb` means: 3/7ths of compute resources (approximately 46 streaming multiprocessors on A100-40GB) and 20GB dedicated VRAM.
+
+=== Common MIG Profiles by GPU Model
+
+**A100-40GB Profiles**:
+
+[cols="2,1,2,1,3"]
+|===
+|Profile |Max Instances |Memory per Instance |Compute Slices |Typical Use Case
+
+|`1g.5gb`
+|7
+|5 GB
+|1/7 (~15 SMs)
+|Small models: DistilBERT, small CNNs, development
+
+|`2g.10gb`
+|3
+|10 GB
+|2/7 (~31 SMs)
+|Medium models: BERT-base, ResNet-50, fine-tuning
+
+|`3g.20gb`
+|2
+|20 GB
+|3/7 (~46 SMs)
+|Large models: LLaMA-7B, GPT-J-6B, training
+
+|`4g.20gb`
+|1
+|20 GB
+|4/7 (~62 SMs)
+|Very large inference, more compute-intensive workloads
+
+|`7g.40gb`
+|1
+|40 GB
+|7/7 (full GPU)
+|Full GPU mode (MIG disabled or single instance)
+|===
+
+**A100-80GB Profiles**: Profiles scale with double memory: `1g.10gb` (7 instances), `2g.20gb` (3 instances), `3g.40gb` (2 instances), `7g.80gb` (1 instance).
+
+**A30-24GB Profiles**: Smaller GPU with up to 4 instances: `1g.6gb` (4 instances), `2g.12gb` (2 instances), `4g.24gb` (1 instance).
+
+[IMPORTANT]
+====
+When MIG mode is enabled, NVIDIA reserves one compute unit (1/8th of the GPU) for MIG resource management. The remaining 7/8ths are available for partitioning into instances. This is why maximum instances sum to 7g, not 8g.
+====
+
+=== Selecting MIG Profiles for Your Workloads
+
+[TIP]
+====
+**Profile Selection Decision Process:**
+
+1. **Inventory workload requirements**:
+   - Measure actual VRAM usage during test runs (`nvidia-smi` inside pods)
+   - Profile compute utilization under realistic load
+   - Count how many concurrent instances you need
+
+2. **Add overhead buffer**:
+   - Add 20-25% to VRAM requirement for framework overhead (PyTorch, TensorFlow allocators)
+   - Example: Model uses 3.8GB → Plan for 4.8GB → Choose `1g.5gb` profile
+
+3. **Map to nearest profile**:
+   - Always round UP to the next available profile
+   - Example: 12GB requirement → Choose `3g.20gb` (not `2g.10gb`)
+
+4. **Validate profile combination**:
+   - Ensure instance counts fit: 7x `1g.5gb`, or 3x `2g.10gb`, or 1x `3g.20gb` + 2x `2g.10gb`
+   - Consult NVIDIA MIG User Guide for heterogeneous combinations
+====
+
+=== Common MIG Profile Combinations
+
+Beyond homogeneous configurations (all instances same profile), you can mix profiles for diverse workloads:
+
+[cols="3,2,2,3"]
+|===
+|Use Case |Profile Combination |Total Instances |Utilization Strategy
+
+|**Uniform small models**
+|7x `1g.5gb`
+|7
+|Maximum density for microservices, dev/test
+
+|**Uniform medium models**
+|3x `2g.10gb`
+|3
+|Balanced for BERT-class workloads
+
+|**Mixed workload tiers**
+|1x `3g.20gb` + 2x `2g.10gb`
+|3
+|One large model + two medium models
+
+|**Balanced heterogeneous**
+|2x `1g.5gb` + 1x `2g.10gb` + 1x `3g.20gb`
+|4
+|Small, medium, large workload mix (all-balanced profile)
+
+|**Large + development**
+|1x `4g.20gb` + 2x `1g.5gb` + 1x `1g.10gb`†
+|4
+|Production large model + testing instances
+|===
+
+† This combination requires careful validation against the MIG User Guide for placement constraints.
+
+[NOTE]
+====
+The `all-balanced` built-in profile automatically configures a heterogeneous mix optimized for the GPU model. For A100-40GB, this creates 2x `1g.5gb` + 1x `2g.10gb` + 1x `3g.20gb`, providing four instances spanning small, medium, and large workload sizes.
+====

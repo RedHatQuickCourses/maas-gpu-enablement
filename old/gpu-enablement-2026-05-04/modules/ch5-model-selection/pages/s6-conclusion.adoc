@@ -1,0 +1,292 @@
+:time_estimate: 10
+
+= Conclusion and Knowledge Check
+
+_Estimated reading time: *{time_estimate} minutes*._
+
+Objective::
+Validate your model selection expertise through production scenario assessments and review key concepts.
+
+== What You've Learned
+
+You now have practical decision frameworks for model selection:
+
+✅ **Model Selection:** Choose Dense vs MoE based on VRAM budget, concurrency, and workload characteristics
+
+✅ **VRAM Sizing:** Calculate total memory requirements (weights + KV cache + overhead)
+
+✅ **Quantization:** Match precision formats to GPU architecture and accuracy requirements
+
+✅ **Multi-GPU Parallelism:** Choose TP vs PP based on network topology
+
+== Production Scenario Assessments
+
+Test your ability to apply these concepts to real-world challenges.
+
+=== Scenario 1: Capacity Planning
+
+**Situation:** Your customer wants to deploy a chatbot service and expects 100 concurrent users during peak hours.
+
+**Available Options:**
+
+* **Option A:** Llama-70B-FP16 on 4× A100-80GB
+* **Option B:** Mixtral-8×7B-FP16 (70B total, 14B active) on 4× A100-80GB
+* **Option C:** Llama-70B-INT8 on 2× H100-80GB
+
+**Questions:**
+
+. Which option provides the best latency for interactive chat?
+. Which option maximizes throughput for high concurrency?
+. Which option has the lowest hardware cost?
+
+.Reveal Analysis
+[%collapsible]
+=====
+**Analysis:**
+
+. **Best latency:** Option B (Mixtral)
+** MoE models have lower active compute per token
+** Only 14B parameters active vs 70B for dense models
+** Faster token generation = lower latency
+
+. **Maximum throughput:** Option B (Mixtral)
+** Lower compute per token = more tokens/second per GPU
+** Better for high concurrency (100 users)
+** Can handle more concurrent requests
+
+. **Lowest hardware cost:** Option C (Llama-70B-INT8)
+** Only requires 2 GPUs vs 4 GPUs for other options
+** Quantization reduces VRAM requirements
+** Llama-70B-INT8: ~70 GB weights fits on 2× H100-80GB
+** Llama-70B-FP16: ~140 GB weights requires 4 GPUs
+
+**Trade-offs:**
+
+* Option A: Most predictable performance, easier to optimize
+* Option B: Fastest but requires most VRAM (all 70B parameters loaded)
+* Option C: Most cost-effective but potential minor accuracy loss from quantization
+
+**Recommended:** Option B (Mixtral) for high concurrency + low latency requirements
+=====
+
+=== Scenario 2: Emergency Sizing Problem
+
+**Friday 4 PM:** A customer deployed Llama-70B-FP16 on a cluster and the deployment is failing with "CUDA out of memory" errors.
+
+**Their Setup:**
+
+* 2× A100-80GB (160 GB total)
+* Model configured with TP=2
+* Expected context: 128K tokens
+* Using default FP8 KV cache
+
+**Model Specs:**
+* Layers: 80
+* KV heads: 8 (GQA)
+* Head dimension: 128
+
+**Questions:**
+
+. Why is the deployment failing?
+. Calculate the actual VRAM required
+. What would you recommend to fix it?
+
+.Reveal Solution
+[%collapsible]
+=====
+**Solution:**
+
+. **Why failing:** Insufficient VRAM (total requirements exceed 160 GB)
+
+. **Calculate actual VRAM required:**
++
+**Weights (FP16):** 70B × 2 bytes = 140 GB
++
+**KV cache (FP8, 128K context with GQA):**
+```
+2 × 1 × 128,000 × 80 × 8 × 128 × 1 = ~20 GB
+```
++
+**Overhead (10%):** (140 + 20) × 0.10 = ~16 GB
++
+**Total needed:** 140 + 20 + 16 = **~176 GB**
++
+**Available:** 160 GB
++
+**Shortfall:** 16 GB ❌
+
+. **Recommendations (in order of preference):**
++
+**Option 1: Use INT8 quantization for weights**
+** Weights: 70B × 1 byte = 70 GB
+** KV cache (FP8): 20 GB
+** Overhead: ~9 GB
+** Total: ~99 GB
+** **Fits on 2× A100-80GB with 61 GB margin** ✓
++
+**Option 2: Reduce context window to 96K**
+** Weights (FP16): 140 GB
+** KV cache (FP8, 96K): ~15 GB
+** Overhead: ~15.5 GB
+** Total: ~170.5 GB
+** **Might fit but very tight margin**
++
+**Option 3: Add one more GPU**
+** Use 3× A100-80GB (240 GB total)
+** TP=3 configuration
+** More expensive, but safe margin
+
+**Best solution:** Option 1 (INT8 weights) — fits comfortably on existing hardware, maintains 128K context
+=====
+
+=== Scenario 3: Network Topology Problem
+
+**Situation:** You deployed Llama-70B with TP=4 across 4× H100 GPUs. The model loads successfully but GPU utilization is only 20% and inference is very slow.
+
+**Your Investigation:**
+
+[source,bash]
+----
+$ nvidia-smi topo -m
+
+        GPU0    GPU1    GPU2    GPU3
+GPU0     X      SYS     SYS     SYS
+GPU1    SYS      X      SYS     SYS
+GPU2    SYS     SYS      X      SYS
+GPU3    SYS     SYS     SYS      X
+----
+
+**Questions:**
+
+. What does "SYS" in the topology matrix mean?
+. What's causing the low GPU utilization?
+. How would you fix this?
+
+.Reveal Solution
+[%collapsible]
+=====
+**Solution:**
+
+. **"SYS" meaning:**
+** System/PCIe connection between GPUs
+** No direct NVLink connection
+** Much slower than NVLink (PCIe ~64 GB/s vs NVLink 900 GB/s)
+
+. **Cause of low utilization:**
+** Tensor Parallelism requires constant GPU-to-GPU communication
+** Every forward pass requires synchronizing all 4 GPUs
+** Slow PCIe connections create bottleneck
+** GPUs spend most time waiting for network, not computing
+** Result: <20% GPU utilization
+
+. **Fixes (in order of preference):**
++
+**Option 1: Use quantization to fit on single GPU**
+** Llama-70B-INT4: ~35 GB → fits on single H100-80GB
+** Eliminates need for TP
+** Best solution if accuracy acceptable
++
+**Option 2: Use Pipeline Parallelism instead**
+** PP is more tolerant of slow interconnects
+** Higher latency but better throughput than current setup
+** Configure: `--pipeline-parallel-size 4`
++
+**Option 3: Request GPUs with NVLink**
+** Proper hardware for TP deployment
+** Topology should show `NV#` instead of `SYS`
+
+**Best solution:** Option 1 (quantization) unless customer requires FP16 precision
+
+**Key lesson:** Always verify network topology before configuring Tensor Parallelism
+=====
+
+=== Scenario 4: Quantization Selection
+
+**Customer Requirements:**
+
+* Deploy Llama-70B for code generation
+* Accuracy-critical use case (financial code analysis)
+* Acceptable accuracy loss: <1%
+* Available hardware: 2× H100-80GB or 4× A100-80GB
+
+**Questions:**
+
+. If deploying on 2× H100-80GB, what quantization scheme should you use?
+. If deploying on 4× A100-80GB, what quantization scheme should you use?
+. Why does the GPU architecture matter for quantization selection?
+
+.Reveal Solution
+[%collapsible]
+=====
+**Solution:**
+
+. **On 2× H100-80GB:** Use **FP8 (W8A8-FP8)**
+** H100 has native FP8 Tensor Cores (Hopper architecture)
+** FP8 provides <0.5% accuracy loss (within <1% requirement)
+** Llama-70B-FP8: ~70 GB weights + KV cache fits on 2× H100
+** Leverages hardware acceleration for best performance
+
+. **On 4× A100-80GB:** Use **INT8 (W8A8-INT8)**
+** A100 has INT8 Tensor Cores (Ampere architecture)
+** No native FP8 support on Ampere
+** INT8 provides ~1% accuracy loss (at boundary of requirement)
+** Should validate on customer's financial code dataset
+
+. **Why architecture matters:**
+** Different GPU generations have different tensor core capabilities:
+*** Hopper (H100): Native FP8 Tensor Cores
+*** Ampere (A100): INT8 Tensor Cores
+*** Older: INT8 support, no FP8
+** Using the "wrong" quantization format runs on standard CUDA cores
+** Miss out on 2-3× speedup from tensor core acceleration
+** **Matching quantization to hardware = maximum performance**
+
+**Validation required:**
+
+* Test on customer's financial code dataset
+* Verify <1% accuracy loss before production
+* Benchmark performance under expected load
+
+**Key principle:** Always align quantization format to GPU architecture for best performance
+=====
+
+== Key Takeaways
+
+**Decision Framework:**
+
+. **Architecture (Dense vs MoE):** Based on concurrency, VRAM budget, and task specialization needs
+. **VRAM Sizing:** Always account for weights + KV cache + overhead before deployment
+. **Quantization:** Match to GPU architecture (FP8 for Hopper, INT8 for Ampere)
+. **Parallelism:** Use TP for NVLink, PP for slower interconnects, consider quantization first
+
+**Common Mistakes to Avoid:**
+
+❌ Not accounting for KV cache in VRAM calculations
+
+❌ Using TP across slow networks (Ethernet/PCIe)
+
+❌ Selecting quantization based only on memory savings
+
+❌ Not validating accuracy after quantization
+
+❌ Deploying without checking network topology
+
+**Critical Questions Before Every Deployment:**
+
+. Does the model fit? (Calculate VRAM: weights + KV cache + overhead)
+. Should I quantize? (Check if fits on fewer GPUs with quantization)
+. Do I need multi-GPU? (Only if doesn't fit on single GPU after quantization)
+. What's my network topology? (Verify NVLink for TP, InfiniBand for PP)
+
+== What's Next
+
+You've mastered model selection foundations. The next step is deploying these models for inference serving:
+
+* **vLLM Configuration:** Applying TP/PP configurations you've learned
+* **Resource Limits:** Using VRAM calculations to set Kubernetes resource limits
+* **Performance Optimization:** Tuning batch sizes and KV cache allocation
+* **Autoscaling:** Scaling model deployments based on load
+
+The model selection decisions you make directly feed into your inference deployment configuration. Accurate VRAM sizing prevents deployment failures. Proper parallelism configuration prevents performance issues. Validated quantization reduces validation time from weeks to days.
+
+Continue building on these foundations as you advance to inference serving and production model operations.

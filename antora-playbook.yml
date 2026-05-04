@@ -1,6 +1,6 @@
 site:
-  title: Nvidia Accelerator Configuration for Scale
-  start_page: maas-gpu-enablement::index.adoc
+  title: Red Hat OpenShift AI - Models as a Service
+  start_page: maas::index.adoc
 
 content:
   sources:

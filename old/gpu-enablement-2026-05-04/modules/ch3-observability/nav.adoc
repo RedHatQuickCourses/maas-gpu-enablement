@@ -1,0 +1,5 @@
+* xref:index.adoc[]
+** xref:s1-observability-stack.adoc[]
+** xref:s2-expose-metrics-lab.adoc[]
+** xref:s3-grafana-setup-lab.adoc[]
+** xref:s4-dashboards-lab.adoc[]

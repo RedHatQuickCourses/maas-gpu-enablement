@@ -1,0 +1,89 @@
+:time_estimate: 28
+
+= The GPU Underutilization Problem
+
+_Estimated reading time: *{time_estimate} minutes*._
+
+Enterprise AI platforms investing in GPU infrastructure often face a critical challenge: expensive GPU hardware remains dramatically underutilized despite $25,000-$50,000 per GPU capital investment. Understanding this problem and the solutions the GPU Operator enables is essential for maximizing return on GPU infrastructure investment.
+
+=== The $50,000 Idle GPU Crisis
+
+Organizations deploying AI platforms without GPU sharing capabilities typically see GPU utilization rates between 20-40% for inference workloads. This underutilization represents massive wasted capital and operational expense.
+
+**Concrete Example:**
+
+FinServe Corp purchases 10x NVIDIA A100-80GB GPUs at $25,000 per GPU ($250,000 total capital expenditure). They deploy 3 large language model inference services, each allocated a dedicated GPU. Monitoring shows:
+
+* GPU 1 (Finance QA model): 30% average utilization
+* GPU 2 (Risk Analysis model): 25% average utilization
+* GPU 3 (Document Intelligence model): 20% average utilization
+* GPUs 4-10: 0% utilization (reserved for "future workloads")
+
+**Result:** 25% average utilization across the platform → 75% idle capacity → $175,000 in wasted GPU investment annually.
+
+The GPU Operator addresses this crisis through three GPU sharing strategies, each with different isolation guarantees, reconfiguration requirements, and utilization outcomes:
+
+[cols="2,2,1,3",options="header"]
+|===
+|Strategy |Isolation Level |Typical Utilization |Best Use Case
+
+|**Full GPU Allocation**
+|Complete hardware isolation
+|20-40%
+|Training workloads, <10 inference services, guaranteed performance requirements
+
+|**Time-Slicing** (Software)
+|Software-level temporal multiplexing
+|60-80%
+|Bursty inference workloads, dev/test environments, GPUs without MIG support (V100, T4, A10)
+
+|**MIG** (Hardware Partitioning)
+|Hardware-level spatial isolation
+|85-95%
+|Multi-tenant MaaS platforms, >10 concurrent workloads, SLA-backed services on Ampere/Hopper GPUs
+|===
+
+[TIP]
+====
+For MaaS platforms serving fewer than 10 models, time-slicing provides the fastest time-to-value with minimal configuration overhead. For platforms serving more than 10 models or requiring SLA-backed performance guarantees, invest in MIG-capable hardware (A100, A30, H100) for maximum utilization with guaranteed isolation.
+====
+
+=== Multi-Tenant Sharing Challenges
+
+Traditional approaches to GPU sharing fail to meet production MaaS platform requirements:
+
+**Approach 1: Full GPU Passthrough (No Sharing)**
+
+* One workload per physical GPU
+* Complete isolation but catastrophic underutilization
+* Requires 1:1 GPU-to-workload ratio (10 models = 10 GPUs minimum)
+
+**Approach 2: Manual Time-Sharing**
+
+* Multiple pods scheduled to same GPU via Kubernetes resource oversubscription
+* No performance isolation—runaway processes starve other workloads
+* Unpredictable latency makes SLA compliance impossible
+
+**Approach 3: MIG (Multi-Instance GPU)**
+
+* Hardware-partitioned GPU instances with dedicated compute and memory
+* Guaranteed performance isolation with high utilization
+* Requires Ampere or Hopper architecture GPUs and configuration expertise
+
+The GPU Operator automates MIG and time-slicing configuration, transforming GPU sharing from manual, error-prone processes into declarative, operator-managed capabilities.
+
+**Transformation Example:**
+
+----
+Before GPU Operator + Sharing:
+10 GPUs → 3 workloads → 25% utilization → $175K wasted annually
+
+After GPU Operator + MIG:
+10 A100 GPUs → 70 MIG instances (7 per GPU) → 24 active workloads
+→ 85% utilization → $150K annual savings → 8x more concurrent workloads
+----
+
+[IMPORTANT]
+====
+GPU sharing strategy is not reversible without workload downtime. Choose based on 12-month workload projections, not current state. Migrating from time-slicing to MIG requires node drains, driver reconfiguration, and workload migration (10-15 minutes downtime per node).
+====

@@ -1,34 +1,51 @@
-= Nvidia Accelerator Configuration for Scale
-:navtitle: Home
+= Red Hat OpenShift AI: Models as a Service Enablement
 
-== The GPU Silo Crisis
+Welcome to the Red Hat OpenShift AI Models as a Service enablement QuickCourse!
 
-Organizations investing in GPU infrastructure often face the "GPU Silo" problem where expensive GPU hardware remains underutilized due to complex manual configuration, dependency management, and operational overhead. Red Hat AI and the NVIDIA GPU Operator addresses this challenge by automating the deployment and lifecycle management of all necessary GPU software components.
+== What you'll learn
 
-== Goal
+In this QuickCourse, you will:
 
-To equip architects, engineers, and administrators with the knowledge and skills required to configure, manage, and monitor NVIDIA GPU Accelerators on OpenShift. This course serves as the foundational hardware enablement layer for a Models-as-a-Service (MaaS) architecture, ensuring teams can utilize and support these components as part of a revenue-generating services business.
+* Understand the GPU silo crisis and how Models as a Service (MaaS) solves resource allocation challenges
+* Design and implement a centralized model hub with governed token-based consumption
+* Configure MaaS on Red Hat OpenShift AI using the operator and Custom Resource Definitions
+* Deploy generative AI models using llm-d, vLLM, and KServe components for distributed inference
+* Publish models to the OpenShift AI dashboard catalog for self-service access with role-based permissions
+* Implement governance policies with tiered service limits and rate limiting using Kuadrant
+* Generate usage reports for chargeback and monitor GPU utilization metrics with Grafana
+* Integrate AI models into applications using OpenAI-compatible APIs with proper retry logic
 
+== Who this is for
 
-== Objectives
+This QuickCourse is built for Platform Engineers and Developers—including associates, partners, and customers—looking to modernize their GPU infrastructure. You will learn how to break down team silos and establish a centralized, governed environment that empowers lines of business to build agentic AI applications with ease.
 
-On completing this course, you should be able to:
-
-* Understand and install foundational operators including the NVIDIA GPU Operator stack
-* Configure Multi-Instance GPU (MIG) for maximizing GPU ROI in MaaS deployments
-* Monitor GPU telemetry and health using Grafana and OpenShift observability tools
-
-== Audience
-
-* **Platform Engineers**: Responsible for designing and deploying model serving environments and enabling MaaS
-* **DevOps/SREs**: Focused on observability, operational scale, tracking consumption metrics, and cost allocation
+**Experience level**: Intermediate
 
 == Prerequisites
 
-This course assumes that you have the following experience:
+Before starting this QuickCourse, you should have:
 
-* Familiarity with Kubernetes and Red Hat OpenShift Container Platform
-* Basic understanding of machine learning concepts and Red Hat OpenShift AI
-* Basic networking, routing, and understanding of Kubernetes operators
-* Familiarity with REST APIs, Prometheus metrics, and RBAC within OpenShift
+* Red Hat OpenShift administration experience (Version 4.20 or later)
+* Basic Kubernetes operator management knowledge
+* Familiarity with core GPU concepts and generic GPU enablement
+* Understanding of API concepts and REST principles
+* Basic command line experience
 
+== QuickCourse environment
+
+The recommended lab environment is a Single Node OpenShift (SNO) cluster with multiple NVIDIA GPUs (minimum 48GB - (2x24Gb) pre-configured with:
+
+* Red Hat OpenShift 4.20 or later
+* Red Hat OpenShift AI 3.3.2 or later (operator installed)
+* GPU operators and drivers configured
+* Required infrastructure components (KServe, Service Mesh, Connectivity Link, etc.)
+
+== Estimated time
+
+This QuickCourse will take approximately **3-4 hours** to complete.
+
+You can work at your own pace, however, consider shutting down expensive GPU lab environment between sessions.
+
+== Let's get started!
+
+Click on **QuickCourse Overview** in the navigation to begin your learning journey and meet ChocoTech Industries, a chocolate manufacturer facing the GPU silo crisis.

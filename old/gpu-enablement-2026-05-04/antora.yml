@@ -1,0 +1,10 @@
+name: maas-gpu-enablement
+title: Nvidia Accelerator Configuration for Scale
+version: 2
+nav:
+- modules/ROOT/nav.adoc
+- modules/LABENV/nav.adoc
+- modules/ch1-gpu-operator/nav.adoc
+- modules/ch2-mig/nav.adoc
+- modules/ch3-observability/nav.adoc
+- modules/ch5-model-selection/nav.adoc

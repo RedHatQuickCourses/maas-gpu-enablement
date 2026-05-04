@@ -1,4 +1,0 @@
-* xref:index.adoc[Multi-Instance GPU (MIG) Configuration]
-** xref:s2-mig-fundamentals.adoc[MIG Fundamentals]
-** xref:s2-mig-lab.adoc[(Lab) MIG Configuration]
-** xref:s2-conclusion.adoc[Conclusion and Knowledge Check]

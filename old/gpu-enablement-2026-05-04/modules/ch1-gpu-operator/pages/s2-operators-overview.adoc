@@ -1,0 +1,408 @@
+:time_estimate: 25
+
+= Understanding Operators and Platform Automation
+
+_Estimated reading time: *{time_estimate} minutes*._
+
+Objective::
+
+Understand how Kubernetes operators automate GPU platform lifecycle management through OpenShift's Operator Lifecycle Manager (OLM), and how Red Hat OpenShift AI orchestrates the complete suite of operators required for a production Models-as-a-Service platform.
+
+== The Operator Pattern for Platform Automation
+
+Kubernetes operators extend Kubernetes automation by encoding human operational knowledge into software. An operator combines three essential components:
+
+1. **Custom Resource (CR):** A declarative configuration file expressing your desired state
+2. **Controller:** Software that watches CRs and reconciles actual cluster state to match
+3. **Reconciliation Loop:** Continuous monitoring that detects and corrects drift
+
+=== How Operators Work Example
+
+Consider GPU driver management on a 100-node cluster. The traditional approach requires:
+
+* Writing automation (bash scripts) to install drivers on each node
+* Manually updating when new driver versions are released
+* Detecting and recovering from driver crashes
+* Ensuring consistent versions across all nodes
+* Coordinating updates to avoid disrupting workloads
+
+With the NVIDIA GPU Operator, you declare your desired state in a ClusterPolicy Custom Resource:
+
+[source,yaml]
+----
+apiVersion: nvidia.com/v1
+kind: ClusterPolicy
+metadata:
+  name: gpu-cluster-policy
+spec:
+  driver:
+    enabled: true
+    version: "535.129.03"  # <1>
+  dcgm:
+    enabled: true
+----
+<1> Declarative driver version specification
+
+The operator's controller continuously reconciles this desired state:
+
+----
+┌─────────────────────────────────────────────────────┐
+│   Operator Reconciliation Loop                      │
+│                                                     │
+│   1. OBSERVE → Read current cluster state           │
+│   2. DIFF → Compare to ClusterPolicy desired state  │
+│   3. ACT → Create/update resources to align         │
+│   4. REPEAT → Every ~5 seconds                      │
+└─────────────────────────────────────────────────────┘
+----
+
+=== Declarative vs. Imperative Infrastructure
+
+**Imperative (manual scripting):**
+
+[source,bash]
+----
+for node in $(oc get nodes -l gpu=true -o name); do
+  ssh $node "curl -O https://driver-repo/driver-535.129.03.run"
+  ssh $node "sh driver-535.129.03.run --silent"
+  ssh $node "systemctl restart kubelet"
+done
+# Script does NOT monitor or self-heal
+# Requires re-execution if a node crashes
+----
+
+**Declarative (operator-managed):**
+
+[source,yaml]
+----
+apiVersion: nvidia.com/v1
+kind: ClusterPolicy
+metadata:
+  name: gpu-cluster-policy
+spec:
+  driver:
+    version: "535.129.03"
+# Operator CONTINUOUSLY enforces this state
+# Automatically recovers from failures
+# Applies to new nodes automatically
+----
+
+The operator approach eliminates 90% of operational toil while providing self-healing capabilities that manual scripts cannot match.
+
+=== Self-Healing in Action
+
+Operators don't just deploy resources—they continuously monitor and repair them.
+
+**Scenario:** Admin deletes the NVIDIA driver DaemonSet
+
+[source,bash]
+----
+$ oc delete daemonset nvidia-driver-daemonset -n nvidia-gpu-operator
+daemonset.apps "nvidia-driver-daemonset" deleted
+
+# 45 seconds later...
+
+$ oc get daemonset nvidia-driver-daemonset -n nvidia-gpu-operator
+NAME                        DESIRED   CURRENT   READY   UP-TO-DATE   AGE
+nvidia-driver-daemonset     3         3         3       3            23s
+----
+
+**What happened:**
+
+1. Controller detected ClusterPolicy still specifies `driver.enabled: true`
+2. Controller observed DaemonSet is missing
+3. Controller recreated DaemonSet automatically
+4. No human intervention required
+
+This self-healing capability transforms GPU infrastructure from fragile, manually-managed silos into resilient, declarative systems suitable for enterprise AI platforms at scale.
+
+---
+
+== Operator Lifecycle Manager (OLM) Architecture
+
+OpenShift includes Operator Lifecycle Manager (OLM), a built-in framework for discovering, installing, and managing operators. OLM solves the "who manages the managers" problem.
+
+=== The Challenge OLM Solves
+
+Installing an operator manually requires:
+
+* Finding the operator's container images and versions
+* Creating Custom Resource Definitions (CRDs)
+* Configuring RBAC permissions (ServiceAccounts, Roles, RoleBindings)
+* Deploying the operator's Deployment or Pod
+* Managing upgrades when new versions are released
+* Handling dependencies between operators
+
+OLM automates this entire lifecycle, functioning as a "package manager for operators" similar to how `yum` or `apt` manages system packages.
+
+=== Catalog Sources: Operator Repositories
+
+OLM uses **CatalogSources** to discover available operators. OpenShift includes four default catalogs:
+
+[cols="1,2,1,2",options="header"]
+|===
+|Catalog Name |Content |Support Level |Production Usage
+
+|`redhat-operators`
+|Red Hat platform operators (Node Feature Discovery, OpenShift AI)
+|Red Hat support included
+|✅ **Recommended for core infrastructure**
+
+|`certified-operators`
+|Vendor-certified operators (NVIDIA GPU Operator, Cert-manager)
+|Vendor support (e.g., NVIDIA)
+|✅ **Recommended for vendor software**
+
+|`community-operators`
+|Community-maintained operators
+|No support SLAs
+|❌ **Caution with production use**
+
+|`redhat-marketplace`
+|Commercial operators from Red Hat Marketplace
+|Vendor support, requires subscription
+|✅ Depends on procurement
+|===
+
+[WARNING]
+====
+**Caution with community operators in production AI platforms.** They lack support SLAs, may have security vulnerabilities, and could be unmaintained. Use only `redhat-operators` or `certified-operators` with active support contracts.
+====
+
+**Example: Viewing available catalogs**
+
+[source,bash]
+----
+$ oc get catalogsources -n openshift-marketplace
+NAME                  DISPLAY               TYPE   PUBLISHER   AGE
+certified-operators   Certified Operators   grpc   Red Hat     45d
+community-operators   Community Operators   grpc   Red Hat     45d
+redhat-operators      Red Hat Operators     grpc   Red Hat     45d
+redhat-marketplace    Red Hat Marketplace   grpc   Red Hat     45d
+----
+
+**Finding operators in catalogs:**
+
+[source,bash]
+----
+$ oc get packagemanifests | grep nvidia
+gpu-operator-certified     Certified Operators   23h
+----
+
+---
+
+== Core OLM Resources
+
+OLM uses five core resource types to manage operator lifecycle:
+
+=== Subscription
+
+A **Subscription** declares your intent to install and maintain an operator. It specifies:
+
+* Which operator to install
+* Which catalog contains the operator
+* Which update channel to track
+* Whether upgrades should be automatic or manual
+
+**Example Subscription:**
+
+[source,yaml]
+----
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: gpu-operator-certified
+  namespace: nvidia-gpu-operator
+spec:
+  channel: "v26.3"                           # <1>
+  name: gpu-operator-certified               # <2>
+  source: certified-operators                # <3>
+  sourceNamespace: openshift-marketplace     # <4>
+  installPlanApproval: Manual                # <5>
+----
+<1> Update channel - tracks v26.3.x versions
+<2> Operator package name from catalog
+<3> Which CatalogSource to use
+<4> Namespace where catalog lives
+<5> Manual approval required for upgrades (production best practice)
+
+[TIP]
+====
+**Production Best Practice:** Always configure `installPlanApproval: Manual` and pin to version-specific channels (e.g., `channel: "v26.3"`) for revenue-generating MaaS platforms. This gives you control over when driver and operator upgrades occur, allowing you to test in development environments first.
+====
+
+---
+
+=== ClusterServiceVersion (CSV)
+
+A **ClusterServiceVersion (CSV)** represents a specific version of an installed operator. It contains:
+
+* Operator metadata (name, version, description)
+* Deployment specification (operator pod configuration)
+* Custom Resource Definitions (CRDs) the operator manages
+* RBAC requirements (permissions needed)
+* Upgrade path information
+
+**CSV Lifecycle Phases:**
+
+[cols="1,3",options="header"]
+|===
+|Phase |Meaning
+
+|`Pending`
+|Waiting for dependencies or requirements
+
+|`Installing`
+|Operator deployment in progress
+
+|`Succeeded`
+|Operator installed and running normally ✅
+
+|`Failed`
+|Installation or operation failed ❌
+
+|`Replacing`
+|Being replaced by newer version during upgrade
+|===
+
+**Example: Checking CSV status**
+
+[source,bash]
+----
+$ oc get csv -n nvidia-gpu-operator
+NAME                               DISPLAY              VERSION   PHASE
+gpu-operator-certified.v26.3.0     NVIDIA GPU Operator  26.3.0    Succeeded
+----
+
+---
+
+=== OperatorGroup
+
+An **OperatorGroup** defines the scope where an operator can manage resources. It configures:
+
+* Which namespaces the operator watches (single, multiple, or all)
+* RBAC generation for operator permissions
+
+**Example OperatorGroup:**
+
+[source,yaml]
+----
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+metadata:
+  name: nvidia-gpu-operator-group
+  namespace: nvidia-gpu-operator
+spec:
+  targetNamespaces:
+  - nvidia-gpu-operator  # <1>
+----
+<1> Operator only manages resources in this namespace
+
+---
+
+=== InstallPlan
+
+An **InstallPlan** is OLM's execution plan for installing or upgrading an operator. It lists:
+
+* Which CSV version to install
+* CRDs to create or update
+* RBAC resources to configure
+
+**InstallPlans can be:**
+
+* **Automatic:** Executed immediately without admin approval (dev/test environments)
+* **Manual:** Requires explicit approval before execution (production environments)
+
+**Example: Approving a pending upgrade**
+
+[source,bash]
+----
+# View pending upgrades
+$ oc get installplan -n nvidia-gpu-operator
+NAME            CSV                                  APPROVAL   APPROVED
+install-xxxxx   gpu-operator-certified.v26.3.0      Automatic  true      # Current
+install-yyyyy   gpu-operator-certified.v26.3.2      Manual     false     # Pending
+
+# Approve the upgrade
+$ oc patch installplan install-yyyyy -n nvidia-gpu-operator \
+  --type merge --patch '{"spec":{"approved":true}}'
+----
+
+---
+
+=== CatalogSource
+
+A **CatalogSource** represents a repository of available operators. It points to a catalog index container image that OLM queries to discover operators.
+
+**Example: Viewing CatalogSource details**
+
+[source,bash]
+----
+$ oc get catalogsource certified-operators -n openshift-marketplace -o yaml
+apiVersion: operators.coreos.com/v1alpha1
+kind: CatalogSource
+metadata:
+  name: certified-operators
+  namespace: openshift-marketplace
+spec:
+  sourceType: grpc
+  image: registry.redhat.io/redhat/certified-operator-index:v4.14
+  displayName: Certified Operators
+  publisher: Red Hat
+----
+
+== OLM Workflow: How These Resources Work Together
+
+The complete OLM workflow when you create a Subscription:
+
+----
+1. User creates Subscription
+         ↓
+2. OLM's Catalog Operator reads Subscription
+         ↓
+3. OLM queries CatalogSource for operator package
+         ↓
+4. OLM resolves latest version in specified channel
+         ↓
+5. OLM creates InstallPlan with execution steps
+         ↓
+6. If installPlanApproval: Automatic → Execute immediately
+   If installPlanApproval: Manual → Wait for approval
+         ↓
+7. OLM deploys ClusterServiceVersion (CSV)
+         ↓
+8. CSV creates operator Deployment/Pod
+         ↓
+9. CSV registers Custom Resource Definitions (CRDs)
+         ↓
+10. Operator pod starts, begins watching for Custom Resources
+----
+
+=== Update Strategies and Channels
+
+Operator catalogs organize versions into **channels**:
+
+* **`stable`:** Production-ready, tested versions (most conservative)
+* **`fast`:** Latest features, less testing (early access)
+* **`v26.3`, `v25.4`:** Version-specific channels (pin to major.minor)
+
+**Channel selection strategy for production:**
+
+[cols="1,2,2",options="header"]
+|===
+|Channel Type |Update Behavior |Production Recommendation
+
+|`stable`
+|Receives updates across major versions
+|❌ Too broad - unexpected major version upgrades
+
+|`fast`
+|Bleeding edge, less stable
+|❌ Too risky for revenue-generating platforms
+
+|`v26.3`
+|Only v26.3.x updates (e.g., 26.3.0 → 26.3.2)
+|✅ **Recommended - predictable minor updates only**
+|===
+
+**Best practice:** Pin to version-specific channels (`v26.3`) with `installPlanApproval: Manual` to control exactly when upgrades occur.

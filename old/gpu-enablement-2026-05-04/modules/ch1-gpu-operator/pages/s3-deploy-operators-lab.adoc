@@ -1,0 +1,8 @@
+
+= GPU Operator Features and Platform Deployment
+
+Objective::
+
+Understand how the NVIDIA GPU Operator transforms raw GPU hardware into a production-ready, multi-tenant compute platform through automated lifecycle management of drivers, device plugins, monitoring, and GPU sharing capabilities. Deploy the complete operator stack using OpenShift Operator Lifecycle Manager, configure GPU sharing strategies (time-slicing preparation, MIG enablement), and integrate GPU telemetry with cluster monitoring for production observability.
+
+In the previous sections, you learned about the operator pattern for platform automation. This section builds on that foundation by examining GPU Operator features in depth, comparing GPU sharing strategies for multi-tenant platforms, and deploying the complete stack with production-ready configuration.

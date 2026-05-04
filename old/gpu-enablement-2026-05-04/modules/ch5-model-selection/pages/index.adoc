@@ -1,0 +1,23 @@
+:time_estimate: 3
+
+= Model Selection Strategy
+
+Objective::
+Learn practical decision frameworks for selecting model architectures, calculating GPU memory requirements, choosing quantization strategies, and configuring multi-GPU deployments.
+
+As a platform engineer delivering Models-as-a-Service, you need to make informed decisions about which models to deploy and how to configure them efficiently. This chapter provides practical frameworks for making these decisions.
+
+This chapter contains three focused sections:
+
+**xref:s6-model-evaluation.adoc[Section 1: Evaluating Models and Optimizing Weights]** (20 min reading)::
+Decision frameworks for choosing between Dense and MoE architectures, calculating VRAM requirements, selecting quantization formats, and determining when multi-GPU configurations are necessary.
+
+**xref:s6-sizing-lab.adoc[Section 2: (Lab) Model Sizing and Configuration]** (35 min hands-on)::
+Hands-on exercises for VRAM sizing calculations, multi-GPU parallelism planning, and quantization selection. Practice applying concepts through realistic deployment scenarios.
+
+**xref:s6-conclusion.adoc[Section 3: Conclusion and Knowledge Check]** (10 min reading)::
+Production scenario assessments covering capacity planning, sizing problems, network topology issues, and quantization selection. Validate your model selection expertise.
+
+== What's Next
+
+Ready to start? Begin with xref:s6-model-evaluation.adoc[Section 1: Evaluating Models and Optimizing Weights] to learn the decision frameworks for architecture selection, VRAM sizing, quantization, and multi-GPU parallelism.
