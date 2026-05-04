@@ -1,0 +1,83 @@
+= Strategic Model Sizing
+:author: Co-Authored with Gemini AI
+:toc: left
+:icons: font
+:stem: latex
+
+== 3. Model Sizing: The VRAM Blueprint
+
+Before deployment, you must calculate if the model fits. The total VRAM required is:
+
+$$VRAM_{total} = M_{weights} + M_{kv\_cache} + M_{overhead}$$
+
+=== Component 1: Weights ($M_{weights}$)
+Calculate based on **Total Parameters ($P$)** and **Precision (bits)**.
+
+[cols="1,1,2", options="header"]
+|===
+| Precision | Bytes/Param | Calculation for 70B Model
+| **FP16 / BF16** | 2 | 140 GB
+| **INT8 / FP8** | 1 | 70 GB
+| **INT4 (Standard)**| 0.5 | 35 GB
+|===
+
+=== Component 2: KV Cache ($M_{kv\_cache}$)
+The "memory" of the conversation. In 2026, with long-context models (1M+ tokens), the KV Cache can exceed the model weight size.
+
+* **Estimation Rule:** For a 70B model at 16-bit precision, the KV cache consumes roughly **1 GB per 8,000 tokens** of context.
+
+
+
+---
+
+== 4. Decision Matrix: Architecture Selection
+
+[cols="1,2,2", options="header"]
+|===
+| Need | Recommended Architecture | Reasoning
+| **Highest Speed** | MoE (Mixtral/Gemini) | Lower active compute per token.
+| **Budget HW** | Dense (Llama/Mistral) | Fits in smaller total VRAM.
+| **Complex Logic**| Dense (High Param) | Global weight access for every token.
+| **Multi-Tasking**| MoE | Specialization via expert layers.
+|===
+
+---
+
+== 5. Platform Engineering Quizzes
+*Test your ability to size hardware for customer requests.*
+
+****
+**Quiz 1: The "Production Grade" Sizing**
+
+**Scenario:** A customer wants to deploy a **Dense 135B parameter model** using **INT8 (1 byte per param)** precision. They require a **128k context window**.
+
+* **A.** Calculate the VRAM needed for the weights.
+* **B.** If the KV Cache for this model at 128k context takes ~20 GB and system overhead is 4 GB, what is the total VRAM required?
+* **C.** Will this fit on a single **H100 (80GB)**?
+
+.Reveal Solution
+[%collapsible]
+=====
+* **A:** $135B \times 1 \text{ byte} = 135 \text{ GB}$.
+* **B:** $135 \text{ GB (Weights)} + 20 \text{ GB (KV)} + 4 \text{ GB (Overhead)} = 159 \text{ GB}$.
+* **C:** **No.** You would need at least two H100s (80GB x 2 = 160GB) linked via NVLink.
+=====
+****
+
+****
+**Quiz 2: The MoE Efficiency Trap**
+
+**Scenario:** You are deploying an **MoE model** with **1 Trillion total parameters** but only **60 Billion active parameters**. You are using **4-bit (0.5 bytes per param)** quantization.
+
+* **Question:** How much VRAM do you need just to load the weights (ignoring KV cache)?
+* *Hint: Remember the rule about MoE weights and VRAM.*
+
+.Reveal Solution
+[%collapsible]
+=====
+* **Answer:** $1,000B \times 0.5 \text{ bytes} = 500 \text{ GB}$.
+* **Reasoning:** Even though only 60B parameters are "active" during math, the **entire 1T parameters** must be stored in GPU memory to be accessible by the router at any millisecond.
+=====
+****
+
+How do these calculations align with the current GPU clusters you have available in your environment?

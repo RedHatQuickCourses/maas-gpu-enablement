@@ -1,0 +1,84 @@
+= AI Model Selection: Dense vs. Sparse (MoE) Models
+:author: Platform Engineering Guide
+:toc: left
+:icons: font
+
+As a platform engineer, your role is to balance performance, cost-efficiency, and user experience. Choosing between Dense and Mixture of Experts (MoE) architectures isn't just about "which model is smarter"—it’s about how you manage your GPU compute and VRAM budget.
+
+== 1. The Architectural Breakdown
+
+=== Dense Models
+In a dense model, every parameter is activated for every token generated. If you have a 70B parameter model, every word processed involves 70B calculations.
+
+ * Pros: Highly predictable performance; easier to optimize for specific hardware.
+
+ * Cons: Computationally expensive; scaling intelligence linearly increases the "cost per token."
+
+=== Sparse (MoE) Models
+An MoE model has a massive total parameter count (e.g., 1.8T), but for any given token, only a small fraction (the "experts") are activated by a router.
+
+ * Pros: You get the "intelligence" of a massive model with the "compute cost" of a much smaller one.
+
+* Cons: Enormous VRAM footprint. Even if you only use 10B parameters for a calculation, all 1.8T parameters must reside in memory.
+
+image::[Mixture of Experts Architecture]
+
+== 2. Reasoning Capabilities: "Depth vs. Breadth"
+
+There is a nuance in how these models "think":
+
+*Dense Reasoning:* Dense models tend to be more "robust" in sequential logic. Because every neuron is available for every task, they are often better at tasks requiring deep, multi-step synthesis where information needs to be cross-referenced across the entire weight space.
+
+*MoE Reasoning:* MoE models are masters of specialization. A router might send a coding prompt to a "coding expert" and a creative writing prompt to a "linguistic expert." However, if the router makes a mistake (routing a math problem to a creative writer expert), the reasoning collapses.
+
+*The Consensus:* MoE models (like the Gemini or GPT-4 families) generally outperform dense models of the same active parameter count because they can pack more specialized knowledge into their "experts."
+
+== 3. The Platform Engineer’s Perspective
+
+When providing models as a service, your decision usually comes down to three factors:
+
+=== A. Total Cost of Ownership (TCO)
+
+[cols="1,2,2", options="header"]
+|===
+| Metric | Dense Models | MoE Models
+| Compute Cost | High (High FLOPs per token) | Low (Low FLOPs per token)
+| Memory Cost | Lower (Smaller VRAM footprint) | Very High (Massive VRAM footprint)
+| Throughput | Lower (Slower generation) | Higher (Faster generation)
+|===
+
+*The Strategy:* If you have high traffic (many users), MoE is usually cheaper because you can process more tokens per second per GPU. If you have low, intermittent traffic, Dense is better because you aren't paying to keep 1TB of weights "idle" in VRAM.
+
+=== B. Latency vs. Throughput
+
+MoE is the king of latency. Because it only runs a fraction of its weights, the "Time to First Token" (TTFT) is significantly faster than a dense model of equivalent total size.
+
+Dense models are easier to batch. If your organization is doing "offline" tasks (like batch processing 1 million documents), dense models are often more efficient to "stack" on hardware.
+
+=== C. Complexity of Infrastructure
+
+Dense models are "set and forget." They fit into standard inference engines (vLLM, TGI) with minimal tuning.
+
+MoE models require complex memory management. You’ll likely need multi-node clusters and specialized partitioning (tensor parallelism) just to fit the model into memory.
+
+== 4. Decision Matrix
+
+[sidebar]
+
+*Select a Dense Model (e.g., Llama 3 70B) if:*
+
+ * You have limited GPU VRAM (e.g., only a few A100s/H100s).
+
+ * The use case is highly specialized and doesn't require "world-class" general knowledge.
+
+ * You are doing batch processing where raw throughput is less important than hardware utilization.
+
+[sidebar]
+
+*Select an MoE Model (e.g., Mixtral, Grok, or Gemini-class) if:*
+
+* You are building a General Purpose Chatbot for the whole company.
+
+* User experience (low latency/high speed) is the #1 priority.
+
+* You have the infrastructure to support massive VRAM requirements (H200s or B200 clusters).
