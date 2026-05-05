@@ -4,6 +4,8 @@ Now that you understand the business problem, let's explore the technical archit
 
 MaaS on Red Hat OpenShift AI is built on three distinct layers, each with specific responsibilities. Understanding this layered architecture is critical for effective configuration and troubleshooting.
 
+---
+
 === The three-layer architecture
 
 A user request for model inference passes through three distinct layers:
@@ -24,7 +26,9 @@ Authorization (Authorino) and rate limiting (Limitador). Enforces tier-based acc
 **KServe (Layer 3 - Model serving)**::
 Model serving infrastructure. Manages model lifecycle, distributed inference with LeaderWorkerSet, autoscaling, and health checks.
 
-**Why this layered architecture matters**:
+---
+
+=== **Why this layered architecture matters**:
 
 **Separation of concerns**::
 Each component has one job. KServe doesn't do authentication. Kuadrant doesn't do model serving. Gateway API doesn't enforce quotas.
@@ -40,7 +44,7 @@ Kuadrant's token tracking enables precise cross-department billing based on actu
 
 ---
 
-=== Layer 3 - KServe (model serving)
+=== Layer 3 - KServe (model inference)
 
 KServe provides the foundation for serving generative AI models on OpenShift.
 

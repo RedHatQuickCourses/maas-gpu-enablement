@@ -303,7 +303,7 @@ First, get the Gateway hostname:
 
 [source,role="execute"]
 ----
-GATEWAY_HOST=$(oc get gateway maas-default-gateway -n redhat-ods-applications -o jsonpath='{.status.addresses[0].value}')
+GATEWAY_HOST=$(oc get gateway maas-default-gateway -n openshift-ingress -o jsonpath='{.status.addresses[0].value}')
 echo "Gateway host: $GATEWAY_HOST"
 ----
 

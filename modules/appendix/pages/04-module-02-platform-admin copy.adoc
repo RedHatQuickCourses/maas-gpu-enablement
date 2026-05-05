@@ -1,59 +1,12 @@
-= 2.1:  Understanding tier-based governance
+= 2.1: Creating organizational structure and tier architecture
 
-== Tiers
+Before deploying AI models, you need to establish how ChocoTech's business units will access the MaaS platform. This starts with creating OpenShift groups that represent organizational structure and mapping them to access tiers.
 
-*Tiers control which AI asset model endpoints users can access based on their group membership.*
+== Understanding tier-based governance
 
-When multiple teams share large language models, tiers serve several critical functions:
-
-  * Preventing resource exhaustion resulting from unrestricted usage.
-  * Providing differential service levels to distinct user groups.
-  * Tracking and allocating costs based on consumption by each team.
-  * Controlling which teams are granted access to computationally expensive or sensitive models.
-
-[WARNING]
-MaaS assigns users to tiers based on their OpenShift group membership. In instances where a user is a member of multiple groups, the system defaults to assigning the tier with the highest level number.  Users are restricted to accessing only those models made available to their assigned tier and are precluded from accessing models in lower-level tiers, even if they belong to groups associated with those lower tiers
-
+Tier-based governance provides fair resource allocation across business units while preventing any single team from monopolizing GPU resources.
 
 === The three-tier model
-
-|===
-| Tier Name | Description | Level (Priority) | Group | Gateway-Endpoint
-
-| **Free**
-| Entry-level tier for basic users
-| 0 (Lowest)
-| system:authenticated
-| maas-default-gateway-tier-free
-
-| **Premium**
-| Intermediate tier for higher throughput requirements
-| 1
-| premium-users
-| maas-default-gateway-tier-premium
-
-| **Enterprise**
-| Top tier, designed for critical workloads
-| 2
-| enterprise-users
-| maas-default-gateway-tier-enterprise
-
-
-|===
-
----
-
-=== MaaS encompasses the following key capabilities:
-
- * Tier-based access control: Defining multiple service tiers, such as free, premium, or enterprise, each featuring distinct rate limits, quotas, and model access permissions tailored for various user groups.
- * Policy and quota management: Enforcing rate limiting and quota policies to mitigate the risk of resource exhaustion.
- * API key authentication: Regulating access to models through tier-based resource allocation and API key-based authentication.
- * Usage tracking: Monitoring consumption metrics essential for cost allocation and billing processes.
- * Observability: Providing the ability to monitor model access patterns, policy enforcement actions, and resource utilization.
-
-=== Tier to Group Mapping Retrieval
-The configuration map defining the tier-to-group mapping can be retrieved using the command: - oc get configmap tier-to-group-mapping -n redhat-ods-applications
-
 
 MaaS uses a three-tier model for resource allocation:
 

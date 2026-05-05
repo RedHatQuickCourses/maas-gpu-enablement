@@ -1,20 +1,19 @@
-= Course details
+= WorkShop details
 
 
 == Timing and schedule
 
-**Module 1**::
-MaaS Architecture (30 minutes)
-**Module 2**::
-MaaS Configuration (40 minutes)
-**Module 3**::
-Model Deployment to the MaaS catalog (55 minutes)
-**Module 4**::
-MaaS Governance, observability, and chargeback (50 minutes)
-**Module 5**::
-API integration and consumer experience (40 minutes)
-**Break time**::
-10 minutes between modules recommended
+ . **MaaS Architecture** (30 minutes)
+
+ . **MaaS Configuration** (40 minutes)
+
+ . **Model Deployment to the MaaS catalog** (55 minutes)
+
+ . **MaaS Governance, observability, and chargeback** (50 minutes)
+
+ . **API integration and consumer experience** (40 minutes)
+
+ . **Break time**: 10 minutes between modules recommended
 
 
 == Technical requirements
@@ -142,8 +141,6 @@ oc get pods -n redhat-ods-applications | grep kserve
 
 == Follow-up resources
 
-=== Next steps for participants
-
 * link:https://docs.redhat.com/en/documentation/red_hat_openshift_ai_self-managed/3.4[Red Hat OpenShift AI Documentation^, window=blank]
 * link:https://developers.redhat.com/products/red-hat-ai[Red Hat Developer - OpenShift AI Resources^, window=blank]
 * link:https://access.redhat.com/articles/rhoai-supported-configs-3.x[Red Hat OpenShift AI 3.x Supported Configurations^, window=blank]
@@ -156,9 +153,9 @@ oc get pods -n redhat-ods-applications | grep kserve
 Karlos Knox +
 Content Service Architect
 
-**Last Updated**: April 2026
+**Last Updated**: May 2026
 
-**QuickCourse Version**: 3.3
+**QuickCourse Version**: 3.4
 
 **Based on**: Red Hat OpenShift AI 3.3+ MaaS capabilities
 

@@ -2,22 +2,9 @@
 
 Welcome to the Red Hat OpenShift AI Models as a Service enablement QuickCourse!
 
-== What you'll learn
-
-In this QuickCourse, you will:
-
-* Understand the GPU silo crisis and how Models as a Service (MaaS) solves resource allocation challenges
-* Design and implement a centralized model hub with governed token-based consumption
-* Configure MaaS on Red Hat OpenShift AI using the operator and Custom Resource Definitions
-* Deploy generative AI models using llm-d, vLLM, and KServe components for distributed inference
-* Publish models to the OpenShift AI dashboard catalog for self-service access with role-based permissions
-* Implement governance policies with tiered service limits and rate limiting using Kuadrant
-* Generate usage reports for chargeback and monitor GPU utilization metrics with Grafana
-* Integrate AI models into applications using OpenAI-compatible APIs with proper retry logic
-
 == Who this is for
 
-This QuickCourse is built for Platform Engineers and Developers—including associates, partners, and customers—looking to modernize their GPU infrastructure. You will learn how to break down team silos and establish a centralized, governed environment that empowers lines of business to build agentic AI applications with ease.
+This QuickCourse is built for Platform Engineers and Developers—including associates, partners, and customers—looking to modernize their GPU infrastructure with OpenShift AI. You will learn how to break down team silos and establish a centralized, governed environment that empowers lines of business to build agentic AI applications with ease.
 
 **Experience level**: Intermediate
 
@@ -30,6 +17,19 @@ Before starting this QuickCourse, you should have:
 * Familiarity with core GPU concepts and generic GPU enablement
 * Understanding of API concepts and REST principles
 * Basic command line experience
+
+== What you'll learn
+
+In this QuickCourse, you will:
+
+* Understand how Models as a Service (MaaS) solves the GPU resource allocation challenges
+* Design and implement a centralized model hub with governed token-based consumption
+* Configure MaaS on Red Hat OpenShift AI using the operator and Custom Resource Definitions
+* Deploy generative AI models using llm-d, vLLM, and KServe components for distributed inference
+* Publish models to the OpenShift AI ModelsAsService catalog for self-service access with role-based permissions
+* Implement governance policies with tiered service limits and rate limiting using Kuadrant
+* Generate usage reports for chargeback and monitor GPU utilization metrics with Grafana
+* Integrate AI models into applications using OpenAI-compatible APIs with proper retry logic
 
 == QuickCourse environment
 

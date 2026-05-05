@@ -1,5 +1,6 @@
-= 1.4: Troubleshooting and Summary
+= 1.4: Summary
 
+////
 **Issue**: Kuadrant pods not starting after creating Kuadrant CR
 
 **Solution**:
@@ -53,6 +54,8 @@
 . Click **Install** and select openshift-lws-operator namespace
 . Wait for CSV to show Succeeded status
 . LeaderWorkerSet is required for llm-d orchestration in later modules
+
+////
 
 == Learning outcomes
 

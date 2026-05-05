@@ -6,15 +6,16 @@ ChocoTech's GPU infrastructure is already operational from prior AI/ML implement
 
 This module guides you through the activation sequence: verifying required operators, creating infrastructure components, and enabling MaaS features in the OpenShift AI platform. By the end, ChocoTech's platform will be ready for the detailed configuration work in Module 2.
 
-== Step 1: Pre-Configuration Check & Operator Verification
+== Step 1: Configuration Check & Operator Verification
 
 Before applying any configuration, ensure your cluster has the necessary operators installed from Ecosystem (previously OperatorHub). If any of these are missing, the deployment will silently fail—the commands will appear to succeed, but the expected pods and resources will never materialize.
 
-*ChocoTech's platform team learned this lesson the hard way when they attempted to enable MaaS without the Connectivity Link operator installed. The DataScienceCluster patch appeared to succeed, but the maas-api pods never appeared—no error messages, just silent failure. Verifying operators upfront prevents these frustrating troubleshooting sessions.*
+*_ChocoTech's platform team learned this lesson the hard way when they attempted to enable MaaS without the Connectivity Link operator installed. The DataScienceCluster patch appeared to succeed, but the maas-api pods never appeared—no error messages, just silent failure. Verifying operators upfront prevents these frustrating troubleshooting sessions._*
 
-**Required operators**:
 
-Red Hat OpenShift Service Mesh::
+== **Required operators**:
+
+Red Hat OpenShift Service Mesh 3::
 Provides the underlying Istio networking that powers the Gateway API implementation.
 
 Red Hat Connectivity Link (v1.2+)::
@@ -23,10 +24,10 @@ Delivers the Kuadrant governance framework. The Connectivity Link operator manag
 Red Hat OpenShift AI (v3.3+)::
 The core platform operator that manages the DataScienceCluster and deploys MaaS components when enabled.
 
-LeaderWorkerSet Operator::
-Mandatory for llm-d orchestration. Manages distributed inference for ultra-large models that exceed single-node VRAM capacity.
+Leader Worker Set Operator::
+Mandatory for llm-d orchestration. Distributed pod management for ultra-large models that exceed single-node VRAM capacity.
 
-=== Verify operator installation
+== Verify operator installation
 
 Check that all required operators are installed and healthy:
 
@@ -52,7 +53,7 @@ If any operators are missing, install them from OperatorHub before proceeding:
 3. Click **Install** and follow the prompts
 4. Wait for the operator to reach **Succeeded** status before continuing
 
-== Phase 2: Infrastructure Foundation
+== Step 2: Infrastructure Foundation
 
 The OpenShift AI operator is a strict gatekeeper. It will not provision the MaaS API unless the foundational network routing and security engines are actively running on the cluster. This phase creates those prerequisites.
 
@@ -60,9 +61,11 @@ The OpenShift AI operator is a strict gatekeeper. It will not provision the MaaS
 
 The Connectivity Link operator manages Kuadrant, but Kuadrant itself must be explicitly initialized. Creating a Kuadrant custom resource tells the operator to spin up Authorino (authentication/authorization) and Limitador (rate limiting and quota enforcement).
 
-*ChocoTech needs Kuadrant to enforce the tier-based quotas that prevent Marketing's bronze-tier applications from monopolizing GPU resources during campaign launches. Without Kuadrant's Limitador component, there would be no mechanism to track and limit token consumption across teams.*
+*_ChocoTech needs Kuadrant to enforce the tier-based quotas that prevent Marketing's bronze-tier applications from monopolizing GPU resources during campaign launches. Without Kuadrant's Limitador component, there would be no mechanism to track and limit token consumption across teams._*
 
-Create the Kuadrant instance:
+---
+
+==== Create the Kuadrant instance:
 
 [source,role="execute"]
 ----
@@ -101,6 +104,8 @@ limitador-operator-controller-manager-xxxxxxxxx-xxxxx    1/1     Running       0
 ----
 
 **Why this matters**: Authorino validates Bearer tokens and enforces model access policies. Limitador tracks requests per minute and token consumption quotas. Both are mandatory for the MaaS API to function.
+
+---
 
 === Create the MaaS Gateway
 

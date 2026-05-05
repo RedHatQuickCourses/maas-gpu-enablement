@@ -10,21 +10,7 @@ She hands you a requirements document:
 * All access must be authenticated with API tokens for audit trails
 * Rate limits must prevent any single team from monopolizing GPU resources
 
-Your task is to establish the governance foundation before deploying models in Module 3.
-
-toc::[]
-
-== Learning objectives
-
-By the end of this module, you'll be able to:
-
-* Create OpenShift groups representing ChocoTech business units and map them to access tiers
-* Configure ServiceAccounts, Roles, and RoleBindings for API-based model access with RBAC
-* Generate and test JWT tokens for authenticated model inference requests
-* Define and deploy MaaSTier custom resources with rate limits and quotas for Gold, Silver, and Bronze tiers
-* Verify governance readiness before model deployment using a comprehensive pre-deployment checklist
-
-== Module roadmap
+---
 
 In this module, you'll create business unit groups, configure RBAC for API access, generate authentication tokens, and deploy tier-based governance policies that will control model access in Module 3.
 
