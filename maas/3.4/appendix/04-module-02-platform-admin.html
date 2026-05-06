@@ -85,75 +85,6 @@
   </li>
 </ul>
   </li>
-  <li class="nav-item" data-depth="1">
-    <button class="nav-item-toggle"></button>
-    <a class="nav-link" href="05-module-01-model-deployment.html">Model Deployment</a>
-<ul class="nav-list">
-  <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="05a-model-selection-strategy.html">3.1a: Choosing the right model for your workload</a>
-  </li>
-  <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="05-module-02-model-deployment.html">3.1: Understanding serving runtimes and distributed inference</a>
-  </li>
-  <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="05-module-03-model-deployment.html">3.4: Publish model to the MaaS catalog</a>
-  </li>
-  <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="05-module-04-model-deployment.html">3.5: Deploy a second model for multi-model catalog</a>
-  </li>
-  <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="05b-lifecycle-management-gitops.html">3.6: Production lifecycle management and GitOps</a>
-  </li>
-</ul>
-  </li>
-  <li class="nav-item" data-depth="1">
-    <button class="nav-item-toggle"></button>
-    <a class="nav-link" href="06-module-00-governance.html">MaaS Governance</a>
-<ul class="nav-list">
-  <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="06-module-01-governance.html">4.1: Understanding MaaS governance tiers</a>
-  </li>
-  <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="06-module-02-governance.html">4.2: Create OpenShift groups for ChocoTech departments</a>
-  </li>
-  <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="06-module-03-governance.html">4.4: Deploy Grafana for observability</a>
-  </li>
-  <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="06-module-04-governance.html">4.5: Generate chargeback reports</a>
-  </li>
-  <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="06a-security-hardening.html">4.6: Production security hardening</a>
-  </li>
-  <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="06-module-05-governance.html">Troubleshooting</a>
-  </li>
-</ul>
-  </li>
-  <li class="nav-item" data-depth="1">
-    <button class="nav-item-toggle"></button>
-    <a class="nav-link" href="07-module-00-api-integration.html">Developer Experience - API Integration</a>
-<ul class="nav-list">
-  <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="07-module-01-api-integration.html">5.1: Generate API tokens in Gen AI Studio</a>
-  </li>
-  <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="07-module-02-api-integration.html">5.2: Consume models via OpenAI-compatible API</a>
-  </li>
-  <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="07-module-03-api-integration.html">5.3: Implement retry logic for rate limiting</a>
-  </li>
-  <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="07-module-04-api-integration.html">5.4: OpenAI API compatibility and migration patterns</a>
-  </li>
-  <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="07-module-05-api-integration.html">Troubleshooting</a>
-  </li>
-</ul>
-  </li>
-  <li class="nav-item" data-depth="1">
-    <a class="nav-link" href="08-conclusion.html">Conclusion</a>
-  </li>
 </ul>
   </li>
 </ul>
@@ -197,6 +128,35 @@
 <article class="doc">
 <h1 class="page">2.1:  Understanding tier-based governance</h1>
 <div class="sect1">
+<h2 id="_maas_encompasses_the_following_key_capabilities"><a class="anchor" href="#_maas_encompasses_the_following_key_capabilities"></a>MaaS encompasses the following key capabilities:</h2>
+<div class="sectionbody">
+<div class="dlist">
+<dl>
+<dt class="hdlist1">Tier-based access control</dt>
+<dd>
+<p>Defining multiple service tiers, such as free, premium, or enterprise, each featuring distinct rate limits, quotas, and model access permissions tailored for various user groups.</p>
+</dd>
+<dt class="hdlist1">Policy and quota management</dt>
+<dd>
+<p>Enforcing rate limiting and quota policies to mitigate the risk of resource exhaustion.</p>
+</dd>
+<dt class="hdlist1">API key authentication</dt>
+<dd>
+<p>Regulating access to models through tier-based resource allocation and API key-based authentication.</p>
+</dd>
+<dt class="hdlist1">Usage tracking</dt>
+<dd>
+<p>Monitoring consumption metrics essential for cost allocation and billing processes.</p>
+</dd>
+<dt class="hdlist1">Observability</dt>
+<dd>
+<p>Providing the ability to monitor model access patterns, policy enforcement actions, and resource utilization.</p>
+</dd>
+</dl>
+</div>
+</div>
+</div>
+<div class="sect1">
 <h2 id="_tiers"><a class="anchor" href="#_tiers"></a>Tiers</h2>
 <div class="sectionbody">
 <div class="paragraph">
@@ -234,7 +194,7 @@ MaaS assigns users to tiers based on their OpenShift group membership. In instan
 </table>
 </div>
 <div class="sect2">
-<h3 id="_the_three_tier_model"><a class="anchor" href="#_the_three_tier_model"></a>The three-tier model</h3>
+<h3 id="_three_default_tiers"><a class="anchor" href="#_three_default_tiers"></a>Three Default Tiers</h3>
 <table class="tableblock frame-all grid-all stretch">
 <colgroup>
 <col style="width: 20%;">
@@ -279,86 +239,14 @@ MaaS assigns users to tiers based on their OpenShift group membership. In instan
 <hr>
 </div>
 <div class="sect2">
-<h3 id="_maas_encompasses_the_following_key_capabilities"><a class="anchor" href="#_maas_encompasses_the_following_key_capabilities"></a>MaaS encompasses the following key capabilities:</h3>
-<div class="ulist">
-<ul>
-<li>
-<p>Tier-based access control: Defining multiple service tiers, such as free, premium, or enterprise, each featuring distinct rate limits, quotas, and model access permissions tailored for various user groups.</p>
-</li>
-<li>
-<p>Policy and quota management: Enforcing rate limiting and quota policies to mitigate the risk of resource exhaustion.</p>
-</li>
-<li>
-<p>API key authentication: Regulating access to models through tier-based resource allocation and API key-based authentication.</p>
-</li>
-<li>
-<p>Usage tracking: Monitoring consumption metrics essential for cost allocation and billing processes.</p>
-</li>
-<li>
-<p>Observability: Providing the ability to monitor model access patterns, policy enforcement actions, and resource utilization.</p>
-</li>
-</ul>
-</div>
-</div>
-<div class="sect2">
 <h3 id="_tier_to_group_mapping_retrieval"><a class="anchor" href="#_tier_to_group_mapping_retrieval"></a>Tier to Group Mapping Retrieval</h3>
 <div class="paragraph">
-<p>The configuration map defining the tier-to-group mapping can be retrieved using the command: - oc get configmap tier-to-group-mapping -n redhat-ods-applications</p>
+<p>The configuration map defining the tier-to-group mapping can be retrieved using the command:</p>
 </div>
-<div class="paragraph">
-<p>MaaS uses a three-tier model for resource allocation:</p>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs"> oc get configmap tier-to-group-mapping -n redhat-ods-applications</code></pre>
 </div>
-<div class="ulist">
-<ul>
-<li>
-<p><strong>Gold tier</strong>: Production workloads with highest priority and guaranteed resources</p>
-<div class="ulist">
-<ul>
-<li>
-<p>Intended for mission-critical applications</p>
-</li>
-<li>
-<p>Premium rate limits and quotas</p>
-</li>
-<li>
-<p>Highest request processing priority</p>
-</li>
-</ul>
-</div>
-</li>
-<li>
-<p><strong>Silver tier</strong>: Development and moderate usage workloads with balanced resources</p>
-<div class="ulist">
-<ul>
-<li>
-<p>Intended for development and staging environments</p>
-</li>
-<li>
-<p>Moderate rate limits and quotas</p>
-</li>
-<li>
-<p>Medium request processing priority</p>
-</li>
-</ul>
-</div>
-</li>
-<li>
-<p><strong>Bronze tier</strong>: Exploratory and low-priority workloads with shared resources</p>
-<div class="ulist">
-<ul>
-<li>
-<p>Intended for experimentation and testing</p>
-</li>
-<li>
-<p>Conservative rate limits and quotas</p>
-</li>
-<li>
-<p>Lower request processing priority</p>
-</li>
-</ul>
-</div>
-</li>
-</ul>
 </div>
 </div>
 <div class="sect2">
@@ -433,8 +321,66 @@ MaaS assigns users to tiers based on their OpenShift group membership. In instan
 </tbody>
 </table>
 <div class="paragraph">
-<p>In Module 3, you&#8217;ll deploy two models:</p>
+<p>MaaS uses a three-tier model for resource allocation:</p>
 </div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Gold tier</strong>: Production workloads with highest priority and guaranteed resources</p>
+<div class="ulist">
+<ul>
+<li>
+<p>Intended for mission-critical applications</p>
+</li>
+<li>
+<p>Premium rate limits and quotas</p>
+</li>
+<li>
+<p>Highest request processing priority</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p><strong>Silver tier</strong>: Development and moderate usage workloads with balanced resources</p>
+<div class="ulist">
+<ul>
+<li>
+<p>Intended for development and staging environments</p>
+</li>
+<li>
+<p>Moderate rate limits and quotas</p>
+</li>
+<li>
+<p>Medium request processing priority</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p><strong>Bronze tier</strong>: Exploratory and low-priority workloads with shared resources</p>
+<div class="ulist">
+<ul>
+<li>
+<p>Intended for experimentation and testing</p>
+</li>
+<li>
+<p>Conservative rate limits and quotas</p>
+</li>
+<li>
+<p>Lower request processing priority</p>
+</li>
+</ul>
+</div>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_in_module_3_youll_deploy_two_models"><a class="anchor" href="#_in_module_3_youll_deploy_two_models"></a>In Module 3, you&#8217;ll deploy two models:</h2>
+<div class="sectionbody">
 <div class="ulist">
 <ul>
 <li>
@@ -447,7 +393,6 @@ MaaS assigns users to tiers based on their OpenShift group membership. In instan
 </div>
 <div class="paragraph">
 <p>This mapping ensures Quality Control&#8217;s production defect detection system gets guaranteed resources, while Marketing&#8217;s exploratory sentiment analysis doesn&#8217;t impact critical workloads.</p>
-</div>
 </div>
 </div>
 </div>
