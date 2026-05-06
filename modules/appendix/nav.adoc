@@ -8,8 +8,11 @@
 *** xref:03-module-04-architecture.adoc[]
 ** xref:04-module-01-platform-admin.adoc[Access Control & Governance]
 *** xref:04-module-02-platform-admin.adoc[]
+*** xref:04-module-02.1-platform-admin.adoc[]
 *** xref:04-module-03-platform-admin.adoc[]
 *** xref:04-module-04-platform-admin.adoc[]
+*** xref:04-module-05-platform-admin.adoc[]
+*** xref:04-module-06-platform-summary.adoc[]
 ////
 ** xref:05-module-01-model-deployment.adoc[Model Deployment]
 *** xref:05a-model-selection-strategy.adoc[]

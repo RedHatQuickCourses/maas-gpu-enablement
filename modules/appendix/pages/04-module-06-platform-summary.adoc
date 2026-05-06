@@ -1,0 +1,151 @@
+= Module summary
+
+In this module, you transformed ChocoTech's MaaS platform from infrastructure-only to governance-ready:
+
+=== What you accomplished
+
+* *Organizational structure*: Created OpenShift groups for business units and mapped them to access tiers
+* *Authentication*: Configured ServiceAccounts and JWT token-based API authentication with RBAC
+* *Tier policies*: Deployed Gold, Silver, and Bronze tier policies with rate limits and quotas
+* *Component health*: Verified all governance components (Kuadrant, Authorino, Limitador) are operational
+* *End-to-end testing*: Tested authentication flow from token generation to Gateway validation
+
+=== Key technical capabilities unlocked
+
+* *Identity management*: Business units represented as OpenShift groups, not individual users
+* *Programmatic access*: Applications can authenticate via ServiceAccount tokens (no human credentials)
+* *Least privilege RBAC*: ServiceAccounts have read-only model access (get/list only)
+* *Tier enforcement*: Rate limits and quotas automatically applied based on group membership
+* *Audit trails*: All requests traceable to ServiceAccounts and business unit groups
+
+=== What's next: Module 3
+
+The platform is now ready for governed model deployment. Module 3 will guide you through:
+
+1. *Deploying llama3-8b*: Meta's 8B parameter model for all tiers (Quality Control, R&D, Marketing can access)
+2. *Deploying nemotron-8b*: NVIDIA's 8B parameter model for Bronze and Silver only (demonstrates selective tier access)
+3. *Publishing to catalog*: Models appear in Gen AI Studio with tier annotations
+4. *Testing tier access control*: Verify Gold users see all models, Bronze users see subset
+5. *Verifying rate limits*: Send high-volume requests to trigger HTTP 429 responses
+
+By the end of Module 3, ChocoTech's teams will have self-service access to governed AI models through the Gen AI Studio dashboard and API endpoints.
+
+== Knowledge check
+
+Test your understanding of tier governance:
+
+1. *Why are MaaSTier policies created before model deployment, rather than after?*
++
+MaaSTier policies must exist before deployment so the MaaS operator can enforce rate limits and quotas from the first inference request. Creating policies after deployment would allow a window of uncontrolled access.
+
+2. *What happens if a Bronze tier user tries to exceed 20 requests/minute?*
++
+Limitador tracks requests per tier and rejects requests exceeding the rate limit with HTTP 429 Too Many Requests. The user must wait until the next minute window to send more requests.
+
+3. *How does Authorino know which tier a user belongs to?*
++
+Authorino validates the JWT token and extracts the ServiceAccount identity. It then checks which OpenShift groups that ServiceAccount's user belongs to. The MaaSTier resources map groups to tiers (e.g., `chocotech-quality-control` → Gold tier).
+
+== Troubleshooting
+
+If you encounter issues with governance components:
+
+=== AuthConfig not found
+
+**Issue**: `oc get authconfig -n redhat-ods-applications` returns "No resources found"
+
+**Solution**:
+
+1. Verify MaaS was enabled in Module 1:
++
+[source,bash]
+----
+oc get datasciencecluster default-dsc -o jsonpath='{.spec.components.modelsAsService.managementState}'
+----
++
+Should return: `Managed`
+
+2. Check MaaS operator logs:
++
+[source,bash]
+----
+oc logs -n redhat-ods-operator deployment/rhods-operator | grep -i authorino
+----
+
+3. Recreate AuthConfig manually using the command in Exercise 5
+
+=== Authorino pods not Running
+
+**Issue**: Authorino pods show `CrashLoopBackOff` or `Pending`
+
+**Solution**:
+
+1. Check pod events:
++
+[source,bash]
+----
+oc describe pod -l app=authorino -n redhat-ods-applications
+----
+
+2. Common causes:
+** *Insufficient resources*: Check node CPU/memory capacity
+** *Image pull errors*: Verify network connectivity to quay.io
+** *Kuadrant operator not installed*: Check Kuadrant operator in `openshift-operators`
+
+=== Token authentication returns 401 Unauthorized
+
+**Issue**: `curl` with Bearer token returns HTTP 401 instead of HTTP 200
+
+**Solution**:
+
+1. Verify token is valid and not expired:
++
+[source,bash]
+----
+# Regenerate token
+TOKEN=$(oc create token marketing-sentiment-app -n chocotech-models --duration=1h)
+----
+
+2. Verify RBAC is configured:
++
+[source,bash]
+----
+oc get role llm-inference-viewer -n chocotech-models
+oc get rolebinding marketing-sentiment-app-binding -n chocotech-models
+----
+
+3. Check Authorino logs for authentication errors:
++
+[source,bash]
+----
+oc logs -l app=authorino -n redhat-ods-applications
+----
+
+=== MaaSTier resources not created
+
+**Issue**: `oc get maastier` returns "error: the server doesn't have a resource type 'maastier'"
+
+**Solution**:
+
+1. Verify MaaS CRDs are installed:
++
+[source,bash]
+----
+oc get crd | grep maas
+----
++
+Should show: `maastiers.maas.opendatahub.io`
+
+2. If CRD is missing, verify MaaS is enabled:
++
+[source,bash]
+----
+oc get datasciencecluster default-dsc -o jsonpath='{.spec.components.modelsAsService.managementState}'
+----
+
+3. Check OpenShift AI operator logs:
++
+[source,bash]
+----
+oc logs -n redhat-ods-operator deployment/rhods-operator | grep -i maastier
+----
