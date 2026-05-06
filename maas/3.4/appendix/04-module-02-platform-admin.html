@@ -194,7 +194,7 @@ MaaS assigns users to tiers based on their OpenShift group membership. In instan
 </table>
 </div>
 <div class="sect2">
-<h3 id="_three_default_tiers"><a class="anchor" href="#_three_default_tiers"></a>Three Default Tiers</h3>
+<h3 id="_maas_default_tiers"><a class="anchor" href="#_maas_default_tiers"></a>MaaS Default Tiers</h3>
 <table class="tableblock frame-all grid-all stretch">
 <colgroup>
 <col style="width: 20%;">
@@ -257,7 +257,7 @@ MaaS assigns users to tiers based on their OpenShift group membership. In instan
 <div class="ulist">
 <ul>
 <li>
-<p><strong>Fair resource allocation</strong>: Prevents Bronze tier users from consuming resources needed by Gold tier production workloads</p>
+<p><strong>Fair resource allocation</strong>: Prevents Free tier users from consuming resources needed by Enterprise tier production workloads</p>
 </li>
 <li>
 <p><strong>Cost control</strong>: Rate limits and quotas cap resource consumption per tier</p>
@@ -266,7 +266,7 @@ MaaS assigns users to tiers based on their OpenShift group membership. In instan
 <p><strong>Chargeback reporting</strong>: Track and allocate AI infrastructure costs by tier and business unit</p>
 </li>
 <li>
-<p><strong>Quality of service</strong>: Gold tier gets higher priority during peak demand</p>
+<p><strong>Quality of service</strong>: Enterprise tier gets higher priority during peak demand</p>
 </li>
 </ul>
 </div>
@@ -275,7 +275,7 @@ MaaS assigns users to tiers based on their OpenShift group membership. In instan
 </div>
 </div>
 <div class="sect2">
-<h3 id="_chocotechs_business_unit_mapping"><a class="anchor" href="#_chocotechs_business_unit_mapping"></a>ChocoTech&#8217;s business unit mapping</h3>
+<h3 id="_chocotechs_business_unit_tier_mapping"><a class="anchor" href="#_chocotechs_business_unit_tier_mapping"></a>ChocoTech&#8217;s business unit tier mapping</h3>
 <div class="paragraph">
 <p>Based on the CIO&#8217;s requirements document, ChocoTech&#8217;s business units map to tiers as follows:</p>
 </div>
@@ -320,61 +320,6 @@ MaaS assigns users to tiers based on their OpenShift group membership. In instan
 </tr>
 </tbody>
 </table>
-<div class="paragraph">
-<p>MaaS uses a three-tier model for resource allocation:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><strong>Gold tier</strong>: Production workloads with highest priority and guaranteed resources</p>
-<div class="ulist">
-<ul>
-<li>
-<p>Intended for mission-critical applications</p>
-</li>
-<li>
-<p>Premium rate limits and quotas</p>
-</li>
-<li>
-<p>Highest request processing priority</p>
-</li>
-</ul>
-</div>
-</li>
-<li>
-<p><strong>Silver tier</strong>: Development and moderate usage workloads with balanced resources</p>
-<div class="ulist">
-<ul>
-<li>
-<p>Intended for development and staging environments</p>
-</li>
-<li>
-<p>Moderate rate limits and quotas</p>
-</li>
-<li>
-<p>Medium request processing priority</p>
-</li>
-</ul>
-</div>
-</li>
-<li>
-<p><strong>Bronze tier</strong>: Exploratory and low-priority workloads with shared resources</p>
-<div class="ulist">
-<ul>
-<li>
-<p>Intended for experimentation and testing</p>
-</li>
-<li>
-<p>Conservative rate limits and quotas</p>
-</li>
-<li>
-<p>Lower request processing priority</p>
-</li>
-</ul>
-</div>
-</li>
-</ul>
-</div>
 </div>
 </div>
 </div>

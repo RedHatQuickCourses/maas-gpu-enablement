@@ -235,6 +235,39 @@ servicemeshoperator3.v3.3.2               Red Hat OpenShift Service Mesh 3   3.3
 <p><strong><em>ChocoTech needs Kuadrant to enforce the tier-based quotas that prevent Marketing&#8217;s bronze-tier applications from monopolizing GPU resources during campaign launches. Without Kuadrant&#8217;s Limitador component, there would be no mechanism to track and limit token consumption across teams.</em></strong></p>
 </div>
 <hr>
+</div>
+<div class="sect2">
+<h3 id="_architectural_note_the_operator_vs_operand_pattern"><a class="anchor" href="#_architectural_note_the_operator_vs_operand_pattern"></a>Architectural Note: The Operator vs. Operand Pattern</h3>
+<div class="paragraph">
+<p>Before we apply the configuration YAML, it is important to understand <strong>why</strong> we deploy the governance engine this specific way.</p>
+</div>
+<div class="paragraph">
+<p>When setting up Red Hat Connectivity Link (Kuadrant) for MaaS, we follow a strict OpenShift and Kubernetes best practice: <strong>Separating the Operator from the Operand.</strong></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>The Operator (The Manager):</strong> We install the top-level Operator subscription in a cluster-wide namespace like <code>openshift-operators</code>. This is the default global location and prevents us from getting tangled in the complexities of namespace-scoped OLM operator behaviors.</p>
+</li>
+<li>
+<p><strong>The Operand (The Instance):</strong> We deploy the actual <code>Kuadrant</code> Custom Resource (the instance doing the actual work) into its own dedicated namespace, <code>kuadrant-system</code>.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>We deploy it this way because it maintains consistency with upstream project documentation and reflects true enterprise reality. By keeping the controller separate from the workload it manages, we ensure a cleaner, more secure, and highly scalable GitOps foundation for your AI factory.</p>
+</div>
+<div class="sect3">
+<h4 id="_create_the_new_namespace"><a class="anchor" href="#_create_the_new_namespace"></a>Create the new namespace</h4>
+<div class="paragraph">
+<p>Before you can deploy the Kuadrant resource into kuadrant-system, you have to create the namespace.</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">oc create namespace kuadrant-system</code></pre>
+</div>
+</div>
+</div>
 <div class="sect3">
 <h4 id="_create_the_kuadrant_instance"><a class="anchor" href="#_create_the_kuadrant_instance"></a>Create the Kuadrant instance:</h4>
 <div class="listingblock execute">
@@ -244,7 +277,7 @@ apiVersion: kuadrant.io/v1beta1
 kind: Kuadrant
 metadata:
   name: kuadrant
-  namespace: openshift-operators
+  namespace: kuadrant-system
 EOF</code></pre>
 </div>
 </div>
@@ -261,7 +294,7 @@ EOF</code></pre>
 </div>
 <div class="listingblock execute">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-none hljs">oc get pods -n openshift-operators | grep -E "(kuadrant|limitador|authorino)"</code></pre>
+<pre class="highlightjs highlight"><code class="language-none hljs">oc get pods -n kuadrant-system | grep -E "(kuadrant|limitador|authorino)"</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -269,35 +302,27 @@ EOF</code></pre>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre>NAME                                                    READY    STATUS    RESTARTS   AGE
-authorino-xxxxxxxxx-xxxxx                                1/1     Running       0      2m41s
-authorino-operator-xxxxxxxxx-xxxxx                       1/1     Running       0      44m
-kuadrant-console-plugin-xxxxxxxxx-xxxxx                  1/1     Running       0      12m
-kuadrant-operator-controller-manager-xxxxxxxxx-xxxxx     1/1     Running       0      12m
-limitador-limitador-xxxxxxxxx-xxxxx                      1/1     Running       0      2m42s
-limitador-operator-controller-manager-xxxxxxxxx-xxxxx    1/1     Running       0      12m</pre>
+<pre>NAME                                  READY    STATUS   RESTARTS     AGE
+authorino-79cbc94b89-knjf7             1/1     Running     0        2m13s
+limitador-limitador-67566c68b4-ktnhb   1/1     Running     0        2m15s
+
+**Why this matters**: Authorino validates Bearer tokens and enforces model access policies. Limitador tracks requests per minute and token consumption quotas. Both are mandatory for the MaaS API to function.
+
+---
+
+=== Create the MaaS Gateway
+
+KServe requires a specific Gateway resource to route external traffic to your models. This Gateway acts as the single API endpoint for all model inference traffic across ChocoTech's business units.
+
+*The maas-default-gateway becomes the single API endpoint for all of ChocoTech's model inference traffic. Instead of Quality Control, R&amp;D, Marketing, and Supply Chain each managing separate endpoints, they all send requests to one gateway that handles routing, authentication, and policy enforcement.*
+
+Create the Gateway resource:
+
+[source,role="execute"]</pre>
 </div>
 </div>
 <div class="paragraph">
-<p><strong>Why this matters</strong>: Authorino validates Bearer tokens and enforces model access policies. Limitador tracks requests per minute and token consumption quotas. Both are mandatory for the MaaS API to function.</p>
-</div>
-<hr>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_create_the_maas_gateway"><a class="anchor" href="#_create_the_maas_gateway"></a>Create the MaaS Gateway</h3>
-<div class="paragraph">
-<p>KServe requires a specific Gateway resource to route external traffic to your models. This Gateway acts as the single API endpoint for all model inference traffic across ChocoTech&#8217;s business units.</p>
-</div>
-<div class="paragraph">
-<p><strong>The maas-default-gateway becomes the single API endpoint for all of ChocoTech&#8217;s model inference traffic. Instead of Quality Control, R&amp;D, Marketing, and Supply Chain each managing separate endpoints, they all send requests to one gateway that handles routing, authentication, and policy enforcement.</strong></p>
-</div>
-<div class="paragraph">
-<p>Create the Gateway resource:</p>
-</div>
-<div class="listingblock execute">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-none hljs">cat &lt;&lt;EOF | oc apply -f -
+<p>cat &lt;&lt;EOF | oc apply -f -
 apiVersion: gateway.networking.k8s.io/v1
 kind: Gateway
 metadata:
@@ -312,60 +337,56 @@ spec:
     allowedRoutes:
       namespaces:
         from: All
-EOF</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>Expected output:</p>
+EOF</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre>gateway.gateway.networking.k8s.io/maas-default-gateway created</pre>
+<pre>Expected output:</pre>
 </div>
 </div>
 <div class="paragraph">
-<p>Verify the Gateway is programmed correctly:</p>
-</div>
-<div class="listingblock execute">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-none hljs">oc get gateway maas-default-gateway -n openshift-ingress</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>Expected output (PROGRAMMED should show True):</p>
+<p>gateway.gateway.networking.k8s.io/maas-default-gateway created</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre>NAME                   CLASS                          ADDRESS   PROGRAMMED   AGE
-maas-default-gateway   openshift-gateway-controller             True         7s</pre>
+<pre>Verify the Gateway is programmed correctly:
+
+[source,role="execute"]</pre>
 </div>
 </div>
 <div class="paragraph">
-<p><strong>Note</strong>: It may take 30-60 seconds for the Gateway to transition from <code>Unknown</code> to <code>True</code>. If it remains <code>Unknown</code> or shows <code>False</code> after 2 minutes, check the Service Mesh control plane status:</p>
+<p>oc get gateway maas-default-gateway -n openshift-ingress</p>
 </div>
-</div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_phase_3_platform_activation"><a class="anchor" href="#_phase_3_platform_activation"></a>Phase 3: Platform Activation</h2>
-<div class="sectionbody">
-<div class="paragraph">
-<p>With the infrastructure in place—operators verified, Kuadrant running, Gateway created—you can now instruct the OpenShift AI operator to enable MaaS features.</p>
-</div>
-<div class="sect2">
-<h3 id="_enable_the_maas_backend"><a class="anchor" href="#_enable_the_maas_backend"></a>Enable the MaaS Backend</h3>
-<div class="paragraph">
-<p>Patching the DataScienceCluster sets the <code>modelsAsService</code> management state to <code>Managed</code>. This prompts the operator to build the maas-api pods and default RBAC roles that provide the MaaS API layer.</p>
-</div>
-<div class="paragraph">
-<p><strong>This patch tells the OpenShift AI operator to provision the MaaS API layer. Once enabled, Platform Engineers can deploy models to a central catalog that all four business units can access via token-based authentication, eliminating the redundant Llama-3 deployments that were wasting 128GB of storage.</strong></p>
-</div>
-<div class="paragraph">
-<p>Apply the DataScienceCluster patch:</p>
-</div>
-<div class="listingblock execute">
+<div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-none hljs">oc patch datasciencecluster default-dsc --type=merge -p '{
+<pre>Expected output (PROGRAMMED should show True):</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>NAME                   CLASS                          ADDRESS   PROGRAMMED   AGE
+maas-default-gateway   openshift-gateway-controller             True         7s</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>**Note**: It may take 30-60 seconds for the Gateway to transition from `Unknown` to `True`. If it remains `Unknown` or shows `False` after 2 minutes, check the Service Mesh control plane status:
+
+== Phase 3: Platform Activation
+
+With the infrastructure in place—operators verified, Kuadrant running, Gateway created—you can now instruct the OpenShift AI operator to enable MaaS features.
+
+=== Enable the MaaS Backend
+
+Patching the DataScienceCluster sets the `modelsAsService` management state to `Managed`. This prompts the operator to build the maas-api pods and default RBAC roles that provide the MaaS API layer.
+
+*This patch tells the OpenShift AI operator to provision the MaaS API layer. Once enabled, Platform Engineers can deploy models to a central catalog that all four business units can access via token-based authentication, eliminating the redundant Llama-3 deployments that were wasting 128GB of storage.*
+
+Apply the DataScienceCluster patch:
+
+[source,role="execute"]</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>oc patch datasciencecluster default-dsc --type=merge -p '{
   "spec": {
     "components": {
       "kserve": {
@@ -376,117 +397,102 @@ maas-default-gateway   openshift-gateway-controller             True         7s<
       }
     }
   }
-}'</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>Expected output:</p>
+}'</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre>datasciencecluster.datasciencecluster.opendatahub.io/default-dsc patched</pre>
+<pre>Expected output:</pre>
 </div>
 </div>
 <div class="paragraph">
-<p>Verify the MaaS API pods are created:</p>
-</div>
-<div class="listingblock execute">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-none hljs">oc get pods -n redhat-ods-applications | grep maas</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>Expected output (pods should appear within 1-2 minutes):</p>
+<p>datasciencecluster.datasciencecluster.opendatahub.io/default-dsc patched</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre>maas-api-xxxxxxxxx-xxxxx   1/1     Running   0          45s</pre>
+<pre>Verify the MaaS API pods are created:
+
+[source,role="execute"]</pre>
 </div>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_enable_the_dashboard_gen_ai_studio"><a class="anchor" href="#_enable_the_dashboard_gen_ai_studio"></a>Enable the Dashboard (Gen AI Studio)</h3>
-<div class="paragraph">
-<p>Even though you&#8217;re deploying models via GitOps in later modules, Platform Administrators still need the dashboard UI to manage user access tokens and monitor model usage. Enable the Gen AI Studio interface to provide self-service token generation.</p>
 </div>
 <div class="paragraph">
-<p><strong>The Gen AI Studio interface allows ChocoTech&#8217;s Platform Administrators to manage user access tokens and monitor model usage without writing custom scripts. Marketing&#8217;s team lead can now generate API tokens for their developers directly through the dashboard, rather than filing IT tickets.</strong></p>
+<p>oc get pods -n redhat-ods-applications | grep maas</p>
 </div>
-<div class="paragraph">
-<p>Apply the dashboard configuration patch:</p>
-</div>
-<div class="listingblock execute">
+<div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-none hljs">oc patch odhdashboardconfig odh-dashboard-config -n redhat-ods-applications --type=merge -p '{
+<pre>Expected output (pods should appear within 1-2 minutes):</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>maas-api-xxxxxxxxx-xxxxx   1/1     Running   0          45s</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>=== Enable the Dashboard (Gen AI Studio)
+
+Even though you're deploying models via GitOps in later modules, Platform Administrators still need the dashboard UI to manage user access tokens and monitor model usage. Enable the Gen AI Studio interface to provide self-service token generation.
+
+*The Gen AI Studio interface allows ChocoTech's Platform Administrators to manage user access tokens and monitor model usage without writing custom scripts. Marketing's team lead can now generate API tokens for their developers directly through the dashboard, rather than filing IT tickets.*
+
+Apply the dashboard configuration patch:
+
+[source,role="execute"]</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>oc patch odhdashboardconfig odh-dashboard-config -n redhat-ods-applications --type=merge -p '{
   "spec": {
     "dashboardConfig": {
       "modelAsService": true,
       "genAiStudio": true
     }
   }
-}'</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>Expected output:</p>
+}'</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre>odhdashboardconfig.opendatahub.io/odh-dashboard-config patched (no-change)</pre>
+<pre>Expected output:</pre>
 </div>
 </div>
 <div class="paragraph">
-<p>Verify the dashboard configuration:</p>
-</div>
-<div class="listingblock execute">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-none hljs">oc get odhdashboardconfig odh-dashboard-config -n redhat-ods-applications -o jsonpath='{.spec.dashboardConfig}'</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>Expected output (should include both flags as true):</p>
+<p>odhdashboardconfig.opendatahub.io/odh-dashboard-config patched (no-change)</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre>{"genAiStudio":true,"modelAsService":true}</pre>
+<pre>Verify the dashboard configuration:
+
+[source,role="execute"]</pre>
 </div>
 </div>
 <div class="paragraph">
-<p>The Gen AI Studio menu option will appear in the OpenShift AI dashboard after refreshing your browser. If it doesn&#8217;t appear immediately, clear your browser cache and reload the page.</p>
+<p>oc get odhdashboardconfig odh-dashboard-config -n redhat-ods-applications -o jsonpath='{.spec.dashboardConfig}'</p>
 </div>
+<div class="listingblock">
+<div class="content">
+<pre>Expected output (should include both flags as true):</pre>
 </div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_verification"><a class="anchor" href="#_verification"></a>Verification</h2>
-<div class="sectionbody">
-<div class="paragraph">
-<p>Confirm all MaaS components are activated and healthy:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>✓ Required operators (Service Mesh, Connectivity Link, OpenShift AI, LeaderWorkerSet) are installed with Succeeded status</p>
-</li>
-<li>
-<p>✓ Kuadrant pods (authorino, limitador, kuadrant-controller) are Running in kuadrant-system namespace</p>
-</li>
-<li>
-<p>✓ Gateway resource (maas-default-gateway) exists in openshift-ingress namespace with PROGRAMMED=True</p>
-</li>
-<li>
-<p>✓ MaaS API pods are Running in redhat-ods-applications namespace</p>
-</li>
-<li>
-<p>✓ DataScienceCluster shows modelsAsService.managementState=Managed</p>
-</li>
-<li>
-<p>✓ Dashboard config has modelAsService and genAiStudio enabled</p>
-</li>
-</ul>
 </div>
 <div class="paragraph">
-<p><strong>Scope note</strong>: This page covers <strong>basic activation only</strong>—turning on MaaS features. Module 2 will cover detailed configuration of policies, tier definitions, and model deployment. The goal here is to get MaaS operational; the next module will make it production-ready for ChocoTech&#8217;s specific governance requirements.</p>
+<p>{"genAiStudio":true,"modelAsService":true}</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>The Gen AI Studio menu option will appear in the OpenShift AI dashboard after refreshing your browser. If it doesn't appear immediately, clear your browser cache and reload the page.
+
+== Verification
+
+Confirm all MaaS components are activated and healthy:
+
+* ✓ Required operators (Service Mesh, Connectivity Link, OpenShift AI, LeaderWorkerSet) are installed with Succeeded status
+* ✓ Kuadrant pods (authorino, limitador, kuadrant-controller) are Running in kuadrant-system namespace
+* ✓ Gateway resource (maas-default-gateway) exists in openshift-ingress namespace with PROGRAMMED=True
+* ✓ MaaS API pods are Running in redhat-ods-applications namespace
+* ✓ DataScienceCluster shows modelsAsService.managementState=Managed
+* ✓ Dashboard config has modelAsService and genAiStudio enabled
+
+**Scope note**: This page covers **basic activation only**—turning on MaaS features. Module 2 will cover detailed configuration of policies, tier definitions, and model deployment. The goal here is to get MaaS operational; the next module will make it production-ready for ChocoTech's specific governance requirements.</pre>
+</div>
+</div>
+</div>
 </div>
 </div>
 </div>

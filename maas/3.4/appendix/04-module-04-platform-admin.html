@@ -310,33 +310,7 @@ If quota is exceeded: HTTP 429 with quota exhaustion message</p>
 </div>
 <div class="listingblock execute">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-none hljs">oc apply -f - &lt;&lt;EOF
-cat &lt;&lt;EOF | oc apply -f -
-apiVersion: kuadrant.io/v1beta1
-kind: RateLimitPolicy
-metadata:
-  name: gold-tier-rate-limit
-  namespace: chocotech-models
-spec:
-  targetRef:
-    group: gateway.networking.k8s.io
-    kind: Gateway
-    name: maas-default-gateway
-  limits:
-    "gold-request-limit":
-      rates:
-      - limit: 100
-        duration: 1
-        unit: minute
-      when:
-      - selector: "auth.identity.groups"
-        operator: incl
-        value: "chocotech-quality-control"
-EOF</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>cat &lt;&lt;EOF | oc apply -f -
+<pre class="highlightjs highlight"><code class="language-none hljs">cat &lt;&lt;EOF | oc apply -f -
 apiVersion: kuadrant.io/v1
 kind: RateLimitPolicy
 metadata:
@@ -352,18 +326,19 @@ spec:
   limits:
     "gold-request-limit":
       rates:
-      - limit: 100
+      - limit: 10000
         window: 1m  # Fix 1: Required 'window' for 1 minute
       when:
-      - predicate: "auth.identity.groups.contains('chocotech-quality-control')" # Fix 2: Required 'predicate'
-EOF</p>
+      - predicate: "auth.identity.groups.contains('chocotech-quality-control')" #  Required 'predicate'
+EOF</code></pre>
+</div>
 </div>
 <div class="paragraph">
 <p>Expected output:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre>maastier.maas.opendatahub.io/gold created</pre>
+<pre>ratelimitpolicy.kuadrant.io/gold-tier-rate-limit created</pre>
 </div>
 </div>
 </div>
@@ -430,26 +405,49 @@ EOF</p>
 </div>
 </div>
 <div class="sect2">
+<h3 id="_architectural_note_the_ui_is_a_one_way_street"><a class="anchor" href="#_architectural_note_the_ui_is_a_one_way_street"></a>Architectural Note: The UI is a One-Way Street</h3>
+<div class="paragraph">
+<p>If you define a Kuadrant <code>RateLimitPolicy</code> using CEL via the CLI, it will work perfectly at the network edge. However, <strong>it will not appear in the Gen AI Studio UI.</strong></p>
+</div>
+<div class="paragraph">
+<p>The OpenShift AI dashboard is an abstraction layer. It manages its Tiers in its own backend and <strong>pushes</strong> basic YAML down to Kuadrant. It does not read manual Kuadrant policies <strong>up</strong> from the cluster.</p>
+</div>
+<div class="paragraph">
+<p><strong>How to position this to customers:</strong>
+* <strong>The AI Admin (UI):</strong> Uses the Gen AI Studio to create standard, easy-to-read "Free/Premium/Enterprise" tiers.
+* <strong>The Platform Engineer (CLI):</strong> Writes "Out-of-Band" or "Shadow" Kuadrant policies via GitOps when the business requires advanced logic that the UI cannot support (e.g., rate-limiting based on specific JWT claims or routing paths).</p>
+</div>
+<div class="paragraph">
+<p>Both work simultaneously, but the Platform Engineer must document their custom GitOps policies, as the AI Admin will not see them in their dashboard.</p>
+</div>
+</div>
+<div class="sect2">
 <h3 id="_exercise_2_deploy_silver_tier_policy"><a class="anchor" href="#_exercise_2_deploy_silver_tier_policy"></a>Exercise 2: Deploy Silver tier policy</h3>
 <div class="paragraph">
 <p>Create the Silver tier policy for R&amp;D:</p>
 </div>
 <div class="listingblock execute">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-none hljs">oc apply -f - &lt;&lt;EOF
-apiVersion: maas.opendatahub.io/v1alpha1
-kind: MaaSTier
+<pre class="highlightjs highlight"><code class="language-none hljs">cat &lt;&lt;EOF | oc apply -f -
+apiVersion: kuadrant.io/v1
+kind: RateLimitPolicy
 metadata:
-  name: silver
+  annotations:
+    openshift.io/display-name: "Silver Tier Model"
+  name: silver-tier-rate-limit
+  namespace: openshift-operators
 spec:
-  displayName: "Silver Tier - Development Workloads"
-  priority: 50
-  rateLimit:
-    requestsPerMinute: 50
-  quota:
-    tokensPerHour: 25000
-  groups:
-  - chocotech-rd
+  targetRef:
+    group: gateway.networking.k8s.io
+    kind: Gateway
+    name: maas-default-gateway
+  limits:
+    "gold-request-limit":
+      rates:
+      - limit: 100
+        window: 1m  # Fix 1: Required 'window' for 1 minute
+      when:
+      - predicate: "auth.identity.groups.contains('chocotech-rd')" #  Required 'predicate'
 EOF</code></pre>
 </div>
 </div>
@@ -458,7 +456,7 @@ EOF</code></pre>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre>maastier.maas.opendatahub.io/silver created</pre>
+<pre>ratelimitpolicy.kuadrant.io/silver-tier-rate-limit created</pre>
 </div>
 </div>
 <div class="paragraph">
@@ -467,13 +465,13 @@ EOF</code></pre>
 <div class="ulist">
 <ul>
 <li>
-<p>Half the rate limit of Gold tier (50 vs 100 requests/minute)</p>
+<p>Half the rate limit of Gold tier (1000) vs 10000 requests/minute)</p>
 </li>
 <li>
-<p>Half the quota of Gold tier (25,000 vs 50,000 tokens/hour)</p>
+<p>1/10th the quota of Gold tier (60,000 vs 600,000 tokens/hour)</p>
 </li>
 <li>
-<p>Medium priority (50) - processed after Gold, before Bronze</p>
+<p>Medium priority (25) - processed after Gold, before Bronze</p>
 </li>
 </ul>
 </div>
@@ -488,20 +486,26 @@ EOF</code></pre>
 </div>
 <div class="listingblock execute">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-none hljs">oc apply -f - &lt;&lt;EOF
-apiVersion: maas.opendatahub.io/v1alpha1
-kind: MaaSTier
+<pre class="highlightjs highlight"><code class="language-none hljs">cat &lt;&lt;EOF | oc apply -f -
+apiVersion: kuadrant.io/v1
+kind: RateLimitPolicy
 metadata:
-  name: bronze
+  annotations:
+    openshift.io/display-name: "Bronze Tier Model"
+  name: bronze-tier-rate-limit
+  namespace: openshift-operators
 spec:
-  displayName: "Bronze Tier - Exploratory Workloads"
-  priority: 10
-  rateLimit:
-    requestsPerMinute: 20
-  quota:
-    tokensPerHour: 10000
-  groups:
-  - chocotech-marketing
+  targetRef:
+    group: gateway.networking.k8s.io
+    kind: Gateway
+    name: maas-default-gateway
+  limits:
+    "gold-request-limit":
+      rates:
+      - limit: 100
+        window: 1m  # Fix 1: Required 'window' for 1 minute
+      when:
+      - predicate: "auth.identity.groups.contains('chocotech-marketing')" #  Required 'predicate'
 EOF</code></pre>
 </div>
 </div>
@@ -510,7 +514,7 @@ EOF</code></pre>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre>maastier.maas.opendatahub.io/bronze created</pre>
+<pre>ratelimitpolicy.kuadrant.io/bronze-tier-rate-limit created</pre>
 </div>
 </div>
 <div class="paragraph">
