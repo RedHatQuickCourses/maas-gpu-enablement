@@ -65,6 +65,27 @@ The Connectivity Link operator manages Kuadrant, but Kuadrant itself must be exp
 
 ---
 
+=== Architectural Note: The Operator vs. Operand Pattern
+
+Before we apply the configuration YAML, it is important to understand *why* we deploy the governance engine this specific way. 
+
+When setting up Red Hat Connectivity Link (Kuadrant) for MaaS, we follow a strict OpenShift and Kubernetes best practice: **Separating the Operator from the Operand.**
+
+* **The Operator (The Manager):** We install the top-level Operator subscription in a cluster-wide namespace like `openshift-operators`. This is the default global location and prevents us from getting tangled in the complexities of namespace-scoped OLM operator behaviors.
+* **The Operand (The Instance):** We deploy the actual `Kuadrant` Custom Resource (the instance doing the actual work) into its own dedicated namespace, `kuadrant-system`. 
+
+We deploy it this way because it maintains consistency with upstream project documentation and reflects true enterprise reality. By keeping the controller separate from the workload it manages, we ensure a cleaner, more secure, and highly scalable GitOps foundation for your AI factory.
+
+==== Create the new namespace
+
+
+Before you can deploy the Kuadrant resource into kuadrant-system, you have to create the namespace.
+
+[source,role="execute"]
+----
+oc create namespace kuadrant-system
+----
+
 ==== Create the Kuadrant instance:
 
 [source,role="execute"]
@@ -74,7 +95,7 @@ apiVersion: kuadrant.io/v1beta1
 kind: Kuadrant
 metadata:
   name: kuadrant
-  namespace: openshift-operators
+  namespace: kuadrant-system
 EOF
 ----
 
@@ -88,20 +109,15 @@ Verify Kuadrant components are running:
 
 [source,role="execute"]
 ----
-oc get pods -n openshift-operators | grep -E "(kuadrant|limitador|authorino)"
+oc get pods -n kuadrant-system | grep -E "(kuadrant|limitador|authorino)"
 ----
 
 Expected output (pods should reach Running status within 1-2 minutes):
 
 ----
-NAME                                                    READY    STATUS    RESTARTS   AGE
-authorino-xxxxxxxxx-xxxxx                                1/1     Running       0      2m41s
-authorino-operator-xxxxxxxxx-xxxxx                       1/1     Running       0      44m
-kuadrant-console-plugin-xxxxxxxxx-xxxxx                  1/1     Running       0      12m
-kuadrant-operator-controller-manager-xxxxxxxxx-xxxxx     1/1     Running       0      12m
-limitador-limitador-xxxxxxxxx-xxxxx                      1/1     Running       0      2m42s
-limitador-operator-controller-manager-xxxxxxxxx-xxxxx    1/1     Running       0      12m
-----
+NAME                                  READY    STATUS   RESTARTS     AGE
+authorino-79cbc94b89-knjf7             1/1     Running     0        2m13s
+limitador-limitador-67566c68b4-ktnhb   1/1     Running     0        2m15s
 
 **Why this matters**: Authorino validates Bearer tokens and enforces model access policies. Limitador tracks requests per minute and token consumption quotas. Both are mandatory for the MaaS API to function.
 

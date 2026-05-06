@@ -104,30 +104,6 @@ Create the Gold tier policy for Quality Control:
 
 [source,role="execute"]
 ----
-oc apply -f - <<EOF
-cat <<EOF | oc apply -f -
-apiVersion: kuadrant.io/v1beta1
-kind: RateLimitPolicy
-metadata:
-  name: gold-tier-rate-limit
-  namespace: chocotech-models
-spec:
-  targetRef:
-    group: gateway.networking.k8s.io
-    kind: Gateway
-    name: maas-default-gateway
-  limits:
-    "gold-request-limit":
-      rates:
-      - limit: 100
-        duration: 1
-        unit: minute
-      when:
-      - selector: "auth.identity.groups"
-        operator: incl
-        value: "chocotech-quality-control"
-EOF
-----
 
 cat <<EOF | oc apply -f -
 apiVersion: kuadrant.io/v1
@@ -145,16 +121,18 @@ spec:
   limits:
     "gold-request-limit":
       rates:
-      - limit: 100
+      - limit: 10000
         window: 1m  # Fix 1: Required 'window' for 1 minute
       when:
-      - predicate: "auth.identity.groups.contains('chocotech-quality-control')" # Fix 2: Required 'predicate'
+      - predicate: "auth.identity.groups.contains('chocotech-quality-control')" #  Required 'predicate'
 EOF
+----
+
 
 Expected output:
 
 ----
-maastier.maas.opendatahub.io/gold created
+ratelimitpolicy.kuadrant.io/gold-tier-rate-limit created
 ----
 
 === Understanding the Gold tier definition
@@ -176,40 +154,60 @@ maastier.maas.opendatahub.io/gold created
 ** Members of `chocotech-quality-control` group automatically belong to Gold tier
 ** When they generate tokens from ServiceAccounts, requests count against Gold tier limits
 
+=== Architectural Note: The UI is a One-Way Street
+
+If you define a Kuadrant `RateLimitPolicy` using CEL via the CLI, it will work perfectly at the network edge. However, **it will not appear in the Gen AI Studio UI.**
+
+The OpenShift AI dashboard is an abstraction layer. It manages its Tiers in its own backend and *pushes* basic YAML down to Kuadrant. It does not read manual Kuadrant policies *up* from the cluster.
+
+**How to position this to customers:**
+* **The AI Admin (UI):** Uses the Gen AI Studio to create standard, easy-to-read "Free/Premium/Enterprise" tiers.
+* **The Platform Engineer (CLI):** Writes "Out-of-Band" or "Shadow" Kuadrant policies via GitOps when the business requires advanced logic that the UI cannot support (e.g., rate-limiting based on specific JWT claims or routing paths). 
+
+Both work simultaneously, but the Platform Engineer must document their custom GitOps policies, as the AI Admin will not see them in their dashboard.
+
 === Exercise 2: Deploy Silver tier policy
 
 Create the Silver tier policy for R&D:
 
 [source,role="execute"]
 ----
-oc apply -f - <<EOF
-apiVersion: maas.opendatahub.io/v1alpha1
-kind: MaaSTier
+
+cat <<EOF | oc apply -f -
+apiVersion: kuadrant.io/v1
+kind: RateLimitPolicy
 metadata:
-  name: silver
+  annotations:
+    openshift.io/display-name: "Silver Tier Model"
+  name: silver-tier-rate-limit
+  namespace: openshift-operators
 spec:
-  displayName: "Silver Tier - Development Workloads"
-  priority: 50
-  rateLimit:
-    requestsPerMinute: 50
-  quota:
-    tokensPerHour: 25000
-  groups:
-  - chocotech-rd
+  targetRef:
+    group: gateway.networking.k8s.io
+    kind: Gateway
+    name: maas-default-gateway
+  limits:
+    "gold-request-limit":
+      rates:
+      - limit: 100
+        window: 1m  # Fix 1: Required 'window' for 1 minute
+      when:
+      - predicate: "auth.identity.groups.contains('chocotech-rd')" #  Required 'predicate'
 EOF
+
 ----
 
 Expected output:
 
 ----
-maastier.maas.opendatahub.io/silver created
+ratelimitpolicy.kuadrant.io/silver-tier-rate-limit created
 ----
 
 The Silver tier provides balanced resources:
 
-* Half the rate limit of Gold tier (50 vs 100 requests/minute)
-* Half the quota of Gold tier (25,000 vs 50,000 tokens/hour)
-* Medium priority (50) - processed after Gold, before Bronze
+* Half the rate limit of Gold tier (1000) vs 10000 requests/minute)
+* 1/10th the quota of Gold tier (60,000 vs 600,000 tokens/hour)
+* Medium priority (25) - processed after Gold, before Bronze
 
 This allocation is appropriate for R&D's recipe optimization work, which is important but not production-critical.
 
@@ -219,27 +217,34 @@ Create the Bronze tier policy for Marketing:
 
 [source,role="execute"]
 ----
-oc apply -f - <<EOF
-apiVersion: maas.opendatahub.io/v1alpha1
-kind: MaaSTier
+cat <<EOF | oc apply -f -
+apiVersion: kuadrant.io/v1
+kind: RateLimitPolicy
 metadata:
-  name: bronze
+  annotations:
+    openshift.io/display-name: "Bronze Tier Model"
+  name: bronze-tier-rate-limit
+  namespace: openshift-operators
 spec:
-  displayName: "Bronze Tier - Exploratory Workloads"
-  priority: 10
-  rateLimit:
-    requestsPerMinute: 20
-  quota:
-    tokensPerHour: 10000
-  groups:
-  - chocotech-marketing
+  targetRef:
+    group: gateway.networking.k8s.io
+    kind: Gateway
+    name: maas-default-gateway
+  limits:
+    "gold-request-limit":
+      rates:
+      - limit: 100
+        window: 1m  # Fix 1: Required 'window' for 1 minute
+      when:
+      - predicate: "auth.identity.groups.contains('chocotech-marketing')" #  Required 'predicate'
 EOF
 ----
 
 Expected output:
 
 ----
-maastier.maas.opendatahub.io/bronze created
+ratelimitpolicy.kuadrant.io/bronze-tier-rate-limit created
+
 ----
 
 The Bronze tier provides cost-controlled resources:

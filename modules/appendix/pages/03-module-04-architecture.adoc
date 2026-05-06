@@ -57,20 +57,6 @@
 
 ////
 
-== Learning outcomes
-
-By completing this module, you should now understand:
-
-* ✓ How the GPU silo crisis creates simultaneous under-utilization and resource contention
-* ✓ The business value MaaS provides through centralized model serving and governance
-* ✓ The three-layer architecture (Gateway API, Kuadrant, KServe) and separation of concerns
-* ✓ The complete request flow from API client through routing, policy, and serving layers
-* ✓ How to verify required operators are installed before enabling MaaS
-* ✓ Why Kuadrant governance engine is a prerequisite for MaaS functionality
-* ✓ How to create the Gateway resource that KServe uses for external routing
-* ✓ How to enable MaaS features in the DataScienceCluster
-* ✓ How to activate the Gen AI Studio dashboard interface for self-service access
-* ✓ The complete activation sequence from operators through platform enablement
 
 == Module summary
 
@@ -99,3 +85,20 @@ Module 1 (Architecture) is complete. You understand the business problem, the te
 **Next steps**:
 
 Module 2 will guide you through configuring governance policies, setting up tier-based access control (bronze/silver/gold/platinum), and deploying your first models to the central catalog. You'll move from "MaaS is enabled" to "MaaS is ready for ChocoTech's production workloads."
+
+////
+== Learning outcomes
+
+By completing this module, you should now understand:
+
+* ✓ How the GPU silo crisis creates simultaneous under-utilization and resource contention
+* ✓ The business value MaaS provides through centralized model serving and governance
+* ✓ The three-layer architecture (Gateway API, Kuadrant, KServe) and separation of concerns
+* ✓ The complete request flow from API client through routing, policy, and serving layers
+* ✓ How to verify required operators are installed before enabling MaaS
+* ✓ Why Kuadrant governance engine is a prerequisite for MaaS functionality
+* ✓ How to create the Gateway resource that KServe uses for external routing
+* ✓ How to enable MaaS features in the DataScienceCluster
+* ✓ How to activate the Gen AI Studio dashboard interface for self-service access
+* ✓ The complete activation sequence from operators through platform enablement
+ ////

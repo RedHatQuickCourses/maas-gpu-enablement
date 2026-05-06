@@ -29,7 +29,7 @@ When multiple teams share large language models, tiers serve several critical fu
 MaaS assigns users to tiers based on their OpenShift group membership. In instances where a user is a member of multiple groups, the system defaults to assigning the tier with the highest level number.  Users are restricted to accessing only those models made available to their assigned tier and are precluded from accessing models in lower-level tiers, even if they belong to groups associated with those lower tiers
 
 
-=== Three Default Tiers
+=== MaaS Default Tiers
 
 |===
 | Tier Name | Description | Level (Priority) | Group | Gateway-Endpoint
@@ -71,14 +71,14 @@ The configuration map defining the tier-to-group mapping can be retrieved using 
 
 Tier-based governance provides several critical capabilities:
 
-* *Fair resource allocation*: Prevents Bronze tier users from consuming resources needed by Gold tier production workloads
+* *Fair resource allocation*: Prevents Free tier users from consuming resources needed by Enterprise tier production workloads
 * *Cost control*: Rate limits and quotas cap resource consumption per tier
 * *Chargeback reporting*: Track and allocate AI infrastructure costs by tier and business unit
-* *Quality of service*: Gold tier gets higher priority during peak demand
+* *Quality of service*: Enterprise tier gets higher priority during peak demand
 
 Without tiers, the first team to use the platform could monopolize all available GPU resources, blocking other business units.
 
-=== ChocoTech's business unit mapping
+=== ChocoTech's business unit tier mapping
 
 Based on the CIO's requirements document, ChocoTech's business units map to tiers as follows:
 
@@ -110,22 +110,6 @@ Based on the CIO's requirements document, ChocoTech's business units map to tier
 |Select models
 |===
 
-MaaS uses a three-tier model for resource allocation:
-
-* *Gold tier*: Production workloads with highest priority and guaranteed resources
-** Intended for mission-critical applications
-** Premium rate limits and quotas
-** Highest request processing priority
-
-* *Silver tier*: Development and moderate usage workloads with balanced resources
-** Intended for development and staging environments
-** Moderate rate limits and quotas
-** Medium request processing priority
-
-* *Bronze tier*: Exploratory and low-priority workloads with shared resources
-** Intended for experimentation and testing
-** Conservative rate limits and quotas
-** Lower request processing priority
 
 == In Module 3, you'll deploy two models:
 

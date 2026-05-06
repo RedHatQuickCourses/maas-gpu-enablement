@@ -14,7 +14,6 @@ She hands you a requirements document:
 
 In this module, you'll create business unit groups, configure RBAC for API access, generate authentication tokens, and deploy tier-based governance policies that will control model access in Module 3.
 
-The journey follows three key phases:
 
 1. *Organizational Structure*: Create OpenShift groups for ChocoTech's business units (Quality Control, R&D, Marketing) and prepare the namespace for governed model serving
 
