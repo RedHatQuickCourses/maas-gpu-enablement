@@ -1,5 +1,19 @@
 = 2.1:  Understanding tier-based governance
 
+== MaaS encompasses the following key capabilities:
+
+Tier-based access control::
+Defining multiple service tiers, such as free, premium, or enterprise, each featuring distinct rate limits, quotas, and model access permissions tailored for various user groups.
+Policy and quota management::
+Enforcing rate limiting and quota policies to mitigate the risk of resource exhaustion.
+API key authentication::
+Regulating access to models through tier-based resource allocation and API key-based authentication.
+Usage tracking::
+Monitoring consumption metrics essential for cost allocation and billing processes.
+Observability::
+Providing the ability to monitor model access patterns, policy enforcement actions, and resource utilization.
+
+
 == Tiers
 
 *Tiers control which AI asset model endpoints users can access based on their group membership.*
@@ -15,7 +29,7 @@ When multiple teams share large language models, tiers serve several critical fu
 MaaS assigns users to tiers based on their OpenShift group membership. In instances where a user is a member of multiple groups, the system defaults to assigning the tier with the highest level number.  Users are restricted to accessing only those models made available to their assigned tier and are precluded from accessing models in lower-level tiers, even if they belong to groups associated with those lower tiers
 
 
-=== The three-tier model
+=== Three Default Tiers
 
 |===
 | Tier Name | Description | Level (Priority) | Group | Gateway-Endpoint
@@ -43,34 +57,15 @@ MaaS assigns users to tiers based on their OpenShift group membership. In instan
 
 ---
 
-=== MaaS encompasses the following key capabilities:
-
- * Tier-based access control: Defining multiple service tiers, such as free, premium, or enterprise, each featuring distinct rate limits, quotas, and model access permissions tailored for various user groups.
- * Policy and quota management: Enforcing rate limiting and quota policies to mitigate the risk of resource exhaustion.
- * API key authentication: Regulating access to models through tier-based resource allocation and API key-based authentication.
- * Usage tracking: Monitoring consumption metrics essential for cost allocation and billing processes.
- * Observability: Providing the ability to monitor model access patterns, policy enforcement actions, and resource utilization.
-
 === Tier to Group Mapping Retrieval
-The configuration map defining the tier-to-group mapping can be retrieved using the command: - oc get configmap tier-to-group-mapping -n redhat-ods-applications
+The configuration map defining the tier-to-group mapping can be retrieved using the command:
+
+[source,role="execute"]
+----
+ oc get configmap tier-to-group-mapping -n redhat-ods-applications
+----
 
 
-MaaS uses a three-tier model for resource allocation:
-
-* *Gold tier*: Production workloads with highest priority and guaranteed resources
-** Intended for mission-critical applications
-** Premium rate limits and quotas
-** Highest request processing priority
-
-* *Silver tier*: Development and moderate usage workloads with balanced resources
-** Intended for development and staging environments
-** Moderate rate limits and quotas
-** Medium request processing priority
-
-* *Bronze tier*: Exploratory and low-priority workloads with shared resources
-** Intended for experimentation and testing
-** Conservative rate limits and quotas
-** Lower request processing priority
 
 === Why tiers matter for MaaS
 
@@ -90,6 +85,7 @@ Based on the CIO's requirements document, ChocoTech's business units map to tier
 [cols="1,1,2,1,2",options="header"]
 |===
 |Business Unit
+
 |Tier
 |Use Case
 |Priority
@@ -114,7 +110,24 @@ Based on the CIO's requirements document, ChocoTech's business units map to tier
 |Select models
 |===
 
-In Module 3, you'll deploy two models:
+MaaS uses a three-tier model for resource allocation:
+
+* *Gold tier*: Production workloads with highest priority and guaranteed resources
+** Intended for mission-critical applications
+** Premium rate limits and quotas
+** Highest request processing priority
+
+* *Silver tier*: Development and moderate usage workloads with balanced resources
+** Intended for development and staging environments
+** Moderate rate limits and quotas
+** Medium request processing priority
+
+* *Bronze tier*: Exploratory and low-priority workloads with shared resources
+** Intended for experimentation and testing
+** Conservative rate limits and quotas
+** Lower request processing priority
+
+== In Module 3, you'll deploy two models:
 
 * *llama3-8b*: Accessible to all tiers (Gold, Silver, Bronze)
 * *nemotron-8b*: Accessible to Bronze and Silver only (demonstrating selective tier access)

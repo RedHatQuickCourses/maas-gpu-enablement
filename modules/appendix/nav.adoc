@@ -10,6 +10,7 @@
 *** xref:04-module-02-platform-admin.adoc[]
 *** xref:04-module-03-platform-admin.adoc[]
 *** xref:04-module-04-platform-admin.adoc[]
+////
 ** xref:05-module-01-model-deployment.adoc[Model Deployment]
 *** xref:05a-model-selection-strategy.adoc[]
 *** xref:05-module-02-model-deployment.adoc[]
@@ -30,3 +31,4 @@
 *** xref:07-module-04-api-integration.adoc[]
 *** xref:07-module-05-api-integration.adoc[]
 ** xref:08-conclusion.adoc[Conclusion]
+ ////
