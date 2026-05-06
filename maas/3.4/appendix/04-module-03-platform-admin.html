@@ -698,7 +698,7 @@ echo "Gateway host: $GATEWAY_HOST"</code></pre>
 <div class="listingblock execute">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-none hljs">curl -s -w "\nHTTP Status: %{http_code}\n" \
-  https://$GATEWAY_HOST/v1/models \
+  http://$GATEWAY_HOST/v1/models \
   -H "Authorization: Bearer $TOKEN" \
   -k</code></pre>
 </div>

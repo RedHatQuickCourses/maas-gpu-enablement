@@ -317,7 +317,7 @@ metadata:
   annotations:
     openshift.io/display-name: "Gold Tier Model"
   name: gold-tier-rate-limit
-  namespace: openshift-operators
+  namespace: chocotech-models
 spec:
   targetRef:
     group: gateway.networking.k8s.io
@@ -435,7 +435,7 @@ metadata:
   annotations:
     openshift.io/display-name: "Silver Tier Model"
   name: silver-tier-rate-limit
-  namespace: openshift-operators
+  namespace: chocotech-models
 spec:
   targetRef:
     group: gateway.networking.k8s.io
@@ -487,25 +487,28 @@ EOF</code></pre>
 <div class="listingblock execute">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-none hljs">cat &lt;&lt;EOF | oc apply -f -
-apiVersion: kuadrant.io/v1
-kind: RateLimitPolicy
+apiVersion: v1
+kind: ConfigMap
 metadata:
-  annotations:
-    openshift.io/display-name: "Bronze Tier Model"
-  name: bronze-tier-rate-limit
-  namespace: openshift-operators
-spec:
-  targetRef:
-    group: gateway.networking.k8s.io
-    kind: Gateway
-    name: maas-default-gateway
-  limits:
-    "gold-request-limit":
-      rates:
-      - limit: 100
-        window: 1m  # Fix 1: Required 'window' for 1 minute
-      when:
-      - predicate: "auth.identity.groups.contains('chocotech-marketing')" #  Required 'predicate'
+  name: tier-to-group-mapping
+  namespace: redhat-ods-applications
+data:
+  tiers: |
+    - name: gold-tier
+      description: Quality Control Production
+      level: 100
+      groups:
+      - chocotech-quality-control
+    - name: silver-tier
+      description: R&amp;D Development
+      level: 50
+      groups:
+      - chocotech-rd
+    - name: bronze-tier
+      description: Marketing Exploratory
+      level: 10
+      groups:
+      - chocotech-marketing
 EOF</code></pre>
 </div>
 </div>
@@ -514,7 +517,7 @@ EOF</code></pre>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre>ratelimitpolicy.kuadrant.io/bronze-tier-rate-limit created</pre>
+<pre>configmap/tier-to-group-mapping configured</pre>
 </div>
 </div>
 <div class="paragraph">
@@ -523,7 +526,7 @@ EOF</code></pre>
 <div class="ulist">
 <ul>
 <li>
-<p>Conservative rate limit (20 requests/minute) for exploratory work</p>
+<p>Conservative rate limit (100 requests/minute) for exploratory work</p>
 </li>
 <li>
 <p>Lower quota (10,000 tokens/hour) to control costs</p>
@@ -540,11 +543,11 @@ EOF</code></pre>
 <div class="sect2">
 <h3 id="_exercise_4_verify_tier_policies"><a class="anchor" href="#_exercise_4_verify_tier_policies"></a>Exercise 4: Verify tier policies</h3>
 <div class="paragraph">
-<p>List all deployed MaaSTier resources:</p>
+<p>List all deployed Tier resources:</p>
 </div>
 <div class="listingblock execute">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-none hljs">oc get maastier</code></pre>
+<pre class="highlightjs highlight"><code class="language-none hljs">oc get ratelimitpolicies -A</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -552,10 +555,9 @@ EOF</code></pre>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre>NAME     DISPLAY NAME                        PRIORITY   AGE
-bronze   Bronze Tier - Exploratory Workloads 10         30s
-gold     Gold Tier - Production Workloads    100        2m
-silver   Silver Tier - Development Workloads 50         1m</pre>
+<pre>NAMESPACE             NAME                     AGE
+openshift-operators   gold-tier-rate-limit     13m
+openshift-operators   silver-tier-rate-limit   6m28s</pre>
 </div>
 </div>
 <div class="paragraph">
@@ -563,7 +565,7 @@ silver   Silver Tier - Development Workloads 50         1m</pre>
 </div>
 <div class="listingblock execute">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-none hljs">oc describe maastier gold</code></pre>
+<pre class="highlightjs highlight"><code class="language-none hljs">oc get ratelimitpolicy gold-tier-rate-limit -n openshift-operators -o yaml</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -571,23 +573,27 @@ silver   Silver Tier - Development Workloads 50         1m</pre>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre>Name:         gold
-Namespace:
-Labels:       &lt;none&gt;
-Annotations:  &lt;none&gt;
-API Version:  maas.opendatahub.io/v1alpha1
-Kind:         MaaSTier
-Metadata:
-  ...
-Spec:
-  Display Name:  Gold Tier - Production Workloads
-  Groups:
-    chocotech-quality-control
-  Priority:  100
-  Quota:
-    Tokens Per Hour:  50000
-  Rate Limit:
-    Requests Per Minute:  100
+<pre>apiVersion: kuadrant.io/v1
+kind: RateLimitPolicy
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"kuadrant.io/v1","kind":"RateLimitPolicy","metadata":{"annotations":{"openshift.io/display-name":"Gold Tier Model"},"name":"gold-tier-rate-limit","namespace":"chocotech-models"},"spec":{"limits":{"gold-request-limit":{"rates":[{"limit":10000,"window":"1m"}],"when":[{"predicate":"auth.identity.groups.contains('chocotech-quality-control')"}]}},"targetRef":{"group":"gateway.networking.k8s.io","kind":"Gateway","name":"maas-default-gateway"}}}
+    openshift.io/display-name: Gold Tier Model
+  creationTimestamp: "2026-05-06T19:41:29Z"
+  generation: 1
+  name: gold-tier-rate-limit
+  namespace: chocotech-models
+  resourceVersion: "309003"
+  uid: bebf00ac-efc1-45c0-8e25-75dd181c28df
+spec:
+  limits:
+    gold-request-limit:
+      rates:
+      - limit: 10000
+        window: 1m
+      when:
+      - predicate: auth.identity.groups.contains('chocotech-quality-control')
 ...</pre>
 </div>
 </div>
@@ -610,7 +616,7 @@ Spec:
 </div>
 <div class="listingblock execute">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-none hljs">oc get authconfig -n redhat-ods-applications</code></pre>
+<pre class="highlightjs highlight"><code class="language-none hljs">oc get authpolicies -A</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -618,8 +624,9 @@ Spec:
 </div>
 <div class="listingblock">
 <div class="content">
-<pre>NAME        AGE
-maas-auth   15m</pre>
+<pre>NAMESPACE                 NAME                   AGE
+openshift-ingress         gateway-auth-policy    3h2m
+redhat-ods-applications   maas-api-auth-policy   3h2m</pre>
 </div>
 </div>
 <div class="paragraph">
@@ -627,7 +634,7 @@ maas-auth   15m</pre>
 </div>
 <div class="listingblock execute">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-none hljs">oc describe authconfig maas-auth -n redhat-ods-applications</code></pre>
+<pre class="highlightjs highlight"><code class="language-none hljs">oc describe authpolicies  maas-api-auth-policy -n redhat-ods-applications</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -635,23 +642,105 @@ maas-auth   15m</pre>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre>Name:         maas-auth
+<pre>Name:         maas-api-auth-policy
 Namespace:    redhat-ods-applications
+Labels:       app.kubernetes.io/component=api
+              app.kubernetes.io/name=maas-api
+              app.kubernetes.io/part-of=models-as-a-service
+              app.opendatahub.io/modelsasservice=true
+              platform.opendatahub.io/part-of=modelsasservice
+Annotations:  internal.config.kubernetes.io/previousKinds: AuthPolicy
+              internal.config.kubernetes.io/previousNames: maas-api-auth-policy
+              internal.config.kubernetes.io/previousNamespaces: opendatahub
+              platform.opendatahub.io/instance.generation: 1
+              platform.opendatahub.io/instance.name: default-modelsasservice
+              platform.opendatahub.io/instance.uid: 576042f3-01c0-4663-aa50-ff88099601cc
+              platform.opendatahub.io/type: OpenShift AI Self-Managed
+              platform.opendatahub.io/version: 3.3.2
+API Version:  kuadrant.io/v1
+Kind:         AuthPolicy</pre>
+</div>
+</div>
+<details>
+<summary class="title">Click to reveal the full response</summary>
+<div class="content">
+<div class="literalblock">
+<div class="content">
+<pre>Name:         maas-api-auth-policy
+Namespace:    redhat-ods-applications
+Labels:       app.kubernetes.io/component=api
+              app.kubernetes.io/name=maas-api
+              app.kubernetes.io/part-of=models-as-a-service
+              app.opendatahub.io/modelsasservice=true
+              platform.opendatahub.io/part-of=modelsasservice
+Annotations:  internal.config.kubernetes.io/previousKinds: AuthPolicy
+              internal.config.kubernetes.io/previousNames: maas-api-auth-policy
+              internal.config.kubernetes.io/previousNamespaces: opendatahub
+              platform.opendatahub.io/instance.generation: 1
+              platform.opendatahub.io/instance.name: default-modelsasservice
+              platform.opendatahub.io/instance.uid: 576042f3-01c0-4663-aa50-ff88099601cc
+              platform.opendatahub.io/type: OpenShift AI Self-Managed
+              platform.opendatahub.io/version: 3.3.2
+API Version:  kuadrant.io/v1
+Kind:         AuthPolicy
+Metadata:
+  Creation Timestamp:  2026-05-06T16:43:30Z
+  Generation:          1
+  Owner References:
+    API Version:           components.platform.opendatahub.io/v1alpha1
+    Block Owner Deletion:  true
+    Controller:            true
+    Kind:                  ModelsAsService
+    Name:                  default-modelsasservice
+    UID:                   576042f3-01c0-4663-aa50-ff88099601cc
+  Resource Version:        93009
+  UID:                     99dc609a-6277-4b6b-8a02-906a2c45981c
 Spec:
-  Hosts:
-    maas-default-gateway-redhat-ods-applications.apps.cluster.example.com
-  Authentication:
-    k8s-service-account-tokens:
-      Kubernetes Token Review:
-        Audiences:
-          https://kubernetes.default.svc
-  Authorization:
-    k8s-rbac:
-      Kubernetes Subject Access Review:
-        User:
-          Selector:  auth.identity.user.username</pre>
+  Rules:
+    Authentication:
+      Openshift - Identities:
+        Kubernetes Token Review:
+          Audiences:
+            https://kubernetes.default.svc
+            maas-default-gateway-sa
+        Metrics:   false
+        Priority:  0
+    Response:
+      Success:
+        Headers:
+          X - Maa S - Group:
+            Metrics:  false
+            Plain:
+              Selector:  auth.identity.user.groups.@tostr
+            Priority:    0
+          X - Maa S - Username:
+            Metrics:  false
+            Plain:
+              Selector:  auth.identity.user.username
+            Priority:    0
+  Target Ref:
+    Group:  gateway.networking.k8s.io
+    Kind:   HTTPRoute
+    Name:   maas-api-route
+Status:
+  Conditions:
+    Last Transition Time:  2026-05-06T16:43:30Z
+    Message:               AuthPolicy has been accepted
+    Reason:                Accepted
+    Status:                True
+    Type:                  Accepted
+    Last Transition Time:  2026-05-06T16:43:31Z
+    Message:               AuthPolicy has been successfully enforced
+    Reason:                Enforced
+    Status:                True
+    Type:                  Enforced
+  Observed Generation:     1
+Events:                    &lt;none&gt;</pre>
 </div>
 </div>
+</div>
+</details>
+<hr>
 </div>
 <div class="sect2">
 <h3 id="_understanding_the_authconfig"><a class="anchor" href="#_understanding_the_authconfig"></a>Understanding the AuthConfig</h3>
@@ -758,7 +847,7 @@ EOF</code></pre>
 </div>
 <div class="listingblock execute">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-none hljs">oc get pods -n redhat-ods-applications | grep authorino</code></pre>
+<pre class="highlightjs highlight"><code class="language-none hljs">oc get pods -n kuadrant-system | grep authorino</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -774,7 +863,7 @@ EOF</code></pre>
 </div>
 <div class="listingblock execute">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-none hljs">oc get pods -n redhat-ods-applications | grep limitador</code></pre>
+<pre class="highlightjs highlight"><code class="language-none hljs">oc get pods -n kuadrant-system | grep limitador</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -854,7 +943,7 @@ EOF</code></pre>
 </div>
 <div class="listingblock execute">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-none hljs">oc get gateway maas-default-gateway -n redhat-ods-applications</code></pre>
+<pre class="highlightjs highlight"><code class="language-none hljs">oc get gateway maas-default-gateway -n openshift-ingress</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -862,8 +951,8 @@ EOF</code></pre>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre>NAME                   CLASS   ADDRESS                                                      PROGRAMMED   AGE
-maas-default-gateway   istio   maas-default-gateway-redhat-ods-applications.apps.cluster... True         30m</pre>
+<pre>NAME                   CLASS                        ADDRESS        PROGRAMMED   AGE
+maas-default-gateway   data-science-gateway-class   10.10.10.200   True         3h16m</pre>
 </div>
 </div>
 <div class="paragraph">
