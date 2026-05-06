@@ -112,7 +112,7 @@ metadata:
   annotations:
     openshift.io/display-name: "Gold Tier Model"
   name: gold-tier-rate-limit
-  namespace: openshift-operators
+  namespace: chocotech-models
 spec:
   targetRef:
     group: gateway.networking.k8s.io
@@ -180,7 +180,7 @@ metadata:
   annotations:
     openshift.io/display-name: "Silver Tier Model"
   name: silver-tier-rate-limit
-  namespace: openshift-operators
+  namespace: chocotech-models
 spec:
   targetRef:
     group: gateway.networking.k8s.io
@@ -218,38 +218,40 @@ Create the Bronze tier policy for Marketing:
 [source,role="execute"]
 ----
 cat <<EOF | oc apply -f -
-apiVersion: kuadrant.io/v1
-kind: RateLimitPolicy
+apiVersion: v1
+kind: ConfigMap
 metadata:
-  annotations:
-    openshift.io/display-name: "Bronze Tier Model"
-  name: bronze-tier-rate-limit
-  namespace: openshift-operators
-spec:
-  targetRef:
-    group: gateway.networking.k8s.io
-    kind: Gateway
-    name: maas-default-gateway
-  limits:
-    "gold-request-limit":
-      rates:
-      - limit: 100
-        window: 1m  # Fix 1: Required 'window' for 1 minute
-      when:
-      - predicate: "auth.identity.groups.contains('chocotech-marketing')" #  Required 'predicate'
+  name: tier-to-group-mapping
+  namespace: redhat-ods-applications
+data:
+  tiers: |
+    - name: gold-tier
+      description: Quality Control Production
+      level: 100
+      groups:
+      - chocotech-quality-control
+    - name: silver-tier
+      description: R&D Development
+      level: 50
+      groups:
+      - chocotech-rd
+    - name: bronze-tier
+      description: Marketing Exploratory
+      level: 10
+      groups:
+      - chocotech-marketing
 EOF
 ----
 
 Expected output:
 
 ----
-ratelimitpolicy.kuadrant.io/bronze-tier-rate-limit created
-
+configmap/tier-to-group-mapping configured
 ----
 
 The Bronze tier provides cost-controlled resources:
 
-* Conservative rate limit (20 requests/minute) for exploratory work
+* Conservative rate limit (100 requests/minute) for exploratory work
 * Lower quota (10,000 tokens/hour) to control costs
 * Lowest priority (10) - processed after Gold and Silver tiers
 
@@ -257,49 +259,52 @@ This allocation is appropriate for Marketing's sentiment analysis experiments, w
 
 === Exercise 4: Verify tier policies
 
-List all deployed MaaSTier resources:
+List all deployed Tier resources:
 
 [source,role="execute"]
 ----
-oc get maastier
+oc get ratelimitpolicies -A
 ----
 
 Expected output:
 
 ----
-NAME     DISPLAY NAME                        PRIORITY   AGE
-bronze   Bronze Tier - Exploratory Workloads 10         30s
-gold     Gold Tier - Production Workloads    100        2m
-silver   Silver Tier - Development Workloads 50         1m
+NAMESPACE             NAME                     AGE
+openshift-operators   gold-tier-rate-limit     13m
+openshift-operators   silver-tier-rate-limit   6m28s
 ----
 
 Describe the Gold tier to see full details:
 
 [source,role="execute"]
 ----
-oc describe maastier gold
+oc get ratelimitpolicy gold-tier-rate-limit -n openshift-operators -o yaml
 ----
 
 Expected output:
 
 ----
-Name:         gold
-Namespace:
-Labels:       <none>
-Annotations:  <none>
-API Version:  maas.opendatahub.io/v1alpha1
-Kind:         MaaSTier
-Metadata:
-  ...
-Spec:
-  Display Name:  Gold Tier - Production Workloads
-  Groups:
-    chocotech-quality-control
-  Priority:  100
-  Quota:
-    Tokens Per Hour:  50000
-  Rate Limit:
-    Requests Per Minute:  100
+apiVersion: kuadrant.io/v1
+kind: RateLimitPolicy
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"kuadrant.io/v1","kind":"RateLimitPolicy","metadata":{"annotations":{"openshift.io/display-name":"Gold Tier Model"},"name":"gold-tier-rate-limit","namespace":"chocotech-models"},"spec":{"limits":{"gold-request-limit":{"rates":[{"limit":10000,"window":"1m"}],"when":[{"predicate":"auth.identity.groups.contains('chocotech-quality-control')"}]}},"targetRef":{"group":"gateway.networking.k8s.io","kind":"Gateway","name":"maas-default-gateway"}}}
+    openshift.io/display-name: Gold Tier Model
+  creationTimestamp: "2026-05-06T19:41:29Z"
+  generation: 1
+  name: gold-tier-rate-limit
+  namespace: chocotech-models
+  resourceVersion: "309003"
+  uid: bebf00ac-efc1-45c0-8e25-75dd181c28df
+spec:
+  limits:
+    gold-request-limit:
+      rates:
+      - limit: 10000
+        window: 1m
+      when:
+      - predicate: auth.identity.groups.contains('chocotech-quality-control')
 ...
 ----
 
@@ -315,42 +320,124 @@ The MaaS operator should have created an AuthConfig for token authentication whe
 
 [source,role="execute"]
 ----
-oc get authconfig -n redhat-ods-applications
+oc get authpolicies -A
 ----
 
 Expected output:
 
 ----
-NAME        AGE
-maas-auth   15m
+NAMESPACE                 NAME                   AGE
+openshift-ingress         gateway-auth-policy    3h2m
+redhat-ods-applications   maas-api-auth-policy   3h2m
 ----
 
 Describe the AuthConfig to see its configuration:
 
 [source,role="execute"]
 ----
-oc describe authconfig maas-auth -n redhat-ods-applications
+oc describe authpolicies  maas-api-auth-policy -n redhat-ods-applications
 ----
 
 Expected output (partial):
 
 ----
-Name:         maas-auth
+Name:         maas-api-auth-policy
 Namespace:    redhat-ods-applications
-Spec:
-  Hosts:
-    maas-default-gateway-redhat-ods-applications.apps.cluster.example.com
-  Authentication:
-    k8s-service-account-tokens:
-      Kubernetes Token Review:
-        Audiences:
-          https://kubernetes.default.svc
-  Authorization:
-    k8s-rbac:
-      Kubernetes Subject Access Review:
-        User:
-          Selector:  auth.identity.user.username
+Labels:       app.kubernetes.io/component=api
+              app.kubernetes.io/name=maas-api
+              app.kubernetes.io/part-of=models-as-a-service
+              app.opendatahub.io/modelsasservice=true
+              platform.opendatahub.io/part-of=modelsasservice
+Annotations:  internal.config.kubernetes.io/previousKinds: AuthPolicy
+              internal.config.kubernetes.io/previousNames: maas-api-auth-policy
+              internal.config.kubernetes.io/previousNamespaces: opendatahub
+              platform.opendatahub.io/instance.generation: 1
+              platform.opendatahub.io/instance.name: default-modelsasservice
+              platform.opendatahub.io/instance.uid: 576042f3-01c0-4663-aa50-ff88099601cc
+              platform.opendatahub.io/type: OpenShift AI Self-Managed
+              platform.opendatahub.io/version: 3.3.2
+API Version:  kuadrant.io/v1
+Kind:         AuthPolicy
 ----
+
+.Click to reveal the full response
+[%collapsible]
+====
+....
+Name:         maas-api-auth-policy
+Namespace:    redhat-ods-applications
+Labels:       app.kubernetes.io/component=api
+              app.kubernetes.io/name=maas-api
+              app.kubernetes.io/part-of=models-as-a-service
+              app.opendatahub.io/modelsasservice=true
+              platform.opendatahub.io/part-of=modelsasservice
+Annotations:  internal.config.kubernetes.io/previousKinds: AuthPolicy
+              internal.config.kubernetes.io/previousNames: maas-api-auth-policy
+              internal.config.kubernetes.io/previousNamespaces: opendatahub
+              platform.opendatahub.io/instance.generation: 1
+              platform.opendatahub.io/instance.name: default-modelsasservice
+              platform.opendatahub.io/instance.uid: 576042f3-01c0-4663-aa50-ff88099601cc
+              platform.opendatahub.io/type: OpenShift AI Self-Managed
+              platform.opendatahub.io/version: 3.3.2
+API Version:  kuadrant.io/v1
+Kind:         AuthPolicy
+Metadata:
+  Creation Timestamp:  2026-05-06T16:43:30Z
+  Generation:          1
+  Owner References:
+    API Version:           components.platform.opendatahub.io/v1alpha1
+    Block Owner Deletion:  true
+    Controller:            true
+    Kind:                  ModelsAsService
+    Name:                  default-modelsasservice
+    UID:                   576042f3-01c0-4663-aa50-ff88099601cc
+  Resource Version:        93009
+  UID:                     99dc609a-6277-4b6b-8a02-906a2c45981c
+Spec:
+  Rules:
+    Authentication:
+      Openshift - Identities:
+        Kubernetes Token Review:
+          Audiences:
+            https://kubernetes.default.svc
+            maas-default-gateway-sa
+        Metrics:   false
+        Priority:  0
+    Response:
+      Success:
+        Headers:
+          X - Maa S - Group:
+            Metrics:  false
+            Plain:
+              Selector:  auth.identity.user.groups.@tostr
+            Priority:    0
+          X - Maa S - Username:
+            Metrics:  false
+            Plain:
+              Selector:  auth.identity.user.username
+            Priority:    0
+  Target Ref:
+    Group:  gateway.networking.k8s.io
+    Kind:   HTTPRoute
+    Name:   maas-api-route
+Status:
+  Conditions:
+    Last Transition Time:  2026-05-06T16:43:30Z
+    Message:               AuthPolicy has been accepted
+    Reason:                Accepted
+    Status:                True
+    Type:                  Accepted
+    Last Transition Time:  2026-05-06T16:43:31Z
+    Message:               AuthPolicy has been successfully enforced
+    Reason:                Enforced
+    Status:                True
+    Type:                  Enforced
+  Observed Generation:     1
+Events:                    <none>
+....
+====
+
+---
 
 === Understanding the AuthConfig
 
@@ -412,7 +499,7 @@ Check Authorino pods (authentication):
 
 [source,role="execute"]
 ----
-oc get pods -n redhat-ods-applications | grep authorino
+oc get pods -n kuadrant-system | grep authorino
 ----
 
 Expected output:
@@ -425,7 +512,7 @@ Check Limitador pods (rate limiting):
 
 [source,role="execute"]
 ----
-oc get pods -n redhat-ods-applications | grep limitador
+oc get pods -n kuadrant-system | grep limitador
 ----
 
 Expected output:
@@ -478,14 +565,14 @@ Check Gateway status:
 
 [source,role="execute"]
 ----
-oc get gateway maas-default-gateway -n redhat-ods-applications
+oc get gateway maas-default-gateway -n openshift-ingress
 ----
 
 Expected output:
 
 ----
-NAME                   CLASS   ADDRESS                                                      PROGRAMMED   AGE
-maas-default-gateway   istio   maas-default-gateway-redhat-ods-applications.apps.cluster... True         30m
+NAME                   CLASS                        ADDRESS        PROGRAMMED   AGE
+maas-default-gateway   data-science-gateway-class   10.10.10.200   True         3h16m
 ----
 
 The `PROGRAMMED=True` status indicates the Gateway is configured and operational.

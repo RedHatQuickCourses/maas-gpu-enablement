@@ -318,7 +318,7 @@ Test authentication with the token:
 [source,role="execute"]
 ----
 curl -s -w "\nHTTP Status: %{http_code}\n" \
-  https://$GATEWAY_HOST/v1/models \
+  http://$GATEWAY_HOST/v1/models \
   -H "Authorization: Bearer $TOKEN" \
   -k
 ----

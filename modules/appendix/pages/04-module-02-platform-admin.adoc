@@ -1,5 +1,9 @@
 = 2.1:  Understanding tier-based governance
 
+"In this lab, we are generating tokens via the CLI using ServiceAccounts for programmatic access. Human developers belonging to the groups we created (e.g., chocotech-rd) will simply log into the Gen AI Studio UI, where the dashboard will generate their JWTs for them based on their group's MaaSTier mapping."
+
+
+
 == MaaS encompasses the following key capabilities:
 
 Tier-based access control::
