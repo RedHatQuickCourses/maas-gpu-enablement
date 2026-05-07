@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>2.1:  Understanding tier-based governance :: Models as a Service: Breaking the GPU Silos on OpenShift AI 3.3</title>
+    <link rel="prev" href="04-module-01-platform-admin.html">
+    <link rel="next" href="04-module-04-platform-admin.html">
+    <meta name="generator" content="Antora 3.1.3">
+    <link rel="stylesheet" href="../../../_/css/site.css">
+    <script>var uiRootPath = '../../../_'</script>
+  </head>
+  <body class="article">
+<header class="header">
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="https://www.redhat.com" target="_blank"><img src="../../../_/img/redhat-logo.png" height="40px" alt="Red Hat"></a>
+      <a class="navbar-item" style="font-size: 24px; color: white" href="../../..">Models as a Service: Breaking the GPU Silos on OpenShift AI 3.3</a>
+      <button class="navbar-burger" data-target="topbar-nav">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+    <div id="topbar-nav" class="navbar-menu">
+      <div class="navbar-end">
+        <a class="navbar-item" href="https://github.com/RedHatQuickCourses/REPLACEREPONAME/issues" target="_blank">Report Issues</a>
+      </div>
+    </div>
+  </nav>
+</header>
+<div class="body">
+<div class="nav-container" data-component="Breaking the GPU Silos on OpenShift AI 3.3" data-version="3.4">
+  <aside class="nav">
+    <div class="panels">
+<div class="nav-panel-menu is-active" data-panel="menu">
+  <nav class="nav-menu">
+    <h3 class="title"><a href="../index.html">Models as a Service Breaking the GPU Silos on OpenShift AI 3.3</a></h3>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../index.html">Models-as-a-Service Introduction</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="01-overview.html">QuickCourse Overview</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="03-module-00-architecture.html">MaaS Architecture</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="03-module-01-architecture.html">1.1: Understanding the GPU silo crisis</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="03-module-02-architecture.html">1.2: The MaaS architecture stack</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="03-module-03-architecture.html">1.3: Enabling MaaS on your OpenShift AI platform</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="03-module-04-architecture.html">1.4: Summary</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="04-module-01-platform-admin.html">Access Control &amp; Governance</a>
+<ul class="nav-list">
+  <li class="nav-item is-current-page" data-depth="2">
+    <a class="nav-link" href="04-module-02-platform-admin.html">2.1:  Understanding tier-based governance</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="04-module-04-platform-admin.html">2.2: Deploying governance tier policies and verifying readiness</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="04-module-05-platform-admin.html">2.3: Deploying governance tier policies and verifying readiness</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="04-module-02.1-platform-groups.html">2.5: Creating OpenShift groups</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="04-module-03-platform-admin.html">2.6: Configuring API access with ServiceAccounts and RBAC</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="04-module-06-platform-summary.html">2.6Module summary</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="05-module-01-model-deployment.html">Model Deployment</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="05a-model-selection-strategy.html">3.1a: Choosing the right model for your workload</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="05-module-02-model-deployment.html">3.1: Understanding serving runtimes and distributed inference</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="05-module-03-model-deployment.html">3.4: Publish model to the MaaS catalog</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="05-module-04-model-deployment.html">3.5: Deploy a second model for multi-model catalog</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="05b-lifecycle-management-gitops.html">3.6: Production lifecycle management and GitOps</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+</ul>
+  </nav>
+</div>
+<div class="nav-panel-explore" data-panel="explore">
+  <div class="context">
+    <span class="title">Models as a Service Breaking the GPU Silos on OpenShift AI 3.3</span>
+    <span class="version">3.4</span>
+  </div>
+  <ul class="components">
+    <li class="component is-current">
+      <a class="title" href="../index.html">Models as a Service Breaking the GPU Silos on OpenShift AI 3.3</a>
+      <ul class="versions">
+        <li class="version is-current is-latest">
+          <a href="../index.html">3.4</a>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</div>
+    </div>
+  </aside>
+</div>
+<main class="article">
+<div class="toolbar" role="navigation">
+<button class="nav-toggle"></button>
+<nav class="breadcrumbs" aria-label="breadcrumbs">
+  <ul>
+    <li><a href="../index.html">Models as a Service Breaking the GPU Silos on OpenShift AI 3.3</a></li>
+    <li><a href="04-module-01-platform-admin.html">Access Control &amp; Governance</a></li>
+    <li><a href="04-module-02-platform-admin.html">2.1:  Understanding tier-based governance</a></li>
+  </ul>
+</nav>
+</div>
+  <div class="content">
+<aside class="toc sidebar" data-title="Contents" data-levels="2">
+  <div class="toc-menu"></div>
+</aside>
+<article class="doc">
+<h1 class="page">2.1:  Understanding tier-based governance</h1>
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>In this lab, we are generating tokens via the CLI using ServiceAccounts for programmatic access. Human developers belonging to the groups we created (e.g., chocotech-rd) will simply log into the Gen AI Studio UI, where the dashboard will generate their JWTs for them based on their group&#8217;s MaaS Tier mapping.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_maas_encompasses_the_following_key_capabilities"><a class="anchor" href="#_maas_encompasses_the_following_key_capabilities"></a>MaaS encompasses the following key capabilities:</h2>
+<div class="sectionbody">
+<div class="dlist">
+<dl>
+<dt class="hdlist1">Tier-based access control</dt>
+<dd>
+<p>Defining multiple service tiers, such as free, premium, or enterprise, each featuring distinct rate limits, quotas, and model access permissions tailored for various user groups.</p>
+</dd>
+<dt class="hdlist1">Policy and quota management</dt>
+<dd>
+<p>Enforcing rate limiting and quota policies to mitigate the risk of resource exhaustion.</p>
+</dd>
+<dt class="hdlist1">API key authentication</dt>
+<dd>
+<p>Regulating access to models through tier-based resource allocation and API key-based authentication.</p>
+</dd>
+<dt class="hdlist1">Usage tracking</dt>
+<dd>
+<p>Monitoring consumption metrics essential for cost allocation and billing processes.</p>
+</dd>
+<dt class="hdlist1">Observability</dt>
+<dd>
+<p>Providing the ability to monitor model access patterns, policy enforcement actions, and resource utilization.</p>
+</dd>
+</dl>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_tiers"><a class="anchor" href="#_tiers"></a>Tiers</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p><strong>Tiers control which AI asset model endpoints users can access based on their group membership.</strong></p>
+</div>
+<div class="paragraph">
+<p>When multiple teams share large language models, tiers serve several critical functions:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Preventing resource exhaustion resulting from unrestricted usage.</p>
+</li>
+<li>
+<p>Providing differential service levels to distinct user groups.</p>
+</li>
+<li>
+<p>Tracking and allocating costs based on consumption by each team.</p>
+</li>
+<li>
+<p>Controlling which teams are granted access to computationally expensive or sensitive models.</p>
+</li>
+</ul>
+</div>
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-warning" title="Warning"></i>
+</td>
+<td class="content">
+MaaS assigns users to tiers based on their OpenShift group membership. In instances where a user is a member of multiple groups, the system defaults to assigning the tier with the highest level number.  Users are restricted to accessing only those models made available to their assigned tier and are precluded from accessing models in lower-level tiers, even if they belong to groups associated with those lower tiers
+</td>
+</tr>
+</table>
+</div>
+<div class="sect2">
+<h3 id="_maas_default_tiers"><a class="anchor" href="#_maas_default_tiers"></a>MaaS Default Tiers</h3>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 20%;">
+<col style="width: 20%;">
+<col style="width: 20%;">
+<col style="width: 20%;">
+<col style="width: 20%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Tier Name</th>
+<th class="tableblock halign-left valign-top">Description</th>
+<th class="tableblock halign-left valign-top">Level (Priority)</th>
+<th class="tableblock halign-left valign-top">Group</th>
+<th class="tableblock halign-left valign-top">Gateway-Endpoint</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Free</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Entry-level tier for basic users</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0 (Lowest)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">system:authenticated</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">maas-default-gateway-tier-free</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Premium</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Intermediate tier for higher throughput requirements</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">premium-users</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">maas-default-gateway-tier-premium</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Enterprise</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Top tier, designed for critical workloads</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">enterprise-users</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">maas-default-gateway-tier-enterprise</p></td>
+</tr>
+</tbody>
+</table>
+<hr>
+</div>
+<div class="sect2">
+<h3 id="_tier_to_group_mapping_retrieval"><a class="anchor" href="#_tier_to_group_mapping_retrieval"></a>Tier to Group Mapping Retrieval</h3>
+<div class="paragraph">
+<p>The configuration map defining the tier-to-group mapping can be retrieved using the command:</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs"> oc get configmap tier-to-group-mapping -n redhat-ods-applications</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_why_tiers_matter_for_maas"><a class="anchor" href="#_why_tiers_matter_for_maas"></a>Why tiers matter for MaaS</h3>
+<div class="paragraph">
+<p>Tier-based governance provides several critical capabilities:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Fair resource allocation</strong>: Prevents Free tier users from consuming resources needed by Enterprise tier production workloads</p>
+</li>
+<li>
+<p><strong>Cost control</strong>: Rate limits and quotas cap resource consumption per tier</p>
+</li>
+<li>
+<p><strong>Chargeback reporting</strong>: Track and allocate AI infrastructure costs by tier and business unit</p>
+</li>
+<li>
+<p><strong>Quality of service</strong>: Enterprise tier gets higher priority during peak demand</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Without tiers, the first team to use the platform could monopolize all available GPU resources, blocking other business units.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_chocotechs_business_unit_tier_mapping"><a class="anchor" href="#_chocotechs_business_unit_tier_mapping"></a>ChocoTech&#8217;s business unit tier mapping</h3>
+<div class="paragraph">
+<p>Based on the CIO&#8217;s requirements document, ChocoTech&#8217;s business units map to tiers as follows:</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 14.2857%;">
+<col style="width: 14.2857%;">
+<col style="width: 28.5714%;">
+<col style="width: 14.2857%;">
+<col style="width: 28.5715%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Business Unit</th>
+<th class="tableblock halign-left valign-top">Tier</th>
+<th class="tableblock halign-left valign-top">Use Case</th>
+<th class="tableblock halign-left valign-top">Priority</th>
+<th class="tableblock halign-left valign-top">Models Allowed</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Quality Control</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Gold</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Defect detection (production)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Highest</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">All models</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">R&amp;D</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Silver</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Recipe optimization (development)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Medium</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">All models</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Marketing</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Bronze</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Sentiment analysis (exploratory)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Lower</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Select models</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<nav class="pagination">
+  <span class="prev"><a href="04-module-01-platform-admin.html">Access Control &amp; Governance</a></span>
+  <span class="next"><a href="04-module-04-platform-admin.html">2.2: Deploying governance tier policies and verifying readiness</a></span>
+</nav>
+</article>
+  </div>
+</main>
+</div>
+<footer class="footer">
+  <img src="../../../_/img/rhl-logo-red.png" height="40px" alt="Red Hat"  href="https://redhat.com" >
+</footer><script id="site-script" src="../../../_/js/site.js" data-ui-root-path="../../../_"></script>
+<script async src="../../../_/js/vendor/highlight.js"></script>
+  </body>
+</html>

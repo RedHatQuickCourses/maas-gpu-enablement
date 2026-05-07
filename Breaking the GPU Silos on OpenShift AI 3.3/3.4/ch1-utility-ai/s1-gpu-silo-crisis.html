@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>The GPU Silo Crisis :: Models as a Service: Breaking the GPU Silos on OpenShift AI 3.3</title>
+    <meta name="generator" content="Antora 3.1.3">
+    <link rel="stylesheet" href="../../../_/css/site.css">
+    <script>var uiRootPath = '../../../_'</script>
+  </head>
+  <body class="article">
+<header class="header">
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="https://www.redhat.com" target="_blank"><img src="../../../_/img/redhat-logo.png" height="40px" alt="Red Hat"></a>
+      <a class="navbar-item" style="font-size: 24px; color: white" href="../../..">Models as a Service: Breaking the GPU Silos on OpenShift AI 3.3</a>
+      <button class="navbar-burger" data-target="topbar-nav">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+    <div id="topbar-nav" class="navbar-menu">
+      <div class="navbar-end">
+        <a class="navbar-item" href="https://github.com/RedHatQuickCourses/REPLACEREPONAME/issues" target="_blank">Report Issues</a>
+      </div>
+    </div>
+  </nav>
+</header>
+<div class="body">
+<div class="nav-container" data-component="Breaking the GPU Silos on OpenShift AI 3.3" data-version="3.4">
+  <aside class="nav">
+    <div class="panels">
+<div class="nav-panel-menu is-active" data-panel="menu">
+  <nav class="nav-menu">
+    <h3 class="title"><a href="../index.html">Models as a Service Breaking the GPU Silos on OpenShift AI 3.3</a></h3>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../index.html">Models-as-a-Service Introduction</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../appendix/01-overview.html">QuickCourse Overview</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../appendix/03-module-00-architecture.html">MaaS Architecture</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../appendix/03-module-01-architecture.html">1.1: Understanding the GPU silo crisis</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../appendix/03-module-02-architecture.html">1.2: The MaaS architecture stack</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../appendix/03-module-03-architecture.html">1.3: Enabling MaaS on your OpenShift AI platform</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../appendix/03-module-04-architecture.html">1.4: Summary</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../appendix/04-module-01-platform-admin.html">Access Control &amp; Governance</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../appendix/04-module-02-platform-admin.html">2.1:  Understanding tier-based governance</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../appendix/04-module-04-platform-admin.html">2.2: Deploying governance tier policies and verifying readiness</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../appendix/04-module-05-platform-admin.html">2.3: Deploying governance tier policies and verifying readiness</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../appendix/04-module-02.1-platform-groups.html">2.5: Creating OpenShift groups</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../appendix/04-module-03-platform-admin.html">2.6: Configuring API access with ServiceAccounts and RBAC</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../appendix/04-module-06-platform-summary.html">2.6Module summary</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../appendix/05-module-01-model-deployment.html">Model Deployment</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../appendix/05a-model-selection-strategy.html">3.1a: Choosing the right model for your workload</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../appendix/05-module-02-model-deployment.html">3.1: Understanding serving runtimes and distributed inference</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../appendix/05-module-03-model-deployment.html">3.4: Publish model to the MaaS catalog</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../appendix/05-module-04-model-deployment.html">3.5: Deploy a second model for multi-model catalog</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../appendix/05b-lifecycle-management-gitops.html">3.6: Production lifecycle management and GitOps</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+</ul>
+  </nav>
+</div>
+<div class="nav-panel-explore" data-panel="explore">
+  <div class="context">
+    <span class="title">Models as a Service Breaking the GPU Silos on OpenShift AI 3.3</span>
+    <span class="version">3.4</span>
+  </div>
+  <ul class="components">
+    <li class="component is-current">
+      <a class="title" href="../index.html">Models as a Service Breaking the GPU Silos on OpenShift AI 3.3</a>
+      <ul class="versions">
+        <li class="version is-current is-latest">
+          <a href="../index.html">3.4</a>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</div>
+    </div>
+  </aside>
+</div>
+<main class="article">
+<div class="toolbar" role="navigation">
+<button class="nav-toggle"></button>
+<nav class="breadcrumbs" aria-label="breadcrumbs">
+  <ul>
+    <li><a href="../index.html">Models as a Service Breaking the GPU Silos on OpenShift AI 3.3</a></li>
+    <li><a href="s1-gpu-silo-crisis.html">The GPU Silo Crisis</a></li>
+  </ul>
+</nav>
+</div>
+  <div class="content">
+<aside class="toc sidebar" data-title="Contents" data-levels="2">
+  <div class="toc-menu"></div>
+</aside>
+<article class="doc">
+<h1 class="page">The GPU Silo Crisis</h1>
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p><em>Estimated reading time: <strong>5 minutes</strong>.</em></p>
+</div>
+<div class="paragraph lead">
+<p><strong>Expensive GPU hardware trapped in team silos creates idle capacity in some departments while high-priority projects stall in others.</strong></p>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1">Objective</dt>
+<dd>
+<p>Understand the business and operational problems created by fragmented GPU infrastructure and how the Models-as-a-Service "Centralized Model Hub" solves them.</p>
+</dd>
+</dl>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_the_problem_dedicated_accelerators"><a class="anchor" href="#_the_problem_dedicated_accelerators"></a>The Problem: Dedicated Accelerators</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Organizations currently face a "GPU Silo" crisis where expensive, limited hardware is trapped within individual teams. This leads to simultaneous idle capacity and project bottlenecks.</p>
+</div>
+<div class="paragraph">
+<p>A platform engineer must allocate $200,000 worth of GPU hardware fairly across multiple teams and projects.</p>
+</div>
+<div class="paragraph">
+<p>Without centralized orchestration, teams request and manage their own dedicated GPUs. This creates:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Wasted Resources</strong>: GPU hardware sitting idle in Team A while Team B&#8217;s projects are queued</p>
+</li>
+<li>
+<p><strong>Shadow AI</strong>: Multiple teams downloading and deploying the same models independently</p>
+</li>
+<li>
+<p><strong>Zero Visibility</strong>: No audit logs, no PII filtering, no usage tracking</p>
+</li>
+<li>
+<p><strong>Debugging Tax</strong>: Data scientists waste time on model deployment tasks such as managing CUDA drivers and Kubernetes instead of model tuning</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_the_solution_centralized_model_hub"><a class="anchor" href="#_the_solution_centralized_model_hub"></a>The Solution: Centralized Model Hub</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The Models-as-a-Service (MaaS) capability transforms GPU infrastructure from dedicated, single-team clusters into a consumable model backplane available to the entire enterprise.</p>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1">Central IT</dt>
+<dd>
+<p>Manages the inference strategy, hardware allocation, and governance policies</p>
+</dd>
+<dt class="hdlist1">Lines of Business</dt>
+<dd>
+<p>Consume AI capabilities via tokens; treating model inference as a metered, on-demand internal service</p>
+</dd>
+<dt class="hdlist1">Platform Engineers</dt>
+<dd>
+<p>Configure tiers, rate limits, and observability dashboards</p>
+</dd>
+<dt class="hdlist1">Developers</dt>
+<dd>
+<p>Focus on applications, not infrastructure</p>
+</dd>
+</dl>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_business_impact"><a class="anchor" href="#_business_impact"></a>Business Impact</h2>
+<div class="sectionbody">
+<div class="dlist">
+<dl>
+<dt class="hdlist1">Without MaaS</dt>
+<dd>
+<div class="ulist">
+<ul>
+<li>
+<p>Redundant model deployments waste storage and compute</p>
+</li>
+<li>
+<p>No audit trail for compliance requirements</p>
+</li>
+<li>
+<p>Cannot track usage or forecast future needs</p>
+</li>
+<li>
+<p>Teams compete for scarce GPU resources</p>
+</li>
+</ul>
+</div>
+</dd>
+<dt class="hdlist1">With MaaS</dt>
+<dd>
+<div class="ulist">
+<ul>
+<li>
+<p>Centralized model catalog eliminates redundancy</p>
+</li>
+<li>
+<p>Complete audit logs and PII filtering via API gateway</p>
+</li>
+<li>
+<p>Token-based consumption enables accurate chargeback</p>
+</li>
+<li>
+<p>Fair resource allocation prevents team conflicts</p>
+</li>
+</ul>
+</div>
+</dd>
+</dl>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_the_transition_framework"><a class="anchor" href="#_the_transition_framework"></a>The Transition Framework</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Moving from silos to centralized serving requires:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>Generic GPU Enablement</strong> - The foundation (drivers, operators, hardware certification)</p>
+</li>
+<li>
+<p><strong>MaaS Layer</strong> - The wiring (KServe, Kuadrant, Gateway API)</p>
+</li>
+<li>
+<p><strong>Governance Framework</strong> - The controls (tiers, rate limits, quotas)</p>
+</li>
+<li>
+<p><strong>Token Delivery Model</strong> - The consumption interface (OpenAI-compatible APIs)</p>
+</li>
+</ol>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_whats_next"><a class="anchor" href="#_whats_next"></a>What&#8217;s Next</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Now that you understand the business problem that MaaS solves, the next section covers the hardware and platform prerequisites needed before enabling the MaaS layer.</p>
+</div>
+</div>
+</div>
+</article>
+  </div>
+</main>
+</div>
+<footer class="footer">
+  <img src="../../../_/img/rhl-logo-red.png" height="40px" alt="Red Hat"  href="https://redhat.com" >
+</footer><script id="site-script" src="../../../_/js/site.js" data-ui-root-path="../../../_"></script>
+<script async src="../../../_/js/vendor/highlight.js"></script>
+  </body>
+</html>

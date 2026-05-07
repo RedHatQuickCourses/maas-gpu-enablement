@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Troubleshooting :: Models as a Service: Breaking the GPU Silos on OpenShift AI 3.3</title>
+    <meta name="generator" content="Antora 3.1.3">
+    <link rel="stylesheet" href="../../../_/css/site.css">
+    <script>var uiRootPath = '../../../_'</script>
+  </head>
+  <body class="article">
+<header class="header">
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="https://www.redhat.com" target="_blank"><img src="../../../_/img/redhat-logo.png" height="40px" alt="Red Hat"></a>
+      <a class="navbar-item" style="font-size: 24px; color: white" href="../../..">Models as a Service: Breaking the GPU Silos on OpenShift AI 3.3</a>
+      <button class="navbar-burger" data-target="topbar-nav">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+    <div id="topbar-nav" class="navbar-menu">
+      <div class="navbar-end">
+        <a class="navbar-item" href="https://github.com/RedHatQuickCourses/REPLACEREPONAME/issues" target="_blank">Report Issues</a>
+      </div>
+    </div>
+  </nav>
+</header>
+<div class="body">
+<div class="nav-container" data-component="Breaking the GPU Silos on OpenShift AI 3.3" data-version="3.4">
+  <aside class="nav">
+    <div class="panels">
+<div class="nav-panel-menu is-active" data-panel="menu">
+  <nav class="nav-menu">
+    <h3 class="title"><a href="../index.html">Models as a Service Breaking the GPU Silos on OpenShift AI 3.3</a></h3>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../index.html">Models-as-a-Service Introduction</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="01-overview.html">QuickCourse Overview</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="03-module-00-architecture.html">MaaS Architecture</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="03-module-01-architecture.html">1.1: Understanding the GPU silo crisis</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="03-module-02-architecture.html">1.2: The MaaS architecture stack</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="03-module-03-architecture.html">1.3: Enabling MaaS on your OpenShift AI platform</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="03-module-04-architecture.html">1.4: Summary</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="04-module-01-platform-admin.html">Access Control &amp; Governance</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="04-module-02-platform-admin.html">2.1:  Understanding tier-based governance</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="04-module-04-platform-admin.html">2.2: Deploying governance tier policies and verifying readiness</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="04-module-05-platform-admin.html">2.3: Deploying governance tier policies and verifying readiness</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="04-module-02.1-platform-groups.html">2.5: Creating OpenShift groups</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="04-module-03-platform-admin.html">2.6: Configuring API access with ServiceAccounts and RBAC</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="04-module-06-platform-summary.html">2.6Module summary</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="05-module-01-model-deployment.html">Model Deployment</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="05a-model-selection-strategy.html">3.1a: Choosing the right model for your workload</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="05-module-02-model-deployment.html">3.1: Understanding serving runtimes and distributed inference</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="05-module-03-model-deployment.html">3.4: Publish model to the MaaS catalog</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="05-module-04-model-deployment.html">3.5: Deploy a second model for multi-model catalog</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="05b-lifecycle-management-gitops.html">3.6: Production lifecycle management and GitOps</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+</ul>
+  </nav>
+</div>
+<div class="nav-panel-explore" data-panel="explore">
+  <div class="context">
+    <span class="title">Models as a Service Breaking the GPU Silos on OpenShift AI 3.3</span>
+    <span class="version">3.4</span>
+  </div>
+  <ul class="components">
+    <li class="component is-current">
+      <a class="title" href="../index.html">Models as a Service Breaking the GPU Silos on OpenShift AI 3.3</a>
+      <ul class="versions">
+        <li class="version is-current is-latest">
+          <a href="../index.html">3.4</a>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</div>
+    </div>
+  </aside>
+</div>
+<main class="article">
+<div class="toolbar" role="navigation">
+<button class="nav-toggle"></button>
+<nav class="breadcrumbs" aria-label="breadcrumbs">
+  <ul>
+    <li><a href="../index.html">Models as a Service Breaking the GPU Silos on OpenShift AI 3.3</a></li>
+    <li><a href="07-module-05-api-integration.html">Troubleshooting</a></li>
+  </ul>
+</nav>
+</div>
+  <div class="content">
+<aside class="toc sidebar" data-title="Contents" data-levels="2">
+  <div class="toc-menu"></div>
+</aside>
+<article class="doc">
+<h1 class="page">Troubleshooting</h1>
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p><strong>Issue</strong>: API returns 401 Unauthorized</p>
+</div>
+<div class="paragraph">
+<p><strong>Solution</strong>:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Verify Bearer token is valid and not expired in Gen AI Studio → API tokens</p>
+</li>
+<li>
+<p>Check token is correctly set in environment variable: <code>echo ${MAAS_TOKEN:0:20}</code></p>
+</li>
+<li>
+<p>Ensure Authorization header format: <code>Authorization: Bearer &lt;token&gt;</code> (not <code>Bearer: &lt;token&gt;</code>)</p>
+</li>
+<li>
+<p>Verify token was copied correctly (no extra spaces or newlines)</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p><strong>Issue</strong>: API returns 403 Forbidden</p>
+</div>
+<div class="paragraph">
+<p><strong>Solution</strong>:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Your tier does not have access to the requested model</p>
+</li>
+<li>
+<p>Check model&#8217;s tier access in Gen AI Studio → Models tab</p>
+</li>
+<li>
+<p>Verify your user group membership: <code>oc get user {user} -o yaml | grep groups</code></p>
+</li>
+<li>
+<p>Check which tier your group is assigned to</p>
+</li>
+<li>
+<p>Request access from Platform Engineer to upgrade tier or publish model to your tier</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p><strong>Issue</strong>: API returns 429 Rate Limit Exceeded immediately</p>
+</div>
+<div class="paragraph">
+<p><strong>Solution</strong>:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>You&#8217;ve exhausted your tier&#8217;s quota (requests/min or tokens/min)</p>
+</li>
+<li>
+<p>Check usage in Gen AI Studio → Usage tab</p>
+</li>
+<li>
+<p>Implement exponential backoff retry logic (see Exercise 3)</p>
+</li>
+<li>
+<p>Request tier upgrade from Platform Engineer if usage is legitimate</p>
+</li>
+<li>
+<p>Check <code>Retry-After</code> header for when quota resets</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p><strong>Issue</strong>: OpenAI SDK raises "Connection refused" error</p>
+</div>
+<div class="paragraph">
+<p><strong>Solution</strong>:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Verify MaaS gateway route exists: <code>oc get route maas-default-gateway -n redhat-ods-applications</code></p>
+</li>
+<li>
+<p>Check MAAS_URL environment variable is correct: <code>echo $MAAS_URL</code></p>
+</li>
+<li>
+<p>Verify network connectivity from client to OpenShift cluster</p>
+</li>
+<li>
+<p>Check for firewall or proxy blocking HTTPS traffic</p>
+</li>
+<li>
+<p>Test with curl first to isolate SDK vs connectivity issues</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p><strong>Issue</strong>: Model inference returns empty or truncated response</p>
+</div>
+<div class="paragraph">
+<p><strong>Solution</strong>:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Check <code>max_tokens</code> parameter - may be too low for complete response</p>
+</li>
+<li>
+<p>Increase <code>max_tokens</code> to allow longer completions (e.g., 500 or 1000)</p>
+</li>
+<li>
+<p>Check <code>finish_reason</code> in response - if "length", tokens limit was hit</p>
+</li>
+<li>
+<p>Verify model is healthy: <code>oc get llminferenceservice -n chocotech-models</code></p>
+</li>
+<li>
+<p>Check model pod logs for inference errors: <code>oc logs -l app=llama-3-8b -n chocotech-models</code></p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p><strong>Issue</strong>: Requests timing out after 30 seconds</p>
+</div>
+<div class="paragraph">
+<p><strong>Solution</strong>:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Large models or long prompts may take time to generate responses</p>
+</li>
+<li>
+<p>Increase request timeout in client code (e.g., <code>timeout=60</code>)</p>
+</li>
+<li>
+<p>Check model pod CPU/GPU utilization - may be overloaded</p>
+</li>
+<li>
+<p>Consider using streaming responses for better user experience</p>
+</li>
+<li>
+<p>Check for model pod issues: <code>oc get pods -n chocotech-models</code></p>
+</li>
+</ol>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_learning_outcomes"><a class="anchor" href="#_learning_outcomes"></a>Learning outcomes</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>By completing this module, you should now understand:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>✓ How to navigate Gen AI Studio to discover models and generate API tokens</p>
+</li>
+<li>
+<p>✓ The OpenAI-compatible API structure and endpoint patterns (<code>/v1/models</code>, <code>/v1/chat/completions</code>)</p>
+</li>
+<li>
+<p>✓ How to implement exponential backoff retry logic for production applications</p>
+</li>
+<li>
+<p>✓ How tier-based rate limiting and quotas affect API responses</p>
+</li>
+<li>
+<p>✓ Migration patterns for switching applications from OpenAI to self-hosted MaaS models</p>
+</li>
+<li>
+<p>✓ Token consumption tracking and quota management for cost visibility</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_module_summary"><a class="anchor" href="#_module_summary"></a>Module summary</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>You&#8217;ve successfully demonstrated the developer experience for consuming MaaS models via the OpenAI-compatible API.</p>
+</div>
+<div class="paragraph">
+<p><strong>What you accomplished for ChocoTech</strong>:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Enabled Marketing team to switch from external OpenAI API to internal MaaS models</p>
+</li>
+<li>
+<p>Generated API tokens with appropriate expiration and scope for application integration</p>
+</li>
+<li>
+<p>Demonstrated OpenAI SDK compatibility for minimal migration effort</p>
+</li>
+<li>
+<p>Implemented retry logic for production-ready error handling</p>
+</li>
+<li>
+<p>Provided developers with self-service access to AI capabilities without infrastructure complexity</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>Developer experience benefits</strong>:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Self-service</strong>: Developers generate API tokens without Platform Engineer involvement</p>
+</li>
+<li>
+<p><strong>Familiar API</strong>: OpenAI-compatible format reduces learning curve and enables code reuse</p>
+</li>
+<li>
+<p><strong>Production-ready</strong>: Rate limiting and retry patterns ensure reliable applications</p>
+</li>
+<li>
+<p><strong>Cost visibility</strong>: Token consumption tracking enables application-level budget management</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>Your journey progress</strong>:</p>
+</div>
+<div class="paragraph">
+<p>ChocoTech now has a complete MaaS platform with governance, observability, and developer self-service capabilities. From GPU silo crisis to centralized model hub, you&#8217;ve transformed how the organization delivers AI capabilities.</p>
+</div>
+<div class="paragraph">
+<p><strong>What you&#8217;ve built</strong>:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Module 1: Understood the GPU silo problem and MaaS architecture</p>
+</li>
+<li>
+<p>Module 2: Configured the MaaS platform through OpenShift AI operator</p>
+</li>
+<li>
+<p>Module 3: Deployed models with distributed inference to the catalog</p>
+</li>
+<li>
+<p>Module 4: Implemented governance tiers, rate limiting, and chargeback</p>
+</li>
+<li>
+<p>Module 5: Enabled developer API integration with OpenAI compatibility</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>Next steps</strong>:</p>
+</div>
+<div class="paragraph">
+<p>The Conclusion will summarize key learning outcomes, provide reference links to Red Hat OpenShift AI documentation, and outline paths for further exploration including model optimization, fine-tuning, and production deployment patterns.</p>
+</div>
+</div>
+</div>
+</article>
+  </div>
+</main>
+</div>
+<footer class="footer">
+  <img src="../../../_/img/rhl-logo-red.png" height="40px" alt="Red Hat"  href="https://redhat.com" >
+</footer><script id="site-script" src="../../../_/js/site.js" data-ui-root-path="../../../_"></script>
+<script async src="../../../_/js/vendor/highlight.js"></script>
+  </body>
+</html>
