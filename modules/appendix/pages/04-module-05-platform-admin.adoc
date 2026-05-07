@@ -2,15 +2,15 @@
 
 With organizational structure and authentication in place, the final step is to deploy tier-based governance policies that enforce rate limits and quotas across ChocoTech's business units.
 
-This section covers creating MaaSTier custom resources, verifying governance components, and completing a comprehensive pre-deployment readiness checklist.
+This section covers creating MaaS Tier custom resources, verifying governance components, and completing a comprehensive pre-deployment readiness checklist.
 
 == Understanding MaaS tier governance
 
 Tier governance ensures fair resource allocation and prevents any single business unit from monopolizing GPU resources.
 
-=== What are MaaSTier custom resources?
+=== What are MaaS Tier custom resources?
 
-MaaSTier is a custom resource definition (CRD) provided by the Red Hat OpenShift AI MaaS operator. Each MaaSTier resource defines:
+MaaS Tier is a custom resource definition (CRD) provided by the Red Hat OpenShift AI MaaS operator. Each MaaS Tier resource defines:
 
 * *Tier properties*: Display name, priority level
 * *Rate limits*: Maximum requests per minute
@@ -94,7 +94,7 @@ These limits ensure:
 * R&D has sufficient capacity for development without impacting production
 * Marketing can experiment without consuming resources needed by other teams
 
-== Creating MaaSTier custom resources
+== Creating MaaS Tier custom resources
 
 The tier-to-group-mapping ConfigMap defines the global business rules for your entire enterprise AI factory.
 
@@ -606,7 +606,7 @@ Work through each section and confirm all items:
 
 ==== Governance Policies
 
-* [ ] Three MaaSTier resources deployed (gold, silver, bronze)
+* [ ] Three MaaS Tier resources deployed (gold, silver, bronze)
 * [ ] Each tier has rate limit (requestsPerMinute) defined
 * [ ] Each tier has quota (tokensPerHour) defined
 * [ ] Each tier is mapped to a business unit group
@@ -639,7 +639,7 @@ oc get sa -n chocotech-models | grep marketing && \
 echo "=== RBAC ===" && \
 oc get role,rolebinding -n chocotech-models && \
 echo "=== Tiers ===" && \
-oc get maastier && \
+oc get MaaS Tier && \
 echo "=== Governance Pods ===" && \
 oc get pods -n redhat-ods-applications | grep -E "authorino|limitador" && \
 echo "=== Gateway ===" && \
@@ -703,7 +703,7 @@ You've established a complete governance foundation. Here's what's in place and 
 |✅ RBAC Roles control who can access models (get/list permissions)
 
 |Policy layer
-|✅ MaaSTier CRDs define rate limits and quotas (100/50/20 requests/min)
+|✅ MaaS Tier CRDs define rate limits and quotas (100/50/20 requests/min)
 
 |Enforcement layer
 |✅ Authorino validates tokens, Limitador enforces rate limits (pods Running)
@@ -802,9 +802,9 @@ By the end of Module 3, ChocoTech's teams will have self-service access to gover
 
 Test your understanding of tier governance:
 
-1. *Why are MaaSTier policies created before model deployment, rather than after?*
+1. *Why are MaaS Tier policies created before model deployment, rather than after?*
 +
-MaaSTier policies must exist before deployment so the MaaS operator can enforce rate limits and quotas from the first inference request. Creating policies after deployment would allow a window of uncontrolled access.
+MaaS Tier policies must exist before deployment so the MaaS operator can enforce rate limits and quotas from the first inference request. Creating policies after deployment would allow a window of uncontrolled access.
 
 2. *What happens if a Bronze tier user tries to exceed 20 requests/minute?*
 +
@@ -812,7 +812,7 @@ Limitador tracks requests per tier and rejects requests exceeding the rate limit
 
 3. *How does Authorino know which tier a user belongs to?*
 +
-Authorino validates the JWT token and extracts the ServiceAccount identity. It then checks which OpenShift groups that ServiceAccount's user belongs to. The MaaSTier resources map groups to tiers (e.g., `chocotech-quality-control` → Gold tier).
+Authorino validates the JWT token and extracts the ServiceAccount identity. It then checks which OpenShift groups that ServiceAccount's user belongs to. The MaaS Tier resources map groups to tiers (e.g., `chocotech-quality-control` → Gold tier).
 
 == Troubleshooting
 
@@ -889,9 +889,9 @@ oc get rolebinding marketing-sentiment-app-binding -n chocotech-models
 oc logs -l app=authorino -n redhat-ods-applications
 ----
 
-=== MaaSTier resources not created
+=== MaaS Tier resources not created
 
-**Issue**: `oc get maastier` returns "error: the server doesn't have a resource type 'maastier'"
+**Issue**: `oc get MaaS Tier` returns "error: the server doesn't have a resource type 'MaaS Tier'"
 
 **Solution**:
 
@@ -902,7 +902,7 @@ oc logs -l app=authorino -n redhat-ods-applications
 oc get crd | grep maas
 ----
 +
-Should show: `maastiers.maas.opendatahub.io`
+Should show: `MaaS Tiers.maas.opendatahub.io`
 
 2. If CRD is missing, verify MaaS is enabled:
 +
@@ -915,5 +915,5 @@ oc get datasciencecluster default-dsc -o jsonpath='{.spec.components.modelsAsSer
 +
 [source,bash]
 ----
-oc logs -n redhat-ods-operator deployment/rhods-operator | grep -i maastier
+oc logs -n redhat-ods-operator deployment/rhods-operator | grep -i MaaS Tier
 ----

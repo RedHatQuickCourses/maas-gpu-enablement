@@ -1,51 +1,108 @@
-= Red Hat OpenShift AI: Models as a Service Enablement
+= "Models as a Service: Breaking the GPU Silos on OpenShift AI 3.3"
 
-Welcome to the Red Hat OpenShift AI Models as a Service enablement QuickCourse!
+Welcome to the "Models as a Service: Breaking the GPU Silos on OpenShift AI 3.3" QuickCourse! 
 
-== Who this is for
+== Who This Is For
 
-This QuickCourse is built for Platform Engineers and Developers—including associates, partners, and customers—looking to modernize their GPU infrastructure with OpenShift AI. You will learn how to break down team silos and establish a centralized, governed environment that empowers lines of business to build agentic AI applications with ease.
+Designed for Platform Engineers and Developers, this course provides the exact steps to build a governed Models as a Service (MaaS) ecosystem on OpenShift AI 3.3. We skip the trial-and-error of figuring out which operators and registries to install. Instead, you will learn how to immediately transform fragmented, isolated hardware into a fairly scheduled, multi-tenant shared service, empowering your business units to deploy agentic AI smoothly, securely, and at scale.
 
-**Experience level**: Intermediate
+By the end of this course, you will be equipped to empower your lines of business with self-service models to build agentic AI applications smoothly and securely.
+
+[NOTE]
+====
+**Experience Level**: Intermediate
+====
 
 == Prerequisites
 
-Before starting this QuickCourse, you should have:
+To get the most out of this QuickCourse, you should come to the table with:
 
-* Red Hat OpenShift administration experience (Version 4.20 or later)
+* Red Hat OpenShift administration experience (version 4.20 or later)
 * Basic Kubernetes operator management knowledge
 * Familiarity with core GPU concepts and generic GPU enablement
-* Understanding of API concepts and REST principles
-* Basic command line experience
+* An understanding of API concepts and REST principles
+* Basic command-line experience
 
-== What you'll learn
+== What You'll Learn
 
-In this QuickCourse, you will:
+In this hands-on QuickCourse, you will:
 
-* Understand how Models as a Service (MaaS) solves the GPU resource allocation challenges
-* Design and implement a centralized model hub with governed token-based consumption
-* Configure MaaS on Red Hat OpenShift AI using the operator and Custom Resource Definitions
-* Deploy generative AI models using llm-d, vLLM, and KServe components for distributed inference
-* Publish models to the OpenShift AI ModelsAsService catalog for self-service access with role-based permissions
-* Implement governance policies with tiered service limits and rate limiting using Kuadrant
-* Generate usage reports for chargeback and monitor GPU utilization metrics with Grafana
-* Integrate AI models into applications using OpenAI-compatible APIs with proper retry logic
+* **Master MaaS**: Understand how Models as a Service solves complex GPU resource allocation challenges.
+* **Architect a Hub**: Design and implement a centralized model hub featuring governed, token-based consumption.
+* **Configure and Deploy**: Set up MaaS on OpenShift AI using operators and CRDs, and deploy generative AI models (using llm-d, vLLM, and KServe) for distributed inference.
+* **Publish for Self-Service**: Publish models to the OpenShift AI `ModelsAsService` catalog, complete with role-based access permissions.
+* **Enforce Governance**: Implement tiered service limits and rate limiting using Kuadrant.
+* **Monitor and Report**: Generate chargeback reports and track GPU utilization metrics using Grafana.
+* **Integrate Seamlessly**: Connect AI models into applications using OpenAI-compatible APIs with robust retry logic.
 
-== QuickCourse environment
+== QuickCourse Environment
 
-The recommended lab environment is a Single Node OpenShift (SNO) cluster with multiple NVIDIA GPUs (minimum 48GB - (2x24Gb) pre-configured with:
+This lab requires a robust setup. The recommended environment is a **Single Node OpenShift (SNO) cluster** with multiple NVIDIA GPUs (minimum 48GB total, e.g., 2x24GB).
 
-* Red Hat OpenShift 4.20 or later
-* Red Hat OpenShift AI 3.3.2 or later (operator installed)
-* GPU operators and drivers configured
-* Required infrastructure components (KServe, Service Mesh, Connectivity Link, etc.)
+[IMPORTANT]
+====
+**Pre-flight Checklist**
+The following components **must** be pre-configured before you begin:
 
-== Estimated time
+* **OpenShift Cluster**: SNO with GPU nodes configured (version 4.20 or later).
+* **GPU Operators**: NVIDIA GPU Operator and Node Feature Discovery installed.
+* **OpenShift AI Operator**: Installed via the `stable-3.x` channel.
+* **Service Mesh Operator**: Installed (required for Gateway API routing).
+* **Red Hat Connectivity Link**: Kuadrant installed for auth and rate limiting.
+* **LeaderWorkerSet Operator**: Installed for llm-d (required for Mixture of Expoert (MOE) Model) inference.
+* **CLI Access**: Web Terminal Operator or Developer Spaces active, with the `oc` command accessible.
+* **Serving & Drivers**: KServe components deployed, and NVIDIA drivers loaded/tested.
+====
 
-This QuickCourse will take approximately **3-4 hours** to complete.
+**Why do we need multiple GPUs for this lab?**
 
-You can work at your own pace, however, consider shutting down expensive GPU lab environment between sessions.
+* The LlamaStack model powers the MaaS Dashboard and consumes 1 dedicated GPU.
+* It allows us to simulate realistic, multi-tenant model serving scenarios.
+* It enables proper demonstrations of load balancing and autoscaling.
+* It provides the capacity to deploy the NVIDIA-Nemotron-3-Nano-4B-FP8 (or 30B A3B) model.
 
-== Let's get started!
+== Estimated Time & Agenda
 
-Click on **QuickCourse Overview** in the navigation to begin your learning journey and meet ChocoTech Industries, a chocolate manufacturer facing the GPU silo crisis.
+Plan for approximately **3 to 4 hours** to complete the full journey. 
+
+. **MaaS Architecture** (30 mins)
+. **MaaS Configuration** (40 mins)
+. **Model Deployment to the MaaS Catalog** (55 mins)
+. **MaaS Governance, Observability, and Chargeback** (50 mins)
+. **API Integration and Consumer Experience** (40 mins)
+
+[TIP]
+====
+**Pacing Yourself:** You can work through the modules at your own pace. We highly recommend to **shut down the expensive GPU lab environment** between active sessions!
+====
+
+== Follow-up Resources
+
+* link:https://docs.redhat.com/en/documentation/red_hat_openshift_ai_self-managed/3.4[Red Hat OpenShift AI Documentation^]
+* link:https://developers.redhat.com/products/red-hat-ai[Red Hat Developer - OpenShift AI Resources^]
+* link:https://access.redhat.com/articles/rhoai-supported-configs-3.x[Red Hat OpenShift AI 3.x Supported Configurations^]
+* link:https://www.redhat.com/en/technologies/cloud-computing/openshift/openshift-ai[Red Hat OpenShift AI Product Page^]
+
+== Authors and Contributors
+
+**Primary Author**::
+Karlos Knox +
+Content Services Architect
+
+* **Last Updated**: May 2026
+* **QuickCourse Version**: 3.4
+* **Based on**: Red Hat OpenShift AI 3.3+ MaaS capabilities
+
+**Contact Information**:
+
+* **QuickCourse feedback**: Submit an issue via the GitHub repository [fix_me_link].
+* **Content updates**: Submit GitHub issues via the QuickCourse repository (link provided by your facilitator).
+
+**Acknowledgments**: 
+This QuickCourse incorporates expert guidance from the Red Hat OpenShift AI business unit and product engineering architects working with enterprise AI deployments. Special thanks to **Taylor Jordan Smith** and **James Harmison**. 
+
+== Let's Get Started!
+
+Ready to dive in? Click on **QuickCourse Overview** in the navigation to begin your learning journey. 
+
+You'll start by meeting **ChocoTech Industries**—a rapidly growing chocolate manufacturer desperately looking for a solution to their GPU silo crisis. Let's help them build a better AI infrastructure!

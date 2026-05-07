@@ -1,5 +1,5 @@
-name: maas
-title: Red Hat OpenShift AI - Models as a Service
+name: Breaking the GPU Silos on OpenShift AI 3.3"
+title: "Models as a Service: Breaking the GPU Silos on OpenShift AI 3.3"
 version: 3.4
 nav:
 - modules/ROOT/nav.adoc

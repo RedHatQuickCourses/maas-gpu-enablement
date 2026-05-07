@@ -1,16 +1,16 @@
-= 2.3: Deploying governance tier policies and verifying readiness
+= 2.2: Deploying governance tier policies and verifying readiness
 
 With organizational structure and authentication in place, the final step is to deploy tier-based governance policies that enforce rate limits and quotas across ChocoTech's business units.
 
-This section covers creating MaaSTier custom resources, verifying governance components, and completing a comprehensive pre-deployment readiness checklist.
+This section covers creating MaaS Tier custom resources, verifying governance components, and completing a comprehensive pre-deployment readiness checklist.
 
 == Understanding MaaS tier governance
 
 Tier governance ensures fair resource allocation and prevents any single business unit from monopolizing GPU resources.
 
-=== What are MaaSTier custom resources?
+=== What are MaaS Tier custom resources?
 
-MaaSTier is a custom resource definition (CRD) provided by the Red Hat OpenShift AI MaaS operator. Each MaaSTier resource defines:
+MaaS Tier is a custom resource definition (CRD) provided by the Red Hat OpenShift AI MaaS operator. Each MaaS Tier resource defines:
 
 * *Tier properties*: Display name, priority level
 * *Rate limits*: Maximum requests per minute
@@ -33,6 +33,8 @@ With tier governance:
 * *Fair resource allocation*: Rate limits prevent Bronze tier from consuming all capacity
 * *Cost control*: Quotas cap token consumption (and thus GPU costs) per tier
 * *Chargeback reporting*: Track AI infrastructure costs by tier and business unit
+
+---
 
 === The tier enforcement flow
 
@@ -62,9 +64,6 @@ The core OpenShift AI backend services—specifically the maas-api server and th
 Because it is a global controller, it expects its configuration files to live in its own system namespace. If you put it in chocotech-models, the MaaS API wouldn't know it exists, and the Gen AI Studio UI would show empty tiers.
 
 ---
-
----
-
 
 
 === ChocoTech's tier requirements
@@ -104,17 +103,16 @@ These limits ensure:
 * R&D has sufficient capacity for development without impacting production
 * Marketing can experiment without consuming resources needed by other teams
 
-== Creating MaaSTier custom resources
 
-Deploy tier policies for Gold, Silver, and Bronze tiers.
+== Creating the Tiers for ChochTech
 
-=== Exercise 1: Deploy Gold tier policy
+In OpenShift AI 3.3, creating a governed tier is a two-step process. First, we define the business logic for the UI. Second, we deploy the network policy to the Gateway to enforce the limits.
 
-Create the Gold tier policy for Quality Control:
+**Step 1: Define the UI Business Logic**
+Apply the ConfigMap to register the Gold Tier in the Gen AI Studio and assign it to the Quality Control group.
 
-[source,role="execute"]
+[source,bash]
 ----
-
 cat <<EOF | oc apply -f -
 apiVersion: v1
 kind: ConfigMap
@@ -128,34 +126,130 @@ data:
       level: 100
       groups:
       - chocotech-quality-control
+    - name: silver-tier
+      description: R&D Development
+      level: 50
+      groups:
+      - chocotech-rd
+    - name: bronze-tier
+      description: Marketing Exploratory
+      level: 10
+      groups:
+      - chocotech-marketing
 EOF
 ----
 
 
-Expected output:
+*Expected output:* `configmap/tier-to-group-mapping configured`
 
+=== **Step 2: Enforce the Network Rate Limits**
+
+Now, apply the Kuadrant `RateLimitPolicy` to the Gateway to physically enforce the Gold tier's traffic limits.
+
+[source,bash]
 ----
-ratelimitpolicy.kuadrant.io/gold-tier-rate-limit created
+cat <<EOF | oc apply -f -
+apiVersion: kuadrant.io/v1
+kind: RateLimitPolicy
+metadata:
+  name: gold-tier-rate-limit
+  namespace: chocotech-models
+spec:
+  targetRef:
+    group: gateway.networking.k8s.io
+    kind: Gateway
+    name: maas-default-gateway
+  limits:
+    "gold-request-limit":
+      rates:
+      - limit: 100
+        window: "1m"
+      when:
+      - predicate: "has(auth.identity) && 'chocotech-quality-control' in auth.identity.groups"
+EOF
 ----
 
-=== Understanding the Gold tier definition
 
-* `priority: 100`: Highest priority level for request processing
-** During peak demand, Gold tier requests are processed before Silver and Bronze
-** Ensures Quality Control's production defect detection system gets guaranteed resources
+*Expected output:* `ratelimitpolicy.kuadrant.io/gold-tier-rate-limit created`
 
-* `rateLimit.requestsPerMinute: 100`: Maximum 100 inference requests per minute
-** Prevents excessive burst traffic that could overwhelm GPU resources
-** Allows steady production throughput
+==== Understanding the Gold Tier Definition
 
-* `quota.tokensPerHour: 50000`: Maximum 50,000 LLM tokens per hour
-** Tokens = input tokens + output tokens for all requests in the past hour
-** For context: GPT-3.5 level model processes ~500 tokens per request
-** 50,000 tokens ≈ 100 requests of 500 tokens each
+* **level: 100 (ConfigMap):** The highest priority level for UI token generation. If a user belongs to multiple groups, the system defaults to the highest level.
+* **groups: [chocotech-quality-control] (ConfigMap):** Maps this tier to the OpenShift group. Members of this group will automatically see the Gold Tier when they log into the Gen AI Studio.
+* **limit: 100 / window: 1m (RateLimitPolicy):** Enforces a maximum of 100 inference requests per minute at the Gateway layer. This prevents excessive burst traffic from overwhelming the GPUs and ensures Quality Control maintains steady production throughput.
+* **predicate (RateLimitPolicy):** The Common Expression Language (CEL) rule that tells Kuadrant to only apply this specific 100-request limit to users whose JWT token contains the `chocotech-quality-control` group claim.
 
-* `groups: [chocotech-quality-control]`: Maps this tier to the OpenShift group
-** Members of `chocotech-quality-control` group automatically belong to Gold tier
-** When they generate tokens from ServiceAccounts, requests count against Gold tier limits
+
+=== Exercise 2: Deploy Silver Rate Limits
+
+Since we already defined the UI business logic for all tiers in the ConfigMap during Exercise 1, we only need to deploy the Kuadrant network policy to enforce the Silver tier limits at the Gateway.
+
+[source,bash]
+----
+cat <<EOF | oc apply -f -
+apiVersion: kuadrant.io/v1
+kind: RateLimitPolicy
+metadata:
+  name: silver-tier-rate-limit
+  namespace: chocotech-models
+spec:
+  targetRef:
+    group: gateway.networking.k8s.io
+    kind: Gateway
+    name: maas-default-gateway
+  limits:
+    "silver-request-limit":
+      rates:
+      - limit: 50
+        window: "1m"
+      when:
+      - predicate: "has(auth.identity) && 'chocotech-rd' in auth.identity.groups"
+EOF
+----
+*Expected output:* `ratelimitpolicy.kuadrant.io/silver-tier-rate-limit created`
+
+==== Understanding the Silver Tier Allocation
+The Silver tier provides balanced resources suitable for development:
+
+* **Rate Limit (50 requests/minute):** This provides a generous capacity for the R&D team's recipe optimization scripts, but remains lower than the Gold production limit to prevent development from impacting Quality Control.
+* **Priority Level 50 (ConfigMap):** Medium priority. During peak Gateway saturation, Silver requests are processed after Gold, but before Bronze.
+
+
+=== Exercise 3: Deploy Bronze Rate limits Policy (Marketing)
+
+Finally, deploy the Kuadrant network policy for the Bronze tier to govern the Marketing team's exploratory experiments.
+
+[source,bash]
+----
+cat <<EOF | oc apply -f -
+apiVersion: kuadrant.io/v1
+kind: RateLimitPolicy
+metadata:
+  name: bronze-tier-rate-limit
+  namespace: chocotech-models
+spec:
+  targetRef:
+    group: gateway.networking.k8s.io
+    kind: Gateway
+    name: maas-default-gateway
+  limits:
+    "bronze-request-limit":
+      rates:
+      - limit: 20
+        window: "1m"
+      when:
+      - predicate: "has(auth.identity) && 'chocotech-marketing' in auth.identity.groups"
+EOF
+----
+
+*Expected output:* `ratelimitpolicy.kuadrant.io/bronze-tier-rate-limit created`
+
+==== Understanding the Bronze Tier Allocation
+The Bronze tier provides highly conservative, cost-controlled resources:
+
+* **Rate Limit (20 requests/minute):** A strict limit designed for exploratory work (like sentiment analysis testing). This prevents runaway experimental scripts from consuming expensive GPU cycles.
+* **Priority Level 10 (ConfigMap):** Lowest priority. Processed only after Gold and Silver tier requests have been handled.
+
 
 === Architectural Note: The UI is a One-Way Street
 
@@ -170,79 +264,6 @@ The OpenShift AI dashboard is an abstraction layer. It manages its Tiers in its 
 
 Both work simultaneously, but the Platform Engineer must document their custom GitOps policies, as the AI Admin will not see them in their dashboard.
 
-=== Exercise 2: Deploy Silver tier policy
-
-Create the Silver tier policy for R&D:
-
-[source,role="execute"]
-----
-
-cat <<EOF | oc apply -f -
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: tier-to-group-mapping
-  namespace: redhat-ods-applications
-data:
-  tiers: |
-    - name: silver-tier
-      description: R&D Development
-      level: 50
-      groups:
-      - chocotech-rd
-EOF
-
-----
-
-Expected output:
-
-----
-ratelimitpolicy.kuadrant.io/silver-tier-rate-limit created
-----
-
-The Silver tier provides balanced resources:
-
-* Half the rate limit of Gold tier (1000) vs 10000 requests/minute)
-* 1/10th the quota of Gold tier (60,000 vs 600,000 tokens/hour)
-* Medium priority (25) - processed after Gold, before Bronze
-
-This allocation is appropriate for R&D's recipe optimization work, which is important but not production-critical.
-
-=== Exercise 3: Deploy Bronze tier policy
-
-Create the Bronze tier policy for Marketing:
-
-[source,role="execute"]
-----
-cat <<EOF | oc apply -f -
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: tier-to-group-mapping
-  namespace: redhat-ods-applications
-data:
-  tiers: |
-    - name: bronze-tier
-      description: Marketing Exploratory
-      level: 10
-      groups:
-      - chocotech-marketing
-EOF
-----
-
-Expected output:
-
-----
-configmap/tier-to-group-mapping configured
-----
-
-The Bronze tier provides cost-controlled resources:
-
-* Conservative rate limit (100 requests/minute) for exploratory work
-* Lower quota (10,000 tokens/hour) to control costs
-* Lowest priority (10) - processed after Gold and Silver tiers
-
-This allocation is appropriate for Marketing's sentiment analysis experiments, which are exploratory and cost-sensitive.
 
 === Exercise 4: Verify tier policies
 
@@ -258,7 +279,8 @@ Expected output:
 ----
 NAMESPACE             NAME                     AGE
 openshift-operators   gold-tier-rate-limit     13m
-openshift-operators   silver-tier-rate-limit   6m28s
+openshift-operators   silver-tier-rate-limit   13m
+openshift-operators   bronze-tier-rate-limit   13m
 ----
 
 Describe the Gold tier to see full details:
@@ -288,7 +310,7 @@ spec:
   limits:
     gold-request-limit:
       rates:
-      - limit: 10000
+      - limit: 100
         window: 1m
       when:
       - predicate: auth.identity.groups.contains('chocotech-quality-control')
@@ -608,7 +630,7 @@ Work through each section and confirm all items:
 
 ==== Governance Policies
 
-* [ ] Three MaaSTier resources deployed (gold, silver, bronze)
+* [ ] Three MaaS Tier resources deployed (gold, silver, bronze)
 * [ ] Each tier has rate limit (requestsPerMinute) defined
 * [ ] Each tier has quota (tokensPerHour) defined
 * [ ] Each tier is mapped to a business unit group
@@ -641,7 +663,7 @@ oc get sa -n chocotech-models | grep marketing && \
 echo "=== RBAC ===" && \
 oc get role,rolebinding -n chocotech-models && \
 echo "=== Tiers ===" && \
-oc get maastier && \
+oc get MaaS Tier && \
 echo "=== Governance Pods ===" && \
 oc get pods -n redhat-ods-applications | grep -E "authorino|limitador" && \
 echo "=== Gateway ===" && \
@@ -705,7 +727,7 @@ You've established a complete governance foundation. Here's what's in place and 
 |✅ RBAC Roles control who can access models (get/list permissions)
 
 |Policy layer
-|✅ MaaSTier CRDs define rate limits and quotas (100/50/20 requests/min)
+|✅ MaaS Tier CRDs define rate limits and quotas (100/50/20 requests/min)
 
 |Enforcement layer
 |✅ Authorino validates tokens, Limitador enforces rate limits (pods Running)
@@ -804,9 +826,9 @@ By the end of Module 3, ChocoTech's teams will have self-service access to gover
 
 Test your understanding of tier governance:
 
-1. *Why are MaaSTier policies created before model deployment, rather than after?*
+1. *Why are MaaS Tier policies created before model deployment, rather than after?*
 +
-MaaSTier policies must exist before deployment so the MaaS operator can enforce rate limits and quotas from the first inference request. Creating policies after deployment would allow a window of uncontrolled access.
+MaaS Tier policies must exist before deployment so the MaaS operator can enforce rate limits and quotas from the first inference request. Creating policies after deployment would allow a window of uncontrolled access.
 
 2. *What happens if a Bronze tier user tries to exceed 20 requests/minute?*
 +
@@ -814,7 +836,7 @@ Limitador tracks requests per tier and rejects requests exceeding the rate limit
 
 3. *How does Authorino know which tier a user belongs to?*
 +
-Authorino validates the JWT token and extracts the ServiceAccount identity. It then checks which OpenShift groups that ServiceAccount's user belongs to. The MaaSTier resources map groups to tiers (e.g., `chocotech-quality-control` → Gold tier).
+Authorino validates the JWT token and extracts the ServiceAccount identity. It then checks which OpenShift groups that ServiceAccount's user belongs to. The MaaS Tier resources map groups to tiers (e.g., `chocotech-quality-control` → Gold tier).
 
 == Troubleshooting
 
@@ -891,9 +913,9 @@ oc get rolebinding marketing-sentiment-app-binding -n chocotech-models
 oc logs -l app=authorino -n redhat-ods-applications
 ----
 
-=== MaaSTier resources not created
+=== MaaS Tier resources not created
 
-**Issue**: `oc get maastier` returns "error: the server doesn't have a resource type 'maastier'"
+**Issue**: `oc get MaaS Tier` returns "error: the server doesn't have a resource type 'MaaS Tier'"
 
 **Solution**:
 
@@ -904,7 +926,7 @@ oc logs -l app=authorino -n redhat-ods-applications
 oc get crd | grep maas
 ----
 +
-Should show: `maastiers.maas.opendatahub.io`
+Should show: `MaaS Tiers.maas.opendatahub.io`
 
 2. If CRD is missing, verify MaaS is enabled:
 +
@@ -917,5 +939,5 @@ oc get datasciencecluster default-dsc -o jsonpath='{.spec.components.modelsAsSer
 +
 [source,bash]
 ----
-oc logs -n redhat-ods-operator deployment/rhods-operator | grep -i maastier
+oc logs -n redhat-ods-operator deployment/rhods-operator | grep -i MaaS Tier
 ----

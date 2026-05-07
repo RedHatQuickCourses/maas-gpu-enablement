@@ -1,4 +1,4 @@
-= 2.2: Configuring API access with ServiceAccounts and RBAC
+= 2.6: Configuring API access with ServiceAccounts and RBAC
 
 With organizational structure in place, the next step is to enable programmatic API access for applications. Marketing's sentiment analysis application needs to access models without requiring human credentials.
 

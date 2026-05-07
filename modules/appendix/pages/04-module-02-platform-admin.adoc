@@ -1,6 +1,6 @@
 = 2.1:  Understanding tier-based governance
 
-In this lab, we are generating tokens via the CLI using ServiceAccounts for programmatic access. Human developers belonging to the groups we created (e.g., chocotech-rd) will simply log into the Gen AI Studio UI, where the dashboard will generate their JWTs for them based on their group's MaaSTier mapping.
+In this lab, we are generating tokens via the CLI using ServiceAccounts for programmatic access. Human developers belonging to the groups we created (e.g., chocotech-rd) will simply log into the Gen AI Studio UI, where the dashboard will generate their JWTs for them based on their group's MaaS Tier mapping.
 
 
 
@@ -114,6 +114,7 @@ Based on the CIO's requirements document, ChocoTech's business units map to tier
 |Select models
 |===
 
+////
 
 == In Module 3, you'll deploy two models:
 
@@ -125,3 +126,5 @@ This mapping ensures Quality Control's production defect detection system gets g
 == Creating OpenShift groups
 
 OpenShift groups provide a way to organize users by department or function and assign permissions at the group level rather than individual users.
+
+////

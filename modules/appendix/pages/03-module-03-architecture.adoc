@@ -118,6 +118,7 @@ Expected output (pods should reach Running status within 1-2 minutes):
 NAME                                  READY    STATUS   RESTARTS     AGE
 authorino-79cbc94b89-knjf7             1/1     Running     0        2m13s
 limitador-limitador-67566c68b4-ktnhb   1/1     Running     0        2m15s
+----
 
 **Why this matters**: Authorino validates Bearer tokens and enforces model access policies. Limitador tracks requests per minute and token consumption quotas. Both are mandatory for the MaaS API to function.
 

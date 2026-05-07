@@ -1,4 +1,4 @@
-= Module summary
+= 2.6Module summary
 
 In this module, you transformed ChocoTech's MaaS platform from infrastructure-only to governance-ready:
 
@@ -34,9 +34,9 @@ By the end of Module 3, ChocoTech's teams will have self-service access to gover
 
 Test your understanding of tier governance:
 
-1. *Why are MaaSTier policies created before model deployment, rather than after?*
+1. *Why are MaaS Tier policies created before model deployment, rather than after?*
 +
-MaaSTier policies must exist before deployment so the MaaS operator can enforce rate limits and quotas from the first inference request. Creating policies after deployment would allow a window of uncontrolled access.
+MaaS Tier policies must exist before deployment so the MaaS operator can enforce rate limits and quotas from the first inference request. Creating policies after deployment would allow a window of uncontrolled access.
 
 2. *What happens if a Bronze tier user tries to exceed 20 requests/minute?*
 +
@@ -44,7 +44,7 @@ Limitador tracks requests per tier and rejects requests exceeding the rate limit
 
 3. *How does Authorino know which tier a user belongs to?*
 +
-Authorino validates the JWT token and extracts the ServiceAccount identity. It then checks which OpenShift groups that ServiceAccount's user belongs to. The MaaSTier resources map groups to tiers (e.g., `chocotech-quality-control` → Gold tier).
+Authorino validates the JWT token and extracts the ServiceAccount identity. It then checks which OpenShift groups that ServiceAccount's user belongs to. The MaaS Tier resources map groups to tiers (e.g., `chocotech-quality-control` → Gold tier).
 
 == Troubleshooting
 
@@ -121,9 +121,9 @@ oc get rolebinding marketing-sentiment-app-binding -n chocotech-models
 oc logs -l app=authorino -n redhat-ods-applications
 ----
 
-=== MaaSTier resources not created
+=== MaaS Tier resources not created
 
-**Issue**: `oc get maastier` returns "error: the server doesn't have a resource type 'maastier'"
+**Issue**: `oc get MaaS Tier` returns "error: the server doesn't have a resource type 'MaaS Tier'"
 
 **Solution**:
 
@@ -134,7 +134,7 @@ oc logs -l app=authorino -n redhat-ods-applications
 oc get crd | grep maas
 ----
 +
-Should show: `maastiers.maas.opendatahub.io`
+Should show: `MaaS Tiers.maas.opendatahub.io`
 
 2. If CRD is missing, verify MaaS is enabled:
 +
@@ -147,5 +147,5 @@ oc get datasciencecluster default-dsc -o jsonpath='{.spec.components.modelsAsSer
 +
 [source,bash]
 ----
-oc logs -n redhat-ods-operator deployment/rhods-operator | grep -i maastier
+oc logs -n redhat-ods-operator deployment/rhods-operator | grep -i MaaS Tier
 ----
