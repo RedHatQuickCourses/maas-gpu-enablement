@@ -1,6 +1,6 @@
 site:
   title: Models as a Service Breaking the GPU Silos on OpenShift AI 3.3
-  start_page: maas-gpu-enablement::index.adoc
+  start_page: maas-gpu-enablement::ROOT::index.adoc
 
 content:
   sources:
