@@ -3,8 +3,9 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Red Hat OpenShift AI: Models as a Service Enablement :: Models as a Service Breaking the GPU Silos on OpenShift AI 3.3</title>
-    <link rel="prev" href="../ch5-api-integration/ch5-api-integration-07.html">
+    <title>3.4: Publish model to the MaaS catalog :: Models as a Service Breaking the GPU Silos on OpenShift AI 3.3</title>
+    <link rel="prev" href="ch4-model-deploy-03.html">
+    <link rel="next" href="ch4-model-deploy-05.html">
     <meta name="generator" content="Antora 3.1.3">
     <link rel="stylesheet" href="../../../_/css/site.css">
     <script>var uiRootPath = '../../../_'</script>
@@ -128,25 +129,25 @@
 <ul class="nav-list">
   <li class="nav-item" data-depth="1">
     <button class="nav-item-toggle"></button>
-    <a class="nav-link" href="../ch4-model-deployment/ch4-model-deploy-01.html">4. Model Deployment</a>
+    <a class="nav-link" href="ch4-model-deploy-01.html">4. Model Deployment</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../ch4-model-deployment/ch4-model-deploy-01.html">4.1: Introduction to Model Deployment</a>
+    <a class="nav-link" href="ch4-model-deploy-01.html">4.1: Introduction to Model Deployment</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../ch4-model-deployment/ch4-model-deploy-02.html">4.2: Model Selection Strategy</a>
+    <a class="nav-link" href="ch4-model-deploy-02.html">4.2: Model Selection Strategy</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../ch4-model-deployment/ch4-model-deploy-03.html">4.3: Lab - Deploying with Serving Runtimes</a>
+    <a class="nav-link" href="ch4-model-deploy-03.html">4.3: Lab - Deploying with Serving Runtimes</a>
+  </li>
+  <li class="nav-item is-current-page" data-depth="2">
+    <a class="nav-link" href="ch4-model-deploy-04.html">4.4: Lab - Distributed Inference Configuration</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../ch4-model-deployment/ch4-model-deploy-04.html">4.4: Lab - Distributed Inference Configuration</a>
+    <a class="nav-link" href="ch4-model-deploy-05.html">4.5: Lab - Publishing to MaaS Catalog</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../ch4-model-deployment/ch4-model-deploy-05.html">4.5: Lab - Publishing to MaaS Catalog</a>
-  </li>
-  <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../ch4-model-deployment/ch4-model-deploy-06.html">4.6: Lifecycle Management with GitOps</a>
+    <a class="nav-link" href="ch4-model-deploy-06.html">4.6: Lifecycle Management with GitOps</a>
   </li>
 </ul>
   </li>
@@ -185,8 +186,8 @@
   </li>
   <li class="nav-item" data-depth="0">
 <ul class="nav-list">
-  <li class="nav-item is-current-page" data-depth="1">
-    <a class="nav-link" href="index.html">Appendix</a>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../appendix/index.html">Appendix</a>
   </li>
 </ul>
   </li>
@@ -218,7 +219,8 @@
 <nav class="breadcrumbs" aria-label="breadcrumbs">
   <ul>
     <li><a href="../index.html">Models as a Service Breaking the GPU Silos on OpenShift AI 3.3</a></li>
-    <li><a href="index.html">Appendix</a></li>
+    <li><a href="ch4-model-deploy-01.html">4. Model Deployment</a></li>
+    <li><a href="ch4-model-deploy-04.html">4.4: Lab - Distributed Inference Configuration</a></li>
   </ul>
 </nav>
 </div>
@@ -227,133 +229,179 @@
   <div class="toc-menu"></div>
 </aside>
 <article class="doc">
-<h1 class="page">Red Hat OpenShift AI: Models as a Service Enablement</h1>
+<h1 class="page">3.4: Publish model to the MaaS catalog</h1>
 <div id="preamble">
 <div class="sectionbody">
 <div class="paragraph">
-<p>Welcome to the Red Hat OpenShift AI Models as a Service enablement workshop!</p>
+<p>Now that the model is deployed, verify it appears in the Gen AI Studio catalog and is accessible through the MaaS gateway.</p>
 </div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_what_youll_learn"><a class="anchor" href="#_what_youll_learn"></a>What you&#8217;ll learn</h2>
-<div class="sectionbody">
 <div class="paragraph">
-<p>In this workshop, you will:</p>
+<p>The <code>publishToGenAIStudio: true</code> setting in the LLMInferenceService manifest automatically registers the model with MaaS.</p>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_verify_model_registration_in_maas"><a class="anchor" href="#_verify_model_registration_in_maas"></a>Verify model registration in MaaS</h3>
+<div class="paragraph">
+<p>Check that the model was registered with the MaaS API:</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">oc get maasmodel -n chocotech-models</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Expected output:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>NAME          MODEL                                    STATUS    AGE
+llama-3-8b    meta-llama/Meta-Llama-3-8B-Instruct     Published   5m</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Describe the MaaSModel resource:</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">oc describe maasmodel llama-3-8b -n chocotech-models</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Look for:</p>
 </div>
 <div class="ulist">
 <ul>
 <li>
-<p>Understand the GPU silo crisis and how Models as a Service (MaaS) solves resource allocation challenges</p>
+<p><code>Status: Published</code> - Model is available in catalog</p>
 </li>
 <li>
-<p>Design and implement a centralized model hub with governed token-based consumption</p>
+<p><code>Gateway Endpoint</code> - External URL for model access</p>
 </li>
 <li>
-<p>Configure MaaS on Red Hat OpenShift AI using the operator and Custom Resource Definitions</p>
+<p><code>Tier Access</code> - bronze, silver, gold, platinum</p>
 </li>
 <li>
-<p>Deploy generative AI models using llm-d, vLLM, and KServe components for distributed inference</p>
-</li>
-<li>
-<p>Publish models to the OpenShift AI dashboard catalog for self-service access with role-based permissions</p>
-</li>
-<li>
-<p>Implement governance policies with tiered service limits and rate limiting using Kuadrant</p>
-</li>
-<li>
-<p>Generate usage reports for chargeback and monitor GPU utilization metrics with Grafana</p>
-</li>
-<li>
-<p>Integrate AI models into applications using OpenAI-compatible APIs with proper retry logic</p>
+<p><code>Integration Status</code> - Kuadrant policies applied</p>
 </li>
 </ul>
 </div>
 </div>
+<div class="sect2">
+<h3 id="_access_the_gen_ai_studio_catalog"><a class="anchor" href="#_access_the_gen_ai_studio_catalog"></a>Access the Gen AI Studio catalog</h3>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Open the OpenShift AI dashboard in your browser (or use Showroom "OpenShift AI" tab)</p>
+</li>
+<li>
+<p>Navigate to <strong>Gen AI Studio</strong> in the left menu</p>
+</li>
+<li>
+<p>Click on the <strong>Models</strong> tab</p>
+</li>
+</ol>
 </div>
-<div class="sect1">
-<h2 id="_who_this_is_for"><a class="anchor" href="#_who_this_is_for"></a>Who this is for</h2>
-<div class="sectionbody">
 <div class="paragraph">
-<p>This workshop is designed for Platform Engineers and Developers who want to transform GPU infrastructure from isolated team silos into a centralized, governed environment where lines of business can access generative AI models to build agentic applications.</p>
+<p>You should now see Llama-3 8B in the model catalog:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>Model Name: meta-llama/Meta-Llama-3-8B-Instruct
+Status: Available
+Tier Access: Bronze, Silver, Gold, Platinum
+Endpoint: https://maas-default-gateway.{cluster_domain}/v1/chat/completions</pre>
+</div>
+</div>
+<div class="imageblock unresolved">
+<div class="content">
+<a class="image" href="genai-studio-model-catalog.png" target="blank"><img src="genai-studio-model-catalog.png" alt="Gen AI Studio catalog showing Llama-3 8B model with tier access and endpoint information" width="800"></a>
+</div>
+<div class="title">Figure 1. Model Catalog in Gen AI Studio Dashboard</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_test_model_accessibility_through_maas_gateway"><a class="anchor" href="#_test_model_accessibility_through_maas_gateway"></a>Test model accessibility through MaaS gateway</h3>
+<div class="paragraph">
+<p>Get the MaaS gateway endpoint:</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">oc get route maas-default-gateway -n redhat-ods-applications -o jsonpath='{.spec.host}'</code></pre>
+</div>
 </div>
 <div class="paragraph">
-<p><strong>Experience level</strong>: Intermediate</p>
+<p>Expected output:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>maas-default-gateway.apps.{cluster_domain}</pre>
 </div>
 </div>
-</div>
-<div class="sect1">
-<h2 id="_prerequisites"><a class="anchor" href="#_prerequisites"></a>Prerequisites</h2>
-<div class="sectionbody">
 <div class="paragraph">
-<p>Before starting this workshop, you should have:</p>
+<p>Generate an API token (covered in Module 5) or use a test token:</p>
+</div>
+<div class="paragraph">
+<p>Note: In Module 5, you&#8217;ll learn how to generate proper Bearer tokens. For now, verify the model endpoint is reachable.</p>
+</div>
+<div class="paragraph">
+<p>Check the models list endpoint (no auth required for list):</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">curl https://$(oc get route maas-default-gateway -n redhat-ods-applications -o jsonpath='{.spec.host}')/v1/models</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Expected output:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>{
+  "object": "list",
+  "data": [
+    {
+      "id": "meta-llama/Meta-Llama-3-8B-Instruct",
+      "object": "model",
+      "created": 1714345678,
+      "owned_by": "chocotech-models"
+    }
+  ]
+}</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Your model appears in the API response, confirming MaaS integration is working.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_verification"><a class="anchor" href="#_verification"></a>Verification</h3>
+<div class="paragraph">
+<p>Confirm MaaS catalog publication:</p>
 </div>
 <div class="ulist">
 <ul>
 <li>
-<p>Red Hat OpenShift administration experience (Version {ocp_version} or later)</p>
+<p>MaaSModel resource exists with Status=Published</p>
 </li>
 <li>
-<p>Basic Kubernetes operator management knowledge</p>
+<p>Model appears in Gen AI Studio Models tab</p>
 </li>
 <li>
-<p>Familiarity with core GPU concepts and generic GPU enablement</p>
+<p>Model shows correct tier access permissions (bronze/silver/gold/platinum)</p>
 </li>
 <li>
-<p>Understanding of API concepts and REST principles</p>
+<p>MaaS gateway <code>/v1/models</code> endpoint returns the model</p>
 </li>
 <li>
-<p>Basic command line experience</p>
+<p>Gateway endpoint URL is accessible</p>
 </li>
 </ul>
-</div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_workshop_environment"><a class="anchor" href="#_workshop_environment"></a>Workshop environment</h2>
-<div class="sectionbody">
-<div class="paragraph">
-<p>Your lab environment includes a Single Node OpenShift (SNO) cluster with multiple NVIDIA GPUs (minimum {gpu_memory}) pre-configured with:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>Red Hat OpenShift 4.20 or later</p>
-</li>
-<li>
-<p>Red Hat OpenShift AI 3.4.0 or later (operator installed)</p>
-</li>
-<li>
-<p>GPU operators and drivers configured</p>
-</li>
-<li>
-<p>Required infrastructure components (KServe, Service Mesh)</p>
-</li>
-</ul>
-</div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_estimated_time"><a class="anchor" href="#_estimated_time"></a>Estimated time</h2>
-<div class="sectionbody">
-<div class="paragraph">
-<p>This workshop will take approximately <strong>3-4 hours</strong> to complete.</p>
-</div>
-<div class="paragraph">
-<p>You can work at your own pace.</p>
-</div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_lets_get_started"><a class="anchor" href="#_lets_get_started"></a>Let&#8217;s get started!</h2>
-<div class="sectionbody">
-<div class="paragraph">
-<p>Click on <strong>Workshop Overview</strong> in the navigation to begin your learning journey and meet ChocoTech Industries, a chocolate manufacturer facing the GPU silo crisis.</p>
-</div>
 </div>
 </div>
 <nav class="pagination">
-  <span class="prev"><a href="../ch5-api-integration/ch5-api-integration-07.html">5.7: Conclusion</a></span>
+  <span class="prev"><a href="ch4-model-deploy-03.html">4.3: Lab - Deploying with Serving Runtimes</a></span>
+  <span class="next"><a href="ch4-model-deploy-05.html">4.5: Lab - Publishing to MaaS Catalog</a></span>
 </nav>
 </article>
   </div>
