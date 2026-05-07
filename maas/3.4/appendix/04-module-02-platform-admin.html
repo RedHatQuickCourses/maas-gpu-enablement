@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>2.1:  Understanding tier-based governance :: Red Hat OpenShift AI - Models as a Service</title>
     <link rel="prev" href="04-module-01-platform-admin.html">
-    <link rel="next" href="#04-module-02.1-platform-admin.adoc">
+    <link rel="next" href="04-module-02.1-platform-groups.html">
     <meta name="generator" content="Antora 3.1.3">
     <link rel="stylesheet" href="../../../_/css/site.css">
     <script>var uiRootPath = '../../../_'</script>
@@ -78,7 +78,7 @@
     <a class="nav-link" href="04-module-02-platform-admin.html">2.1:  Understanding tier-based governance</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="#04-module-02.1-platform-admin.adoc">04-module-02.1-platform-admin.adoc</a>
+    <a class="nav-link" href="04-module-02.1-platform-groups.html">2.1: Creating OpenShift groups</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="04-module-03-platform-admin.html">2.2: Configuring API access with ServiceAccounts and RBAC</a>
@@ -91,6 +91,27 @@
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="04-module-06-platform-summary.html">Module summary</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="05-module-01-model-deployment.html">Model Deployment</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="05a-model-selection-strategy.html">3.1a: Choosing the right model for your workload</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="05-module-02-model-deployment.html">3.1: Understanding serving runtimes and distributed inference</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="05-module-03-model-deployment.html">3.4: Publish model to the MaaS catalog</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="05-module-04-model-deployment.html">3.5: Deploy a second model for multi-model catalog</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="05b-lifecycle-management-gitops.html">3.6: Production lifecycle management and GitOps</a>
   </li>
 </ul>
   </li>
@@ -139,7 +160,7 @@
 <div id="preamble">
 <div class="sectionbody">
 <div class="paragraph">
-<p>"In this lab, we are generating tokens via the CLI using ServiceAccounts for programmatic access. Human developers belonging to the groups we created (e.g., chocotech-rd) will simply log into the Gen AI Studio UI, where the dashboard will generate their JWTs for them based on their group&#8217;s MaaSTier mapping."</p>
+<p>In this lab, we are generating tokens via the CLI using ServiceAccounts for programmatic access. Human developers belonging to the groups we created (e.g., chocotech-rd) will simply log into the Gen AI Studio UI, where the dashboard will generate their JWTs for them based on their group&#8217;s MaaSTier mapping.</p>
 </div>
 </div>
 </div>
@@ -363,33 +384,11 @@ MaaS assigns users to tiers based on their OpenShift group membership. In instan
 <div class="paragraph">
 <p>OpenShift groups provide a way to organize users by department or function and assign permissions at the group level rather than individual users.</p>
 </div>
-<div class="sect2">
-<h3 id="_why_use_groups_instead_of_individual_users"><a class="anchor" href="#_why_use_groups_instead_of_individual_users"></a>Why use groups instead of individual users?</h3>
-<div class="paragraph">
-<p>Groups provide several advantages over granting permissions to individual users:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><strong>Scalability</strong>: Add new team members by adding them to groups, not by creating individual role bindings</p>
-</li>
-<li>
-<p><strong>Audit trails</strong>: Actions are traceable to business units (e.g., "chocotech-quality-control") rather than individual users</p>
-</li>
-<li>
-<p><strong>Team collaboration</strong>: All members of a group share the same permissions</p>
-</li>
-<li>
-<p><strong>Simplified management</strong>: Change group permissions once instead of updating permissions for each user</p>
-</li>
-</ul>
-</div>
-</div>
 </div>
 </div>
 <nav class="pagination">
   <span class="prev"><a href="04-module-01-platform-admin.html">Access Control &amp; Governance</a></span>
-  <span class="next"><a href="#04-module-02.1-platform-admin.adoc">04-module-02.1-platform-admin.adoc</a></span>
+  <span class="next"><a href="04-module-02.1-platform-groups.html">2.1: Creating OpenShift groups</a></span>
 </nav>
 </article>
   </div>
