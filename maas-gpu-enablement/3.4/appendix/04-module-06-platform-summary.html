@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>2.6Module summary :: Models as a Service Breaking the GPU Silos on OpenShift AI 3.3</title>
+    <link rel="prev" href="04-module-03-platform-admin.html">
+    <link rel="next" href="05-module-01-model-deployment.html">
+    <meta name="generator" content="Antora 3.1.3">
+    <link rel="stylesheet" href="../../../_/css/site.css">
+    <script>var uiRootPath = '../../../_'</script>
+  </head>
+  <body class="article">
+<header class="header">
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="https://www.redhat.com" target="_blank"><img src="../../../_/img/redhat-logo.png" height="40px" alt="Red Hat"></a>
+      <a class="navbar-item" style="font-size: 24px; color: white" href="../../..">Models as a Service Breaking the GPU Silos on OpenShift AI 3.3</a>
+      <button class="navbar-burger" data-target="topbar-nav">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+    <div id="topbar-nav" class="navbar-menu">
+      <div class="navbar-end">
+        <a class="navbar-item" href="https://github.com/RedHatQuickCourses/REPLACEREPONAME/issues" target="_blank">Report Issues</a>
+      </div>
+    </div>
+  </nav>
+</header>
+<div class="body">
+<div class="nav-container" data-component="maas-gpu-enablement" data-version="3.4">
+  <aside class="nav">
+    <div class="panels">
+<div class="nav-panel-menu is-active" data-panel="menu">
+  <nav class="nav-menu">
+    <h3 class="title"><a href="../index.html">Models as a Service Breaking the GPU Silos on OpenShift AI 3.3</a></h3>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../index.html">Models-as-a-Service Introduction</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="01-overview.html">QuickCourse Overview</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="03-module-00-architecture.html">MaaS Architecture</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="03-module-01-architecture.html">1.1: Understanding the GPU silo crisis</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="03-module-02-architecture.html">1.2: The MaaS architecture stack</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="03-module-03-architecture.html">1.3: Enabling MaaS on your OpenShift AI platform</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="03-module-04-architecture.html">1.4: Summary</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="04-module-01-platform-admin.html">Access Control &amp; Governance</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="04-module-02-platform-admin.html">2.1:  Understanding tier-based governance</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="04-module-04-platform-admin.html">2.2: Deploying governance tier policies and verifying readiness</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="04-module-05-platform-admin.html">2.3: Deploying governance tier policies and verifying readiness</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="04-module-02.1-platform-groups.html">2.5: Creating OpenShift groups</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="04-module-03-platform-admin.html">2.6: Configuring API access with ServiceAccounts and RBAC</a>
+  </li>
+  <li class="nav-item is-current-page" data-depth="2">
+    <a class="nav-link" href="04-module-06-platform-summary.html">2.6Module summary</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="05-module-01-model-deployment.html">Model Deployment</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="05a-model-selection-strategy.html">3.1a: Choosing the right model for your workload</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="05-module-02-model-deployment.html">3.1: Understanding serving runtimes and distributed inference</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="05-module-03-model-deployment.html">3.4: Publish model to the MaaS catalog</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="05-module-04-model-deployment.html">3.5: Deploy a second model for multi-model catalog</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="05b-lifecycle-management-gitops.html">3.6: Production lifecycle management and GitOps</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+</ul>
+  </nav>
+</div>
+<div class="nav-panel-explore" data-panel="explore">
+  <div class="context">
+    <span class="title">Models as a Service Breaking the GPU Silos on OpenShift AI 3.3</span>
+    <span class="version">3.4</span>
+  </div>
+  <ul class="components">
+    <li class="component is-current">
+      <a class="title" href="../index.html">Models as a Service Breaking the GPU Silos on OpenShift AI 3.3</a>
+      <ul class="versions">
+        <li class="version is-current is-latest">
+          <a href="../index.html">3.4</a>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</div>
+    </div>
+  </aside>
+</div>
+<main class="article">
+<div class="toolbar" role="navigation">
+<button class="nav-toggle"></button>
+<nav class="breadcrumbs" aria-label="breadcrumbs">
+  <ul>
+    <li><a href="../index.html">Models as a Service Breaking the GPU Silos on OpenShift AI 3.3</a></li>
+    <li><a href="04-module-01-platform-admin.html">Access Control &amp; Governance</a></li>
+    <li><a href="04-module-06-platform-summary.html">2.6Module summary</a></li>
+  </ul>
+</nav>
+</div>
+  <div class="content">
+<aside class="toc sidebar" data-title="Contents" data-levels="2">
+  <div class="toc-menu"></div>
+</aside>
+<article class="doc">
+<h1 class="page">2.6Module summary</h1>
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>In this module, you transformed ChocoTech&#8217;s MaaS platform from infrastructure-only to governance-ready:</p>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_what_you_accomplished"><a class="anchor" href="#_what_you_accomplished"></a>What you accomplished</h3>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Organizational structure</strong>: Created OpenShift groups for business units and mapped them to access tiers</p>
+</li>
+<li>
+<p><strong>Authentication</strong>: Configured ServiceAccounts and JWT token-based API authentication with RBAC</p>
+</li>
+<li>
+<p><strong>Tier policies</strong>: Deployed Gold, Silver, and Bronze tier policies with rate limits and quotas</p>
+</li>
+<li>
+<p><strong>Component health</strong>: Verified all governance components (Kuadrant, Authorino, Limitador) are operational</p>
+</li>
+<li>
+<p><strong>End-to-end testing</strong>: Tested authentication flow from token generation to Gateway validation</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_key_technical_capabilities_unlocked"><a class="anchor" href="#_key_technical_capabilities_unlocked"></a>Key technical capabilities unlocked</h3>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Identity management</strong>: Business units represented as OpenShift groups, not individual users</p>
+</li>
+<li>
+<p><strong>Programmatic access</strong>: Applications can authenticate via ServiceAccount tokens (no human credentials)</p>
+</li>
+<li>
+<p><strong>Least privilege RBAC</strong>: ServiceAccounts have read-only model access (get/list only)</p>
+</li>
+<li>
+<p><strong>Tier enforcement</strong>: Rate limits and quotas automatically applied based on group membership</p>
+</li>
+<li>
+<p><strong>Audit trails</strong>: All requests traceable to ServiceAccounts and business unit groups</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_whats_next_module_3"><a class="anchor" href="#_whats_next_module_3"></a>What&#8217;s next: Module 3</h3>
+<div class="paragraph">
+<p>The platform is now ready for governed model deployment. Module 3 will guide you through:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>Deploying llama3-8b</strong>: Meta&#8217;s 8B parameter model for all tiers (Quality Control, R&amp;D, Marketing can access)</p>
+</li>
+<li>
+<p><strong>Deploying nemotron-8b</strong>: NVIDIA&#8217;s 8B parameter model for Bronze and Silver only (demonstrates selective tier access)</p>
+</li>
+<li>
+<p><strong>Publishing to catalog</strong>: Models appear in Gen AI Studio with tier annotations</p>
+</li>
+<li>
+<p><strong>Testing tier access control</strong>: Verify Gold users see all models, Bronze users see subset</p>
+</li>
+<li>
+<p><strong>Verifying rate limits</strong>: Send high-volume requests to trigger HTTP 429 responses</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>By the end of Module 3, ChocoTech&#8217;s teams will have self-service access to governed AI models through the Gen AI Studio dashboard and API endpoints.</p>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_knowledge_check"><a class="anchor" href="#_knowledge_check"></a>Knowledge check</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Test your understanding of tier governance:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>Why are MaaS Tier policies created before model deployment, rather than after?</strong></p>
+<div class="paragraph">
+<p>MaaS Tier policies must exist before deployment so the MaaS operator can enforce rate limits and quotas from the first inference request. Creating policies after deployment would allow a window of uncontrolled access.</p>
+</div>
+</li>
+<li>
+<p><strong>What happens if a Bronze tier user tries to exceed 20 requests/minute?</strong></p>
+<div class="paragraph">
+<p>Limitador tracks requests per tier and rejects requests exceeding the rate limit with HTTP 429 Too Many Requests. The user must wait until the next minute window to send more requests.</p>
+</div>
+</li>
+<li>
+<p><strong>How does Authorino know which tier a user belongs to?</strong></p>
+<div class="paragraph">
+<p>Authorino validates the JWT token and extracts the ServiceAccount identity. It then checks which OpenShift groups that ServiceAccount&#8217;s user belongs to. The MaaS Tier resources map groups to tiers (e.g., <code>chocotech-quality-control</code> → Gold tier).</p>
+</div>
+</li>
+</ol>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_troubleshooting"><a class="anchor" href="#_troubleshooting"></a>Troubleshooting</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>If you encounter issues with governance components:</p>
+</div>
+<div class="sect2">
+<h3 id="_authconfig_not_found"><a class="anchor" href="#_authconfig_not_found"></a>AuthConfig not found</h3>
+<div class="paragraph">
+<p><strong>Issue</strong>: <code>oc get authconfig -n redhat-ods-applications</code> returns "No resources found"</p>
+</div>
+<div class="paragraph">
+<p><strong>Solution</strong>:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Verify MaaS was enabled in Module 1:</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get datasciencecluster default-dsc -o jsonpath='{.spec.components.modelsAsService.managementState}'</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Should return: <code>Managed</code></p>
+</div>
+</li>
+<li>
+<p>Check MaaS operator logs:</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc logs -n redhat-ods-operator deployment/rhods-operator | grep -i authorino</code></pre>
+</div>
+</div>
+</li>
+<li>
+<p>Recreate AuthConfig manually using the command in Exercise 5</p>
+</li>
+</ol>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_authorino_pods_not_running"><a class="anchor" href="#_authorino_pods_not_running"></a>Authorino pods not Running</h3>
+<div class="paragraph">
+<p><strong>Issue</strong>: Authorino pods show <code>CrashLoopBackOff</code> or <code>Pending</code></p>
+</div>
+<div class="paragraph">
+<p><strong>Solution</strong>:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Check pod events:</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc describe pod -l app=authorino -n redhat-ods-applications</code></pre>
+</div>
+</div>
+</li>
+<li>
+<p>Common causes:</p>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Insufficient resources</strong>: Check node CPU/memory capacity</p>
+</li>
+<li>
+<p><strong>Image pull errors</strong>: Verify network connectivity to quay.io</p>
+</li>
+<li>
+<p><strong>Kuadrant operator not installed</strong>: Check Kuadrant operator in <code>openshift-operators</code></p>
+</li>
+</ul>
+</div>
+</li>
+</ol>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_token_authentication_returns_401_unauthorized"><a class="anchor" href="#_token_authentication_returns_401_unauthorized"></a>Token authentication returns 401 Unauthorized</h3>
+<div class="paragraph">
+<p><strong>Issue</strong>: <code>curl</code> with Bearer token returns HTTP 401 instead of HTTP 200</p>
+</div>
+<div class="paragraph">
+<p><strong>Solution</strong>:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Verify token is valid and not expired:</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Regenerate token
+TOKEN=$(oc create token marketing-sentiment-app -n chocotech-models --duration=1h)</code></pre>
+</div>
+</div>
+</li>
+<li>
+<p>Verify RBAC is configured:</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get role llm-inference-viewer -n chocotech-models
+oc get rolebinding marketing-sentiment-app-binding -n chocotech-models</code></pre>
+</div>
+</div>
+</li>
+<li>
+<p>Check Authorino logs for authentication errors:</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc logs -l app=authorino -n redhat-ods-applications</code></pre>
+</div>
+</div>
+</li>
+</ol>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_maas_tier_resources_not_created"><a class="anchor" href="#_maas_tier_resources_not_created"></a>MaaS Tier resources not created</h3>
+<div class="paragraph">
+<p><strong>Issue</strong>: <code>oc get MaaS Tier</code> returns "error: the server doesn&#8217;t have a resource type 'MaaS Tier'"</p>
+</div>
+<div class="paragraph">
+<p><strong>Solution</strong>:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Verify MaaS CRDs are installed:</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get crd | grep maas</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Should show: <code>MaaS Tiers.maas.opendatahub.io</code></p>
+</div>
+</li>
+<li>
+<p>If CRD is missing, verify MaaS is enabled:</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get datasciencecluster default-dsc -o jsonpath='{.spec.components.modelsAsService.managementState}'</code></pre>
+</div>
+</div>
+</li>
+<li>
+<p>Check OpenShift AI operator logs:</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc logs -n redhat-ods-operator deployment/rhods-operator | grep -i MaaS Tier</code></pre>
+</div>
+</div>
+</li>
+</ol>
+</div>
+</div>
+</div>
+</div>
+<nav class="pagination">
+  <span class="prev"><a href="04-module-03-platform-admin.html">2.6: Configuring API access with ServiceAccounts and RBAC</a></span>
+  <span class="next"><a href="05-module-01-model-deployment.html">Model Deployment</a></span>
+</nav>
+</article>
+  </div>
+</main>
+</div>
+<footer class="footer">
+  <img src="../../../_/img/rhl-logo-red.png" height="40px" alt="Red Hat"  href="https://redhat.com" >
+</footer><script id="site-script" src="../../../_/js/site.js" data-ui-root-path="../../../_"></script>
+<script async src="../../../_/js/vendor/highlight.js"></script>
+  </body>
+</html>

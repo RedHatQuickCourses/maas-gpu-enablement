@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Module 3: Governance, Observability, and Chargeback :: Models as a Service Breaking the GPU Silos on OpenShift AI 3.3</title>
+    <meta name="generator" content="Antora 3.1.3">
+    <link rel="stylesheet" href="../../../_/css/site.css">
+    <script>var uiRootPath = '../../../_'</script>
+  </head>
+  <body class="article">
+<header class="header">
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="https://www.redhat.com" target="_blank"><img src="../../../_/img/redhat-logo.png" height="40px" alt="Red Hat"></a>
+      <a class="navbar-item" style="font-size: 24px; color: white" href="../../..">Models as a Service Breaking the GPU Silos on OpenShift AI 3.3</a>
+      <button class="navbar-burger" data-target="topbar-nav">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+    <div id="topbar-nav" class="navbar-menu">
+      <div class="navbar-end">
+        <a class="navbar-item" href="https://github.com/RedHatQuickCourses/REPLACEREPONAME/issues" target="_blank">Report Issues</a>
+      </div>
+    </div>
+  </nav>
+</header>
+<div class="body">
+<div class="nav-container" data-component="maas-gpu-enablement" data-version="3.4">
+  <aside class="nav">
+    <div class="panels">
+<div class="nav-panel-menu is-active" data-panel="menu">
+  <nav class="nav-menu">
+    <h3 class="title"><a href="../index.html">Models as a Service Breaking the GPU Silos on OpenShift AI 3.3</a></h3>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../index.html">Models-as-a-Service Introduction</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../appendix/01-overview.html">QuickCourse Overview</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../appendix/03-module-00-architecture.html">MaaS Architecture</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../appendix/03-module-01-architecture.html">1.1: Understanding the GPU silo crisis</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../appendix/03-module-02-architecture.html">1.2: The MaaS architecture stack</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../appendix/03-module-03-architecture.html">1.3: Enabling MaaS on your OpenShift AI platform</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../appendix/03-module-04-architecture.html">1.4: Summary</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../appendix/04-module-01-platform-admin.html">Access Control &amp; Governance</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../appendix/04-module-02-platform-admin.html">2.1:  Understanding tier-based governance</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../appendix/04-module-04-platform-admin.html">2.2: Deploying governance tier policies and verifying readiness</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../appendix/04-module-05-platform-admin.html">2.3: Deploying governance tier policies and verifying readiness</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../appendix/04-module-02.1-platform-groups.html">2.5: Creating OpenShift groups</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../appendix/04-module-03-platform-admin.html">2.6: Configuring API access with ServiceAccounts and RBAC</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../appendix/04-module-06-platform-summary.html">2.6Module summary</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../appendix/05-module-01-model-deployment.html">Model Deployment</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../appendix/05a-model-selection-strategy.html">3.1a: Choosing the right model for your workload</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../appendix/05-module-02-model-deployment.html">3.1: Understanding serving runtimes and distributed inference</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../appendix/05-module-03-model-deployment.html">3.4: Publish model to the MaaS catalog</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../appendix/05-module-04-model-deployment.html">3.5: Deploy a second model for multi-model catalog</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../appendix/05b-lifecycle-management-gitops.html">3.6: Production lifecycle management and GitOps</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+</ul>
+  </nav>
+</div>
+<div class="nav-panel-explore" data-panel="explore">
+  <div class="context">
+    <span class="title">Models as a Service Breaking the GPU Silos on OpenShift AI 3.3</span>
+    <span class="version">3.4</span>
+  </div>
+  <ul class="components">
+    <li class="component is-current">
+      <a class="title" href="../index.html">Models as a Service Breaking the GPU Silos on OpenShift AI 3.3</a>
+      <ul class="versions">
+        <li class="version is-current is-latest">
+          <a href="../index.html">3.4</a>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</div>
+    </div>
+  </aside>
+</div>
+<main class="article">
+<div class="toolbar" role="navigation">
+<button class="nav-toggle"></button>
+<nav class="breadcrumbs" aria-label="breadcrumbs">
+  <ul>
+    <li><a href="../index.html">Models as a Service Breaking the GPU Silos on OpenShift AI 3.3</a></li>
+    <li><a href="index.html">Module 3: Governance, Observability, and Chargeback</a></li>
+  </ul>
+</nav>
+</div>
+  <div class="content">
+<aside class="toc sidebar" data-title="Contents" data-levels="2">
+  <div class="toc-menu"></div>
+</aside>
+<article class="doc">
+<h1 class="page">Module 3: Governance, Observability, and Chargeback</h1>
+<div class="paragraph lead">
+<p><strong>Without tiers and quotas, centralized serving becomes uncontrolled consumption—governance transforms the Centralized Model Hub from free-for-all to fair allocation.</strong></p>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>Implement MaaS Governance and Observability</strong></dt>
+<dd>
+<p>Define tiered service limits, configure group-based rate limiting, track token consumption metrics, and automate chargeback workflows.</p>
+</dd>
+</dl>
+</div>
+<hr>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>3.1: Defining Governance Tiers</strong></dt>
+<dd>
+<div class="ulist">
+<ul>
+<li>
+<p>Default tiers and group mappings, create custom governance tiers (Free, Premium, Enterprise), Map OpenShift user groups to tier levels</p>
+</li>
+</ul>
+</div>
+</dd>
+<dt class="hdlist1"><strong>3.2: Rate Limits and Quotas</strong></dt>
+<dd>
+<div class="ulist">
+<ul>
+<li>
+<p>onfigure request rate limits and token quotas</p>
+</li>
+</ul>
+</div>
+</dd>
+<dt class="hdlist1"><strong>3.3: Lab - Observability &amp; Automated Chargeback</strong></dt>
+<dd>
+<div class="ulist">
+<ul>
+<li>
+<p>Tracking metrics and billing calculations</p>
+</li>
+</ul>
+</div>
+</dd>
+</dl>
+</div>
+</article>
+  </div>
+</main>
+</div>
+<footer class="footer">
+  <img src="../../../_/img/rhl-logo-red.png" height="40px" alt="Red Hat"  href="https://redhat.com" >
+</footer><script id="site-script" src="../../../_/js/site.js" data-ui-root-path="../../../_"></script>
+<script async src="../../../_/js/vendor/highlight.js"></script>
+  </body>
+</html>
