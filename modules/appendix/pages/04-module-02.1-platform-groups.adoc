@@ -62,12 +62,12 @@ oc adm groups add-users chocotech-quality-control $(oc whoami)
 Expected output:
 
 ----
-group.user.openshift.io/chocotech-quality-control added: "user1"
+group.user.openshift.io/chocotech-quality-control added: "user1" or ("admin")
 ----
 
 Verify your group membership:
 
-[source,role="execute"]
+[source]
 ----
 oc get group chocotech-quality-control -o yaml
 ----

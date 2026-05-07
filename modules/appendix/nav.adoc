@@ -8,18 +8,20 @@
 *** xref:03-module-04-architecture.adoc[]
 ** xref:04-module-01-platform-admin.adoc[Access Control & Governance]
 *** xref:04-module-02-platform-admin.adoc[]
-*** xref:04-module-02.1-platform-admin.adoc[]
+*** xref:04-module-02.1-platform-groups.adoc[]
 *** xref:04-module-03-platform-admin.adoc[]
 *** xref:04-module-04-platform-admin.adoc[]
 *** xref:04-module-05-platform-admin.adoc[]
 *** xref:04-module-06-platform-summary.adoc[]
-////
+
 ** xref:05-module-01-model-deployment.adoc[Model Deployment]
 *** xref:05a-model-selection-strategy.adoc[]
 *** xref:05-module-02-model-deployment.adoc[]
 *** xref:05-module-03-model-deployment.adoc[]
 *** xref:05-module-04-model-deployment.adoc[]
 *** xref:05b-lifecycle-management-gitops.adoc[]
+
+////
 ** xref:06-module-00-governance.adoc[MaaS Governance]
 *** xref:06-module-01-governance.adoc[]
 *** xref:06-module-02-governance.adoc[]

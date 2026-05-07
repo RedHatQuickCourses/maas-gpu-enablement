@@ -55,7 +55,17 @@ Model (LLMInferenceService processes the request)
 ----
 
 If rate limit is exceeded: HTTP 429 Too Many Requests
-If quota is exceeded: HTTP 429 with quota exhaustion message
+If quota is exceeded: HTTP 429 with quota exhaustion messageThe tier-to-group-mapping ConfigMap defines the global business rules for your entire enterprise AI factory.
+
+The core OpenShift AI backend services—specifically the maas-api server and the Gen AI Studio UI—live in the redhat-ods-applications namespace. When an AI Administrator logs into the dashboard, the UI needs to read this ConfigMap to know what tiers exist and who belongs to them.
+
+Because it is a global controller, it expects its configuration files to live in its own system namespace. If you put it in chocotech-models, the MaaS API wouldn't know it exists, and the Gen AI Studio UI would show empty tiers.
+
+---
+
+---
+
+
 
 === ChocoTech's tier requirements
 
@@ -154,6 +164,7 @@ If you define a Kuadrant `RateLimitPolicy` using CEL via the CLI, it will work p
 The OpenShift AI dashboard is an abstraction layer. It manages its Tiers in its own backend and *pushes* basic YAML down to Kuadrant. It does not read manual Kuadrant policies *up* from the cluster.
 
 **How to position this to customers:**
+
 * **The AI Admin (UI):** Uses the Gen AI Studio to create standard, easy-to-read "Free/Premium/Enterprise" tiers.
 * **The Platform Engineer (CLI):** Writes "Out-of-Band" or "Shadow" Kuadrant policies via GitOps when the business requires advanced logic that the UI cannot support (e.g., rate-limiting based on specific JWT claims or routing paths). 
 

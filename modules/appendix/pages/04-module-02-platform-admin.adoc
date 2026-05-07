@@ -1,6 +1,6 @@
 = 2.1:  Understanding tier-based governance
 
-"In this lab, we are generating tokens via the CLI using ServiceAccounts for programmatic access. Human developers belonging to the groups we created (e.g., chocotech-rd) will simply log into the Gen AI Studio UI, where the dashboard will generate their JWTs for them based on their group's MaaSTier mapping."
+In this lab, we are generating tokens via the CLI using ServiceAccounts for programmatic access. Human developers belonging to the groups we created (e.g., chocotech-rd) will simply log into the Gen AI Studio UI, where the dashboard will generate their JWTs for them based on their group's MaaSTier mapping.
 
 
 
@@ -125,12 +125,3 @@ This mapping ensures Quality Control's production defect detection system gets g
 == Creating OpenShift groups
 
 OpenShift groups provide a way to organize users by department or function and assign permissions at the group level rather than individual users.
-
-=== Why use groups instead of individual users?
-
-Groups provide several advantages over granting permissions to individual users:
-
-* *Scalability*: Add new team members by adding them to groups, not by creating individual role bindings
-* *Audit trails*: Actions are traceable to business units (e.g., "chocotech-quality-control") rather than individual users
-* *Team collaboration*: All members of a group share the same permissions
-* *Simplified management*: Change group permissions once instead of updating permissions for each user

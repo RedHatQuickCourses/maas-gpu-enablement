@@ -67,7 +67,7 @@ Based on the CIO's requirements document:
 |Business Unit
 |Requests/Minute
 |Tokens/Hour
-|Priority
+|Level (Priority )
 
 |Gold
 |Quality Control
@@ -95,6 +95,14 @@ These limits ensure:
 * Marketing can experiment without consuming resources needed by other teams
 
 == Creating MaaSTier custom resources
+
+The tier-to-group-mapping ConfigMap defines the global business rules for your entire enterprise AI factory.
+
+The core OpenShift AI backend services—specifically the maas-api server and the Gen AI Studio UI—live in the redhat-ods-applications namespace. When an AI Administrator logs into the dashboard, the UI needs to read this ConfigMap to know what tiers exist and who belongs to them.
+
+Because it is a global controller, it expects its configuration files to live in its own system namespace. If you put it in chocotech-models, the MaaS API wouldn't know it exists, and the Gen AI Studio UI would show empty tiers.
+
+---
 
 Deploy tier policies for Gold, Silver, and Bronze tiers.
 
@@ -130,7 +138,7 @@ ratelimitpolicy.kuadrant.io/gold-tier-rate-limit created
 
 === Understanding the Gold tier definition
 
-* `priority: 100`: Highest priority level for request processing
+* `level: 100`: Highest priority level for request processing
 ** During peak demand, Gold tier requests are processed before Silver and Bronze
 ** Ensures Quality Control's production defect detection system gets guaranteed resources
 
@@ -154,6 +162,7 @@ If you define a Kuadrant `RateLimitPolicy` using CEL via the CLI, it will work p
 The OpenShift AI dashboard is an abstraction layer. It manages its Tiers in its own backend and *pushes* basic YAML down to Kuadrant. It does not read manual Kuadrant policies *up* from the cluster.
 
 **How to position this to customers:**
+
 * **The AI Admin (UI):** Uses the Gen AI Studio to create standard, easy-to-read "Free/Premium/Enterprise" tiers.
 * **The Platform Engineer (CLI):** Writes "Out-of-Band" or "Shadow" Kuadrant policies via GitOps when the business requires advanced logic that the UI cannot support (e.g., rate-limiting based on specific JWT claims or routing paths). 
 
