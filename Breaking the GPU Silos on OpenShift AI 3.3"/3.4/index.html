@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>"Models as a Service: Breaking the GPU Silos on OpenShift AI 3.3" :: Models as a Service: Breaking the GPU Silos on OpenShift AI 3.3</title>
+    <meta name="generator" content="Antora 3.1.3">
+    <link rel="stylesheet" href="../../_/css/site.css">
+    <script>var uiRootPath = '../../_'</script>
+  </head>
+  <body class="article">
+<header class="header">
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="https://www.redhat.com" target="_blank"><img src="../../_/img/redhat-logo.png" height="40px" alt="Red Hat"></a>
+      <a class="navbar-item" style="font-size: 24px; color: white" href="../..">Models as a Service: Breaking the GPU Silos on OpenShift AI 3.3</a>
+      <button class="navbar-burger" data-target="topbar-nav">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+    <div id="topbar-nav" class="navbar-menu">
+      <div class="navbar-end">
+        <a class="navbar-item" href="https://github.com/RedHatQuickCourses/REPLACEREPONAME/issues" target="_blank">Report Issues</a>
+      </div>
+    </div>
+  </nav>
+</header>
+<div class="body">
+<div class="nav-container" data-component="Breaking the GPU Silos on OpenShift AI 3.3&quot;" data-version="3.4">
+  <aside class="nav">
+    <div class="panels">
+<div class="nav-panel-menu is-active" data-panel="menu">
+  <nav class="nav-menu">
+    <h3 class="title"><a href="index.html">Models as a Service: Breaking the GPU Silos on OpenShift AI 3.3</a></h3>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <span class="nav-text"><a href="/Breaking%20the%20GPU%20Silos%20on%20OpenShift%20AI%203.3"/3.4/index.html" class="xref page">Models-as-a-Service Introduction</a></span>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <span class="nav-text"><a href="/Breaking%20the%20GPU%20Silos%20on%20OpenShift%20AI%203.3"/3.4/appendix/01-overview.html" class="xref page">QuickCourse Overview</a></span>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text"><a href="/Breaking%20the%20GPU%20Silos%20on%20OpenShift%20AI%203.3"/3.4/appendix/03-module-00-architecture.html" class="xref page">MaaS Architecture</a></span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <span class="nav-text"><a href="/Breaking%20the%20GPU%20Silos%20on%20OpenShift%20AI%203.3"/3.4/appendix/03-module-01-architecture.html" class="xref page">1.1: Understanding the GPU silo crisis</a></span>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <span class="nav-text"><a href="/Breaking%20the%20GPU%20Silos%20on%20OpenShift%20AI%203.3"/3.4/appendix/03-module-02-architecture.html" class="xref page">1.2: The MaaS architecture stack</a></span>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <span class="nav-text"><a href="/Breaking%20the%20GPU%20Silos%20on%20OpenShift%20AI%203.3"/3.4/appendix/03-module-03-architecture.html" class="xref page">1.3: Enabling MaaS on your OpenShift AI platform</a></span>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <span class="nav-text"><a href="/Breaking%20the%20GPU%20Silos%20on%20OpenShift%20AI%203.3"/3.4/appendix/03-module-04-architecture.html" class="xref page">1.4: Summary</a></span>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text"><a href="/Breaking%20the%20GPU%20Silos%20on%20OpenShift%20AI%203.3"/3.4/appendix/04-module-01-platform-admin.html" class="xref page">Access Control &amp; Governance</a></span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <span class="nav-text"><a href="/Breaking%20the%20GPU%20Silos%20on%20OpenShift%20AI%203.3"/3.4/appendix/04-module-02-platform-admin.html" class="xref page">2.1:  Understanding tier-based governance</a></span>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <span class="nav-text"><a href="/Breaking%20the%20GPU%20Silos%20on%20OpenShift%20AI%203.3"/3.4/appendix/04-module-04-platform-admin.html" class="xref page">2.2: Deploying governance tier policies and verifying readiness</a></span>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <span class="nav-text"><a href="/Breaking%20the%20GPU%20Silos%20on%20OpenShift%20AI%203.3"/3.4/appendix/04-module-05-platform-admin.html" class="xref page">2.3: Deploying governance tier policies and verifying readiness</a></span>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <span class="nav-text"><a href="/Breaking%20the%20GPU%20Silos%20on%20OpenShift%20AI%203.3"/3.4/appendix/04-module-02.1-platform-groups.html" class="xref page">2.5: Creating OpenShift groups</a></span>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <span class="nav-text"><a href="/Breaking%20the%20GPU%20Silos%20on%20OpenShift%20AI%203.3"/3.4/appendix/04-module-03-platform-admin.html" class="xref page">2.6: Configuring API access with ServiceAccounts and RBAC</a></span>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <span class="nav-text"><a href="/Breaking%20the%20GPU%20Silos%20on%20OpenShift%20AI%203.3"/3.4/appendix/04-module-06-platform-summary.html" class="xref page">2.6Module summary</a></span>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text"><a href="/Breaking%20the%20GPU%20Silos%20on%20OpenShift%20AI%203.3"/3.4/appendix/05-module-01-model-deployment.html" class="xref page">Model Deployment</a></span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <span class="nav-text"><a href="/Breaking%20the%20GPU%20Silos%20on%20OpenShift%20AI%203.3"/3.4/appendix/05a-model-selection-strategy.html" class="xref page">3.1a: Choosing the right model for your workload</a></span>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <span class="nav-text"><a href="/Breaking%20the%20GPU%20Silos%20on%20OpenShift%20AI%203.3"/3.4/appendix/05-module-02-model-deployment.html" class="xref page">3.1: Understanding serving runtimes and distributed inference</a></span>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <span class="nav-text"><a href="/Breaking%20the%20GPU%20Silos%20on%20OpenShift%20AI%203.3"/3.4/appendix/05-module-03-model-deployment.html" class="xref page">3.4: Publish model to the MaaS catalog</a></span>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <span class="nav-text"><a href="/Breaking%20the%20GPU%20Silos%20on%20OpenShift%20AI%203.3"/3.4/appendix/05-module-04-model-deployment.html" class="xref page">3.5: Deploy a second model for multi-model catalog</a></span>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <span class="nav-text"><a href="/Breaking%20the%20GPU%20Silos%20on%20OpenShift%20AI%203.3"/3.4/appendix/05b-lifecycle-management-gitops.html" class="xref page">3.6: Production lifecycle management and GitOps</a></span>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+</ul>
+  </nav>
+</div>
+<div class="nav-panel-explore" data-panel="explore">
+  <div class="context">
+    <span class="title">Models as a Service: Breaking the GPU Silos on OpenShift AI 3.3</span>
+    <span class="version">3.4</span>
+  </div>
+  <ul class="components">
+    <li class="component is-current">
+      <a class="title" href="index.html">Models as a Service: Breaking the GPU Silos on OpenShift AI 3.3</a>
+      <ul class="versions">
+        <li class="version is-current is-latest">
+          <a href="index.html">3.4</a>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</div>
+    </div>
+  </aside>
+</div>
+<main class="article">
+<div class="toolbar" role="navigation">
+<button class="nav-toggle"></button>
+<nav class="breadcrumbs" aria-label="breadcrumbs">
+  <ul>
+    <li><a href="index.html">Models as a Service: Breaking the GPU Silos on OpenShift AI 3.3</a></li>
+    <li><a href="index.html">"Models as a Service: Breaking the GPU Silos on OpenShift AI 3.3"</a></li>
+  </ul>
+</nav>
+</div>
+  <div class="content">
+<aside class="toc sidebar" data-title="Contents" data-levels="2">
+  <div class="toc-menu"></div>
+</aside>
+<article class="doc">
+<h1 class="page">"Models as a Service: Breaking the GPU Silos on OpenShift AI 3.3"</h1>
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>Welcome to the "Models as a Service: Breaking the GPU Silos on OpenShift AI 3.3" QuickCourse!</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_who_this_is_for"><a class="anchor" href="#_who_this_is_for"></a>Who This Is For</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Designed for Platform Engineers and Developers, this course provides the exact steps to build a governed Models as a Service (MaaS) ecosystem on OpenShift AI 3.3. We skip the trial-and-error of figuring out which operators and registries to install. Instead, you will learn how to immediately transform fragmented, isolated hardware into a fairly scheduled, multi-tenant shared service, empowering your business units to deploy agentic AI smoothly, securely, and at scale.</p>
+</div>
+<div class="paragraph">
+<p>By the end of this course, you will be equipped to empower your lines of business with self-service models to build agentic AI applications smoothly and securely.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p><strong>Experience Level</strong>: Intermediate</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_prerequisites"><a class="anchor" href="#_prerequisites"></a>Prerequisites</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>To get the most out of this QuickCourse, you should come to the table with:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Red Hat OpenShift administration experience (version 4.20 or later)</p>
+</li>
+<li>
+<p>Basic Kubernetes operator management knowledge</p>
+</li>
+<li>
+<p>Familiarity with core GPU concepts and generic GPU enablement</p>
+</li>
+<li>
+<p>An understanding of API concepts and REST principles</p>
+</li>
+<li>
+<p>Basic command-line experience</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_what_youll_learn"><a class="anchor" href="#_what_youll_learn"></a>What You&#8217;ll Learn</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>In this hands-on QuickCourse, you will:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Master MaaS</strong>: Understand how Models as a Service solves complex GPU resource allocation challenges.</p>
+</li>
+<li>
+<p><strong>Architect a Hub</strong>: Design and implement a centralized model hub featuring governed, token-based consumption.</p>
+</li>
+<li>
+<p><strong>Configure and Deploy</strong>: Set up MaaS on OpenShift AI using operators and CRDs, and deploy generative AI models (using llm-d, vLLM, and KServe) for distributed inference.</p>
+</li>
+<li>
+<p><strong>Publish for Self-Service</strong>: Publish models to the OpenShift AI <code>ModelsAsService</code> catalog, complete with role-based access permissions.</p>
+</li>
+<li>
+<p><strong>Enforce Governance</strong>: Implement tiered service limits and rate limiting using Kuadrant.</p>
+</li>
+<li>
+<p><strong>Monitor and Report</strong>: Generate chargeback reports and track GPU utilization metrics using Grafana.</p>
+</li>
+<li>
+<p><strong>Integrate Seamlessly</strong>: Connect AI models into applications using OpenAI-compatible APIs with robust retry logic.</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_quickcourse_environment"><a class="anchor" href="#_quickcourse_environment"></a>QuickCourse Environment</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>This lab requires a robust setup. The recommended environment is a <strong>Single Node OpenShift (SNO) cluster</strong> with multiple NVIDIA GPUs (minimum 48GB total, e.g., 2x24GB).</p>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p><strong>Pre-flight Checklist</strong>
+The following components <strong>must</strong> be pre-configured before you begin:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>OpenShift Cluster</strong>: SNO with GPU nodes configured (version 4.20 or later).</p>
+</li>
+<li>
+<p><strong>GPU Operators</strong>: NVIDIA GPU Operator and Node Feature Discovery installed.</p>
+</li>
+<li>
+<p><strong>OpenShift AI Operator</strong>: Installed via the <code>stable-3.x</code> channel.</p>
+</li>
+<li>
+<p><strong>Service Mesh Operator</strong>: Installed (required for Gateway API routing).</p>
+</li>
+<li>
+<p><strong>Red Hat Connectivity Link</strong>: Kuadrant installed for auth and rate limiting.</p>
+</li>
+<li>
+<p><strong>LeaderWorkerSet Operator</strong>: Installed for llm-d (required for Mixture of Expoert (MOE) Model) inference.</p>
+</li>
+<li>
+<p><strong>CLI Access</strong>: Web Terminal Operator or Developer Spaces active, with the <code>oc</code> command accessible.</p>
+</li>
+<li>
+<p><strong>Serving &amp; Drivers</strong>: KServe components deployed, and NVIDIA drivers loaded/tested.</p>
+</li>
+</ul>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p><strong>Why do we need multiple GPUs for this lab?</strong></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>The LlamaStack model powers the MaaS Dashboard and consumes 1 dedicated GPU.</p>
+</li>
+<li>
+<p>It allows us to simulate realistic, multi-tenant model serving scenarios.</p>
+</li>
+<li>
+<p>It enables proper demonstrations of load balancing and autoscaling.</p>
+</li>
+<li>
+<p>It provides the capacity to deploy the NVIDIA-Nemotron-3-Nano-4B-FP8 (or 30B A3B) model.</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_estimated_time_agenda"><a class="anchor" href="#_estimated_time_agenda"></a>Estimated Time &amp; Agenda</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Plan for approximately <strong>3 to 4 hours</strong> to complete the full journey.</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>MaaS Architecture</strong> (30 mins)</p>
+</li>
+<li>
+<p><strong>MaaS Configuration</strong> (40 mins)</p>
+</li>
+<li>
+<p><strong>Model Deployment to the MaaS Catalog</strong> (55 mins)</p>
+</li>
+<li>
+<p><strong>MaaS Governance, Observability, and Chargeback</strong> (50 mins)</p>
+</li>
+<li>
+<p><strong>API Integration and Consumer Experience</strong> (40 mins)</p>
+</li>
+</ol>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p><strong>Pacing Yourself:</strong> You can work through the modules at your own pace. We highly recommend to <strong>shut down the expensive GPU lab environment</strong> between active sessions!</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_follow_up_resources"><a class="anchor" href="#_follow_up_resources"></a>Follow-up Resources</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p><a href="https://docs.redhat.com/en/documentation/red_hat_openshift_ai_self-managed/3.4" target="_blank" rel="noopener">Red Hat OpenShift AI Documentation</a></p>
+</li>
+<li>
+<p><a href="https://developers.redhat.com/products/red-hat-ai" target="_blank" rel="noopener">Red Hat Developer - OpenShift AI Resources</a></p>
+</li>
+<li>
+<p><a href="https://access.redhat.com/articles/rhoai-supported-configs-3.x" target="_blank" rel="noopener">Red Hat OpenShift AI 3.x Supported Configurations</a></p>
+</li>
+<li>
+<p><a href="https://www.redhat.com/en/technologies/cloud-computing/openshift/openshift-ai" target="_blank" rel="noopener">Red Hat OpenShift AI Product Page</a></p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_authors_and_contributors"><a class="anchor" href="#_authors_and_contributors"></a>Authors and Contributors</h2>
+<div class="sectionbody">
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>Primary Author</strong></dt>
+<dd>
+<p>Karlos Knox<br>
+Content Services Architect</p>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Last Updated</strong>: May 2026</p>
+</li>
+<li>
+<p><strong>QuickCourse Version</strong>: 3.4</p>
+</li>
+<li>
+<p><strong>Based on</strong>: Red Hat OpenShift AI 3.3+ MaaS capabilities</p>
+</li>
+</ul>
+</div>
+</dd>
+</dl>
+</div>
+<div class="paragraph">
+<p><strong>Contact Information</strong>:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>QuickCourse feedback</strong>: Submit an issue via the GitHub repository [fix_me_link].</p>
+</li>
+<li>
+<p><strong>Content updates</strong>: Submit GitHub issues via the QuickCourse repository (link provided by your facilitator).</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>Acknowledgments</strong>:
+This QuickCourse incorporates expert guidance from the Red Hat OpenShift AI business unit and product engineering architects working with enterprise AI deployments. Special thanks to <strong>Taylor Jordan Smith</strong> and <strong>James Harmison</strong>.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_lets_get_started"><a class="anchor" href="#_lets_get_started"></a>Let&#8217;s Get Started!</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Ready to dive in? Click on <strong>QuickCourse Overview</strong> in the navigation to begin your learning journey.</p>
+</div>
+<div class="paragraph">
+<p>You&#8217;ll start by meeting <strong>ChocoTech Industries</strong>—a rapidly growing chocolate manufacturer desperately looking for a solution to their GPU silo crisis. Let&#8217;s help them build a better AI infrastructure!</p>
+</div>
+</div>
+</div>
+</article>
+  </div>
+</main>
+</div>
+<footer class="footer">
+  <img src="../../_/img/rhl-logo-red.png" height="40px" alt="Red Hat"  href="https://redhat.com" >
+</footer><script id="site-script" src="../../_/js/site.js" data-ui-root-path="../../_"></script>
+<script async src="../../_/js/vendor/highlight.js"></script>
+  </body>
+</html>

@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Module 4: Governance, observability, and chargeback :: Models as a Service: Breaking the GPU Silos on OpenShift AI 3.3</title>
+    <meta name="generator" content="Antora 3.1.3">
+    <link rel="stylesheet" href="../../../_/css/site.css">
+    <script>var uiRootPath = '../../../_'</script>
+  </head>
+  <body class="article">
+<header class="header">
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="https://www.redhat.com" target="_blank"><img src="../../../_/img/redhat-logo.png" height="40px" alt="Red Hat"></a>
+      <a class="navbar-item" style="font-size: 24px; color: white" href="../../..">Models as a Service: Breaking the GPU Silos on OpenShift AI 3.3</a>
+      <button class="navbar-burger" data-target="topbar-nav">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+    <div id="topbar-nav" class="navbar-menu">
+      <div class="navbar-end">
+        <a class="navbar-item" href="https://github.com/RedHatQuickCourses/REPLACEREPONAME/issues" target="_blank">Report Issues</a>
+      </div>
+    </div>
+  </nav>
+</header>
+<div class="body">
+<div class="nav-container" data-component="Breaking the GPU Silos on OpenShift AI 3.3&quot;" data-version="3.4">
+  <aside class="nav">
+    <div class="panels">
+<div class="nav-panel-menu is-active" data-panel="menu">
+  <nav class="nav-menu">
+    <h3 class="title"><a href="../index.html">Models as a Service: Breaking the GPU Silos on OpenShift AI 3.3</a></h3>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <span class="nav-text"><a href="/Breaking%20the%20GPU%20Silos%20on%20OpenShift%20AI%203.3"/3.4/index.html" class="xref page">Models-as-a-Service Introduction</a></span>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <span class="nav-text"><a href="/Breaking%20the%20GPU%20Silos%20on%20OpenShift%20AI%203.3"/3.4/appendix/01-overview.html" class="xref page">QuickCourse Overview</a></span>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text"><a href="/Breaking%20the%20GPU%20Silos%20on%20OpenShift%20AI%203.3"/3.4/appendix/03-module-00-architecture.html" class="xref page">MaaS Architecture</a></span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <span class="nav-text"><a href="/Breaking%20the%20GPU%20Silos%20on%20OpenShift%20AI%203.3"/3.4/appendix/03-module-01-architecture.html" class="xref page">1.1: Understanding the GPU silo crisis</a></span>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <span class="nav-text"><a href="/Breaking%20the%20GPU%20Silos%20on%20OpenShift%20AI%203.3"/3.4/appendix/03-module-02-architecture.html" class="xref page">1.2: The MaaS architecture stack</a></span>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <span class="nav-text"><a href="/Breaking%20the%20GPU%20Silos%20on%20OpenShift%20AI%203.3"/3.4/appendix/03-module-03-architecture.html" class="xref page">1.3: Enabling MaaS on your OpenShift AI platform</a></span>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <span class="nav-text"><a href="/Breaking%20the%20GPU%20Silos%20on%20OpenShift%20AI%203.3"/3.4/appendix/03-module-04-architecture.html" class="xref page">1.4: Summary</a></span>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text"><a href="/Breaking%20the%20GPU%20Silos%20on%20OpenShift%20AI%203.3"/3.4/appendix/04-module-01-platform-admin.html" class="xref page">Access Control &amp; Governance</a></span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <span class="nav-text"><a href="/Breaking%20the%20GPU%20Silos%20on%20OpenShift%20AI%203.3"/3.4/appendix/04-module-02-platform-admin.html" class="xref page">2.1:  Understanding tier-based governance</a></span>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <span class="nav-text"><a href="/Breaking%20the%20GPU%20Silos%20on%20OpenShift%20AI%203.3"/3.4/appendix/04-module-04-platform-admin.html" class="xref page">2.2: Deploying governance tier policies and verifying readiness</a></span>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <span class="nav-text"><a href="/Breaking%20the%20GPU%20Silos%20on%20OpenShift%20AI%203.3"/3.4/appendix/04-module-05-platform-admin.html" class="xref page">2.3: Deploying governance tier policies and verifying readiness</a></span>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <span class="nav-text"><a href="/Breaking%20the%20GPU%20Silos%20on%20OpenShift%20AI%203.3"/3.4/appendix/04-module-02.1-platform-groups.html" class="xref page">2.5: Creating OpenShift groups</a></span>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <span class="nav-text"><a href="/Breaking%20the%20GPU%20Silos%20on%20OpenShift%20AI%203.3"/3.4/appendix/04-module-03-platform-admin.html" class="xref page">2.6: Configuring API access with ServiceAccounts and RBAC</a></span>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <span class="nav-text"><a href="/Breaking%20the%20GPU%20Silos%20on%20OpenShift%20AI%203.3"/3.4/appendix/04-module-06-platform-summary.html" class="xref page">2.6Module summary</a></span>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text"><a href="/Breaking%20the%20GPU%20Silos%20on%20OpenShift%20AI%203.3"/3.4/appendix/05-module-01-model-deployment.html" class="xref page">Model Deployment</a></span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <span class="nav-text"><a href="/Breaking%20the%20GPU%20Silos%20on%20OpenShift%20AI%203.3"/3.4/appendix/05a-model-selection-strategy.html" class="xref page">3.1a: Choosing the right model for your workload</a></span>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <span class="nav-text"><a href="/Breaking%20the%20GPU%20Silos%20on%20OpenShift%20AI%203.3"/3.4/appendix/05-module-02-model-deployment.html" class="xref page">3.1: Understanding serving runtimes and distributed inference</a></span>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <span class="nav-text"><a href="/Breaking%20the%20GPU%20Silos%20on%20OpenShift%20AI%203.3"/3.4/appendix/05-module-03-model-deployment.html" class="xref page">3.4: Publish model to the MaaS catalog</a></span>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <span class="nav-text"><a href="/Breaking%20the%20GPU%20Silos%20on%20OpenShift%20AI%203.3"/3.4/appendix/05-module-04-model-deployment.html" class="xref page">3.5: Deploy a second model for multi-model catalog</a></span>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <span class="nav-text"><a href="/Breaking%20the%20GPU%20Silos%20on%20OpenShift%20AI%203.3"/3.4/appendix/05b-lifecycle-management-gitops.html" class="xref page">3.6: Production lifecycle management and GitOps</a></span>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+</ul>
+  </nav>
+</div>
+<div class="nav-panel-explore" data-panel="explore">
+  <div class="context">
+    <span class="title">Models as a Service: Breaking the GPU Silos on OpenShift AI 3.3</span>
+    <span class="version">3.4</span>
+  </div>
+  <ul class="components">
+    <li class="component is-current">
+      <a class="title" href="../index.html">Models as a Service: Breaking the GPU Silos on OpenShift AI 3.3</a>
+      <ul class="versions">
+        <li class="version is-current is-latest">
+          <a href="../index.html">3.4</a>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</div>
+    </div>
+  </aside>
+</div>
+<main class="article">
+<div class="toolbar" role="navigation">
+<button class="nav-toggle"></button>
+<nav class="breadcrumbs" aria-label="breadcrumbs">
+  <ul>
+    <li><a href="../index.html">Models as a Service: Breaking the GPU Silos on OpenShift AI 3.3</a></li>
+    <li><a href="06-module-00-governance.html">Module 4: Governance, observability, and chargeback</a></li>
+  </ul>
+</nav>
+</div>
+  <div class="content">
+<aside class="toc sidebar" data-title="Contents" data-levels="2">
+  <div class="toc-menu"></div>
+</aside>
+<article class="doc">
+<h1 class="page">Module 4: Governance, observability, and chargeback</h1>
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>ChocoTech&#8217;s Finance department raises a critical concern during your status update meeting. "We need to track which teams are consuming GPU resources," the CFO states. "Marketing is requesting additional budget for AI infrastructure, but we have no data showing their current usage or justifying the expansion."</p>
+</div>
+<div class="paragraph">
+<p>Meanwhile, the Quality Control team complains: "Our defect detection models are getting rate-limited during production shifts. Is Marketing&#8217;s chatbot consuming all the capacity?"</p>
+</div>
+<div class="paragraph">
+<p>Your task is to implement governance policies that ensure fair resource allocation, track usage for chargeback, and provide observability into model consumption patterns.</p>
+</div>
+<div class="paragraph">
+<p>In this module, you&#8217;ll configure governance tiers with rate limiting and quotas using Kuadrant, monitor GPU utilization and token consumption with Grafana, and generate chargeback reports for Finance.</p>
+</div>
+<!-- toc disabled -->
+</div>
+</div>
+<div class="sect1">
+<h2 id="_learning_objectives"><a class="anchor" href="#_learning_objectives"></a>Learning objectives</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>By the end of this module, you&#8217;ll be able to:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Define governance tiers (bronze, silver, gold, platinum) with different access levels and quotas</p>
+</li>
+<li>
+<p>Map OpenShift user groups to tier levels for automatic access control</p>
+</li>
+<li>
+<p>Configure rate limiting and token quotas using Kuadrant RateLimitPolicy</p>
+</li>
+<li>
+<p>Deploy Grafana dashboards to monitor model usage and GPU utilization</p>
+</li>
+<li>
+<p>Generate chargeback reports showing token consumption by department and model</p>
+</li>
+<li>
+<p>Implement comprehensive security hardening for production MaaS deployment</p>
+</li>
+<li>
+<p>Troubleshoot policy enforcement issues using Kuadrant component logs</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</article>
+  </div>
+</main>
+</div>
+<footer class="footer">
+  <img src="../../../_/img/rhl-logo-red.png" height="40px" alt="Red Hat"  href="https://redhat.com" >
+</footer><script id="site-script" src="../../../_/js/site.js" data-ui-root-path="../../../_"></script>
+<script async src="../../../_/js/vendor/highlight.js"></script>
+  </body>
+</html>

@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Module 2: Setting Up Access Control and Governance :: Models as a Service: Breaking the GPU Silos on OpenShift AI 3.3</title>
+    <meta name="generator" content="Antora 3.1.3">
+    <link rel="stylesheet" href="../../../_/css/site.css">
+    <script>var uiRootPath = '../../../_'</script>
+  </head>
+  <body class="article">
+<header class="header">
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="https://www.redhat.com" target="_blank"><img src="../../../_/img/redhat-logo.png" height="40px" alt="Red Hat"></a>
+      <a class="navbar-item" style="font-size: 24px; color: white" href="../../..">Models as a Service: Breaking the GPU Silos on OpenShift AI 3.3</a>
+      <button class="navbar-burger" data-target="topbar-nav">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+    <div id="topbar-nav" class="navbar-menu">
+      <div class="navbar-end">
+        <a class="navbar-item" href="https://github.com/RedHatQuickCourses/REPLACEREPONAME/issues" target="_blank">Report Issues</a>
+      </div>
+    </div>
+  </nav>
+</header>
+<div class="body">
+<div class="nav-container" data-component="Breaking the GPU Silos on OpenShift AI 3.3&quot;" data-version="3.4">
+  <aside class="nav">
+    <div class="panels">
+<div class="nav-panel-menu is-active" data-panel="menu">
+  <nav class="nav-menu">
+    <h3 class="title"><a href="../index.html">Models as a Service: Breaking the GPU Silos on OpenShift AI 3.3</a></h3>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <span class="nav-text"><a href="/Breaking%20the%20GPU%20Silos%20on%20OpenShift%20AI%203.3"/3.4/index.html" class="xref page">Models-as-a-Service Introduction</a></span>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <span class="nav-text"><a href="/Breaking%20the%20GPU%20Silos%20on%20OpenShift%20AI%203.3"/3.4/appendix/01-overview.html" class="xref page">QuickCourse Overview</a></span>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text"><a href="/Breaking%20the%20GPU%20Silos%20on%20OpenShift%20AI%203.3"/3.4/appendix/03-module-00-architecture.html" class="xref page">MaaS Architecture</a></span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <span class="nav-text"><a href="/Breaking%20the%20GPU%20Silos%20on%20OpenShift%20AI%203.3"/3.4/appendix/03-module-01-architecture.html" class="xref page">1.1: Understanding the GPU silo crisis</a></span>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <span class="nav-text"><a href="/Breaking%20the%20GPU%20Silos%20on%20OpenShift%20AI%203.3"/3.4/appendix/03-module-02-architecture.html" class="xref page">1.2: The MaaS architecture stack</a></span>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <span class="nav-text"><a href="/Breaking%20the%20GPU%20Silos%20on%20OpenShift%20AI%203.3"/3.4/appendix/03-module-03-architecture.html" class="xref page">1.3: Enabling MaaS on your OpenShift AI platform</a></span>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <span class="nav-text"><a href="/Breaking%20the%20GPU%20Silos%20on%20OpenShift%20AI%203.3"/3.4/appendix/03-module-04-architecture.html" class="xref page">1.4: Summary</a></span>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text"><a href="/Breaking%20the%20GPU%20Silos%20on%20OpenShift%20AI%203.3"/3.4/appendix/04-module-01-platform-admin.html" class="xref page">Access Control &amp; Governance</a></span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <span class="nav-text"><a href="/Breaking%20the%20GPU%20Silos%20on%20OpenShift%20AI%203.3"/3.4/appendix/04-module-02-platform-admin.html" class="xref page">2.1:  Understanding tier-based governance</a></span>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <span class="nav-text"><a href="/Breaking%20the%20GPU%20Silos%20on%20OpenShift%20AI%203.3"/3.4/appendix/04-module-04-platform-admin.html" class="xref page">2.2: Deploying governance tier policies and verifying readiness</a></span>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <span class="nav-text"><a href="/Breaking%20the%20GPU%20Silos%20on%20OpenShift%20AI%203.3"/3.4/appendix/04-module-05-platform-admin.html" class="xref page">2.3: Deploying governance tier policies and verifying readiness</a></span>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <span class="nav-text"><a href="/Breaking%20the%20GPU%20Silos%20on%20OpenShift%20AI%203.3"/3.4/appendix/04-module-02.1-platform-groups.html" class="xref page">2.5: Creating OpenShift groups</a></span>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <span class="nav-text"><a href="/Breaking%20the%20GPU%20Silos%20on%20OpenShift%20AI%203.3"/3.4/appendix/04-module-03-platform-admin.html" class="xref page">2.6: Configuring API access with ServiceAccounts and RBAC</a></span>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <span class="nav-text"><a href="/Breaking%20the%20GPU%20Silos%20on%20OpenShift%20AI%203.3"/3.4/appendix/04-module-06-platform-summary.html" class="xref page">2.6Module summary</a></span>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text"><a href="/Breaking%20the%20GPU%20Silos%20on%20OpenShift%20AI%203.3"/3.4/appendix/05-module-01-model-deployment.html" class="xref page">Model Deployment</a></span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <span class="nav-text"><a href="/Breaking%20the%20GPU%20Silos%20on%20OpenShift%20AI%203.3"/3.4/appendix/05a-model-selection-strategy.html" class="xref page">3.1a: Choosing the right model for your workload</a></span>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <span class="nav-text"><a href="/Breaking%20the%20GPU%20Silos%20on%20OpenShift%20AI%203.3"/3.4/appendix/05-module-02-model-deployment.html" class="xref page">3.1: Understanding serving runtimes and distributed inference</a></span>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <span class="nav-text"><a href="/Breaking%20the%20GPU%20Silos%20on%20OpenShift%20AI%203.3"/3.4/appendix/05-module-03-model-deployment.html" class="xref page">3.4: Publish model to the MaaS catalog</a></span>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <span class="nav-text"><a href="/Breaking%20the%20GPU%20Silos%20on%20OpenShift%20AI%203.3"/3.4/appendix/05-module-04-model-deployment.html" class="xref page">3.5: Deploy a second model for multi-model catalog</a></span>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <span class="nav-text"><a href="/Breaking%20the%20GPU%20Silos%20on%20OpenShift%20AI%203.3"/3.4/appendix/05b-lifecycle-management-gitops.html" class="xref page">3.6: Production lifecycle management and GitOps</a></span>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+</ul>
+  </nav>
+</div>
+<div class="nav-panel-explore" data-panel="explore">
+  <div class="context">
+    <span class="title">Models as a Service: Breaking the GPU Silos on OpenShift AI 3.3</span>
+    <span class="version">3.4</span>
+  </div>
+  <ul class="components">
+    <li class="component is-current">
+      <a class="title" href="../index.html">Models as a Service: Breaking the GPU Silos on OpenShift AI 3.3</a>
+      <ul class="versions">
+        <li class="version is-current is-latest">
+          <a href="../index.html">3.4</a>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</div>
+    </div>
+  </aside>
+</div>
+<main class="article">
+<div class="toolbar" role="navigation">
+<button class="nav-toggle"></button>
+<nav class="breadcrumbs" aria-label="breadcrumbs">
+  <ul>
+    <li><a href="../index.html">Models as a Service: Breaking the GPU Silos on OpenShift AI 3.3</a></li>
+    <li><a href="04-module-01-platform-admin.html">Module 2: Setting Up Access Control and Governance</a></li>
+  </ul>
+</nav>
+</div>
+  <div class="content">
+<aside class="toc sidebar" data-title="Contents" data-levels="2">
+  <div class="toc-menu"></div>
+</aside>
+<article class="doc">
+<h1 class="page">Module 2: Setting Up Access Control and Governance</h1>
+<div class="paragraph">
+<p>After enabling the MaaS platform in Module 1, the CIO calls you into a meeting. "The infrastructure is ready," she says, "but before we deploy any models, I need to know how we&#8217;re going to control access and manage costs across business units."</p>
+</div>
+<div class="paragraph">
+<p>She hands you a requirements document:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Quality Control</strong> needs production-grade access with guaranteed availability (Gold tier)</p>
+</li>
+<li>
+<p><strong>R&amp;D</strong> needs development access with moderate throughput (Silver tier)</p>
+</li>
+<li>
+<p><strong>Marketing</strong> needs exploratory access for sentiment analysis (Bronze tier)</p>
+</li>
+<li>
+<p>All access must be authenticated with API tokens for audit trails</p>
+</li>
+<li>
+<p>Rate limits must prevent any single team from monopolizing GPU resources</p>
+</li>
+</ul>
+</div>
+<hr>
+<div class="paragraph">
+<p>In this module, you&#8217;ll create business unit groups, configure RBAC for API access, generate authentication tokens, and deploy tier-based governance policies that will control model access in Module 3.</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>Organizational Structure</strong>: Create OpenShift groups for ChocoTech&#8217;s business units (Quality Control, R&amp;D, Marketing) and prepare the namespace for governed model serving</p>
+</li>
+<li>
+<p><strong>Authentication &amp; Authorization</strong>: Configure ServiceAccounts for programmatic API access, define RBAC roles for model access, and test JWT token-based authentication</p>
+</li>
+<li>
+<p><strong>Governance Policies</strong>: Deploy tier-based policies (Gold, Silver, Bronze) with rate limits and quotas, then verify all governance components are operational</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>By the end of this module, the MaaS platform will be ready for governed model deployment with tier-based access control, authentication, and resource limits in place.</p>
+</div>
+</article>
+  </div>
+</main>
+</div>
+<footer class="footer">
+  <img src="../../../_/img/rhl-logo-red.png" height="40px" alt="Red Hat"  href="https://redhat.com" >
+</footer><script id="site-script" src="../../../_/js/site.js" data-ui-root-path="../../../_"></script>
+<script async src="../../../_/js/vendor/highlight.js"></script>
+  </body>
+</html>
