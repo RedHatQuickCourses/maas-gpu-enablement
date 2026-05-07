@@ -121,7 +121,7 @@ Confirm multi-model catalog:
 * `/v1/models` API endpoint returns both models
 * Each model has its own service and pods in chocotech-models namespace
 
-include::05b-lifecycle-management-gitops.adoc[leveloffset=+1]
+include::ch4-model-deploy-06.adoc[leveloffset=+1]
 
 == Troubleshooting
 

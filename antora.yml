@@ -3,4 +3,9 @@ title: Models as a Service Breaking the GPU Silos on OpenShift AI 3.3
 version: 3.4
 nav:
 - modules/ROOT/nav.adoc
+- modules/ch1-mass-arch/nav.adoc
+- modules/ch2-platform-admin/nav.adoc
+- modules/ch3-governance/nav.adoc
+- modules/ch4-model-deployment/nav.adoc
+- modules/ch5-api-integration/nav.adoc
 - modules/appendix/nav.adoc
