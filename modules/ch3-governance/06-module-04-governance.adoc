@@ -1,0 +1,187 @@
+= 4.5: Generate chargeback reports
+
+Now that governance and observability are configured, you can generate chargeback reports for Finance showing token consumption by department.
+
+Token-based consumption tracking enables Finance to bill departments based on actual usage rather than infrastructure allocation.
+
+=== Query token consumption metrics
+
+Use Prometheus to query token consumption by tier:
+
+[source,role="execute"]
+----
+oc exec -n openshift-monitoring prometheus-k8s-0 -- promtool query instant \
+  http://localhost:9090 \
+  'sum(rate(maas_tokens_consumed_total[1h])) by (tier, model)'
+----
+
+This returns token consumption rate by tier and model over the last hour.
+
+Example output:
+
+----
+tier="platinum", model="llama-3-8b"    125000 tokens/hour
+tier="gold", model="llama-3-8b"         45000 tokens/hour
+tier="bronze", model="nemotron-8b"      12000 tokens/hour
+----
+
+=== Calculate chargeback costs
+
+Define cost per 1,000 tokens for internal chargeback:
+
+* Bronze tier: $0.001 per 1,000 tokens
+* Silver tier: $0.002 per 1,000 tokens
+* Gold tier: $0.003 per 1,000 tokens
+* Platinum tier: $0.005 per 1,000 tokens
+
+Example calculation for Quality Control (Platinum tier):
+
+----
+Tokens consumed (24 hours): 125,000 tokens/hour x 24 hours = 3,000,000 tokens
+Cost: (3,000,000 / 1,000) x $0.005 = $15.00 per day
+Monthly estimate: $15.00 x 30 = $450.00
+----
+
+Marketing (Bronze tier):
+
+----
+Tokens consumed (24 hours): 12,000 tokens/hour x 24 hours = 288,000 tokens
+Cost: (288,000 / 1,000) x $0.001 = $0.29 per day
+Monthly estimate: $0.29 x 30 = $8.70
+----
+
+This demonstrates that Quality Control's production workload justifies their Platinum tier allocation, while Marketing's exploratory use appropriately stays in Bronze tier.
+
+=== Create a chargeback report
+
+Generate a simple chargeback report:
+
+[source,role="execute"]
+----
+cat > chargeback-report.sh <<'EOF'
+#!/bin/bash
+echo "ChocoTech Industries - MaaS Chargeback Report"
+echo "Generated: $(date)"
+echo ""
+echo "Department          Tier      Tokens (24h)    Cost/Day    Monthly Est."
+echo "--------------------------------------------------------------------------------"
+echo "Quality Control     Platinum  3,000,000       \$15.00     \$450.00"
+echo "R&D                 Gold      1,080,000       \$3.24      \$97.20"
+echo "Supply Chain        Silver      480,000       \$0.96      \$28.80"
+echo "Marketing           Bronze      288,000       \$0.29      \$8.70"
+echo "--------------------------------------------------------------------------------"
+echo "Total Monthly Cost:                                     \$584.70"
+EOF
+chmod +x chargeback-report.sh
+----
+
+Run the report:
+
+[source,role="execute"]
+----
+./chargeback-report.sh
+----
+
+This simple report demonstrates the concept. In production, you would integrate Prometheus metrics with your organization's billing system or create automated Grafana reports.
+
+=== Verification
+
+Confirm chargeback capability:
+
+* Prometheus metrics show token consumption by tier and model
+* Token consumption rates can be queried and aggregated
+* Chargeback calculations based on tier pricing are possible
+* Reports can demonstrate which departments are consuming GPU resources
+* Finance has visibility into AI infrastructure costs by business unit
+
+== Troubleshooting
+
+**Issue**: RateLimitPolicy not enforcing quotas (requests succeeding beyond limits)
+
+**Solution**:
+
+. Verify Limitador pod is healthy: `oc get pods -n kuadrant-system | grep limitador`
+. Check RateLimitPolicy is correctly configured: `oc describe ratelimitpolicy -n redhat-ods-applications`
+. Verify AuthPolicy is configured to extract user tier: `oc get authpolicy -n redhat-ods-applications`
+. Check Limitador logs for policy evaluation: `oc logs -l app=limitador -n kuadrant-system`
+
+**Issue**: User assigned to wrong tier (expected Platinum, getting Bronze)
+
+**Solution**:
+
+. Verify user group membership: `oc get user {user} -o yaml | grep -A 5 groups`
+. Check MaaSTier configuration: `oc get maastier platinum -o yaml`
+. Ensure group name matches exactly in tier spec
+. Priority level determines tier when user belongs to multiple groups (highest wins)
+. Check Authorino logs for user tier resolution: `oc logs -l app=authorino -n kuadrant-system`
+
+**Issue**: Grafana cannot connect to Prometheus data source
+
+**Solution**:
+
+. Verify Prometheus is accessible from Grafana namespace
+. Check GrafanaDataSource status: `oc describe grafanadatasource prometheus-maas -n redhat-ods-applications`
+. Verify Thanos Querier service exists: `oc get svc thanos-querier -n openshift-monitoring`
+. Test connectivity: `oc exec -n redhat-ods-applications deployment/maas-grafana -- curl -k https://thanos-querier.openshift-monitoring.svc.cluster.local:9091/api/v1/query?query=up`
+
+**Issue**: Token consumption metrics not appearing in Prometheus
+
+**Solution**:
+
+. Verify KServe and Kuadrant are exposing metrics
+. Check ServiceMonitor resources: `oc get servicemonitor -n redhat-ods-applications`
+. Verify Prometheus is scraping MaaS metrics: Query `up{job="maas-api"}` in Prometheus UI
+. Check MaaS API pod logs for metric export: `oc logs -l app=maas-api -n redhat-ods-applications | grep metrics`
+
+**Issue**: MaaSTier resource created but RateLimitPolicy not generated
+
+**Solution**:
+
+. Check MaaS operator logs: `oc logs -n redhat-ods-operator deployment/rhods-operator | grep -i maastier`
+. Verify Kuadrant CRDs are installed: `oc get crd | grep kuadrant`
+. Check MaaSTier status for reconciliation errors: `oc get maastier platinum -o yaml | grep -A 10 status`
+. Verify RBAC permissions for MaaS operator to create RateLimitPolicy resources
+
+include::06a-security-hardening.adoc[leveloffset=+1]
+
+== Learning outcomes
+
+By completing this module, you should now understand:
+
+* ✓ How tier-based governance prevents uncontrolled resource consumption in multi-tenant environments
+* ✓ The relationship between OpenShift groups, MaaSTier resources, and Kuadrant policies
+* ✓ How to configure rate limiting and token quotas using declarative tier definitions
+* ✓ The role of Authorino in user tier resolution and Limitador in quota enforcement
+* ✓ How to deploy Grafana for observability into model usage patterns
+* ✓ How to generate chargeback reports based on token consumption by department
+* ✓ How to implement comprehensive security hardening across nine critical areas
+* ✓ How to meet compliance requirements (SOC 2, ISO 27001, NIST AI RMF) for production AI systems
+
+== Module summary
+
+You've successfully implemented governance policies that ensure fair resource allocation at ChocoTech and provided Finance with visibility into AI infrastructure costs.
+
+**What you accomplished for ChocoTech**:
+
+* Created four tier levels aligned with business priorities (Bronze/Silver/Gold/Platinum)
+* Mapped department groups to tiers with appropriate rate limits and quotas
+* Deployed Grafana for observability into token consumption and GPU utilization
+* Enabled Finance to perform chargeback based on actual usage by department
+* Prevented uncontrolled consumption through tier-based rate limiting
+* Implemented production security hardening meeting SOC 2 and ISO 27001 requirements
+* Obtained CISO approval for production deployment after comprehensive security review
+
+**Business impact realized**:
+
+* **Fair allocation**: Quality Control's production workload no longer competes with Marketing's exploratory queries
+* **Cost visibility**: Finance can justify AI infrastructure expansion with usage data
+* **Accurate billing**: Departments are billed based on actual consumption, not infrastructure allocation
+* **Audit compliance**: Complete trail of who accessed which models with user identity tracking
+
+**Your journey progress**:
+
+ChocoTech now has a fully governed MaaS platform with observability and chargeback capabilities. The final step is enabling developers to integrate models into their applications.
+
+**Next steps**:
+
+Module 5 will guide you through the developer experience - navigating Gen AI Studio, generating API tokens, integrating models into applications using OpenAI-compatible APIs, and implementing retry logic for rate limit handling.

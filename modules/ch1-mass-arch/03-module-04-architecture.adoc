@@ -1,0 +1,104 @@
+= 1.4: Summary
+
+////
+**Issue**: Kuadrant pods not starting after creating Kuadrant CR
+
+**Solution**:
+
+. Check Connectivity Link operator logs: `oc logs -n openshift-operators deployment/connectivity-link-operator --tail=50`
+. Verify Kuadrant CRDs are installed: `oc get crd | grep kuadrant`
+
+**Issue**: Gateway status shows PROGRAMMED=Unknown (persists beyond 2 minutes)
+
+**Solution**:
+
+. Wait 60-90 seconds—the Gateway controller needs time to process the resource and provision listeners
+. If still Unknown after 2 minutes, check Service Mesh control plane: `oc get pods -n openshift-ingress`
+. Verify the Gateway controller is running: `oc get pods -n openshift-ingress-operator`
+. Check Gateway events for clues: `oc describe gateway maas-default-gateway -n openshift-ingress`
+. Common cause: Istio control plane not fully ready or Gateway API CRDs not installed
+
+**Issue**: Gateway status shows PROGRAMMED=False
+
+**Solution**:
+
+. Verify Service Mesh control plane is healthy: `oc get pods -n openshift-ingress`
+. Check for error messages in Gateway status: `oc describe gateway maas-default-gateway -n openshift-ingress`
+. Common cause: Service Mesh operator not installed or Istio control plane not deployed
+. Ensure the `openshift-ingress` namespace exists and contains running `istiod-*` and `istio-ingressgateway-*` pods
+
+**Issue**: MaaS API pods not appearing after DataScienceCluster patch
+
+**Solution**:
+
+. Check DataScienceCluster status conditions: `oc get datasciencecluster default-dsc -o yaml | grep -A 10 conditions`
+. Verify Kuadrant is running: `oc get pods -n openshift-operators`
+. MaaS API deployment depends on Kuadrant being healthy—if Kuadrant pods are not Running, the operator will not create maas-api
+. Check operator logs for specific errors: `oc logs -n redhat-ods-operator deployment/rhods-operator --tail=100`
+
+**Issue**: Gen AI Studio not visible in dashboard after configuration patch
+
+**Solution**:
+
+. Verify dashboard config patch applied correctly: `oc get odhdashboardconfig odh-dashboard-config -n redhat-ods-applications -o yaml | grep -A 5 dashboardConfig`
+. Clear browser cache and hard-reload the page (Ctrl+Shift+R or Cmd+Shift+R)
+. Check dashboard pod logs for errors: `oc logs -n redhat-ods-applications deployment/odh-dashboard --tail=50`
+. Restart the dashboard pod if needed: `oc rollout restart deployment/odh-dashboard -n redhat-ods-applications`
+
+**Issue**: LeaderWorkerSet operator missing from operator list
+
+**Solution**:
+
+. Install from OperatorHub: Navigate to **Ecosystem → Software Catalog** in OpenShift console
+. Search for "Leader Worker Set"
+. Click **Install** and select openshift-lws-operator namespace
+. Wait for CSV to show Succeeded status
+. LeaderWorkerSet is required for llm-d orchestration in later modules
+
+////
+
+
+== Module summary
+
+You've transformed ChocoTech's fragmented GPU infrastructure from passive verification to active enablement. The platform is now MaaS-capable.
+
+**What you accomplished for ChocoTech**:
+
+* Verified that required operators (Service Mesh, Connectivity Link, OpenShift AI, LeaderWorkerSet) are installed and ready
+* Created the governance infrastructure (Kuadrant) that will enforce token quotas and access policies
+* Deployed the Gateway resource that provides a single API endpoint for all model traffic
+* Enabled MaaS features in the OpenShift AI platform through DataScienceCluster configuration
+* Activated the Gen AI Studio dashboard for self-service token management
+
+**Business impact potential**:
+
+* **Infrastructure ready**: Platform can now enforce token quotas and tier-based access policies across Quality Control, R&D, Marketing, and Supply Chain
+* **Self-service enabled**: Business unit leads can generate API tokens for their developers without filing IT tickets
+* **Governance foundation**: Authorino and Limitador are operational and ready for policy configuration
+* **API gateway operational**: Single endpoint replaces the four separate model serving endpoints that teams were managing independently
+* **Audit capability**: Request logging infrastructure is in place for compliance and chargeback tracking
+
+**Your journey progress**:
+
+Module 1 (Architecture) is complete. You understand the business problem, the technical architecture, and have activated the MaaS platform. The foundation is operational, but not yet configured for production use.
+
+**Next steps**:
+
+Module 2 will guide you through configuring governance policies, setting up tier-based access control (bronze/silver/gold/platinum), and deploying your first models to the central catalog. You'll move from "MaaS is enabled" to "MaaS is ready for ChocoTech's production workloads."
+
+////
+== Learning outcomes
+
+By completing this module, you should now understand:
+
+* ✓ How the GPU silo crisis creates simultaneous under-utilization and resource contention
+* ✓ The business value MaaS provides through centralized model serving and governance
+* ✓ The three-layer architecture (Gateway API, Kuadrant, KServe) and separation of concerns
+* ✓ The complete request flow from API client through routing, policy, and serving layers
+* ✓ How to verify required operators are installed before enabling MaaS
+* ✓ Why Kuadrant governance engine is a prerequisite for MaaS functionality
+* ✓ How to create the Gateway resource that KServe uses for external routing
+* ✓ How to enable MaaS features in the DataScienceCluster
+* ✓ How to activate the Gen AI Studio dashboard interface for self-service access
+* ✓ The complete activation sequence from operators through platform enablement
+ ////

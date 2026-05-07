@@ -1,0 +1,83 @@
+= Course Scenario: ChocoTech Industries
+
+== Your Role and Mission
+
+In this course, you will take on the role of a **Platform Engineer at ChocoTech Industries**, a modern chocolate manufacturing company. You have been assigned to solve a critical infrastructure challenge that is actively hindering multiple business units.
+
+ChocoTech has teams across Quality Control, R&D, Marketing, and Supply Chain, all trying to leverage AI for their operations. However, each team has purchased and siloed their own GPU infrastructure, leading to a company-wide **"GPU Silo Crisis."**
+
+[IMPORTANT]
+====
+* **Your Assignment**: Design and implement a Models as a Service (MaaS) platform on Red Hat OpenShift AI to transform fragmented GPU resources into a centralized, governed model hub.
+* **The Objective**: Enable all lines of business to access generative AI models through a self-service catalog with proper governance. This will eliminate resource waste and accelerate business innovation.
+====
+
+== The Problem: ChocoTech's GPU Silo Crisis
+
+ChocoTech has invested heavily in AI, but their decentralized approach has created serious operational and financial bottlenecks. 
+
+=== The Current State
+
+Four teams independently purchased and deployed their own GPU hardware:
+
+* **Quality Control**: Running computer vision models for defect detection (2x A100 GPUs).
+* **R&D**: Testing recipe optimization and flavor prediction models (4x L40S GPUs).
+* **Marketing**: Analyzing customer sentiment and demand forecasting (2x L4 GPUs).
+* **Supply Chain**: Running inventory prediction models (2x L40S GPUs).
+
+=== Operational Pain Points
+
+* **Severe Under-Utilization**: Quality Control's GPUs sit idle 60% of the time while R&D waits weeks for capacity, prompting unnecessary hardware purchases exceeding $200,000.
+* **Misallocated Expertise**: Data scientists spend 40% of their time debugging CUDA drivers, Docker containers, and Kubernetes manifests instead of tuning models and analyzing data.
+* **Redundant Deployments**: All four teams independently downloaded and deployed the Llama-3 8B model, wasting 32GB of storage and compute capacity per deployment.
+* **Security "Black Boxes"**: Without a centralized API gateway, there is zero visibility into who is sending what data to which model, making audit logs and PII filtering impossible to enforce.
+* **No Chargeback Visibility**: Finance cannot justify infrastructure costs without clear visibility into model usage across users and applications.
+
+[NOTE]
+====
+**The MaaS Opportunity**
+We need to transition from hardware management to token delivery. MaaS transforms GPU infrastructure from dedicated, single-team clusters into a consumable backplane. Centralized IT manages the hardware, inference strategy, and governance policies (via KServe, Kuadrant, and the Gateway API), while the lines of business simply consume AI capabilities via tokens.
+====
+
+== Your Vision of Success
+
+If your MaaS implementation succeeds, here is the impact you will deliver to ChocoTech:
+
+**Immediate Improvements (Short-Term)**
+
+* **Eliminated Redundancy**: A single Llama-3 8B deployment serves all four teams, resulting in a 75% reduction in storage and compute waste.
+* **Fair Resource Allocation**: Tier-based quotas prevent Quality Control from monopolizing GPUs while R&D waits, ensuring balanced access.
+* **Complete Audit Trail**: Every API request is logged with user identity, the model accessed, and tokens consumed to satisfy compliance requirements.
+* **Simplified Developer Experience**: The Marketing team can integrate models via an OpenAI-compatible API in hours instead of weeks.
+
+**Strategic Benefits (Long-Term)**
+
+* **Accurate Chargebacks**: Token-based consumption tracking enables Finance to bill departments based on actual usage, justifying infrastructure investments.
+* **Centralized Catalog Governance**: The platform team controls which models are available, preventing "Shadow AI" and standardizing security.
+* **Maximized GPU Efficiency**: Intelligent routing and centralized inference reduce overall infrastructure costs by 40-50%.
+* **Accelerated Innovation**: Developers focus on building applications instead of managing infrastructure, vastly increasing team productivity.
+
+== Mission Success Criteria
+
+By the end of this QuickCourse, you will have practical MaaS implementation skills to address ChocoTech's challenges. You will be able to:
+
+* **Prevent "Shadow AI"**: Understand the business impact of the GPU silo crisis and eliminate redundant deployments.
+* **Establish Centralized Serving**: Configure the MaaS platform through OpenShift AI operator Custom Resource Definitions (CRDs).
+* **Enable Efficient Utilization**: Deploy models using distributed inference with llm-d and vLLM across multiple accelerators.
+* **Ensure Fair Allocation**: Implement governance tiers with rate limiting and quotas using Kuadrant.
+* **Provide Visibility**: Generate usage metrics and chargeback reports to justify infrastructure costs.
+* **Simplify Consumption**: Integrate models into applications via OpenAI-compatible APIs so developers can skip infrastructure complexity.
+
+== Common Questions
+
+**"Can we integrate MaaS with our existing AI models without major changes?"**::
+Yes. Module 3 demonstrates deploying existing models from Hugging Face and custom model repositories using the llm-d and vLLM serving runtimes.
+
+**"What about security and compliance considerations?"**::
+Module 4 covers governance policies, including rate limiting, tier-based access control, and audit logging through the Kuadrant policy layer.
+
+**"How does this integrate with our current application development workflows?"**::
+Module 5 shows OpenAI-compatible API integration that works natively with existing LangChain, LlamaIndex, and custom application frameworks.
+
+**"Is MaaS adoption sustainable for our team with limited Kubernetes expertise?"**::
+Absolutely. This QuickCourse demonstrates operator-based configuration through OpenShift AI CRDs, minimizing low-level Kubernetes knowledge requirements while providing self-service capabilities via the dashboard.

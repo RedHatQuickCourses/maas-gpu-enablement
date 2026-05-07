@@ -1,10 +1,10 @@
-= "Models as a Service: Breaking the GPU Silos on OpenShift AI 3.3"
+= Models as a Service: Breaking the GPU Silos on OpenShift AI 3.3
 
-Welcome to the "Models as a Service: Breaking the GPU Silos on OpenShift AI 3.3" QuickCourse! 
+Welcome to this *Red Hat OpenShift AI 3 - Models as a Service* QuickCourse! 
 
-== Who This Is For
+== Course Overview: The MaaS Mandate
 
-Designed for Platform Engineers and Developers, this course provides the exact steps to build a governed Models as a Service (MaaS) ecosystem on OpenShift AI 3.3. We skip the trial-and-error of figuring out which operators and registries to install. Instead, you will learn how to immediately transform fragmented, isolated hardware into a fairly scheduled, multi-tenant shared service, empowering your business units to deploy agentic AI smoothly, securely, and at scale.
+Designed for Platform Engineers and Developers, this course provides the exact steps to build a governed Models as a Service (MaaS) ecosystem on OpenShift AI 3.3. We skip the trial-and-error of figuring out which operators and registries to install. Instead - you will learn how to immediately transform fragmented, isolated hardware into a fairly scheduled, multi-tenant shared service, empowering your business units to deploy agentic AI smoothly, securely, and at scale.
 
 By the end of this course, you will be equipped to empower your lines of business with self-service models to build agentic AI applications smoothly and securely.
 
@@ -95,8 +95,8 @@ Content Services Architect
 
 **Contact Information**:
 
-* **QuickCourse feedback**: Submit an issue via the GitHub repository [fix_me_link].
-* **Content updates**: Submit GitHub issues via the QuickCourse repository (link provided by your facilitator).
+* **QuickCourse feedback**: Submit GitHub issues via the https://github.com/RedHatQuickCourses/maas-gpu-enablement.git[QuickCourse repository., window=_blank]
+* **Content updates**: Submit GitHub issues via the https://github.com/RedHatQuickCourses/maas-gpu-enablement.git[QuickCourse repository., window=_blank].
 
 **Acknowledgments**: 
 This QuickCourse incorporates expert guidance from the Red Hat OpenShift AI business unit and product engineering architects working with enterprise AI deployments. Special thanks to **Taylor Jordan Smith** and **James Harmison**. 
