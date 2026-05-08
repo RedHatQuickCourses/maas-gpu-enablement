@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>2.6: Configuring API access with ServiceAccounts and RBAC :: Models as a Service Breaking the GPU Silos on OpenShift AI 3.3</title>
+    <title>2.4: Deploying governance tier policies and verifying readiness :: Models as a Service Breaking the GPU Silos on OpenShift AI 3.3</title>
     <link rel="prev" href="ch2-platform-admin-05.html">
     <link rel="next" href="ch2-platform-admin-07.html">
     <meta name="generator" content="Antora 3.1.3">
@@ -47,26 +47,23 @@
   <li class="nav-item" data-depth="0">
 <ul class="nav-list">
   <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../ch1-mass-arch/ch1-scenario-01.html">Course Scenario - ChocoTech</a>
+  </li>
+  <li class="nav-item" data-depth="1">
     <button class="nav-item-toggle"></button>
-    <a class="nav-link" href="../ch1-mass-arch/ch1-maas-arch-01.html">1. MaaS Architecture</a>
+    <a class="nav-link" href="../ch1-mass-arch/ch1-maas-arch-01.html">1: MaaS architecture</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../ch1-mass-arch/ch1-maas-arch-01.html">1.1: QuickCourse Overview</a>
+    <a class="nav-link" href="../ch1-mass-arch/ch1-maas-arch-02.html">1.1: GPU silo crisis</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../ch1-mass-arch/ch1-maas-arch-02.html">1.2: MaaS Architecture Introduction</a>
+    <a class="nav-link" href="../ch1-mass-arch/ch1-maas-arch-03.html">1.2: MaaS architecture stack</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../ch1-mass-arch/ch1-maas-arch-03.html">1.3: The Three-Layer MaaS Architecture</a>
+    <a class="nav-link" href="../ch1-mass-arch/ch1-maas-arch-04.html">1.3: Enabling MaaS on RHOAI</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../ch1-mass-arch/ch1-maas-arch-04.html">1.4: Infrastructure Components</a>
-  </li>
-  <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../ch1-mass-arch/ch1-maas-arch-05.html">1.5: Request Flow &amp; Integration</a>
-  </li>
-  <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../ch1-mass-arch/ch1-maas-arch-06.html">1.6: Verifying MaaS Installation</a>
+    <a class="nav-link" href="../ch1-mass-arch/ch1-maas-arch-05.html">1.4: Summary &amp; troubleshooting</a>
   </li>
 </ul>
   </li>
@@ -76,19 +73,16 @@
 <ul class="nav-list">
   <li class="nav-item" data-depth="1">
     <button class="nav-item-toggle"></button>
-    <a class="nav-link" href="ch2-platform-admin-01.html">2. Platform Administration</a>
+    <a class="nav-link" href="ch2-platform-admin-01.html">2: Access Control &amp; Governance</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="ch2-platform-admin-01.html">2.1: Access Control &amp; Governance</a>
+    <a class="nav-link" href="ch2-platform-admin-02.html">2.1: Tier-based governancep</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="ch2-platform-admin-02.html">2.2: Authentication &amp; Authorization Setup</a>
+    <a class="nav-link" href="ch2-platform-admin-03.html">2.2: Creating OpenShift groups</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="ch2-platform-admin-03.html">2.3: Governance Policies Implementation</a>
-  </li>
-  <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="ch2-platform-admin-04.html">2.4: Additional Platform Administration</a>
+    <a class="nav-link" href="ch2-platform-admin-04.html">2.3: ServiceAccounts &amp; RBAC</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="ch2-platform-admin-05.html">2.5: Understanding Tier-Based Governance</a>
@@ -181,7 +175,7 @@
 <nav class="breadcrumbs" aria-label="breadcrumbs">
   <ul>
     <li><a href="../index.html">Models as a Service Breaking the GPU Silos on OpenShift AI 3.3</a></li>
-    <li><a href="ch2-platform-admin-01.html">2. Platform Administration</a></li>
+    <li><a href="ch2-platform-admin-01.html">2: Access Control &amp; Governance</a></li>
     <li><a href="ch2-platform-admin-06.html">2.6: ServiceAccount Configuration &amp; RBAC</a></li>
   </ul>
 </nav>
@@ -191,264 +185,214 @@
   <div class="toc-menu"></div>
 </aside>
 <article class="doc">
-<h1 class="page">2.6: Configuring API access with ServiceAccounts and RBAC</h1>
+<h1 class="page">2.4: Deploying governance tier policies and verifying readiness</h1>
 <div id="preamble">
 <div class="sectionbody">
 <div class="paragraph">
-<p>With organizational structure in place, the next step is to enable programmatic API access for applications. Marketing&#8217;s sentiment analysis application needs to access models without requiring human credentials.</p>
+<p>With organizational structure and authentication in place, the final step is to deploy tier-based governance policies that enforce rate limits and quotas across ChocoTech&#8217;s business units.</p>
 </div>
 <div class="paragraph">
-<p>This section covers ServiceAccount-based authentication using JWT tokens and RBAC (Role-Based Access Control) for authorizing model access.</p>
+<p>This section covers creating MaaS Tier custom resources, verifying governance components, and completing a comprehensive pre-deployment readiness checklist.</p>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_understanding_serviceaccount_based_authentication"><a class="anchor" href="#_understanding_serviceaccount_based_authentication"></a>Understanding ServiceAccount-based authentication</h2>
+<h2 id="_understanding_maas_tier_governance"><a class="anchor" href="#_understanding_maas_tier_governance"></a>Understanding MaaS tier governance</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>OpenShift provides two types of identities for accessing resources: User accounts and ServiceAccounts.</p>
+<p>Tier governance ensures fair resource allocation and prevents any single business unit from monopolizing GPU resources.</p>
 </div>
 <div class="sect2">
-<h3 id="_user_accounts_vs_serviceaccounts"><a class="anchor" href="#_user_accounts_vs_serviceaccounts"></a>User accounts vs. ServiceAccounts</h3>
+<h3 id="_what_are_maas_tier_custom_resources"><a class="anchor" href="#_what_are_maas_tier_custom_resources"></a>What are MaaS Tier custom resources?</h3>
+<div class="paragraph">
+<p>MaaS Tier is a custom resource definition (CRD) provided by the Red Hat OpenShift AI MaaS operator. Each MaaS Tier resource defines:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Tier properties</strong>: Display name, priority level</p>
+</li>
+<li>
+<p><strong>Rate limits</strong>: Maximum requests per minute</p>
+</li>
+<li>
+<p><strong>Quotas</strong>: Maximum tokens per hour for LLM inference</p>
+</li>
+<li>
+<p><strong>Group mapping</strong>: Which OpenShift groups belong to this tier</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>When you deploy a model in Module 3, you&#8217;ll annotate it with tier names. The MaaS platform enforces the tier&#8217;s rate limits and quotas on all requests to that model.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_why_tier_policies_matter"><a class="anchor" href="#_why_tier_policies_matter"></a>Why tier policies matter</h3>
+<div class="paragraph">
+<p>Without tier governance:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Bronze tier users (Marketing&#8217;s exploratory experiments) could consume all available GPU capacity</p>
+</li>
+<li>
+<p>Gold tier users (Quality Control&#8217;s production defect detection) would be blocked waiting for resources</p>
+</li>
+<li>
+<p>No mechanism exists to track or limit costs per business unit</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>With tier governance:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Prioritized request processing</strong>: Gold tier requests are processed first during peak demand</p>
+</li>
+<li>
+<p><strong>Fair resource allocation</strong>: Rate limits prevent Bronze tier from consuming all capacity</p>
+</li>
+<li>
+<p><strong>Cost control</strong>: Quotas cap token consumption (and thus GPU costs) per tier</p>
+</li>
+<li>
+<p><strong>Chargeback reporting</strong>: Track AI infrastructure costs by tier and business unit</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_the_tier_enforcement_flow"><a class="anchor" href="#_the_tier_enforcement_flow"></a>The tier enforcement flow</h3>
+<div class="paragraph">
+<p>When an application makes an inference request, the request flows through multiple governance layers:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>API Request (with Bearer token)
+  ↓
+Gateway (maas-default-gateway)
+  ↓
+Authorino (validates token, extracts ServiceAccount identity)
+  ↓
+Authorino (determines which group/tier the ServiceAccount belongs to)
+  ↓
+Limitador (checks tier rate limit: has this tier exceeded requests/minute?)
+  ↓ (if rate limit OK)
+MaaS API (checks tier quota: has this tier exceeded tokens/hour?)
+  ↓ (if quota OK)
+Model (LLMInferenceService processes the request)</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>If rate limit is exceeded: HTTP 429 Too Many Requests
+If quota is exceeded: HTTP 429 with quota exhaustion message</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_chocotechs_tier_requirements"><a class="anchor" href="#_chocotechs_tier_requirements"></a>ChocoTech&#8217;s tier requirements</h3>
+<div class="paragraph">
+<p>Based on the CIO&#8217;s requirements document:</p>
+</div>
 <table class="tableblock frame-all grid-all stretch">
 <colgroup>
-<col style="width: 20%;">
-<col style="width: 40%;">
-<col style="width: 40%;">
+<col style="width: 16.6666%;">
+<col style="width: 33.3333%;">
+<col style="width: 16.6666%;">
+<col style="width: 16.6666%;">
+<col style="width: 16.6669%;">
 </colgroup>
 <thead>
 <tr>
-<th class="tableblock halign-left valign-top">Identity Type</th>
-<th class="tableblock halign-left valign-top">Intended For</th>
-<th class="tableblock halign-left valign-top">Use Case</th>
+<th class="tableblock halign-left valign-top">Tier</th>
+<th class="tableblock halign-left valign-top">Business Unit</th>
+<th class="tableblock halign-left valign-top">Requests/Minute</th>
+<th class="tableblock halign-left valign-top">Tokens/Hour</th>
+<th class="tableblock halign-left valign-top">Level (Priority )</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">User account</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Humans (interactive login)</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Developer logs into OpenShift AI dashboard, deploys models manually</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Gold</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Quality Control</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">100</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">50,000</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">High (100)</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">ServiceAccount</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Applications (programmatic access)</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Marketing&#8217;s sentiment analysis app calls MaaS API to classify customer feedback</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Silver</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">R&amp;D</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">50</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">25,000</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Medium (50)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Bronze</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Marketing</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">20</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">10,000</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Low (10)</p></td>
 </tr>
 </tbody>
 </table>
 <div class="paragraph">
-<p>The Marketing team&#8217;s sentiment analysis application needs a ServiceAccount because:</p>
+<p>These limits ensure:</p>
 </div>
 <div class="ulist">
 <ul>
 <li>
-<p>The application runs in a container and cannot perform interactive login</p>
+<p>Quality Control&#8217;s production workloads get guaranteed throughput</p>
 </li>
 <li>
-<p>User credentials should not be embedded in application code or container images</p>
+<p>R&amp;D has sufficient capacity for development without impacting production</p>
 </li>
 <li>
-<p>Tokens can be rotated without redeploying the application</p>
-</li>
-<li>
-<p>ServiceAccount tokens provide audit trails (which application accessed which model)</p>
+<p>Marketing can experiment without consuming resources needed by other teams</p>
 </li>
 </ul>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_the_authentication_flow"><a class="anchor" href="#_the_authentication_flow"></a>The authentication flow</h3>
-<div class="paragraph">
-<p>When an application makes an API request to the MaaS Gateway, the request flows through multiple authentication and authorization layers:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre>Application
-  ↓ (includes Bearer token in Authorization header)
-Gateway (maas-default-gateway)
-  ↓ (routes to Authorino for authentication)
-Authorino
-  ↓ (validates JWT token signature with Kubernetes API server)
-Token Validation
-  ↓ (extracts ServiceAccount identity from token)
-RBAC Check (verifies ServiceAccount has required permissions)
-  ↓ (authorized request forwarded to backend)
-MaaS API
-  ↓ (routes to specific model)
-Model (LLMInferenceService)</pre>
-</div>
-</div>
-<div class="paragraph">
-<p>If any step fails (invalid token, expired token, insufficient permissions), the request is rejected with HTTP 401 Unauthorized or 403 Forbidden.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_jwt_tokens_vs_permanent_credentials"><a class="anchor" href="#_jwt_tokens_vs_permanent_credentials"></a>JWT tokens vs. permanent credentials</h3>
-<div class="paragraph">
-<p>MaaS uses JWT (JSON Web Token) tokens for authentication:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><strong>Time-limited</strong>: Tokens expire after a configured duration (1 hour, 24 hours, etc.)</p>
-<div class="ulist">
-<ul>
-<li>
-<p>Reduces risk if a token is leaked (it expires automatically)</p>
-</li>
-<li>
-<p>Forces applications to rotate tokens periodically</p>
-</li>
-</ul>
-</div>
-</li>
-<li>
-<p><strong>Revocable</strong>: Delete the ServiceAccount to immediately revoke all its tokens</p>
-<div class="ulist">
-<ul>
-<li>
-<p>No need to change passwords or regenerate credentials</p>
-</li>
-<li>
-<p>Instant revocation across all applications using that ServiceAccount</p>
-</li>
-</ul>
-</div>
-</li>
-<li>
-<p><strong>Auditable</strong>: Every API request includes the ServiceAccount identity</p>
-<div class="ulist">
-<ul>
-<li>
-<p>OpenShift audit logs track which ServiceAccount made which requests</p>
-</li>
-<li>
-<p>Authorino and MaaS API logs provide detailed request histories</p>
-</li>
-</ul>
-</div>
-</li>
-</ul>
-</div>
-<div class="admonitionblock note">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-note" title="Note"></i>
-</td>
-<td class="content">
-<div class="paragraph">
-<p>For detailed information on ServiceAccount authentication patterns, see the official Red Hat documentation:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><a href="../../../reference/Distributed_Inference-en-US/full-document.md#making-authenticated-inference-requests">Distributed Inference Guide - Section 2.7: Making Authenticated Requests</a></p>
-</li>
-<li>
-<p><a href="../../../reference/Deploying_models-en-US/full-document.md#token-authentication">Deploying Models Guide - Section 4.1-4.4: Token Authentication</a></p>
-</li>
-</ul>
-</div>
-</td>
-</tr>
-</table>
 </div>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_creating_serviceaccounts"><a class="anchor" href="#_creating_serviceaccounts"></a>Creating ServiceAccounts</h2>
+<h2 id="_creating_maas_tier_custom_resources"><a class="anchor" href="#_creating_maas_tier_custom_resources"></a>Creating MaaS Tier custom resources</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Create a ServiceAccount for the Marketing team&#8217;s sentiment analysis application.</p>
+<p>The tier-to-group-mapping ConfigMap defines the global business rules for your entire enterprise AI factory.</p>
+</div>
+<div class="paragraph">
+<p>The core OpenShift AI backend services—specifically the maas-api server and the Gen AI Studio UI—live in the redhat-ods-applications namespace. When an AI Administrator logs into the dashboard, the UI needs to read this ConfigMap to know what tiers exist and who belongs to them.</p>
+</div>
+<div class="paragraph">
+<p>Because it is a global controller, it expects its configuration files to live in its own system namespace. If you put it in chocotech-models, the MaaS API wouldn&#8217;t know it exists, and the Gen AI Studio UI would show empty tiers.</p>
+</div>
+<hr>
+<div class="paragraph">
+<p>Deploy tier policies for Gold, Silver, and Bronze tiers.</p>
 </div>
 <div class="sect2">
-<h3 id="_exercise_1_create_serviceaccount_for_api_access"><a class="anchor" href="#_exercise_1_create_serviceaccount_for_api_access"></a>Exercise 1: Create ServiceAccount for API access</h3>
-<div class="listingblock execute">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-none hljs">oc create serviceaccount marketing-sentiment-app -n chocotech-models</code></pre>
-</div>
-</div>
+<h3 id="_exercise_1_deploy_gold_tier_policy"><a class="anchor" href="#_exercise_1_deploy_gold_tier_policy"></a>Exercise 1: Deploy Gold tier policy</h3>
 <div class="paragraph">
-<p>Expected output:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre>serviceaccount/marketing-sentiment-app created</pre>
-</div>
-</div>
-<div class="paragraph">
-<p>Verify the ServiceAccount was created:</p>
+<p>Create the Gold tier policy for Quality Control:</p>
 </div>
 <div class="listingblock execute">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-none hljs">oc get serviceaccount marketing-sentiment-app -n chocotech-models</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>Expected output:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre>NAME                       SECRETS   AGE
-marketing-sentiment-app    0         15s</pre>
-</div>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_what_was_created"><a class="anchor" href="#_what_was_created"></a>What was created?</h3>
-<div class="paragraph">
-<p>The <code>oc create serviceaccount</code> command created:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>A <strong>ServiceAccount</strong> resource in the <code>chocotech-models</code> namespace</p>
-</li>
-<li>
-<p>An identity that can be used to generate JWT tokens</p>
-</li>
-<li>
-<p>A principal that can be granted RBAC permissions</p>
-</li>
-</ul>
-</div>
-<div class="paragraph">
-<p>The ServiceAccount exists but currently has no permissions. You&#8217;ll grant permissions in the next section using RBAC.</p>
-</div>
-</div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_creating_rbac_roles"><a class="anchor" href="#_creating_rbac_roles"></a>Creating RBAC roles</h2>
-<div class="sectionbody">
-<div class="paragraph">
-<p>RBAC (Role-Based Access Control) defines which actions a ServiceAccount can perform on which resources.</p>
-</div>
-<div class="sect2">
-<h3 id="_exercise_2_create_role_for_model_inference_access"><a class="anchor" href="#_exercise_2_create_role_for_model_inference_access"></a>Exercise 2: Create Role for model inference access</h3>
-<div class="paragraph">
-<p>The Marketing team&#8217;s application needs to discover available models and send inference requests. This requires <code>get</code> and <code>list</code> permissions on <code>LLMInferenceService</code> resources.</p>
-</div>
-<div class="paragraph">
-<p>Create a Role that grants read-only access to LLMInferenceService resources:</p>
-</div>
-<div class="listingblock execute">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-none hljs">oc apply -f - &lt;&lt;EOF
-apiVersion: rbac.authorization.k8s.io/v1
-kind: Role
+<pre class="highlightjs highlight"><code class="language-none hljs">cat &lt;&lt;EOF | oc apply -f -
+apiVersion: v1
+kind: ConfigMap
 metadata:
-  name: llm-inference-viewer
-  namespace: chocotech-models
-rules:
-- apiGroups: ["serving.kserve.io"]
-  resources: ["llminferenceservices"]
-  verbs: ["get", "list"]
-- apiGroups: ["serving.kserve.io"]
-  resources: ["llminferenceservices/status"]
-  verbs: ["get"]
+  name: tier-to-group-mapping
+  namespace: redhat-ods-applications
+data:
+  tiers: |
+    - name: gold-tier
+      description: Quality Control Production
+      level: 100
+      groups:
+      - chocotech-quality-control
 EOF</code></pre>
 </div>
 </div>
@@ -457,105 +401,118 @@ EOF</code></pre>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre>role.rbac.authorization.k8s.io/llm-inference-viewer created</pre>
+<pre>ratelimitpolicy.kuadrant.io/gold-tier-rate-limit created</pre>
 </div>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_understanding_the_rbac_role"><a class="anchor" href="#_understanding_the_rbac_role"></a>Understanding the RBAC role</h3>
-<div class="paragraph">
-<p>Let&#8217;s break down the Role definition:</p>
-</div>
+<h3 id="_understanding_the_gold_tier_definition"><a class="anchor" href="#_understanding_the_gold_tier_definition"></a>Understanding the Gold tier definition</h3>
 <div class="ulist">
 <ul>
 <li>
-<p><code>apiGroups: ["serving.kserve.io"]</code></p>
+<p><code>level: 100</code>: Highest priority level for request processing</p>
 <div class="ulist">
 <ul>
 <li>
-<p>The API group for KServe resources</p>
+<p>During peak demand, Gold tier requests are processed before Silver and Bronze</p>
 </li>
 <li>
-<p>LLMInferenceService is a custom resource provided by KServe</p>
+<p>Ensures Quality Control&#8217;s production defect detection system gets guaranteed resources</p>
 </li>
 </ul>
 </div>
 </li>
 <li>
-<p><code>resources: ["llminferenceservices"]</code></p>
+<p><code>rateLimit.requestsPerMinute: 100</code>: Maximum 100 inference requests per minute</p>
 <div class="ulist">
 <ul>
 <li>
-<p>The specific resource type this Role grants access to</p>
+<p>Prevents excessive burst traffic that could overwhelm GPU resources</p>
 </li>
 <li>
-<p>Corresponds to deployed models in the namespace</p>
+<p>Allows steady production throughput</p>
 </li>
 </ul>
 </div>
 </li>
 <li>
-<p><code>verbs: ["get", "list"]</code></p>
+<p><code>quota.tokensPerHour: 50000</code>: Maximum 50,000 LLM tokens per hour</p>
 <div class="ulist">
 <ul>
 <li>
-<p><code>get</code>: Retrieve a specific LLMInferenceService by name</p>
+<p>Tokens = input tokens + output tokens for all requests in the past hour</p>
 </li>
 <li>
-<p><code>list</code>: List all LLMInferenceService resources in the namespace</p>
+<p>For context: GPT-3.5 level model processes ~500 tokens per request</p>
 </li>
 <li>
-<p>Notably <strong>excludes</strong> <code>create</code>, <code>update</code>, <code>delete</code> (read-only access)</p>
+<p>50,000 tokens ≈ 100 requests of 500 tokens each</p>
 </li>
 </ul>
 </div>
 </li>
 <li>
-<p><code>resources: ["llminferenceservices/status"]</code></p>
+<p><code>groups: [chocotech-quality-control]</code>: Maps this tier to the OpenShift group</p>
 <div class="ulist">
 <ul>
 <li>
-<p>Access to the status subresource</p>
+<p>Members of <code>chocotech-quality-control</code> group automatically belong to Gold tier</p>
 </li>
 <li>
-<p>Allows checking model deployment status (ready, loading, error)</p>
+<p>When they generate tokens from ServiceAccounts, requests count against Gold tier limits</p>
 </li>
 </ul>
 </div>
-</li>
-</ul>
-</div>
-<div class="paragraph">
-<p>This Role grants the <strong>minimum permissions</strong> required for model inference. It does NOT grant:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>Model deployment permissions (<code>create</code>, <code>update</code>, <code>delete</code> verbs)</p>
-</li>
-<li>
-<p>Access to other resource types (pods, services, secrets)</p>
-</li>
-<li>
-<p>Access to other namespaces (Role is namespace-scoped)</p>
-</li>
-<li>
-<p>Cluster-wide permissions (ClusterRole would be required)</p>
 </li>
 </ul>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_exercise_3_create_rolebinding_to_connect_serviceaccount_to_role"><a class="anchor" href="#_exercise_3_create_rolebinding_to_connect_serviceaccount_to_role"></a>Exercise 3: Create RoleBinding to connect ServiceAccount to Role</h3>
+<h3 id="_architectural_note_the_ui_is_a_one_way_street"><a class="anchor" href="#_architectural_note_the_ui_is_a_one_way_street"></a>Architectural Note: The UI is a One-Way Street</h3>
 <div class="paragraph">
-<p>A Role defines permissions, but doesn&#8217;t grant them to anyone. A RoleBinding connects a ServiceAccount to a Role.</p>
+<p>If you define a Kuadrant <code>RateLimitPolicy</code> using CEL via the CLI, it will work perfectly at the network edge. However, <strong>it will not appear in the Gen AI Studio UI.</strong></p>
+</div>
+<div class="paragraph">
+<p>The OpenShift AI dashboard is an abstraction layer. It manages its Tiers in its own backend and <strong>pushes</strong> basic YAML down to Kuadrant. It does not read manual Kuadrant policies <strong>up</strong> from the cluster.</p>
+</div>
+<div class="paragraph">
+<p><strong>How to position this to customers:</strong></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>The AI Admin (UI):</strong> Uses the Gen AI Studio to create standard, easy-to-read "Free/Premium/Enterprise" tiers.</p>
+</li>
+<li>
+<p><strong>The Platform Engineer (CLI):</strong> Writes "Out-of-Band" or "Shadow" Kuadrant policies via GitOps when the business requires advanced logic that the UI cannot support (e.g., rate-limiting based on specific JWT claims or routing paths).</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Both work simultaneously, but the Platform Engineer must document their custom GitOps policies, as the AI Admin will not see them in their dashboard.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_exercise_2_deploy_silver_tier_policy"><a class="anchor" href="#_exercise_2_deploy_silver_tier_policy"></a>Exercise 2: Deploy Silver tier policy</h3>
+<div class="paragraph">
+<p>Create the Silver tier policy for R&amp;D:</p>
 </div>
 <div class="listingblock execute">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-none hljs">oc create rolebinding marketing-sentiment-app-binding \
-  --role=llm-inference-viewer \
-  --serviceaccount=chocotech-models:marketing-sentiment-app \
-  -n chocotech-models</code></pre>
+<pre class="highlightjs highlight"><code class="language-none hljs">cat &lt;&lt;EOF | oc apply -f -
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: tier-to-group-mapping
+  namespace: redhat-ods-applications
+data:
+  tiers: |
+    - name: silver-tier
+      description: R&amp;D Development
+      level: 50
+      groups:
+      - chocotech-rd
+EOF</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -563,15 +520,50 @@ EOF</code></pre>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre>rolebinding.rbac.authorization.k8s.io/marketing-sentiment-app-binding created</pre>
+<pre>ratelimitpolicy.kuadrant.io/silver-tier-rate-limit created</pre>
 </div>
 </div>
 <div class="paragraph">
-<p>Verify the RoleBinding:</p>
+<p>The Silver tier provides balanced resources:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Half the rate limit of Gold tier (1000) vs 10000 requests/minute)</p>
+</li>
+<li>
+<p>1/10th the quota of Gold tier (60,000 vs 600,000 tokens/hour)</p>
+</li>
+<li>
+<p>Medium priority (25) - processed after Gold, before Bronze</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>This allocation is appropriate for R&amp;D&#8217;s recipe optimization work, which is important but not production-critical.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_exercise_3_deploy_bronze_tier_policy"><a class="anchor" href="#_exercise_3_deploy_bronze_tier_policy"></a>Exercise 3: Deploy Bronze tier policy</h3>
+<div class="paragraph">
+<p>Create the Bronze tier policy for Marketing:</p>
 </div>
 <div class="listingblock execute">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-none hljs">oc describe rolebinding marketing-sentiment-app-binding -n chocotech-models</code></pre>
+<pre class="highlightjs highlight"><code class="language-none hljs">cat &lt;&lt;EOF | oc apply -f -
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: tier-to-group-mapping
+  namespace: redhat-ods-applications
+data:
+  tiers: |
+    - name: bronze-tier
+      description: Marketing Exploratory
+      level: 10
+      groups:
+      - chocotech-marketing
+EOF</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -579,86 +571,106 @@ EOF</code></pre>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre>Name:         marketing-sentiment-app-binding
-Namespace:    chocotech-models
-Labels:       &lt;none&gt;
-Annotations:  &lt;none&gt;
-Role:
-  Kind:  Role
-  Name:  llm-inference-viewer
-Subjects:
-  Kind            Name                      Namespace
-  ----            ----                      ---------
-  ServiceAccount  marketing-sentiment-app   chocotech-models</pre>
+<pre>configmap/tier-to-group-mapping configured</pre>
 </div>
+</div>
+<div class="paragraph">
+<p>The Bronze tier provides cost-controlled resources:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Conservative rate limit (100 requests/minute) for exploratory work</p>
+</li>
+<li>
+<p>Lower quota (10,000 tokens/hour) to control costs</p>
+</li>
+<li>
+<p>Lowest priority (10) - processed after Gold and Silver tiers</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>This allocation is appropriate for Marketing&#8217;s sentiment analysis experiments, which are exploratory and cost-sensitive.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_the_rbac_authorization_chain"><a class="anchor" href="#_the_rbac_authorization_chain"></a>The RBAC authorization chain</h3>
+<h3 id="_exercise_4_verify_tier_policies"><a class="anchor" href="#_exercise_4_verify_tier_policies"></a>Exercise 4: Verify tier policies</h3>
 <div class="paragraph">
-<p>The complete authorization chain is now:</p>
+<p>List all deployed Tier resources:</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">oc get ratelimitpolicies -A</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Expected output:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre>ServiceAccount: marketing-sentiment-app
-  ↓ (bound via RoleBinding)
-RoleBinding: marketing-sentiment-app-binding
-  ↓ (references)
-Role: llm-inference-viewer
-  ↓ (grants permissions)
-Permissions: get/list LLMInferenceService resources</pre>
+<pre>NAMESPACE             NAME                     AGE
+openshift-operators   gold-tier-rate-limit     13m
+openshift-operators   silver-tier-rate-limit   6m28s</pre>
 </div>
 </div>
 <div class="paragraph">
-<p>When the MaaS API receives a request with a JWT token from <code>marketing-sentiment-app</code>, Kubernetes RBAC checks:</p>
+<p>Describe the Gold tier to see full details:</p>
 </div>
-<div class="olist arabic">
-<ol class="arabic">
-<li>
-<p>Is the token valid and not expired?</p>
-</li>
-<li>
-<p>Which ServiceAccount does this token belong to?</p>
-</li>
-<li>
-<p>Which RoleBindings reference this ServiceAccount?</p>
-</li>
-<li>
-<p>Which Roles do those RoleBindings grant?</p>
-</li>
-<li>
-<p>Do those Roles include the requested permission (e.g., <code>get llminferenceservices</code>)?</p>
-</li>
-</ol>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">oc get ratelimitpolicy gold-tier-rate-limit -n openshift-operators -o yaml</code></pre>
+</div>
 </div>
 <div class="paragraph">
-<p>If all checks pass, the request is authorized.</p>
+<p>Expected output:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>apiVersion: kuadrant.io/v1
+kind: RateLimitPolicy
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"kuadrant.io/v1","kind":"RateLimitPolicy","metadata":{"annotations":{"openshift.io/display-name":"Gold Tier Model"},"name":"gold-tier-rate-limit","namespace":"chocotech-models"},"spec":{"limits":{"gold-request-limit":{"rates":[{"limit":10000,"window":"1m"}],"when":[{"predicate":"auth.identity.groups.contains('chocotech-quality-control')"}]}},"targetRef":{"group":"gateway.networking.k8s.io","kind":"Gateway","name":"maas-default-gateway"}}}
+    openshift.io/display-name: Gold Tier Model
+  creationTimestamp: "2026-05-06T19:41:29Z"
+  generation: 1
+  name: gold-tier-rate-limit
+  namespace: chocotech-models
+  resourceVersion: "309003"
+  uid: bebf00ac-efc1-45c0-8e25-75dd181c28df
+spec:
+  limits:
+    gold-request-limit:
+      rates:
+      - limit: 10000
+        window: 1m
+      when:
+      - predicate: auth.identity.groups.contains('chocotech-quality-control')
+...</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>All three tiers should be present with correct configuration.</p>
 </div>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_generating_and_testing_api_tokens"><a class="anchor" href="#_generating_and_testing_api_tokens"></a>Generating and testing API tokens</h2>
+<h2 id="_configuring_authorino_authentication_policies"><a class="anchor" href="#_configuring_authorino_authentication_policies"></a>Configuring Authorino authentication policies</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>With RBAC configured, generate a JWT token from the ServiceAccount and test authentication against the MaaS Gateway.</p>
+<p>Authorino validates JWT tokens and enforces authentication policies. Verify the MaaS operator created the necessary AuthConfig resources.</p>
 </div>
 <div class="sect2">
-<h3 id="_exercise_4_generate_jwt_token_from_serviceaccount"><a class="anchor" href="#_exercise_4_generate_jwt_token_from_serviceaccount"></a>Exercise 4: Generate JWT token from ServiceAccount</h3>
+<h3 id="_exercise_5_verify_authorino_authconfig"><a class="anchor" href="#_exercise_5_verify_authorino_authconfig"></a>Exercise 5: Verify Authorino AuthConfig</h3>
 <div class="paragraph">
-<p>Generate a 1-hour JWT token:</p>
+<p>The MaaS operator should have created an AuthConfig for token authentication when you enabled MaaS in Module 1. Verify it exists:</p>
 </div>
 <div class="listingblock execute">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-none hljs">TOKEN=$(oc create token marketing-sentiment-app -n chocotech-models --duration=1h)</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>Display the first 50 characters of the token:</p>
-</div>
-<div class="listingblock execute">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-none hljs">echo $TOKEN | cut -c1-50</code></pre>
+<pre class="highlightjs highlight"><code class="language-none hljs">oc get authpolicies -A</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -666,59 +678,170 @@ Permissions: get/list LLMInferenceService resources</pre>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre>eyJhbGciOiJSUzI1NiIsImtpZCI6IjRHN3BzeXQ3bkw5Ny1pZ</pre>
+<pre>NAMESPACE                 NAME                   AGE
+openshift-ingress         gateway-auth-policy    3h2m
+redhat-ods-applications   maas-api-auth-policy   3h2m</pre>
 </div>
+</div>
+<div class="paragraph">
+<p>Describe the AuthConfig to see its configuration:</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">oc describe authpolicies  maas-api-auth-policy -n redhat-ods-applications</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Expected output (partial):</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>Name:         maas-api-auth-policy
+Namespace:    redhat-ods-applications
+Labels:       app.kubernetes.io/component=api
+              app.kubernetes.io/name=maas-api
+              app.kubernetes.io/part-of=models-as-a-service
+              app.opendatahub.io/modelsasservice=true
+              platform.opendatahub.io/part-of=modelsasservice
+Annotations:  internal.config.kubernetes.io/previousKinds: AuthPolicy
+              internal.config.kubernetes.io/previousNames: maas-api-auth-policy
+              internal.config.kubernetes.io/previousNamespaces: opendatahub
+              platform.opendatahub.io/instance.generation: 1
+              platform.opendatahub.io/instance.name: default-modelsasservice
+              platform.opendatahub.io/instance.uid: 576042f3-01c0-4663-aa50-ff88099601cc
+              platform.opendatahub.io/type: OpenShift AI Self-Managed
+              platform.opendatahub.io/version: 3.3.2
+API Version:  kuadrant.io/v1
+Kind:         AuthPolicy</pre>
+</div>
+</div>
+<details>
+<summary class="title">Click to reveal the full response</summary>
+<div class="content">
+<div class="literalblock">
+<div class="content">
+<pre>Name:         maas-api-auth-policy
+Namespace:    redhat-ods-applications
+Labels:       app.kubernetes.io/component=api
+              app.kubernetes.io/name=maas-api
+              app.kubernetes.io/part-of=models-as-a-service
+              app.opendatahub.io/modelsasservice=true
+              platform.opendatahub.io/part-of=modelsasservice
+Annotations:  internal.config.kubernetes.io/previousKinds: AuthPolicy
+              internal.config.kubernetes.io/previousNames: maas-api-auth-policy
+              internal.config.kubernetes.io/previousNamespaces: opendatahub
+              platform.opendatahub.io/instance.generation: 1
+              platform.opendatahub.io/instance.name: default-modelsasservice
+              platform.opendatahub.io/instance.uid: 576042f3-01c0-4663-aa50-ff88099601cc
+              platform.opendatahub.io/type: OpenShift AI Self-Managed
+              platform.opendatahub.io/version: 3.3.2
+API Version:  kuadrant.io/v1
+Kind:         AuthPolicy
+Metadata:
+  Creation Timestamp:  2026-05-06T16:43:30Z
+  Generation:          1
+  Owner References:
+    API Version:           components.platform.opendatahub.io/v1alpha1
+    Block Owner Deletion:  true
+    Controller:            true
+    Kind:                  ModelsAsService
+    Name:                  default-modelsasservice
+    UID:                   576042f3-01c0-4663-aa50-ff88099601cc
+  Resource Version:        93009
+  UID:                     99dc609a-6277-4b6b-8a02-906a2c45981c
+Spec:
+  Rules:
+    Authentication:
+      Openshift - Identities:
+        Kubernetes Token Review:
+          Audiences:
+            https://kubernetes.default.svc
+            maas-default-gateway-sa
+        Metrics:   false
+        Priority:  0
+    Response:
+      Success:
+        Headers:
+          X - Maa S - Group:
+            Metrics:  false
+            Plain:
+              Selector:  auth.identity.user.groups.@tostr
+            Priority:    0
+          X - Maa S - Username:
+            Metrics:  false
+            Plain:
+              Selector:  auth.identity.user.username
+            Priority:    0
+  Target Ref:
+    Group:  gateway.networking.k8s.io
+    Kind:   HTTPRoute
+    Name:   maas-api-route
+Status:
+  Conditions:
+    Last Transition Time:  2026-05-06T16:43:30Z
+    Message:               AuthPolicy has been accepted
+    Reason:                Accepted
+    Status:                True
+    Type:                  Accepted
+    Last Transition Time:  2026-05-06T16:43:31Z
+    Message:               AuthPolicy has been successfully enforced
+    Reason:                Enforced
+    Status:                True
+    Type:                  Enforced
+  Observed Generation:     1
+Events:                    &lt;none&gt;</pre>
+</div>
+</div>
+</div>
+</details>
+<hr>
+</div>
+<div class="sect2">
+<h3 id="_understanding_the_authconfig"><a class="anchor" href="#_understanding_the_authconfig"></a>Understanding the AuthConfig</h3>
+<div class="paragraph">
+<p>This AuthConfig provides:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Host binding</strong>: Applies to requests sent to the MaaS Gateway hostname</p>
+</li>
+<li>
+<p><strong>Token validation</strong>: Uses Kubernetes TokenReview API to validate JWT signatures</p>
+<div class="ulist">
+<ul>
+<li>
+<p>Ensures tokens are signed by the Kubernetes API server</p>
+</li>
+<li>
+<p>Rejects tampered or forged tokens</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p><strong>ServiceAccount extraction</strong>: Extracts ServiceAccount identity from validated tokens</p>
+</li>
+<li>
+<p><strong>RBAC authorization</strong>: Checks if the ServiceAccount has required permissions</p>
+<div class="ulist">
+<ul>
+<li>
+<p>Uses Kubernetes SubjectAccessReview API</p>
+</li>
+<li>
+<p>Enforces the RBAC Roles and RoleBindings you created in Section 2.2</p>
+</li>
+</ul>
+</div>
+</li>
+</ul>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_understanding_jwt_token_properties"><a class="anchor" href="#_understanding_jwt_token_properties"></a>Understanding JWT token properties</h3>
+<h3 id="_what_if_authconfig_is_missing"><a class="anchor" href="#_what_if_authconfig_is_missing"></a>What if AuthConfig is missing?</h3>
 <div class="paragraph">
-<p>The generated token has these properties:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><strong>Format</strong>: JWT (JSON Web Token) - a cryptographically signed JSON payload</p>
-</li>
-<li>
-<p><strong>Duration</strong>: 1 hour (configurable: <code>1h</code>, <code>24h</code>, <code>168h</code> for 7 days)</p>
-</li>
-<li>
-<p><strong>Encoding</strong>: Base64-encoded JSON with three parts: header, payload, signature</p>
-</li>
-<li>
-<p><strong>Signature</strong>: Signed by the Kubernetes API server&#8217;s private key</p>
-<div class="ulist">
-<ul>
-<li>
-<p>Authorino validates the signature using the API server&#8217;s public key</p>
-</li>
-<li>
-<p>Tampered tokens are rejected (signature verification fails)</p>
-</li>
-</ul>
-</div>
-</li>
-</ul>
-</div>
-<div class="paragraph">
-<p>The token includes:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>ServiceAccount identity (<code>system:serviceaccount:chocotech-models:marketing-sentiment-app</code>)</p>
-</li>
-<li>
-<p>Expiration timestamp (<code>exp</code> claim)</p>
-</li>
-<li>
-<p>Issuer (<code>kubernetes/serviceaccount</code>)</p>
-</li>
-<li>
-<p>Audience (<code>aud</code> claim - who the token is intended for)</p>
-</li>
-</ul>
+<p>If the <code>oc get authconfig</code> command returns "No resources found", the MaaS operator may not have created it automatically. Recreate it manually:</p>
 </div>
 <div class="admonitionblock warning">
 <table>
@@ -728,307 +851,223 @@ Permissions: get/list LLMInferenceService resources</pre>
 </td>
 <td class="content">
 <div class="paragraph">
-<p>Never log or display full tokens in production. Treat tokens like passwords. The <code>cut -c1-50</code> command is for lab verification only.</p>
+<p>In most cases, the AuthConfig should exist. Only recreate if it&#8217;s genuinely missing.</p>
 </div>
 </td>
 </tr>
 </table>
 </div>
-</div>
-<div class="sect2">
-<h3 id="_exercise_5_test_token_authentication"><a class="anchor" href="#_exercise_5_test_token_authentication"></a>Exercise 5: Test token authentication</h3>
-<div class="paragraph">
-<p>Test the token by calling the MaaS Gateway&#8217;s <code>/v1/models</code> endpoint:</p>
-</div>
-<div class="paragraph">
-<p>First, get the Gateway hostname:</p>
-</div>
 <div class="listingblock execute">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-none hljs">GATEWAY_HOST=$(oc get gateway maas-default-gateway -n openshift-ingress -o jsonpath='{.status.addresses[0].value}')
-echo "Gateway host: $GATEWAY_HOST"</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>Expected output:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre>Gateway host: maas-default-gateway-redhat-ods-applications.apps.cluster.example.com</pre>
-</div>
-</div>
-<div class="paragraph">
-<p>Test authentication with the token:</p>
-</div>
-<div class="listingblock execute">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-none hljs">curl -s -w "\nHTTP Status: %{http_code}\n" \
-  http://$GATEWAY_HOST/v1/models \
-  -H "Authorization: Bearer $TOKEN" \
-  -k</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>Expected output:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-json hljs" data-lang="json">{
-  "object": "list",
-  "data": []
-}
-HTTP Status: 200</code></pre>
-</div>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_understanding_the_test_results"><a class="anchor" href="#_understanding_the_test_results"></a>Understanding the test results</h3>
-<div class="paragraph">
-<p>Success indicators:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><strong>HTTP 200 status</strong>: Authentication successful</p>
-<div class="ulist">
-<ul>
-<li>
-<p>Token was valid and not expired</p>
-</li>
-<li>
-<p>Token signature verified by Authorino</p>
-</li>
-<li>
-<p>ServiceAccount authorized via RBAC</p>
-</li>
-</ul>
-</div>
-</li>
-<li>
-<p><strong>Empty <code>data</code> array</strong>: No models deployed yet</p>
-<div class="ulist">
-<ul>
-<li>
-<p>This is expected - models will be deployed in Module 3</p>
-</li>
-<li>
-<p>The endpoint is working correctly (authentication passed)</p>
-</li>
-</ul>
-</div>
-</li>
-<li>
-<p><strong>No "401 Unauthorized" error</strong>: Authentication succeeded</p>
-</li>
-</ul>
-</div>
-<div class="paragraph">
-<p>If you see <code>HTTP Status: 401</code>, this indicates an authentication failure. Common causes:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>Token expired (regenerate with <code>oc create token</code>)</p>
-</li>
-<li>
-<p>RBAC not configured correctly (verify RoleBinding exists)</p>
-</li>
-<li>
-<p>Authorino not processing tokens (check in Section 2.3)</p>
-</li>
-</ul>
-</div>
-<div class="admonitionblock tip">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-tip" title="Tip"></i>
-</td>
-<td class="content">
-<div class="paragraph">
-<p>The <code>-k</code> flag tells curl to accept self-signed certificates (common in lab environments). In production with valid TLS certificates, omit the <code>-k</code> flag.</p>
-</div>
-</td>
-</tr>
-</table>
-</div>
-</div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_token_security_best_practices"><a class="anchor" href="#_token_security_best_practices"></a>Token security best practices</h2>
-<div class="sectionbody">
-<div class="paragraph">
-<p>When using ServiceAccount tokens in production applications, follow these security guidelines:</p>
-</div>
-<div class="sect2">
-<h3 id="_short_lived_tokens"><a class="anchor" href="#_short_lived_tokens"></a>Short-lived tokens</h3>
-<div class="ulist">
-<ul>
-<li>
-<p><strong>Testing/development</strong>: 1-hour duration (<code>--duration=1h</code>)</p>
-</li>
-<li>
-<p><strong>Production applications</strong>: 24-hour duration (<code>--duration=24h</code>)</p>
-</li>
-<li>
-<p><strong>Never</strong>: Infinite duration tokens (tokens should always expire)</p>
-</li>
-</ul>
-</div>
-<div class="paragraph">
-<p>Shorter durations reduce the window of opportunity if a token is compromised.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_scoped_permissions"><a class="anchor" href="#_scoped_permissions"></a>Scoped permissions</h3>
-<div class="paragraph">
-<p>Grant the minimum required permissions:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><strong>Read-only inference</strong>: <code>get</code> and <code>list</code> verbs only (like the <code>llm-inference-viewer</code> Role)</p>
-</li>
-<li>
-<p><strong>Model deployment</strong>: Add <code>create</code>, <code>update</code>, <code>delete</code> verbs only if needed</p>
-</li>
-<li>
-<p><strong>Namespace-scoped</strong>: Use Role (not ClusterRole) to limit access to a single namespace</p>
-</li>
-</ul>
-</div>
-<div class="paragraph">
-<p>Never grant <code>cluster-admin</code> or <code>*</code> permissions to ServiceAccounts used for model inference.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_token_rotation"><a class="anchor" href="#_token_rotation"></a>Token rotation</h3>
-<div class="paragraph">
-<p>Regenerate tokens periodically rather than reusing the same token indefinitely:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><strong>Application startup</strong>: Generate a new token when the application starts</p>
-</li>
-<li>
-<p><strong>Periodic rotation</strong>: Regenerate tokens every 24 hours</p>
-</li>
-<li>
-<p><strong>Never hardcode</strong>: Don&#8217;t embed tokens in source code or container images</p>
-</li>
-</ul>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_audit_trails"><a class="anchor" href="#_audit_trails"></a>Audit trails</h3>
-<div class="paragraph">
-<p>All token usage is logged:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><strong>OpenShift audit logs</strong>: Track ServiceAccount token generation (<code>oc create token</code>)</p>
-</li>
-<li>
-<p><strong>Authorino logs</strong>: Log authentication attempts (successes and failures)</p>
-</li>
-<li>
-<p><strong>MaaS API logs</strong>: Log inference requests with ServiceAccount identity</p>
-</li>
-</ul>
-</div>
-<div class="paragraph">
-<p>Use these logs to detect unusual access patterns or compromised tokens.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_token_revocation"><a class="anchor" href="#_token_revocation"></a>Token revocation</h3>
-<div class="paragraph">
-<p>To immediately revoke all tokens for a ServiceAccount:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Delete the ServiceAccount (revokes all tokens instantly)
-oc delete serviceaccount marketing-sentiment-app -n chocotech-models
-
-# Recreate the ServiceAccount (old tokens are now invalid)
-oc create serviceaccount marketing-sentiment-app -n chocotech-models
-
-# Recreate the RoleBinding
-oc create rolebinding marketing-sentiment-app-binding \
-  --role=llm-inference-viewer \
-  --serviceaccount=chocotech-models:marketing-sentiment-app \
-  -n chocotech-models</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>All previously generated tokens for the old ServiceAccount are immediately invalid (signature verification fails).</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_storing_tokens_in_production"><a class="anchor" href="#_storing_tokens_in_production"></a>Storing tokens in production</h3>
-<div class="paragraph">
-<p>For production applications running in Kubernetes, store tokens in Secrets and mount them into pods:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Generate 24-hour token for production application
-oc create token marketing-sentiment-app -n chocotech-models --duration=24h &gt; /tmp/maas-token.txt
-
-# Store token in a Kubernetes Secret
-oc create secret generic marketing-api-token \
-  --from-file=token=/tmp/maas-token.txt \
-  -n chocotech-models
-
-# Clean up temporary file
-rm /tmp/maas-token.txt</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>In your application Deployment, mount the Secret as a volume:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">apiVersion: apps/v1
-kind: Deployment
+<pre class="highlightjs highlight"><code class="language-none hljs"># Only run this if AuthConfig does not exist
+oc apply -f - &lt;&lt;EOF
+apiVersion: authorino.kuadrant.io/v1beta2
+kind: AuthConfig
 metadata:
-  name: sentiment-analyzer
+  name: maas-auth
+  namespace: redhat-ods-applications
 spec:
-  template:
-    spec:
-      containers:
-      - name: app
-        image: quay.io/chocotech/sentiment-analyzer:latest
-        volumeMounts:
-        - name: maas-token
-          mountPath: /var/run/secrets/maas
-          readOnly: true
-      volumes:
-      - name: maas-token
-        secret:
-          secretName: marketing-api-token</code></pre>
+  hosts:
+  - maas-default-gateway-redhat-ods-applications.apps.cluster.example.com
+  authentication:
+    "k8s-service-account-tokens":
+      kubernetesTokenReview:
+        audiences:
+        - https://kubernetes.default.svc
+  authorization:
+    "k8s-rbac":
+      kubernetesSubjectAccessReview:
+        user:
+          selector: auth.identity.user.username
+EOF</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>The application reads the token from <code>/var/run/secrets/maas/token</code> at runtime.</p>
+<p>Replace <code>cluster.example.com</code> with your actual cluster domain.</p>
 </div>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_verification"><a class="anchor" href="#_verification"></a>Verification</h2>
+<h2 id="_verifying_governance_component_health"><a class="anchor" href="#_verifying_governance_component_health"></a>Verifying governance component health</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Confirm all RBAC and authentication components are configured correctly.</p>
+<p>Verify all governance components (Kuadrant, Authorino, Limitador) are deployed and healthy.</p>
 </div>
 <div class="sect2">
-<h3 id="_verification_checklist"><a class="anchor" href="#_verification_checklist"></a>Verification checklist</h3>
+<h3 id="_exercise_6_verify_kuadrant_components"><a class="anchor" href="#_exercise_6_verify_kuadrant_components"></a>Exercise 6: Verify Kuadrant components</h3>
+<div class="paragraph">
+<p>Check Authorino pods (authentication):</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">oc get pods -n kuadrant-system | grep authorino</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Expected output:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>authorino-abc123                 2/2     Running   0          20m</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Check Limitador pods (rate limiting):</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">oc get pods -n kuadrant-system | grep limitador</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Expected output:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>limitador-xyz789                 1/1     Running   0          20m</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Check Kuadrant operator:</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">oc get pods -n openshift-operators | grep kuadrant</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Expected output:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>kuadrant-operator-controller-manager-def456   2/2     Running   0          25m</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>All pods should show <code>Running</code> status with all containers ready (<code>2/2</code> or <code>1/1</code>).</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_what_if_pods_are_not_running"><a class="anchor" href="#_what_if_pods_are_not_running"></a>What if pods are not Running?</h3>
+<div class="paragraph">
+<p>If any pod shows <code>CrashLoopBackOff</code>, <code>ImagePullBackOff</code>, or <code>Pending</code>:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Check pod events:</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc describe pod &lt;pod-name&gt; -n &lt;namespace&gt;</code></pre>
+</div>
+</div>
+</li>
+<li>
+<p>Check pod logs:</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc logs &lt;pod-name&gt; -n &lt;namespace&gt;</code></pre>
+</div>
+</div>
+</li>
+<li>
+<p>Common issues:</p>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Image pull errors</strong>: Network connectivity to quay.io</p>
+</li>
+<li>
+<p><strong>Resource constraints</strong>: Insufficient CPU or memory on nodes</p>
+</li>
+<li>
+<p><strong>Configuration errors</strong>: Invalid AuthConfig or Kuadrant resources</p>
+</li>
+</ul>
+</div>
+</li>
+</ol>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_exercise_7_verify_gateway_integration"><a class="anchor" href="#_exercise_7_verify_gateway_integration"></a>Exercise 7: Verify Gateway integration</h3>
+<div class="paragraph">
+<p>Check Gateway status:</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">oc get gateway maas-default-gateway -n openshift-ingress</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Expected output:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>NAME                   CLASS                        ADDRESS        PROGRAMMED   AGE
+maas-default-gateway   data-science-gateway-class   10.10.10.200   True         3h16m</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The <code>PROGRAMMED=True</code> status indicates the Gateway is configured and operational.</p>
+</div>
+<div class="paragraph">
+<p>Verify Gateway has AuthPolicy attached:</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">oc get authpolicy -n redhat-ods-applications</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Expected output:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>NAME              READY   STATUS
+maas-auth-policy  True    AuthScheme ready</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>If no AuthPolicy exists, this is expected - the MaaS operator will create it when models are deployed. The important verification is that Authorino and the AuthConfig exist.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_pre_deployment_readiness_checklist"><a class="anchor" href="#_pre_deployment_readiness_checklist"></a>Pre-deployment readiness checklist</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Before proceeding to Module 3 (model deployment), verify all governance components are in place.</p>
+</div>
+<div class="sect2">
+<h3 id="_complete_the_readiness_checklist"><a class="anchor" href="#_complete_the_readiness_checklist"></a>Complete the readiness checklist</h3>
+<div class="paragraph">
+<p>Work through each section and confirm all items:</p>
+</div>
+<div class="sect3">
+<h4 id="_organizational_structure"><a class="anchor" href="#_organizational_structure"></a>Organizational Structure</h4>
 <div class="ulist checklist">
 <ul class="checklist">
 <li>
-<p><i class="fa fa-square-o"></i> ServiceAccount <code>marketing-sentiment-app</code> created in <code>chocotech-models</code> namespace</p>
+<p><i class="fa fa-square-o"></i> Three business unit groups created (<code>chocotech-quality-control</code>, <code>chocotech-rd</code>, <code>chocotech-marketing</code>)</p>
+</li>
+<li>
+<p><i class="fa fa-square-o"></i> Current user is member of a business unit group</p>
+</li>
+<li>
+<p><i class="fa fa-square-o"></i> <code>chocotech-models</code> namespace exists and is labeled for MaaS (<code>maas.opendatahub.io/managed=true</code>)</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_rbac_configuration"><a class="anchor" href="#_rbac_configuration"></a>RBAC Configuration</h4>
+<div class="ulist checklist">
+<ul class="checklist">
+<li>
+<p><i class="fa fa-square-o"></i> ServiceAccount <code>marketing-sentiment-app</code> created for API access</p>
 </li>
 <li>
 <p><i class="fa fa-square-o"></i> Role <code>llm-inference-viewer</code> grants LLMInferenceService get/list permissions</p>
@@ -1036,29 +1075,103 @@ spec:
 <li>
 <p><i class="fa fa-square-o"></i> RoleBinding connects ServiceAccount to Role</p>
 </li>
+</ul>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_authentication"><a class="anchor" href="#_authentication"></a>Authentication</h4>
+<div class="ulist checklist">
+<ul class="checklist">
 <li>
 <p><i class="fa fa-square-o"></i> JWT token generated from ServiceAccount</p>
 </li>
 <li>
-<p><i class="fa fa-square-o"></i> Token authentication tested against Gateway (HTTP 200 status)</p>
+<p><i class="fa fa-square-o"></i> Token authentication tested successfully against Gateway (HTTP 200)</p>
+</li>
+<li>
+<p><i class="fa fa-square-o"></i> Authorino AuthConfig exists and references Gateway hostname</p>
 </li>
 </ul>
 </div>
+</div>
+<div class="sect3">
+<h4 id="_governance_policies"><a class="anchor" href="#_governance_policies"></a>Governance Policies</h4>
+<div class="ulist checklist">
+<ul class="checklist">
+<li>
+<p><i class="fa fa-square-o"></i> Three MaaS Tier resources deployed (gold, silver, bronze)</p>
+</li>
+<li>
+<p><i class="fa fa-square-o"></i> Each tier has rate limit (requestsPerMinute) defined</p>
+</li>
+<li>
+<p><i class="fa fa-square-o"></i> Each tier has quota (tokensPerHour) defined</p>
+</li>
+<li>
+<p><i class="fa fa-square-o"></i> Each tier is mapped to a business unit group</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_infrastructure_health"><a class="anchor" href="#_infrastructure_health"></a>Infrastructure Health</h4>
+<div class="ulist checklist">
+<ul class="checklist">
+<li>
+<p><i class="fa fa-square-o"></i> Kuadrant operator pod Running in <code>openshift-operators</code> namespace</p>
+</li>
+<li>
+<p><i class="fa fa-square-o"></i> Authorino pods Running (2/2 containers) in <code>redhat-ods-applications</code> namespace</p>
+</li>
+<li>
+<p><i class="fa fa-square-o"></i> Limitador pods Running (1/1 containers) in <code>redhat-ods-applications</code> namespace</p>
+</li>
+<li>
+<p><i class="fa fa-square-o"></i> Gateway shows <code>PROGRAMMED=True</code> status</p>
+</li>
+<li>
+<p><i class="fa fa-square-o"></i> AuthConfig exists in <code>redhat-ods-applications</code> namespace</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_dashboard_access"><a class="anchor" href="#_dashboard_access"></a>Dashboard Access</h4>
+<div class="ulist checklist">
+<ul class="checklist">
+<li>
+<p><i class="fa fa-square-o"></i> Gen AI Studio accessible via OpenShift AI dashboard</p>
+</li>
+<li>
+<p><i class="fa fa-square-o"></i> API tokens tab visible (even if model list is empty)</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_comprehensive_verification_command"><a class="anchor" href="#_comprehensive_verification_command"></a>Comprehensive verification command</h3>
 <div class="paragraph">
-<p>Run this comprehensive verification:</p>
+<p>Run this command to verify all components:</p>
 </div>
 <div class="listingblock execute">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-none hljs">echo "=== ServiceAccount ===" &amp;&amp; \
-oc get serviceaccount marketing-sentiment-app -n chocotech-models &amp;&amp; \
-echo "=== Role ===" &amp;&amp; \
-oc get role llm-inference-viewer -n chocotech-models &amp;&amp; \
-echo "=== RoleBinding ===" &amp;&amp; \
-oc describe rolebinding marketing-sentiment-app-binding -n chocotech-models | grep -E "Name:|Role:|ServiceAccount" &amp;&amp; \
-echo "=== Token Test ===" &amp;&amp; \
-TOKEN=$(oc create token marketing-sentiment-app -n chocotech-models --duration=1h) &amp;&amp; \
-GATEWAY_HOST=$(oc get gateway maas-default-gateway -n openshift-ingress -o jsonpath='{.status.addresses[0].value}') &amp;&amp; \
-curl -s -w "HTTP Status: %{http_code}\n" https://$GATEWAY_HOST/v1/models -H "Authorization: Bearer $TOKEN" -k | tail -1</code></pre>
+<pre class="highlightjs highlight"><code class="language-none hljs">echo "=== Groups ===" &amp;&amp; \
+oc get groups | grep chocotech &amp;&amp; \
+echo "=== Namespace ===" &amp;&amp; \
+oc get namespace chocotech-models --show-labels | grep maas &amp;&amp; \
+echo "=== ServiceAccount ===" &amp;&amp; \
+oc get sa -n chocotech-models | grep marketing &amp;&amp; \
+echo "=== RBAC ===" &amp;&amp; \
+oc get role,rolebinding -n chocotech-models &amp;&amp; \
+echo "=== Tiers ===" &amp;&amp; \
+oc get MaaS Tier &amp;&amp; \
+echo "=== Governance Pods ===" &amp;&amp; \
+oc get pods -n redhat-ods-applications | grep -E "authorino|limitador" &amp;&amp; \
+echo "=== Gateway ===" &amp;&amp; \
+oc get gateway -n redhat-ods-applications &amp;&amp; \
+echo "=== AuthConfig ===" &amp;&amp; \
+oc get authconfig -n redhat-ods-applications</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -1066,22 +1179,150 @@ curl -s -w "HTTP Status: %{http_code}\n" https://$GATEWAY_HOST/v1/models -H "Aut
 </div>
 <div class="listingblock">
 <div class="content">
-<pre>=== ServiceAccount ===
-NAME                       SECRETS   AGE
-marketing-sentiment-app    0         15m
-=== Role ===
-NAME                    CREATED AT
-llm-inference-viewer    2024-01-15T10:30:00Z
-=== RoleBinding ===
-Name:         marketing-sentiment-app-binding
-  Name:  llm-inference-viewer
-  ServiceAccount  marketing-sentiment-app   chocotech-models
-=== Token Test ===
-HTTP Status: 200</pre>
+<pre>=== Groups ===
+chocotech-marketing
+chocotech-quality-control
+chocotech-rd
+=== Namespace ===
+chocotech-models   Active   30m   maas.opendatahub.io/managed=true,...
+=== ServiceAccount ===
+marketing-sentiment-app    0         20m
+=== RBAC ===
+NAME                                  CREATED AT
+role.rbac.authorization.k8s.io/llm-inference-viewer   2024-01-15T10:45:00Z
+NAME                                                          ROLE                          AGE
+rolebinding.rbac.authorization.k8s.io/marketing-sentiment-app-binding   Role/llm-inference-viewer   20m
+=== Tiers ===
+NAME     DISPLAY NAME                        PRIORITY   AGE
+bronze   Bronze Tier - Exploratory Workloads 10         15m
+gold     Gold Tier - Production Workloads    100        15m
+silver   Silver Tier - Development Workloads 50         15m
+=== Governance Pods ===
+authorino-abc123                 2/2     Running   0          25m
+limitador-xyz789                 1/1     Running   0          25m
+=== Gateway ===
+NAME                   CLASS   ADDRESS                                   PROGRAMMED   AGE
+maas-default-gateway   istio   maas-default-gateway-...apps.cluster...   True         30m
+=== AuthConfig ===
+NAME        AGE
+maas-auth   25m</pre>
 </div>
 </div>
 <div class="paragraph">
-<p>All checkboxes should be complete.</p>
+<p>All items should be present and healthy.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_understanding_whats_ready_for_module_3"><a class="anchor" href="#_understanding_whats_ready_for_module_3"></a>Understanding what&#8217;s ready for Module 3</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>You&#8217;ve established a complete governance foundation. Here&#8217;s what&#8217;s in place and what&#8217;s still missing.</p>
+</div>
+<div class="sect2">
+<h3 id="_what_youve_established"><a class="anchor" href="#_what_youve_established"></a>What you&#8217;ve established</h3>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 25%;">
+<col style="width: 75%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Layer</th>
+<th class="tableblock halign-left valign-top">Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Identity layer</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✅ OpenShift groups represent business units (Quality Control, R&amp;D, Marketing)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Authentication layer</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✅ ServiceAccounts + JWT tokens for API access (tested with HTTP 200)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Authorization layer</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✅ RBAC Roles control who can access models (get/list permissions)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Policy layer</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✅ MaaS Tier CRDs define rate limits and quotas (100/50/20 requests/min)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Enforcement layer</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✅ Authorino validates tokens, Limitador enforces rate limits (pods Running)</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>The governance architecture is complete and operational.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_whats_missing_module_3_will_add"><a class="anchor" href="#_whats_missing_module_3_will_add"></a>What&#8217;s missing (Module 3 will add)</h3>
+<div class="paragraph">
+<p>The following components are intentionally absent because no models have been deployed yet:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>No models in catalog</strong>: The <code>/v1/models</code> endpoint returns an empty array</p>
+<div class="ulist">
+<ul>
+<li>
+<p>Module 3 will deploy <code>llama3-8b</code> and <code>nemotron-8b</code> models</p>
+</li>
+<li>
+<p>Models will appear in the Gen AI Studio catalog</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p><strong>No tier annotations on models</strong>: No models exist to annotate</p>
+<div class="ulist">
+<ul>
+<li>
+<p>Module 3 will annotate models with tier names during deployment</p>
+</li>
+<li>
+<p>Example: <code>alpha.maas.opendatahub.io/tiers: '["bronze", "silver", "gold"]'</code></p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p><strong>No rate limiting triggered</strong>: No inference traffic exists to limit</p>
+<div class="ulist">
+<ul>
+<li>
+<p>Module 3 will send inference requests and verify rate limits are enforced</p>
+</li>
+<li>
+<p>You&#8217;ll see HTTP 429 responses when exceeding tier limits</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p><strong>No usage metrics</strong>: No token consumption to track</p>
+<div class="ulist">
+<ul>
+<li>
+<p>Module 3 will generate usage metrics visible in the Gen AI Studio dashboard</p>
+</li>
+<li>
+<p>Metrics will show token consumption per tier</p>
+</li>
+</ul>
+</div>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>The governance architecture is ready. Module 3 will deploy models that inherit these policies automatically.</strong></p>
 </div>
 </div>
 </div>
@@ -1090,29 +1331,131 @@ HTTP Status: 200</pre>
 <h2 id="_business_value"><a class="anchor" href="#_business_value"></a>Business value</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>By configuring ServiceAccount-based RBAC, you&#8217;ve enabled:</p>
+<p>You&#8217;ve established ChocoTech&#8217;s governance foundation that meets all the CIO&#8217;s requirements:</p>
 </div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 20%;">
+<col style="width: 40%;">
+<col style="width: 40%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">CIO Requirement</th>
+<th class="tableblock halign-left valign-top">Implementation</th>
+<th class="tableblock halign-left valign-top">Business Impact</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Production-grade access for Quality Control</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Gold tier: 100 requests/min, 50,000 tokens/hour, priority 100</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Guaranteed resources for production defect detection</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Development access for R&amp;D</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Silver tier: 50 requests/min, 25,000 tokens/hour, priority 50</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Balanced capacity for recipe optimization</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Exploratory access for Marketing</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Bronze tier: 20 requests/min, 10,000 tokens/hour, priority 10</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Cost-controlled sentiment analysis experiments</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">API token authentication</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ServiceAccounts + JWT tokens with RBAC</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Audit trails for all model access</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Prevent resource monopolization</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Tier rate limits and quotas enforced by Limitador</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Fair allocation across business units</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>All requirements are met before a single model is deployed. When the CIO asks "Are we ready for governed AI deployment?", the answer is yes.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_module_summary"><a class="anchor" href="#_module_summary"></a>Module summary</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>In this module, you transformed ChocoTech&#8217;s MaaS platform from infrastructure-only to governance-ready:</p>
+</div>
+<div class="sect2">
+<h3 id="_what_you_accomplished"><a class="anchor" href="#_what_you_accomplished"></a>What you accomplished</h3>
 <div class="ulist">
 <ul>
 <li>
-<p><strong>Programmatic access</strong>: Marketing team can deploy their sentiment analysis application with API token authentication</p>
+<p><strong>Organizational structure</strong>: Created OpenShift groups for business units and mapped them to access tiers</p>
 </li>
 <li>
-<p><strong>Application identity</strong>: Applications access models without human credentials or shared passwords</p>
+<p><strong>Authentication</strong>: Configured ServiceAccounts and JWT token-based API authentication with RBAC</p>
 </li>
 <li>
-<p><strong>Audit trail</strong>: Every API request is traceable to a specific ServiceAccount and namespace</p>
+<p><strong>Tier policies</strong>: Deployed Gold, Silver, and Bronze tier policies with rate limits and quotas</p>
 </li>
 <li>
-<p><strong>Security</strong>: Tokens are time-limited, revocable, and follow principle of least privilege</p>
+<p><strong>Component health</strong>: Verified all governance components (Kuadrant, Authorino, Limitador) are operational</p>
 </li>
 <li>
-<p><strong>Scalability</strong>: Create ServiceAccounts for each application without creating OpenShift user accounts</p>
+<p><strong>End-to-end testing</strong>: Tested authentication flow from token generation to Gateway validation</p>
 </li>
 </ul>
 </div>
+</div>
+<div class="sect2">
+<h3 id="_key_technical_capabilities_unlocked"><a class="anchor" href="#_key_technical_capabilities_unlocked"></a>Key technical capabilities unlocked</h3>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Identity management</strong>: Business units represented as OpenShift groups, not individual users</p>
+</li>
+<li>
+<p><strong>Programmatic access</strong>: Applications can authenticate via ServiceAccount tokens (no human credentials)</p>
+</li>
+<li>
+<p><strong>Least privilege RBAC</strong>: ServiceAccounts have read-only model access (get/list only)</p>
+</li>
+<li>
+<p><strong>Tier enforcement</strong>: Rate limits and quotas automatically applied based on group membership</p>
+</li>
+<li>
+<p><strong>Audit trails</strong>: All requests traceable to ServiceAccounts and business unit groups</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_whats_next_module_3"><a class="anchor" href="#_whats_next_module_3"></a>What&#8217;s next: Module 3</h3>
 <div class="paragraph">
-<p>When the Marketing team asks "How do we authenticate our sentiment analysis app?", you can provide them with a ServiceAccount token that grants read-only model access with full audit logging.</p>
+<p>The platform is now ready for governed model deployment. Module 3 will guide you through:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>Deploying llama3-8b</strong>: Meta&#8217;s 8B parameter model for all tiers (Quality Control, R&amp;D, Marketing can access)</p>
+</li>
+<li>
+<p><strong>Deploying nemotron-8b</strong>: NVIDIA&#8217;s 8B parameter model for Bronze and Silver only (demonstrates selective tier access)</p>
+</li>
+<li>
+<p><strong>Publishing to catalog</strong>: Models appear in Gen AI Studio with tier annotations</p>
+</li>
+<li>
+<p><strong>Testing tier access control</strong>: Verify Gold users see all models, Bronze users see subset</p>
+</li>
+<li>
+<p><strong>Verifying rate limits</strong>: Send high-volume requests to trigger HTTP 429 responses</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>By the end of Module 3, ChocoTech&#8217;s teams will have self-service access to governed AI models through the Gen AI Studio dashboard and API endpoints.</p>
+</div>
 </div>
 </div>
 </div>
@@ -1120,26 +1463,26 @@ HTTP Status: 200</pre>
 <h2 id="_knowledge_check"><a class="anchor" href="#_knowledge_check"></a>Knowledge check</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Test your understanding before moving to the next section:</p>
+<p>Test your understanding of tier governance:</p>
 </div>
 <div class="olist arabic">
 <ol class="arabic">
 <li>
-<p><strong>What is the difference between a ServiceAccount and a User account in OpenShift?</strong></p>
+<p><strong>Why are MaaS Tier policies created before model deployment, rather than after?</strong></p>
 <div class="paragraph">
-<p>User accounts are for humans performing interactive login (e.g., dashboard access). ServiceAccounts are for applications performing programmatic access (e.g., API calls from containers). ServiceAccounts use JWT tokens; user accounts use passwords or SSO.</p>
+<p>MaaS Tier policies must exist before deployment so the MaaS operator can enforce rate limits and quotas from the first inference request. Creating policies after deployment would allow a window of uncontrolled access.</p>
 </div>
 </li>
 <li>
-<p><strong>Why use time-limited tokens instead of permanent API keys?</strong></p>
+<p><strong>What happens if a Bronze tier user tries to exceed 20 requests/minute?</strong></p>
 <div class="paragraph">
-<p>Time-limited tokens automatically expire, reducing the risk if a token is leaked. They force periodic rotation, provide natural audit checkpoints, and can be revoked without changing the ServiceAccount itself.</p>
+<p>Limitador tracks requests per tier and rejects requests exceeding the rate limit with HTTP 429 Too Many Requests. The user must wait until the next minute window to send more requests.</p>
 </div>
 </li>
 <li>
-<p><strong>What RBAC verbs does the <code>llm-inference-viewer</code> Role grant, and which verbs are intentionally excluded?</strong></p>
+<p><strong>How does Authorino know which tier a user belongs to?</strong></p>
 <div class="paragraph">
-<p>Grants: <code>get</code> and <code>list</code> (read-only access to discover and query models). Excluded: <code>create</code>, <code>update</code>, <code>delete</code> (no model deployment permissions). This follows the principle of least privilege.</p>
+<p>Authorino validates the JWT token and extracts the ServiceAccount identity. It then checks which OpenShift groups that ServiceAccount&#8217;s user belongs to. The MaaS Tier resources map groups to tiers (e.g., <code>chocotech-quality-control</code> → Gold tier).</p>
 </div>
 </li>
 </ol>
@@ -1147,10 +1490,161 @@ HTTP Status: 200</pre>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_whats_next"><a class="anchor" href="#_whats_next"></a>What&#8217;s next</h2>
+<h2 id="_troubleshooting"><a class="anchor" href="#_troubleshooting"></a>Troubleshooting</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>You&#8217;ve configured authentication and authorization for programmatic API access. In the next section, you&#8217;ll deploy tier-based governance policies (Gold, Silver, Bronze) with rate limits and quotas, then verify all governance components are operational before model deployment in Module 3.</p>
+<p>If you encounter issues with governance components:</p>
+</div>
+<div class="sect2">
+<h3 id="_authconfig_not_found"><a class="anchor" href="#_authconfig_not_found"></a>AuthConfig not found</h3>
+<div class="paragraph">
+<p><strong>Issue</strong>: <code>oc get authconfig -n redhat-ods-applications</code> returns "No resources found"</p>
+</div>
+<div class="paragraph">
+<p><strong>Solution</strong>:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Verify MaaS was enabled in Module 1:</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get datasciencecluster default-dsc -o jsonpath='{.spec.components.modelsAsService.managementState}'</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Should return: <code>Managed</code></p>
+</div>
+</li>
+<li>
+<p>Check MaaS operator logs:</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc logs -n redhat-ods-operator deployment/rhods-operator | grep -i authorino</code></pre>
+</div>
+</div>
+</li>
+<li>
+<p>Recreate AuthConfig manually using the command in Exercise 5</p>
+</li>
+</ol>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_authorino_pods_not_running"><a class="anchor" href="#_authorino_pods_not_running"></a>Authorino pods not Running</h3>
+<div class="paragraph">
+<p><strong>Issue</strong>: Authorino pods show <code>CrashLoopBackOff</code> or <code>Pending</code></p>
+</div>
+<div class="paragraph">
+<p><strong>Solution</strong>:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Check pod events:</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc describe pod -l app=authorino -n redhat-ods-applications</code></pre>
+</div>
+</div>
+</li>
+<li>
+<p>Common causes:</p>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Insufficient resources</strong>: Check node CPU/memory capacity</p>
+</li>
+<li>
+<p><strong>Image pull errors</strong>: Verify network connectivity to quay.io</p>
+</li>
+<li>
+<p><strong>Kuadrant operator not installed</strong>: Check Kuadrant operator in <code>openshift-operators</code></p>
+</li>
+</ul>
+</div>
+</li>
+</ol>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_token_authentication_returns_401_unauthorized"><a class="anchor" href="#_token_authentication_returns_401_unauthorized"></a>Token authentication returns 401 Unauthorized</h3>
+<div class="paragraph">
+<p><strong>Issue</strong>: <code>curl</code> with Bearer token returns HTTP 401 instead of HTTP 200</p>
+</div>
+<div class="paragraph">
+<p><strong>Solution</strong>:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Verify token is valid and not expired:</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Regenerate token
+TOKEN=$(oc create token marketing-sentiment-app -n chocotech-models --duration=1h)</code></pre>
+</div>
+</div>
+</li>
+<li>
+<p>Verify RBAC is configured:</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get role llm-inference-viewer -n chocotech-models
+oc get rolebinding marketing-sentiment-app-binding -n chocotech-models</code></pre>
+</div>
+</div>
+</li>
+<li>
+<p>Check Authorino logs for authentication errors:</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc logs -l app=authorino -n redhat-ods-applications</code></pre>
+</div>
+</div>
+</li>
+</ol>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_maas_tier_resources_not_created"><a class="anchor" href="#_maas_tier_resources_not_created"></a>MaaS Tier resources not created</h3>
+<div class="paragraph">
+<p><strong>Issue</strong>: <code>oc get MaaS Tier</code> returns "error: the server doesn&#8217;t have a resource type 'MaaS Tier'"</p>
+</div>
+<div class="paragraph">
+<p><strong>Solution</strong>:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Verify MaaS CRDs are installed:</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get crd | grep maas</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Should show: <code>MaaS Tiers.maas.opendatahub.io</code></p>
+</div>
+</li>
+<li>
+<p>If CRD is missing, verify MaaS is enabled:</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get datasciencecluster default-dsc -o jsonpath='{.spec.components.modelsAsService.managementState}'</code></pre>
+</div>
+</div>
+</li>
+<li>
+<p>Check OpenShift AI operator logs:</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc logs -n redhat-ods-operator deployment/rhods-operator | grep -i MaaS Tier</code></pre>
+</div>
+</div>
+</li>
+</ol>
+</div>
 </div>
 </div>
 </div>

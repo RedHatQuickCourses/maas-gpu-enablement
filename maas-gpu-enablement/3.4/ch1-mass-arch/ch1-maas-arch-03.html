@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>1.1: Understanding the GPU silo crisis :: Models as a Service Breaking the GPU Silos on OpenShift AI 3.3</title>
+    <title>1.2: The MaaS architecture stack :: Models as a Service Breaking the GPU Silos on OpenShift AI 3.3</title>
     <link rel="prev" href="ch1-maas-arch-02.html">
     <link rel="next" href="ch1-maas-arch-04.html">
     <meta name="generator" content="Antora 3.1.3">
@@ -47,26 +47,23 @@
   <li class="nav-item" data-depth="0">
 <ul class="nav-list">
   <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="ch1-scenario-01.html">Course Scenario - ChocoTech</a>
+  </li>
+  <li class="nav-item" data-depth="1">
     <button class="nav-item-toggle"></button>
-    <a class="nav-link" href="ch1-maas-arch-01.html">1. MaaS Architecture</a>
+    <a class="nav-link" href="ch1-maas-arch-01.html">1: MaaS architecture</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="ch1-maas-arch-01.html">1.1: QuickCourse Overview</a>
-  </li>
-  <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="ch1-maas-arch-02.html">1.2: MaaS Architecture Introduction</a>
+    <a class="nav-link" href="ch1-maas-arch-02.html">1.1: GPU silo crisis</a>
   </li>
   <li class="nav-item is-current-page" data-depth="2">
-    <a class="nav-link" href="ch1-maas-arch-03.html">1.3: The Three-Layer MaaS Architecture</a>
+    <a class="nav-link" href="ch1-maas-arch-03.html">1.2: MaaS architecture stack</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="ch1-maas-arch-04.html">1.4: Infrastructure Components</a>
+    <a class="nav-link" href="ch1-maas-arch-04.html">1.3: Enabling MaaS on RHOAI</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="ch1-maas-arch-05.html">1.5: Request Flow &amp; Integration</a>
-  </li>
-  <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="ch1-maas-arch-06.html">1.6: Verifying MaaS Installation</a>
+    <a class="nav-link" href="ch1-maas-arch-05.html">1.4: Summary &amp; troubleshooting</a>
   </li>
 </ul>
   </li>
@@ -76,19 +73,16 @@
 <ul class="nav-list">
   <li class="nav-item" data-depth="1">
     <button class="nav-item-toggle"></button>
-    <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-01.html">2. Platform Administration</a>
+    <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-01.html">2: Access Control &amp; Governance</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-01.html">2.1: Access Control &amp; Governance</a>
+    <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-02.html">2.1: Tier-based governancep</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-02.html">2.2: Authentication &amp; Authorization Setup</a>
+    <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-03.html">2.2: Creating OpenShift groups</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-03.html">2.3: Governance Policies Implementation</a>
-  </li>
-  <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-04.html">2.4: Additional Platform Administration</a>
+    <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-04.html">2.3: ServiceAccounts &amp; RBAC</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-05.html">2.5: Understanding Tier-Based Governance</a>
@@ -181,8 +175,8 @@
 <nav class="breadcrumbs" aria-label="breadcrumbs">
   <ul>
     <li><a href="../index.html">Models as a Service Breaking the GPU Silos on OpenShift AI 3.3</a></li>
-    <li><a href="ch1-maas-arch-01.html">1. MaaS Architecture</a></li>
-    <li><a href="ch1-maas-arch-03.html">1.3: The Three-Layer MaaS Architecture</a></li>
+    <li><a href="ch1-maas-arch-01.html">1: MaaS architecture</a></li>
+    <li><a href="ch1-maas-arch-03.html">1.2: MaaS architecture stack</a></li>
   </ul>
 </nav>
 </div>
@@ -191,220 +185,149 @@
   <div class="toc-menu"></div>
 </aside>
 <article class="doc">
-<h1 class="page">1.1: Understanding the GPU silo crisis</h1>
+<h1 class="page">1.2: The MaaS architecture stack</h1>
 <div id="preamble">
 <div class="sectionbody">
 <div class="paragraph">
-<p>ChocoTech Industries has four teams independently managing GPU infrastructure. Let&#8217;s examine the operational pain points this creates.</p>
+<p>Now that we understand the business problem—ChocoTech’s fragmented hardware and lack of centralized governance—we must look at <strong>how</strong> OpenShift AI solves it.</p>
 </div>
 <div class="paragraph">
-<p>The current state of GPU allocations across ChocoTech&#8217;s business units.</p>
+<p>If ChocoTech were to simply rent intelligence from a cheap public API, their corporate data would leave the company perimeter, and they would be subject to unpredictable "black box" costs. Instead, Red Hat OpenShift AI uses a disaggregated, three-layer architecture to provide enterprise-grade, edge-level governance while keeping data strictly on-premises.</p>
 </div>
 <div class="paragraph">
-<p><strong>Current state at ChocoTech</strong>:</p>
+<p>Every request for model inference passes through three highly specialized layers: <strong>The Gateway API</strong>, <strong>Kuadrant</strong>, and <strong>KServe</strong>.</p>
 </div>
-<div class="ulist">
-<ul>
-<li>
-<p><strong>Quality Control</strong>: 2x NVIDIA A100 GPUs running defect detection models</p>
-</li>
-<li>
-<p><strong>R&amp;D</strong>: 4x NVIDIA L40S GPUs for recipe optimization</p>
-</li>
-<li>
-<p><strong>Marketing</strong>: 2x NVIDIA L4 GPUs for sentiment analysis</p>
-</li>
-<li>
-<p><strong>Supply Chain</strong>: 2x NVIDIA L40S GPUs for inventory prediction</p>
-</li>
-</ul>
-</div>
+<hr>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_the_problem_with_dedicated_accelerators"><a class="anchor" href="#_the_problem_with_dedicated_accelerators"></a><strong>The problem with dedicated accelerators:</strong></h2>
+<h2 id="_the_three_layer_stack_separation_of_concerns"><a class="anchor" href="#_the_three_layer_stack_separation_of_concerns"></a>The Three-Layer Stack: Separation of Concerns</h2>
 <div class="sectionbody">
-<div class="exampleblock">
+<div class="paragraph">
+<p>By decoupling the network routing, the policy governance, and the execution engine, MaaS provides extreme flexibility. You can adjust user rate limits without redeploying massive models, and you can swap serving runtimes without touching the security perimeter.</p>
+</div>
+<table class="tableblock frame-all grid-rows stretch">
+<colgroup>
+<col style="width: 20%;">
+<col style="width: 40%;">
+<col style="width: 40%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Layer</th>
+<th class="tableblock halign-left valign-top">Core Component &amp; Role</th>
+<th class="tableblock halign-left valign-top">Enterprise Value ("The Why")</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><strong>Layer 1: The Front Door</strong></p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><strong>Gateway API (Traffic Routing)</strong></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Exposes a single, unified endpoint (<code>maas-default-gateway</code>) for all models across the cluster.</p>
+</li>
+<li>
+<p>Handles TLS termination and path-based routing (e.g., <code>/v1/chat/completions</code>).</p>
+</li>
+</ul>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><strong>Simplified Connectivity:</strong> Developers do not need to manage complex, per-model DNS routing or insecure internal IPs. It provides a standard, OpenAI-compatible entry point.</p>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><strong>Layer 2: The Bouncer</strong></p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><strong>Kuadrant (Policy &amp; Governance)</strong></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Authorino:</strong> Validates tokens and enforces zero-trust authentication.</p>
+</li>
+<li>
+<p><strong>Limitador:</strong> Tracks token consumption and enforces tier-based rate limits.</p>
+</li>
+</ul>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><strong>Ironclad Security &amp; Chargebacks:</strong> This layer mathematically guarantees that a team cannot exhaust GPU resources. It provides the exact token-usage telemetry required for Finance to bill departments accurately.</p>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><strong>Layer 3: The Engine Room</strong></p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><strong>KServe &amp; vLLM/llm-d (Model Execution)</strong></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Orchestrates the actual model serving infrastructure.</p>
+</li>
+<li>
+<p>Uses distributed inference frameworks (like llm-d) to spread large models across multiple GPUs.</p>
+</li>
+</ul>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><strong>Maximum ROI:</strong> By decoupling the request handling from low-level GPU tensor operations, KServe maximizes throughput and minimizes idle hardware time.</p>
+</div></div></td>
+</tr>
+</tbody>
+</table>
+<div class="imageblock">
 <div class="content">
-<div class="paragraph">
-<p><strong>GPU under-utilization and over-provisioning</strong></p>
+<a class="image" href="_images/maas-layers.png" target="blank"><img src="_images/maas-layers.png" alt="MaaS Three-Layer Architecture showing Gateway API routing to Kuadrant for policy" width="800"></a>
 </div>
-<div class="paragraph">
-<p>Teams request and manage their own dedicated GPUs, leading to expensive hardware sitting under-utilized while other high-priority projects may be stalled or additional hardware is provisioned unnecessarily.</p>
+<div class="title">Figure 1. MaaS Architecture: The Three Layers of Governed Model Serving</div>
 </div>
-<div class="paragraph">
-<p><strong>ChocoTech example</strong>: <em>Quality Control&#8217;s A100 GPUs process defect images only during production shifts (8 hours/day), leaving $120,000 of hardware idle 67% of the time. Meanwhile, R&amp;D waits three weeks for GPU capacity to test new flavor prediction models.</em></p>
-</div>
-</div>
-</div>
-<div class="exampleblock">
-<div class="content">
-<div class="paragraph">
-<p><strong>Misallocation of engineer and data science expertise</strong></p>
-</div>
-<div class="paragraph">
-<p>Developers and Data scientists spend more time debugging CUDA drivers, Docker containers, and Kubernetes manifests than actually tuning models or analyzing data.</p>
-</div>
-<div class="paragraph">
-<p><strong>ChocoTech example</strong>: <em>Marketing&#8217;s data science team spent 40 hours last quarter troubleshooting vLLM container startup issues instead of improving their customer sentiment models.</em></p>
-</div>
-</div>
-</div>
-<div class="exampleblock">
-<div class="content">
-<div class="paragraph">
-<p><strong>Redundant model deployments</strong></p>
-</div>
-<div class="paragraph">
-<p>Four different teams download and deploy the same generative AI model, leading to overall waste and duplication when they could be sharing resources efficiently.</p>
-</div>
-<div class="paragraph">
-<p><strong>ChocoTech example</strong>: <em>All four teams independently deployed Llama-3 8B for different use cases, consuming 128GB of storage (4 x 32GB) and wasting GPU memory with duplicate model weights.</em></p>
-</div>
-</div>
-</div>
-<div class="exampleblock">
-<div class="content">
-<div class="paragraph">
-<p><strong>Security "black boxes"</strong></p>
-</div>
-<div class="paragraph">
-<p>Without a centralized API gateway, there is zero visibility into who is sending what data to which model, making audit logs and PII filtering nearly impossible to enforce.</p>
-</div>
-<div class="paragraph">
-<p><strong>ChocoTech example</strong>: <em>Marketing&#8217;s sentiment analysis application processes customer feedback containing personally identifiable information (PII), but there&#8217;s no way to audit which users accessed which models or implement PII filtering policies.</em></p>
-</div>
-</div>
-</div>
-<div class="exampleblock">
-<div class="content">
-<div class="paragraph">
-<p><strong>No way to track usage or forecast needs</strong></p>
-</div>
-<div class="paragraph">
-<p>Without the ability to track model usage across users, applications, and different models, there is no way to forecast compute needs accurately.</p>
-</div>
-<div class="paragraph">
-<p><strong>ChocoTech example</strong>: <em>Finance cannot justify GPU infrastructure expansion requests because there&#8217;s no data showing which teams are consuming capacity, which models are heavily used, or whether existing hardware is properly utilized.</em></p>
-</div>
-</div>
-</div>
+<hr>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_the_solution_centralized_model_hub_with_maas"><a class="anchor" href="#_the_solution_centralized_model_hub_with_maas"></a>The Solution - Centralized model hub with MaaS</h2>
+<h2 id="_the_life_of_an_inference_request"><a class="anchor" href="#_the_life_of_an_inference_request"></a>The Life of an Inference Request</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Models as a Service (MaaS) transforms GPU infrastructure from dedicated, single-team clusters into a consumable model backplane.</p>
+<p>To understand how these components work together, let&#8217;s trace a real request from ChocoTech&#8217;s Marketing team as they try to use the shared <code>llama-3-8b</code> model for a sentiment analysis application.</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>The Request Arrives (Gateway API):</strong> The Marketing application sends a POST request to <code>/v1/chat/completions</code> containing their Bearer token and the prompt data. The Gateway API catches this at the network edge.</p>
+</li>
+<li>
+<p><strong>Identity Verification (Kuadrant - Authorino):</strong> The Gateway pauses the request and asks Authorino, "Is this token valid, and what tier is this user?" Authorino confirms the user is in the "Bronze" tier. (If the token was invalid, it would immediately return a <code>401 Unauthorized</code> without touching the GPU).</p>
+</li>
+<li>
+<p><strong>Policy Enforcement (Kuadrant - Limitador):</strong> Limitador checks the Bronze tier quota. "Has the Marketing team exceeded their 10,000 tokens-per-hour limit?" If they are within limits, the request is permitted. (If exceeded, it returns a <code>429 Too Many Requests</code>).</p>
+</li>
+<li>
+<p><strong>Execution (KServe):</strong> The validated, governed request is handed off to KServe. The vLLM runtime processes the prompt against the <code>llama-3-8b</code> weights and generates the response.</p>
+</li>
+<li>
+<p><strong>The Audit Log:</strong> The response flows back to the user, and Kuadrant meticulously logs the exact number of <code>prompt_tokens</code> and <code>completion_tokens</code> consumed by the Marketing user for the chargeback report.</p>
+</li>
+</ol>
 </div>
 <div class="paragraph">
-<p><strong>How MaaS changes the operating model</strong>:</p>
+<p>This layered approach ensures that every request is authenticated, authorized, rate-limited, audited, and routed to the correct model serving infrastructure.</p>
 </div>
-<div class="paragraph">
-<p><strong>Central IT (Platform Engineers)</strong>:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>Manages the inference strategy, hardware allocation, and governance policies. Controls which models are available, enforces access tiers, and monitors infrastructure health.</p>
-</li>
-<li>
-<p>Configure tiers, rate limits, quotas, and observability dashboards. Ensure fair resource allocation and compliance with organizational policies.</p>
-</li>
-</ul>
-</div>
-<div class="paragraph">
-<p><strong>Lines of Business (Marketing, R&amp;D, Quality Control, Supply Chain)</strong>:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>Consume AI capabilities via tokens, treating model inference as a metered, on-demand internal service. Focus on building applications, not managing infrastructure.</p>
-</li>
-</ul>
-</div>
-<div class="paragraph">
-<p><strong>Developers</strong>:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>Integrate models via OpenAI-compatible APIs without worrying about GPU drivers, Kubernetes manifests, or model serving runtimes.</p>
-</li>
-</ul>
-</div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_business_impact_realized"><a class="anchor" href="#_business_impact_realized"></a><strong>Business impact realized</strong>:</h2>
-<div class="sectionbody">
-<div class="paragraph">
-<p><strong>Without MaaS</strong>:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>Redundant model deployments waste storage and compute</p>
-</li>
-<li>
-<p>No audit trail for compliance requirements</p>
-</li>
-<li>
-<p>Cannot track usage or forecast future needs</p>
-</li>
-<li>
-<p>Teams compete for scarce GPU resources</p>
-</li>
-</ul>
-</div>
-<div class="paragraph">
-<p><strong>With MaaS</strong>:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>Centralized model catalog eliminates redundancy</p>
-</li>
-<li>
-<p>Complete audit logs and PII filtering via API gateway</p>
-</li>
-<li>
-<p>Token-based consumption enables accurate chargeback</p>
-</li>
-<li>
-<p>Fair resource allocation prevents team conflicts</p>
-</li>
-</ul>
-</div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_verify_your_understanding"><a class="anchor" href="#_verify_your_understanding"></a>Verify your understanding</h2>
-<div class="sectionbody">
-<div class="paragraph">
-<p>Consider these questions based on ChocoTech&#8217;s situation:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>How would centralized model serving help Quality Control and R&amp;D share GPU capacity?</p>
-</li>
-<li>
-<p>What governance policies would prevent one team from monopolizing resources?</p>
-</li>
-<li>
-<p>How does token-based consumption enable Finance to perform chargeback?</p>
-</li>
-<li>
-<p>What role does the API gateway play in audit logging and PII filtering?</p>
-</li>
-</ul>
-</div>
+<hr>
 </div>
 </div>
 <nav class="pagination">
-  <span class="prev"><a href="ch1-maas-arch-02.html">1.2: MaaS Architecture Introduction</a></span>
-  <span class="next"><a href="ch1-maas-arch-04.html">1.4: Infrastructure Components</a></span>
+  <span class="prev"><a href="ch1-maas-arch-02.html">1.1: GPU silo crisis</a></span>
+  <span class="next"><a href="ch1-maas-arch-04.html">1.3: Enabling MaaS on RHOAI</a></span>
 </nav>
 </article>
   </div>

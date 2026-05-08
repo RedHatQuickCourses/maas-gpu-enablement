@@ -3,8 +3,8 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Module 2: Setting Up Access Control and Governance :: Models as a Service Breaking the GPU Silos on OpenShift AI 3.3</title>
-    <link rel="prev" href="../ch1-mass-arch/ch1-maas-arch-06.html">
+    <title>Module 2: Setting up access control and governance :: Models as a Service Breaking the GPU Silos on OpenShift AI 3.3</title>
+    <link rel="prev" href="../ch1-mass-arch/ch1-maas-arch-05.html">
     <link rel="next" href="ch2-platform-admin-02.html">
     <meta name="generator" content="Antora 3.1.3">
     <link rel="stylesheet" href="../../../_/css/site.css">
@@ -47,26 +47,23 @@
   <li class="nav-item" data-depth="0">
 <ul class="nav-list">
   <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../ch1-mass-arch/ch1-scenario-01.html">Course Scenario - ChocoTech</a>
+  </li>
+  <li class="nav-item" data-depth="1">
     <button class="nav-item-toggle"></button>
-    <a class="nav-link" href="../ch1-mass-arch/ch1-maas-arch-01.html">1. MaaS Architecture</a>
+    <a class="nav-link" href="../ch1-mass-arch/ch1-maas-arch-01.html">1: MaaS architecture</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../ch1-mass-arch/ch1-maas-arch-01.html">1.1: QuickCourse Overview</a>
+    <a class="nav-link" href="../ch1-mass-arch/ch1-maas-arch-02.html">1.1: GPU silo crisis</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../ch1-mass-arch/ch1-maas-arch-02.html">1.2: MaaS Architecture Introduction</a>
+    <a class="nav-link" href="../ch1-mass-arch/ch1-maas-arch-03.html">1.2: MaaS architecture stack</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../ch1-mass-arch/ch1-maas-arch-03.html">1.3: The Three-Layer MaaS Architecture</a>
+    <a class="nav-link" href="../ch1-mass-arch/ch1-maas-arch-04.html">1.3: Enabling MaaS on RHOAI</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../ch1-mass-arch/ch1-maas-arch-04.html">1.4: Infrastructure Components</a>
-  </li>
-  <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../ch1-mass-arch/ch1-maas-arch-05.html">1.5: Request Flow &amp; Integration</a>
-  </li>
-  <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../ch1-mass-arch/ch1-maas-arch-06.html">1.6: Verifying MaaS Installation</a>
+    <a class="nav-link" href="../ch1-mass-arch/ch1-maas-arch-05.html">1.4: Summary &amp; troubleshooting</a>
   </li>
 </ul>
   </li>
@@ -76,19 +73,16 @@
 <ul class="nav-list">
   <li class="nav-item is-current-page" data-depth="1">
     <button class="nav-item-toggle"></button>
-    <a class="nav-link" href="ch2-platform-admin-01.html">2. Platform Administration</a>
+    <a class="nav-link" href="ch2-platform-admin-01.html">2: Access Control &amp; Governance</a>
 <ul class="nav-list">
-  <li class="nav-item is-current-page" data-depth="2">
-    <a class="nav-link" href="ch2-platform-admin-01.html">2.1: Access Control &amp; Governance</a>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="ch2-platform-admin-02.html">2.1: Tier-based governancep</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="ch2-platform-admin-02.html">2.2: Authentication &amp; Authorization Setup</a>
+    <a class="nav-link" href="ch2-platform-admin-03.html">2.2: Creating OpenShift groups</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="ch2-platform-admin-03.html">2.3: Governance Policies Implementation</a>
-  </li>
-  <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="ch2-platform-admin-04.html">2.4: Additional Platform Administration</a>
+    <a class="nav-link" href="ch2-platform-admin-04.html">2.3: ServiceAccounts &amp; RBAC</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="ch2-platform-admin-05.html">2.5: Understanding Tier-Based Governance</a>
@@ -181,7 +175,7 @@
 <nav class="breadcrumbs" aria-label="breadcrumbs">
   <ul>
     <li><a href="../index.html">Models as a Service Breaking the GPU Silos on OpenShift AI 3.3</a></li>
-    <li><a href="ch2-platform-admin-01.html">2. Platform Administration</a></li>
+    <li><a href="ch2-platform-admin-01.html">2: Access Control &amp; Governance</a></li>
   </ul>
 </nav>
 </div>
@@ -190,55 +184,108 @@
   <div class="toc-menu"></div>
 </aside>
 <article class="doc">
-<h1 class="page">Module 2: Setting Up Access Control and Governance</h1>
+<h1 class="page">Module 2: Setting up access control and governance</h1>
+<div id="preamble">
+<div class="sectionbody">
 <div class="paragraph">
-<p>After enabling the MaaS platform in Module 1, the CIO calls you into a meeting. "The infrastructure is ready," she says, "but before we deploy any models, I need to know how we&#8217;re going to control access and manage costs across business units."</p>
+<p>The CIO at ChocoTech Industries just called an emergency meeting.</p>
 </div>
 <div class="paragraph">
-<p>She hands you a requirements document:</p>
+<p>"The infrastructure is ready," she says, "but before we deploy any models, I need to know how we are going to control access and manage costs across business units."</p>
+</div>
+<div class="paragraph">
+<p>If ChocoTech relied on a cheap public API, every business unit would simply swipe a corporate credit card. This leads to unpredictable billing, zero visibility into which team is consuming the most compute, and no way to prioritize mission-critical factory workloads over exploratory marketing tasks.</p>
+</div>
+<div class="paragraph">
+<p>By utilizing Models as a Service (MaaS) on Red Hat OpenShift AI, you solve this by enforcing strict, token-based governance directly at the network edge.</p>
+</div>
+<div class="paragraph">
+<p>She hands you the following requirements document:</p>
+</div>
+<table class="tableblock frame-all grid-rows stretch">
+<colgroup>
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Business Unit</th>
+<th class="tableblock halign-left valign-top">Tier Assignment</th>
+<th class="tableblock halign-left valign-top">Infrastructure Requirement</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><strong>Quality Control</strong></p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>Gold Tier</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>Needs production-grade access with guaranteed availability for real-time defect detection.</p>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><strong>R&amp;D</strong></p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>Silver Tier</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>Needs development access with moderate throughput for recipe optimization testing.</p>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><strong>Marketing</strong></p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>Bronze Tier</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>Needs exploratory access for sentiment analysis.</p>
+</div></div></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>Furthermore, the CIO mandates that all access must be authenticated with API tokens to create definitive audit trails, and strict rate limits must prevent any single team from monopolizing the GPU resources.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_learning_objectives"><a class="anchor" href="#_learning_objectives"></a>Learning objectives</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>By the end of this module, you will be able to:</p>
 </div>
 <div class="ulist">
 <ul>
 <li>
-<p><strong>Quality Control</strong> needs production-grade access with guaranteed availability (Gold tier)</p>
+<p>Explain how tier-based governance prevents resource exhaustion and enables accurate chargebacks.</p>
 </li>
 <li>
-<p><strong>R&amp;D</strong> needs development access with moderate throughput (Silver tier)</p>
+<p>Create OpenShift groups and map them to logical business units.</p>
 </li>
 <li>
-<p><strong>Marketing</strong> needs exploratory access for sentiment analysis (Bronze tier)</p>
+<p>Prepare and label a dedicated model-serving namespace for MaaS governance.</p>
 </li>
 <li>
-<p>All access must be authenticated with API tokens for audit trails</p>
+<p>Configure Role-Based Access Control (RBAC) and ServiceAccounts for programmatic model access.</p>
 </li>
 <li>
-<p>Rate limits must prevent any single team from monopolizing GPU resources</p>
+<p>Define and apply token-aware rate limits and quotas for distinct service tiers.</p>
 </li>
 </ul>
 </div>
-<hr>
-<div class="paragraph">
-<p>In this module, you&#8217;ll create business unit groups, configure RBAC for API access, generate authentication tokens, and deploy tier-based governance policies that will control model access in Module 3.</p>
 </div>
-<div class="olist arabic">
-<ol class="arabic">
-<li>
-<p><strong>Organizational Structure</strong>: Create OpenShift groups for ChocoTech&#8217;s business units (Quality Control, R&amp;D, Marketing) and prepare the namespace for governed model serving</p>
-</li>
-<li>
-<p><strong>Authentication &amp; Authorization</strong>: Configure ServiceAccounts for programmatic API access, define RBAC roles for model access, and test JWT token-based authentication</p>
-</li>
-<li>
-<p><strong>Governance Policies</strong>: Deploy tier-based policies (Gold, Silver, Bronze) with rate limits and quotas, then verify all governance components are operational</p>
-</li>
-</ol>
-</div>
-<div class="paragraph">
-<p>By the end of this module, the MaaS platform will be ready for governed model deployment with tier-based access control, authentication, and resource limits in place.</p>
 </div>
 <nav class="pagination">
-  <span class="prev"><a href="../ch1-mass-arch/ch1-maas-arch-06.html">1.6: Verifying MaaS Installation</a></span>
-  <span class="next"><a href="ch2-platform-admin-02.html">2.2: Authentication &amp; Authorization Setup</a></span>
+  <span class="prev"><a href="../ch1-mass-arch/ch1-maas-arch-05.html">1.4: Summary &amp; troubleshooting</a></span>
+  <span class="next"><a href="ch2-platform-admin-02.html">2.1: Tier-based governancep</a></span>
 </nav>
 </article>
   </div>

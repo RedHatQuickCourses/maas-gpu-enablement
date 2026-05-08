@@ -3,9 +3,9 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>1.3: Enabling MaaS on your OpenShift AI platform :: Models as a Service Breaking the GPU Silos on OpenShift AI 3.3</title>
+    <title>1.4: Summary &amp; troubleshooting :: Models as a Service Breaking the GPU Silos on OpenShift AI 3.3</title>
     <link rel="prev" href="ch1-maas-arch-04.html">
-    <link rel="next" href="ch1-maas-arch-06.html">
+    <link rel="next" href="../ch2-platform-admin/ch2-platform-admin-01.html">
     <meta name="generator" content="Antora 3.1.3">
     <link rel="stylesheet" href="../../../_/css/site.css">
     <script>var uiRootPath = '../../../_'</script>
@@ -47,26 +47,23 @@
   <li class="nav-item" data-depth="0">
 <ul class="nav-list">
   <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="ch1-scenario-01.html">Course Scenario - ChocoTech</a>
+  </li>
+  <li class="nav-item" data-depth="1">
     <button class="nav-item-toggle"></button>
-    <a class="nav-link" href="ch1-maas-arch-01.html">1. MaaS Architecture</a>
+    <a class="nav-link" href="ch1-maas-arch-01.html">1: MaaS architecture</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="ch1-maas-arch-01.html">1.1: QuickCourse Overview</a>
+    <a class="nav-link" href="ch1-maas-arch-02.html">1.1: GPU silo crisis</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="ch1-maas-arch-02.html">1.2: MaaS Architecture Introduction</a>
+    <a class="nav-link" href="ch1-maas-arch-03.html">1.2: MaaS architecture stack</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="ch1-maas-arch-03.html">1.3: The Three-Layer MaaS Architecture</a>
-  </li>
-  <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="ch1-maas-arch-04.html">1.4: Infrastructure Components</a>
+    <a class="nav-link" href="ch1-maas-arch-04.html">1.3: Enabling MaaS on RHOAI</a>
   </li>
   <li class="nav-item is-current-page" data-depth="2">
-    <a class="nav-link" href="ch1-maas-arch-05.html">1.5: Request Flow &amp; Integration</a>
-  </li>
-  <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="ch1-maas-arch-06.html">1.6: Verifying MaaS Installation</a>
+    <a class="nav-link" href="ch1-maas-arch-05.html">1.4: Summary &amp; troubleshooting</a>
   </li>
 </ul>
   </li>
@@ -76,19 +73,16 @@
 <ul class="nav-list">
   <li class="nav-item" data-depth="1">
     <button class="nav-item-toggle"></button>
-    <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-01.html">2. Platform Administration</a>
+    <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-01.html">2: Access Control &amp; Governance</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-01.html">2.1: Access Control &amp; Governance</a>
+    <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-02.html">2.1: Tier-based governancep</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-02.html">2.2: Authentication &amp; Authorization Setup</a>
+    <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-03.html">2.2: Creating OpenShift groups</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-03.html">2.3: Governance Policies Implementation</a>
-  </li>
-  <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-04.html">2.4: Additional Platform Administration</a>
+    <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-04.html">2.3: ServiceAccounts &amp; RBAC</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-05.html">2.5: Understanding Tier-Based Governance</a>
@@ -181,8 +175,8 @@
 <nav class="breadcrumbs" aria-label="breadcrumbs">
   <ul>
     <li><a href="../index.html">Models as a Service Breaking the GPU Silos on OpenShift AI 3.3</a></li>
-    <li><a href="ch1-maas-arch-01.html">1. MaaS Architecture</a></li>
-    <li><a href="ch1-maas-arch-05.html">1.5: Request Flow &amp; Integration</a></li>
+    <li><a href="ch1-maas-arch-01.html">1: MaaS architecture</a></li>
+    <li><a href="ch1-maas-arch-05.html">1.4: Summary &amp; troubleshooting</a></li>
   </ul>
 </nav>
 </div>
@@ -191,402 +185,189 @@
   <div class="toc-menu"></div>
 </aside>
 <article class="doc">
-<h1 class="page">1.3: Enabling MaaS on your OpenShift AI platform</h1>
+<h1 class="page">1.4: Summary &amp; troubleshooting</h1>
 <div id="preamble">
 <div class="sectionbody">
 <div class="paragraph">
-<p>You&#8217;ve explored the business problem and understand the three-layer architecture. Now it&#8217;s time to activate MaaS on ChocoTech&#8217;s OpenShift cluster.</p>
+<p>You have successfully transformed ChocoTech&#8217;s fragmented GPU infrastructure from a state of passive monitoring to active enablement. The physical and network foundations are now officially MaaS-capable.</p>
 </div>
 <div class="paragraph">
-<p>ChocoTech&#8217;s GPU infrastructure is already operational from prior AI/ML implementations. Quality Control&#8217;s A100 GPUs, R&amp;D&#8217;s L40S accelerators, Marketing&#8217;s L4 GPUs, and Supply Chain&#8217;s hardware are all running and handling existing workloads. Rather than starting from scratch, you&#8217;ll transform this fragmented infrastructure into a centralized MaaS platform by enabling the components that provide governance, routing, and multi-tenant model serving.</p>
-</div>
-<div class="paragraph">
-<p>This module guides you through the activation sequence: verifying required operators, creating infrastructure components, and enabling MaaS features in the OpenShift AI platform. By the end, ChocoTech&#8217;s platform will be ready for the detailed configuration work in Module 2.</p>
-</div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_step_1_configuration_check_operator_verification"><a class="anchor" href="#_step_1_configuration_check_operator_verification"></a>Step 1: Configuration Check &amp; Operator Verification</h2>
-<div class="sectionbody">
-<div class="paragraph">
-<p>Before applying any configuration, ensure your cluster has the necessary operators installed from Ecosystem (previously OperatorHub). If any of these are missing, the deployment will silently fail—the commands will appear to succeed, but the expected pods and resources will never materialize.</p>
-</div>
-<div class="paragraph">
-<p><strong><em>ChocoTech&#8217;s platform team learned this lesson the hard way when they attempted to enable MaaS without the Connectivity Link operator installed. The DataScienceCluster patch appeared to succeed, but the maas-api pods never appeared—no error messages, just silent failure. Verifying operators upfront prevents these frustrating troubleshooting sessions.</em></strong></p>
-</div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_required_operators"><a class="anchor" href="#_required_operators"></a><strong>Required operators</strong>:</h2>
-<div class="sectionbody">
-<div class="dlist">
-<dl>
-<dt class="hdlist1">Red Hat OpenShift Service Mesh 3</dt>
-<dd>
-<p>Provides the underlying Istio networking that powers the Gateway API implementation.</p>
-</dd>
-<dt class="hdlist1">Red Hat Connectivity Link (v1.2+)</dt>
-<dd>
-<p>Delivers the Kuadrant governance framework. The Connectivity Link operator manages the Kuadrant controller, which in turn deploys Authorino (authentication/authorization) and Limitador (rate limiting).</p>
-</dd>
-<dt class="hdlist1">Red Hat OpenShift AI (v3.3+)</dt>
-<dd>
-<p>The core platform operator that manages the DataScienceCluster and deploys MaaS components when enabled.</p>
-</dd>
-<dt class="hdlist1">Leader Worker Set Operator</dt>
-<dd>
-<p>Mandatory for llm-d orchestration. Distributed pod management for ultra-large models that exceed single-node VRAM capacity.</p>
-</dd>
-</dl>
-</div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_verify_operator_installation"><a class="anchor" href="#_verify_operator_installation"></a>Verify operator installation</h2>
-<div class="sectionbody">
-<div class="paragraph">
-<p>Check that all required operators are installed and healthy:</p>
-</div>
-<div class="listingblock execute">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-none hljs">oc get csv -n openshift-operators | grep -E "(servicemesh|rhcl|rhods|limitador|authorino)"</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>Expected output (all operators should show Succeeded):</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre>authorino-operator.v1.3.0                 Authorino Operator                 1.3.0                 Succeeded
-limitador-operator.v1.3.0                 Limitador Operator                 1.3.0                 Succeeded
-rhcl-operator.v1.3.3                      Red Hat Connectivity Link          1.3.3                 Succeeded
-rhods-operator.3.3.2                      Red Hat OpenShift AI               3.3.2                 Succeeded
-servicemeshoperator3.v3.3.2               Red Hat OpenShift Service Mesh 3   3.3.2                 Succeeded</pre>
-</div>
-</div>
-<div class="paragraph">
-<p>If any operators are missing, install them from OperatorHub before proceeding:</p>
-</div>
-<div class="olist arabic">
-<ol class="arabic">
-<li>
-<p>Navigate to <strong>Ecosystem → Software Catalog</strong> in the OpenShift console</p>
-</li>
-<li>
-<p>Search for the missing operator by name</p>
-</li>
-<li>
-<p>Click <strong>Install</strong> and follow the prompts</p>
-</li>
-<li>
-<p>Wait for the operator to reach <strong>Succeeded</strong> status before continuing</p>
-</li>
-</ol>
-</div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_step_2_infrastructure_foundation"><a class="anchor" href="#_step_2_infrastructure_foundation"></a>Step 2: Infrastructure Foundation</h2>
-<div class="sectionbody">
-<div class="paragraph">
-<p>The OpenShift AI operator is a strict gatekeeper. It will not provision the MaaS API unless the foundational network routing and security engines are actively running on the cluster. This phase creates those prerequisites.</p>
-</div>
-<div class="sect2">
-<h3 id="_initialize_the_governance_engine_kuadrant"><a class="anchor" href="#_initialize_the_governance_engine_kuadrant"></a>Initialize the Governance Engine (Kuadrant)</h3>
-<div class="paragraph">
-<p>The Connectivity Link operator manages Kuadrant, but Kuadrant itself must be explicitly initialized. Creating a Kuadrant custom resource tells the operator to spin up Authorino (authentication/authorization) and Limitador (rate limiting and quota enforcement).</p>
-</div>
-<div class="paragraph">
-<p><strong><em>ChocoTech needs Kuadrant to enforce the tier-based quotas that prevent Marketing&#8217;s bronze-tier applications from monopolizing GPU resources during campaign launches. Without Kuadrant&#8217;s Limitador component, there would be no mechanism to track and limit token consumption across teams.</em></strong></p>
+<p>Before we move on to establishing the actual governance rules, verify that your environment is healthy. If you hit any roadblocks during setup, expand the troubleshooting guide below.</p>
 </div>
 <hr>
-</div>
-<div class="sect2">
-<h3 id="_architectural_note_the_operator_vs_operand_pattern"><a class="anchor" href="#_architectural_note_the_operator_vs_operand_pattern"></a>Architectural Note: The Operator vs. Operand Pattern</h3>
+<details>
+<summary class="title">🛠️ Troubleshooting: Did something go wrong? (Click to expand)</summary>
+<div class="content">
 <div class="paragraph">
-<p>Before we apply the configuration YAML, it is important to understand <strong>why</strong> we deploy the governance engine this specific way.</p>
+<p>If your verification checks failed in the previous step, locate your issue below to resolve it before proceeding to Module 2.</p>
 </div>
 <div class="paragraph">
-<p>When setting up Red Hat Connectivity Link (Kuadrant) for MaaS, we follow a strict OpenShift and Kubernetes best practice: <strong>Separating the Operator from the Operand.</strong></p>
+<p><strong>Issue: Kuadrant pods are not starting after creating the Kuadrant CR</strong></p>
 </div>
 <div class="ulist">
 <ul>
 <li>
-<p><strong>The Operator (The Manager):</strong> We install the top-level Operator subscription in a cluster-wide namespace like <code>openshift-operators</code>. This is the default global location and prevents us from getting tangled in the complexities of namespace-scoped OLM operator behaviors.</p>
+<p><strong>Check Connectivity Link operator logs:</strong> Run <code>oc logs -n openshift-operators deployment/connectivity-link-operator --tail=50</code>.</p>
 </li>
 <li>
-<p><strong>The Operand (The Instance):</strong> We deploy the actual <code>Kuadrant</code> Custom Resource (the instance doing the actual work) into its own dedicated namespace, <code>kuadrant-system</code>.</p>
+<p><strong>Verify Kuadrant CRDs are installed:</strong> Run <code>oc get crd | grep kuadrant</code>.</p>
 </li>
 </ul>
 </div>
 <div class="paragraph">
-<p>We deploy it this way because it maintains consistency with upstream project documentation and reflects true enterprise reality. By keeping the controller separate from the workload it manages, we ensure a cleaner, more secure, and highly scalable GitOps foundation for your AI factory.</p>
-</div>
-<div class="sect3">
-<h4 id="_create_the_new_namespace"><a class="anchor" href="#_create_the_new_namespace"></a>Create the new namespace</h4>
-<div class="paragraph">
-<p>Before you can deploy the Kuadrant resource into kuadrant-system, you have to create the namespace.</p>
-</div>
-<div class="listingblock execute">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-none hljs">oc create namespace kuadrant-system</code></pre>
-</div>
-</div>
-</div>
-<div class="sect3">
-<h4 id="_create_the_kuadrant_instance"><a class="anchor" href="#_create_the_kuadrant_instance"></a>Create the Kuadrant instance:</h4>
-<div class="listingblock execute">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-none hljs">cat &lt;&lt;EOF | oc apply -f -
-apiVersion: kuadrant.io/v1beta1
-kind: Kuadrant
-metadata:
-  name: kuadrant
-  namespace: kuadrant-system
-EOF</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>Expected output:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre>kuadrant.kuadrant.io/kuadrant created</pre>
-</div>
-</div>
-<div class="paragraph">
-<p>Verify Kuadrant components are running:</p>
-</div>
-<div class="listingblock execute">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-none hljs">oc get pods -n kuadrant-system | grep -E "(kuadrant|limitador|authorino)"</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>Expected output (pods should reach Running status within 1-2 minutes):</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre>NAME                                  READY    STATUS   RESTARTS     AGE
-authorino-79cbc94b89-knjf7             1/1     Running     0        2m13s
-limitador-limitador-67566c68b4-ktnhb   1/1     Running     0        2m15s</pre>
-</div>
-</div>
-<div class="paragraph">
-<p><strong>Why this matters</strong>: Authorino validates Bearer tokens and enforces model access policies. Limitador tracks requests per minute and token consumption quotas. Both are mandatory for the MaaS API to function.</p>
-</div>
-<hr>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_create_the_maas_gateway"><a class="anchor" href="#_create_the_maas_gateway"></a>Create the MaaS Gateway</h3>
-<div class="paragraph">
-<p>KServe requires a specific Gateway resource to route external traffic to your models. This Gateway acts as the single API endpoint for all model inference traffic across ChocoTech&#8217;s business units.</p>
-</div>
-<div class="paragraph">
-<p><strong>The maas-default-gateway becomes the single API endpoint for all of ChocoTech&#8217;s model inference traffic. Instead of Quality Control, R&amp;D, Marketing, and Supply Chain each managing separate endpoints, they all send requests to one gateway that handles routing, authentication, and policy enforcement.</strong></p>
-</div>
-<div class="paragraph">
-<p>Create the Gateway resource:</p>
-</div>
-<div class="listingblock execute">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-none hljs">cat &lt;&lt;EOF | oc apply -f -
-apiVersion: gateway.networking.k8s.io/v1
-kind: Gateway
-metadata:
-  name: maas-default-gateway
-  namespace: openshift-ingress
-spec:
-  gatewayClassName: data-science-gateway-class
-  listeners:
-  - name: http
-    port: 80
-    protocol: HTTP
-    allowedRoutes:
-      namespaces:
-        from: All
-EOF</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>Expected output:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre>gateway.gateway.networking.k8s.io/maas-default-gateway created</pre>
-</div>
-</div>
-<div class="paragraph">
-<p>Verify the Gateway is programmed correctly:</p>
-</div>
-<div class="listingblock execute">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-none hljs">oc get gateway maas-default-gateway -n openshift-ingress</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>Expected output (PROGRAMMED should show True):</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre>NAME                   CLASS                          ADDRESS   PROGRAMMED   AGE
-maas-default-gateway   openshift-gateway-controller             True         7s</pre>
-</div>
-</div>
-<div class="paragraph">
-<p><strong>Note</strong>: It may take 30-60 seconds for the Gateway to transition from <code>Unknown</code> to <code>True</code>. If it remains <code>Unknown</code> or shows <code>False</code> after 2 minutes, check the Service Mesh control plane status:</p>
-</div>
-</div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_phase_3_platform_activation"><a class="anchor" href="#_phase_3_platform_activation"></a>Phase 3: Platform Activation</h2>
-<div class="sectionbody">
-<div class="paragraph">
-<p>With the infrastructure in place—operators verified, Kuadrant running, Gateway created—you can now instruct the OpenShift AI operator to enable MaaS features.</p>
-</div>
-<div class="sect2">
-<h3 id="_enable_the_maas_backend"><a class="anchor" href="#_enable_the_maas_backend"></a>Enable the MaaS Backend</h3>
-<div class="paragraph">
-<p>Patching the DataScienceCluster sets the <code>modelsAsService</code> management state to <code>Managed</code>. This prompts the operator to build the maas-api pods and default RBAC roles that provide the MaaS API layer.</p>
-</div>
-<div class="paragraph">
-<p><strong>This patch tells the OpenShift AI operator to provision the MaaS API layer. Once enabled, Platform Engineers can deploy models to a central catalog that all four business units can access via token-based authentication, eliminating the redundant Llama-3 deployments that were wasting 128GB of storage.</strong></p>
-</div>
-<div class="paragraph">
-<p>Apply the DataScienceCluster patch:</p>
-</div>
-<div class="listingblock execute">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-none hljs">oc patch datasciencecluster default-dsc --type=merge -p '{
-  "spec": {
-    "components": {
-      "kserve": {
-        "managementState": "Managed",
-        "modelsAsService": {
-          "managementState": "Managed"
-        }
-      }
-    }
-  }
-}'</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>Expected output:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre>datasciencecluster.datasciencecluster.opendatahub.io/default-dsc patched</pre>
-</div>
-</div>
-<div class="paragraph">
-<p>Verify the MaaS API pods are created:</p>
-</div>
-<div class="listingblock execute">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-none hljs">oc get pods -n redhat-ods-applications | grep maas</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>Expected output (pods should appear within 1-2 minutes):</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre>maas-api-xxxxxxxxx-xxxxx   1/1     Running   0          45s</pre>
-</div>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_enable_the_dashboard_gen_ai_studio"><a class="anchor" href="#_enable_the_dashboard_gen_ai_studio"></a>Enable the Dashboard (Gen AI Studio)</h3>
-<div class="paragraph">
-<p>Even though you&#8217;re deploying models via GitOps in later modules, Platform Administrators still need the dashboard UI to manage user access tokens and monitor model usage. Enable the Gen AI Studio interface to provide self-service token generation.</p>
-</div>
-<div class="paragraph">
-<p><strong>The Gen AI Studio interface allows ChocoTech&#8217;s Platform Administrators to manage user access tokens and monitor model usage without writing custom scripts. Marketing&#8217;s team lead can now generate API tokens for their developers directly through the dashboard, rather than filing IT tickets.</strong></p>
-</div>
-<div class="paragraph">
-<p>Apply the dashboard configuration patch:</p>
-</div>
-<div class="listingblock execute">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-none hljs">oc patch odhdashboardconfig odh-dashboard-config -n redhat-ods-applications --type=merge -p '{
-  "spec": {
-    "dashboardConfig": {
-      "modelAsService": true,
-      "genAiStudio": true
-    }
-  }
-}'</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>Expected output:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre>odhdashboardconfig.opendatahub.io/odh-dashboard-config patched (no-change)</pre>
-</div>
-</div>
-<div class="paragraph">
-<p>Verify the dashboard configuration:</p>
-</div>
-<div class="listingblock execute">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-none hljs">oc get odhdashboardconfig odh-dashboard-config -n redhat-ods-applications -o jsonpath='{.spec.dashboardConfig}'</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>Expected output (should include both flags as true):</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre>{"genAiStudio":true,"modelAsService":true}</pre>
-</div>
-</div>
-<div class="paragraph">
-<p>The Gen AI Studio menu option will appear in the OpenShift AI dashboard after refreshing your browser. If it doesn&#8217;t appear immediately, clear your browser cache and reload the page.</p>
-</div>
-</div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_verification"><a class="anchor" href="#_verification"></a>Verification</h2>
-<div class="sectionbody">
-<div class="paragraph">
-<p>Confirm all MaaS components are activated and healthy:</p>
+<p><strong>Issue: Gateway status shows <code>PROGRAMMED=Unknown</code> (Persists beyond 2 minutes)</strong></p>
 </div>
 <div class="ulist">
 <ul>
 <li>
-<p>✓ Required operators (Service Mesh, Connectivity Link, OpenShift AI, LeaderWorkerSet) are installed with Succeeded status</p>
+<p><strong>Wait:</strong> The Gateway controller needs 60-90 seconds to process the resource and provision listeners.</p>
 </li>
 <li>
-<p>✓ Kuadrant pods (authorino, limitador, kuadrant-controller) are Running in kuadrant-system namespace</p>
+<p><strong>Check Service Mesh:</strong> Run <code>oc get pods -n openshift-ingress</code>.</p>
 </li>
 <li>
-<p>✓ Gateway resource (maas-default-gateway) exists in openshift-ingress namespace with PROGRAMMED=True</p>
+<p><strong>Check Gateway Controller:</strong> Run <code>oc get pods -n openshift-ingress-operator</code>.</p>
 </li>
 <li>
-<p>✓ MaaS API pods are Running in redhat-ods-applications namespace</p>
+<p><strong>Check Events:</strong> Run <code>oc describe gateway maas-default-gateway -n openshift-ingress</code>.</p>
 </li>
 <li>
-<p>✓ DataScienceCluster shows modelsAsService.managementState=Managed</p>
-</li>
-<li>
-<p>✓ Dashboard config has modelAsService and genAiStudio enabled</p>
+<p><strong>Root Cause:</strong> The Istio control plane is not fully ready, or Gateway API CRDs are not installed.</p>
 </li>
 </ul>
 </div>
 <div class="paragraph">
-<p><strong>Scope note</strong>: This page covers <strong>basic activation only</strong>—turning on MaaS features. Module 2 will cover detailed configuration of policies, tier definitions, and model deployment. The goal here is to get MaaS operational; the next module will make it production-ready for ChocoTech&#8217;s specific governance requirements.</p>
+<p><strong>Issue: Gateway status shows <code>PROGRAMMED=False</code></strong></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Verify Service Mesh:</strong> Ensure the control plane is healthy by running <code>oc get pods -n openshift-ingress</code>.</p>
+</li>
+<li>
+<p><strong>Check for Errors:</strong> Run <code>oc describe gateway maas-default-gateway -n openshift-ingress</code>.</p>
+</li>
+<li>
+<p><strong>Root Cause:</strong> The Service Mesh operator is not installed, or the Istio control plane is not deployed. Ensure the <code>openshift-ingress</code> namespace exists and contains running <code>istiod-<strong></code> and <code>istio-ingressgateway-</strong></code> pods.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>Issue: MaaS API pods are not appearing after DataScienceCluster patch</strong></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Check DSC Status:</strong> Run <code>oc get datasciencecluster default-dsc -o yaml | grep -A 10 conditions</code>.</p>
+</li>
+<li>
+<p><strong>Verify Kuadrant is Running:</strong> Run <code>oc get pods -n openshift-operators</code>. The MaaS API deployment strictly depends on Kuadrant being healthy.</p>
+</li>
+<li>
+<p><strong>Check Operator Logs:</strong> Run <code>oc logs -n redhat-ods-operator deployment/rhods-operator --tail=100</code> to find specific failures.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>Issue: Gen AI Studio is not visible in the dashboard after configuration patch</strong></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Verify Patch:</strong> Run <code>oc get odhdashboardconfig odh-dashboard-config -n redhat-ods-applications -o yaml | grep -A 5 dashboardConfig</code>.</p>
+</li>
+<li>
+<p><strong>Hard Reload:</strong> Clear your browser cache and hard-reload the page (Ctrl+Shift+R or Cmd+Shift+R).</p>
+</li>
+<li>
+<p><strong>Check Pod Logs:</strong> Run <code>oc logs -n redhat-ods-applications deployment/odh-dashboard --tail=50</code>.</p>
+</li>
+<li>
+<p><strong>Restart Dashboard:</strong> If needed, run <code>oc rollout restart deployment/odh-dashboard -n redhat-ods-applications</code>.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>Issue: LeaderWorkerSet operator is missing from the operator list</strong></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Install:</strong> Navigate to <strong>Ecosystem → Software Catalog</strong> in the OpenShift console. Search for "Leader Worker Set" and click <strong>Install</strong>, selecting the <code>openshift-lws-operator</code> namespace. <strong>Note: This is strictly required for llm-d orchestration in later modules</strong>.</p>
+</li>
+</ul>
+</div>
+</div>
+</details>
+<hr>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_the_chocotech_impact"><a class="anchor" href="#_the_chocotech_impact"></a>The ChocoTech impact</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>By completing this module, you have laid the groundwork to solve ChocoTech&#8217;s GPU Silo Crisis.</p>
+</div>
+<div class="paragraph">
+<p><strong>What you accomplished:</strong></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Infrastructure Ready:</strong> The platform can now logically route and enforce policies across Quality Control, R&amp;D, Marketing, and Supply Chain.</p>
+</li>
+<li>
+<p><strong>Self-Service Enabled:</strong> Business unit leads can now generate API tokens for their developers securely, bypassing traditional IT ticket bottlenecks.</p>
+</li>
+<li>
+<p><strong>API Gateway Operational:</strong> A single, robust endpoint has replaced the four separate, insecure model-serving endpoints that teams were managing independently.</p>
+</li>
+</ul>
+</div>
+<hr>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_your_journey_progress"><a class="anchor" href="#_your_journey_progress"></a>Your journey progress</h2>
+<div class="sectionbody">
+<table class="tableblock frame-none grid-none stretch">
+<colgroup>
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 25%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><strong>✅ Module 1</strong><br>
+<em>Architecture &amp; Foundation</em></p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><strong>⏳ Module 2</strong><br>
+<em>Policies &amp; Governance</em></p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><strong>🔒 Module 3</strong><br>
+<em>Model Deployment</em></p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><strong>🚀 Module 4</strong><br>
+<em>Application Integration</em></p>
+</div></div></td>
+</tr>
+</tbody>
+</table>
+<div class="quoteblock">
+<blockquote>
+<strong>Next steps:</strong> You understand the business problem and have activated the MaaS platform. However, the foundation is operational but not yet configured for production. In Module 2, you will establish the actual governance rules, define tier-based access controls (Bronze, Silver, Gold), and continue to deploy your first models to the central catalog in Module 3.
+</blockquote>
 </div>
 </div>
 </div>
 <nav class="pagination">
-  <span class="prev"><a href="ch1-maas-arch-04.html">1.4: Infrastructure Components</a></span>
-  <span class="next"><a href="ch1-maas-arch-06.html">1.6: Verifying MaaS Installation</a></span>
+  <span class="prev"><a href="ch1-maas-arch-04.html">1.3: Enabling MaaS on RHOAI</a></span>
+  <span class="next"><a href="../ch2-platform-admin/ch2-platform-admin-01.html">2: Access Control &amp; Governance</a></span>
 </nav>
 </article>
   </div>
