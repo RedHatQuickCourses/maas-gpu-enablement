@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Module 5: API integration and consumer experience :: Models as a Service Breaking the GPU Silos on OpenShift AI 3.3</title>
+    <title>Module 3: Governance, Observability, and Chargeback :: Models as a Service Breaking the GPU Silos on OpenShift AI 3.3</title>
     <meta name="generator" content="Antora 3.1.3">
     <link rel="stylesheet" href="../../../_/css/site.css">
     <script>var uiRootPath = '../../../_'</script>
@@ -148,7 +148,7 @@
 <nav class="breadcrumbs" aria-label="breadcrumbs">
   <ul>
     <li><a href="../index.html">Models as a Service Breaking the GPU Silos on OpenShift AI 3.3</a></li>
-    <li><a href="ch5-api-integration-01.html">Module 5: API integration and consumer experience</a></li>
+    <li><a href="ch3-governance-01.html">Module 3: Governance, Observability, and Chargeback</a></li>
   </ul>
 </nav>
 </div>
@@ -157,50 +157,52 @@
   <div class="toc-menu"></div>
 </aside>
 <article class="doc">
-<h1 class="page">Module 5: API integration and consumer experience</h1>
-<div id="preamble">
-<div class="sectionbody">
-<div class="paragraph">
-<p>A developer from ChocoTech&#8217;s Marketing team approaches you with excitement. "We&#8217;ve been building a customer sentiment analysis application using OpenAI&#8217;s ChatGPT API," she explains. "Can we switch to using the internal MaaS models instead? We want to keep customer data on-premises and reduce external API costs."</p>
+<h1 class="page">Module 3: Governance, Observability, and Chargeback</h1>
+<div class="paragraph lead">
+<p><strong>Without tiers and quotas, centralized serving becomes uncontrolled consumption—governance transforms the Centralized Model Hub from free-for-all to fair allocation.</strong></p>
 </div>
-<div class="paragraph">
-<p>This is exactly the use case MaaS enables. Your task is to show the development team how to generate API tokens, integrate models using the OpenAI-compatible API, and implement proper error handling for rate limits.</p>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>Implement MaaS Governance and Observability</strong></dt>
+<dd>
+<p>Define tiered service limits, configure group-based rate limiting, track token consumption metrics, and automate chargeback workflows.</p>
+</dd>
+</dl>
 </div>
-<div class="paragraph">
-<p>In this module, you&#8217;ll navigate the Gen AI Studio interface, generate Bearer tokens for authentication, consume models via the OpenAI-compatible API, and implement retry logic for production applications.</p>
-</div>
-<!-- toc disabled -->
-</div>
-</div>
-<div class="sect1">
-<h2 id="_learning_objectives"><a class="anchor" href="#_learning_objectives"></a>Learning objectives</h2>
-<div class="sectionbody">
-<div class="paragraph">
-<p>By the end of this module, you&#8217;ll be able to:</p>
-</div>
+<hr>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>3.1: Defining Governance Tiers</strong></dt>
+<dd>
 <div class="ulist">
 <ul>
 <li>
-<p>Navigate the Gen AI Studio dashboard to discover available models</p>
-</li>
-<li>
-<p>Generate API tokens with proper scope and expiration settings</p>
-</li>
-<li>
-<p>Make REST API calls to <code>/v1/models</code> and <code>/v1/chat/completions</code> endpoints</p>
-</li>
-<li>
-<p>Implement OpenAI-compatible API integration in existing applications</p>
-</li>
-<li>
-<p>Handle rate limiting responses (429 status) with exponential backoff retry logic</p>
-</li>
-<li>
-<p>Understand token consumption tracking and quota management</p>
+<p>Default tiers and group mappings, create custom governance tiers (Free, Premium, Enterprise), Map OpenShift user groups to tier levels</p>
 </li>
 </ul>
 </div>
+</dd>
+<dt class="hdlist1"><strong>3.2: Rate Limits and Quotas</strong></dt>
+<dd>
+<div class="ulist">
+<ul>
+<li>
+<p>onfigure request rate limits and token quotas</p>
+</li>
+</ul>
 </div>
+</dd>
+<dt class="hdlist1"><strong>3.3: Lab - Observability &amp; Automated Chargeback</strong></dt>
+<dd>
+<div class="ulist">
+<ul>
+<li>
+<p>Tracking metrics and billing calculations</p>
+</li>
+</ul>
+</div>
+</dd>
+</dl>
 </div>
 </article>
   </div>

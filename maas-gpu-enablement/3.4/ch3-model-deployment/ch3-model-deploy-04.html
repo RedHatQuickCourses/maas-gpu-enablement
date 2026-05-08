@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Module 5: API integration and consumer experience :: Models as a Service Breaking the GPU Silos on OpenShift AI 3.3</title>
+    <title>3.4: Publish model to the MaaS catalog :: Models as a Service Breaking the GPU Silos on OpenShift AI 3.3</title>
     <meta name="generator" content="Antora 3.1.3">
     <link rel="stylesheet" href="../../../_/css/site.css">
     <script>var uiRootPath = '../../../_'</script>
@@ -148,7 +148,7 @@
 <nav class="breadcrumbs" aria-label="breadcrumbs">
   <ul>
     <li><a href="../index.html">Models as a Service Breaking the GPU Silos on OpenShift AI 3.3</a></li>
-    <li><a href="ch5-api-integration-01.html">Module 5: API integration and consumer experience</a></li>
+    <li><a href="ch3-model-deploy-04.html">3.4: Publish model to the MaaS catalog</a></li>
   </ul>
 </nav>
 </div>
@@ -157,49 +157,174 @@
   <div class="toc-menu"></div>
 </aside>
 <article class="doc">
-<h1 class="page">Module 5: API integration and consumer experience</h1>
+<h1 class="page">3.4: Publish model to the MaaS catalog</h1>
 <div id="preamble">
 <div class="sectionbody">
 <div class="paragraph">
-<p>A developer from ChocoTech&#8217;s Marketing team approaches you with excitement. "We&#8217;ve been building a customer sentiment analysis application using OpenAI&#8217;s ChatGPT API," she explains. "Can we switch to using the internal MaaS models instead? We want to keep customer data on-premises and reduce external API costs."</p>
+<p>Now that the model is deployed, verify it appears in the Gen AI Studio catalog and is accessible through the MaaS gateway.</p>
 </div>
 <div class="paragraph">
-<p>This is exactly the use case MaaS enables. Your task is to show the development team how to generate API tokens, integrate models using the OpenAI-compatible API, and implement proper error handling for rate limits.</p>
+<p>The <code>publishToGenAIStudio: true</code> setting in the LLMInferenceService manifest automatically registers the model with MaaS.</p>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_verify_model_registration_in_maas"><a class="anchor" href="#_verify_model_registration_in_maas"></a>Verify model registration in MaaS</h3>
+<div class="paragraph">
+<p>Check that the model was registered with the MaaS API:</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">oc get maasmodel -n chocotech-models</code></pre>
+</div>
 </div>
 <div class="paragraph">
-<p>In this module, you&#8217;ll navigate the Gen AI Studio interface, generate Bearer tokens for authentication, consume models via the OpenAI-compatible API, and implement retry logic for production applications.</p>
+<p>Expected output:</p>
 </div>
-<!-- toc disabled -->
+<div class="listingblock">
+<div class="content">
+<pre>NAME          MODEL                                    STATUS    AGE
+llama-3-8b    meta-llama/Meta-Llama-3-8B-Instruct     Published   5m</pre>
 </div>
 </div>
-<div class="sect1">
-<h2 id="_learning_objectives"><a class="anchor" href="#_learning_objectives"></a>Learning objectives</h2>
-<div class="sectionbody">
 <div class="paragraph">
-<p>By the end of this module, you&#8217;ll be able to:</p>
+<p>Describe the MaaSModel resource:</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">oc describe maasmodel llama-3-8b -n chocotech-models</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Look for:</p>
 </div>
 <div class="ulist">
 <ul>
 <li>
-<p>Navigate the Gen AI Studio dashboard to discover available models</p>
+<p><code>Status: Published</code> - Model is available in catalog</p>
 </li>
 <li>
-<p>Generate API tokens with proper scope and expiration settings</p>
+<p><code>Gateway Endpoint</code> - External URL for model access</p>
 </li>
 <li>
-<p>Make REST API calls to <code>/v1/models</code> and <code>/v1/chat/completions</code> endpoints</p>
+<p><code>Tier Access</code> - bronze, silver, gold, platinum</p>
 </li>
 <li>
-<p>Implement OpenAI-compatible API integration in existing applications</p>
-</li>
-<li>
-<p>Handle rate limiting responses (429 status) with exponential backoff retry logic</p>
-</li>
-<li>
-<p>Understand token consumption tracking and quota management</p>
+<p><code>Integration Status</code> - Kuadrant policies applied</p>
 </li>
 </ul>
 </div>
+</div>
+<div class="sect2">
+<h3 id="_access_the_gen_ai_studio_catalog"><a class="anchor" href="#_access_the_gen_ai_studio_catalog"></a>Access the Gen AI Studio catalog</h3>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Open the OpenShift AI dashboard in your browser (or use Showroom "OpenShift AI" tab)</p>
+</li>
+<li>
+<p>Navigate to <strong>Gen AI Studio</strong> in the left menu</p>
+</li>
+<li>
+<p>Click on the <strong>Models</strong> tab</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>You should now see Llama-3 8B in the model catalog:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>Model Name: meta-llama/Meta-Llama-3-8B-Instruct
+Status: Available
+Tier Access: Bronze, Silver, Gold, Platinum
+Endpoint: https://maas-default-gateway.{cluster_domain}/v1/chat/completions</pre>
+</div>
+</div>
+<div class="imageblock unresolved">
+<div class="content">
+<a class="image" href="genai-studio-model-catalog.png" target="blank"><img src="genai-studio-model-catalog.png" alt="Gen AI Studio catalog showing Llama-3 8B model with tier access and endpoint information" width="800"></a>
+</div>
+<div class="title">Figure 1. Model Catalog in Gen AI Studio Dashboard</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_test_model_accessibility_through_maas_gateway"><a class="anchor" href="#_test_model_accessibility_through_maas_gateway"></a>Test model accessibility through MaaS gateway</h3>
+<div class="paragraph">
+<p>Get the MaaS gateway endpoint:</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">oc get route maas-default-gateway -n redhat-ods-applications -o jsonpath='{.spec.host}'</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Expected output:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>maas-default-gateway.apps.{cluster_domain}</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Generate an API token (covered in Module 5) or use a test token:</p>
+</div>
+<div class="paragraph">
+<p>Note: In Module 5, you&#8217;ll learn how to generate proper Bearer tokens. For now, verify the model endpoint is reachable.</p>
+</div>
+<div class="paragraph">
+<p>Check the models list endpoint (no auth required for list):</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">curl https://$(oc get route maas-default-gateway -n redhat-ods-applications -o jsonpath='{.spec.host}')/v1/models</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Expected output:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>{
+  "object": "list",
+  "data": [
+    {
+      "id": "meta-llama/Meta-Llama-3-8B-Instruct",
+      "object": "model",
+      "created": 1714345678,
+      "owned_by": "chocotech-models"
+    }
+  ]
+}</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Your model appears in the API response, confirming MaaS integration is working.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_verification"><a class="anchor" href="#_verification"></a>Verification</h3>
+<div class="paragraph">
+<p>Confirm MaaS catalog publication:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>MaaSModel resource exists with Status=Published</p>
+</li>
+<li>
+<p>Model appears in Gen AI Studio Models tab</p>
+</li>
+<li>
+<p>Model shows correct tier access permissions (bronze/silver/gold/platinum)</p>
+</li>
+<li>
+<p>MaaS gateway <code>/v1/models</code> endpoint returns the model</p>
+</li>
+<li>
+<p>Gateway endpoint URL is accessible</p>
+</li>
+</ul>
 </div>
 </div>
 </article>
