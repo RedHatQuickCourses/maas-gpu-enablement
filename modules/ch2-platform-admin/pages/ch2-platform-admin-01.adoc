@@ -1,24 +1,56 @@
-= Module 2: Setting Up Access Control and Governance
+= Module 2: Setting up access control and governance
 
-After enabling the MaaS platform in Module 1, the CIO calls you into a meeting. "The infrastructure is ready," she says, "but before we deploy any models, I need to know how we're going to control access and manage costs across business units."
+The CIO at ChocoTech Industries just called an emergency meeting. 
 
-She hands you a requirements document:
+"The infrastructure is ready," she says, "but before we deploy any models, I need to know how we are going to control access and manage costs across business units." 
 
-* *Quality Control* needs production-grade access with guaranteed availability (Gold tier)
-* *R&D* needs development access with moderate throughput (Silver tier)
-* *Marketing* needs exploratory access for sentiment analysis (Bronze tier)
-* All access must be authenticated with API tokens for audit trails
-* Rate limits must prevent any single team from monopolizing GPU resources
+If ChocoTech relied on a cheap public API, every business unit would simply swipe a corporate credit card. This leads to unpredictable billing, zero visibility into which team is consuming the most compute, and no way to prioritize mission-critical factory workloads over exploratory marketing tasks. 
 
+By utilizing Models as a Service (MaaS) on Red Hat OpenShift AI, you solve this by enforcing strict, token-based governance directly at the network edge. 
+
+She hands you the following requirements document:
+
+[cols="1a,1a,2a",options="header",frame="all",grid="rows"]
+|===
+| Business Unit | Tier Assignment | Infrastructure Requirement
+
+| **Quality Control**
+| Gold Tier
+| Needs production-grade access with guaranteed availability for real-time defect detection. 
+
+| **R&D**
+| Silver Tier
+| Needs development access with moderate throughput for recipe optimization testing.
+
+| **Marketing**
+| Bronze Tier
+| Needs exploratory access for sentiment analysis. 
+|===
+
+Furthermore, the CIO mandates that all access must be authenticated with API tokens to create definitive audit trails, and strict rate limits must prevent any single team from monopolizing the GPU resources.
+
+
+== Learning objectives
+
+By the end of this module, you will be able to:
+
+* Explain how tier-based governance prevents resource exhaustion and enables accurate chargebacks.
+* Create OpenShift groups and map them to logical business units.
+* Prepare and label a dedicated model-serving namespace for MaaS governance.
+* Configure Role-Based Access Control (RBAC) and ServiceAccounts for programmatic model access.
+* Define and apply token-aware rate limits and quotas for distinct service tiers.
+
+////
 ---
 
-In this module, you'll create business unit groups, configure RBAC for API access, generate authentication tokens, and deploy tier-based governance policies that will control model access in Module 3.
+== The deployment strategy
 
+To achieve the CIO's requirements, you cannot simply create a tier and hope it works. You must build the governance foundation from the bottom up. In this module, you will execute the following strategy:
 
-1. *Organizational Structure*: Create OpenShift groups for ChocoTech's business units (Quality Control, R&D, Marketing) and prepare the namespace for governed model serving
+1. **Organizational Structure (The Foundation):** First, you will create the native OpenShift groups for ChocoTech's business units (Quality Control, R&D, Marketing) and prepare a dedicated namespace for governed model serving. 
+2. **Authentication & Authorization:** Next, you will configure ServiceAccounts for programmatic API access, define Role-Based Access Control (RBAC) roles for model access, and generate your JSON Web Tokens (JWTs).
+3. **Governance Policies:** Finally, you will map those newly created groups to specific tier-based policies (Gold, Silver, Bronze) to enforce the CIO's requested rate limits and quotas. 
 
-2. *Authentication & Authorization*: Configure ServiceAccounts for programmatic API access, define RBAC roles for model access, and test JWT token-based authentication
+By the end of this module, ChocoTech's MaaS platform will be fully secured, authenticated, and ready to host high-performance models without the risk of resource exhaustion.
 
-3. *Governance Policies*: Deploy tier-based policies (Gold, Silver, Bronze) with rate limits and quotas, then verify all governance components are operational
-
-By the end of this module, the MaaS platform will be ready for governed model deployment with tier-based access control, authentication, and resource limits in place.
+ ////

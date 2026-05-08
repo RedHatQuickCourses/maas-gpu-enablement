@@ -1,130 +1,86 @@
-= 2.1:  Understanding tier-based governance
+= 2.1: Understanding tier-based governance
 
-In this lab, we are generating tokens via the CLI using ServiceAccounts for programmatic access. Human developers belonging to the groups we created (e.g., chocotech-rd) will simply log into the Gen AI Studio UI, where the dashboard will generate their JWTs for them based on their group's MaaS Tier mapping.
+Before we configure OpenShift groups or generate ServiceAccount tokens, we must define the core mechanism that makes MaaS governance possible: **Tiers**. 
 
+In a traditional, decentralized AI setup, any user with access to an API endpoint can theoretically send massive, computationally expensive prompts to an LLM. This leads to immediate resource exhaustion and makes cross-departmental chargebacks impossible. 
 
-
-== MaaS encompasses the following key capabilities:
-
-Tier-based access control::
-Defining multiple service tiers, such as free, premium, or enterprise, each featuring distinct rate limits, quotas, and model access permissions tailored for various user groups.
-Policy and quota management::
-Enforcing rate limiting and quota policies to mitigate the risk of resource exhaustion.
-API key authentication::
-Regulating access to models through tier-based resource allocation and API key-based authentication.
-Usage tracking::
-Monitoring consumption metrics essential for cost allocation and billing processes.
-Observability::
-Providing the ability to monitor model access patterns, policy enforcement actions, and resource utilization.
+Models as a Service solves this by placing a strict, tier-based governance layer between the user and the underlying KServe infrastructure. 
 
 
-== Tiers
+== What is a tier?
 
-*Tiers control which AI asset model endpoints users can access based on their group membership.*
+A tier is a logical boundary that controls which AI models a user can access, how fast they can access them, and how their usage is tracked. 
 
-When multiple teams share large language models, tiers serve several critical functions:
+When multiple business units share expensive large language models, tiers serve four critical enterprise functions:
 
-  * Preventing resource exhaustion resulting from unrestricted usage.
-  * Providing differential service levels to distinct user groups.
-  * Tracking and allocating costs based on consumption by each team.
-  * Controlling which teams are granted access to computationally expensive or sensitive models.
-
-[WARNING]
-MaaS assigns users to tiers based on their OpenShift group membership. In instances where a user is a member of multiple groups, the system defaults to assigning the tier with the highest level number.  Users are restricted to accessing only those models made available to their assigned tier and are precluded from accessing models in lower-level tiers, even if they belong to groups associated with those lower tiers
-
-
-=== MaaS Default Tiers
-
+[cols="1a,2a",options="header",frame="all",grid="rows"]
 |===
-| Tier Name | Description | Level (Priority) | Group | Gateway-Endpoint
+| The Strategic Capability | The Enterprise Value
+
+| **Preventing Resource Exhaustion**
+| Generative AI compute costs are directly correlated to sequence length. Tiers enforce rate limits and token quotas, preventing a single team from overwhelming the cluster.
+
+| **Differential Service Levels**
+| Tiers allow you to prioritize mission-critical workloads. For example, a production defect-detection system can be granted higher throughput than an exploratory R&D application.
+
+| **Granular Cost Tracking**
+| Finance teams can track exact consumption metrics (prompt and completion tokens) based on tier assignments, enabling highly accurate departmental billing and cost allocation.
+
+| **Model Access Control**
+| Tiers dictate which groups are granted access to specific models. You can restrict massive, 70-billion parameter models to top-tier users while offering smaller 8-billion parameter models to entry-level users.
+|===
+
+== How tier assignments work
+
+MaaS relies on your native OpenShift organizational structure. Administrators map OpenShift user groups directly to logical tiers. 
+
+When a user requests a model, the system checks their group membership and assigns them a tier based on a strict numeric hierarchy. 
+
+=== The Hierarchy Rule
+If a user holds membership in multiple groups associated with different tiers, **MaaS will default to assigning them to the tier with the numerically highest level (priority)**. 
+
+Users are restricted to accessing *only* those models explicitly made available to their assigned tier. They are precluded from accessing models restricted exclusively to lower-level tiers, even if they belong to groups associated with those lower tiers.
+
+=== The 0-100 Priority Spectrum
+To support highly complex enterprise structures, **tier levels can be configured anywhere on a spectrum from `0` to `100`.** This provides massive granularity. An organization might reserve `0` for basic exploratory access, use the `10-50` range for various departmental development environments, and reserve `100` strictly for mission-critical, revenue-generating production workloads that require absolute priority.
+
+== The Default MaaS Tiers
+
+Out of the box, the MaaS platform incorporates three default tiers to demonstrate this spectrum at a basic level (`0`, `1`, and `2`). Each tier is automatically associated with a dedicated OpenShift namespace and identity group.
+
+[cols="1,2,1,1",options="header",frame="all",grid="rows"]
+|===
+| Tier Name | Description | Level (Priority) | Default Associated Group 
 
 | **Free**
-| Entry-level tier for basic users
-| 0 (Lowest)
-| system:authenticated
-| maas-default-gateway-tier-free
+| Entry-level tier for basic or exploratory users.
+| `0` (Lowest)
+| `system:authenticated`
 
 | **Premium**
-| Intermediate tier for higher throughput requirements
-| 1
-| premium-users
-| maas-default-gateway-tier-premium
+| Intermediate tier for higher throughput and token requirements.
+| `1`
+| `premium-users`
 
 | **Enterprise**
-| Top tier, designed for critical workloads
-| 2
-| enterprise-users
-| maas-default-gateway-tier-enterprise
-
-
+| Top tier, designed for production and mission-critical workloads.
+| `2` (Highest)
+| `enterprise-users`
 |===
 
----
+[WARNING]
+====
+**CRITICAL:** It is strongly advised not to delete all tiers from the system. Should the last remaining tier be deleted, the OpenShift AI dashboard will cease to display the "Add tier" button, permanently preventing the creation of new tiers through the User Interface. Ensure at least one tier remains present at all times.
+====
 
-=== Tier to Group Mapping Retrieval
-The configuration map defining the tier-to-group mapping can be retrieved using the command:
+== The ChocoTech tier strategy
 
-[source,role="execute"]
-----
- oc get configmap tier-to-group-mapping -n redhat-ods-applications
-----
+To solve ChocoTech's GPU Silo Crisis, we will not use the generic defaults. Instead, the CIO has mandated a custom tier mapping tailored to the company's business units. 
 
+In the upcoming sections, you will build the following structure:
 
+* **Gold Tier (Level 100):** Mapped to the `chocotech-quality-control` group. This tier will have the highest rate limits to ensure the factory floor's defect detection models never experience throttling.
+* **Silver Tier (Level 50):** Mapped to the `chocotech-rd` group. This tier will have moderate throughput limits for recipe optimization testing.
+* **Bronze Tier (Level 10):** Mapped to the `chocotech-marketing` group. This tier will have strict limits to prevent their exploratory sentiment analysis from monopolizing GPU capacity. 
 
-=== Why tiers matter for MaaS
-
-Tier-based governance provides several critical capabilities:
-
-* *Fair resource allocation*: Prevents Free tier users from consuming resources needed by Enterprise tier production workloads
-* *Cost control*: Rate limits and quotas cap resource consumption per tier
-* *Chargeback reporting*: Track and allocate AI infrastructure costs by tier and business unit
-* *Quality of service*: Enterprise tier gets higher priority during peak demand
-
-Without tiers, the first team to use the platform could monopolize all available GPU resources, blocking other business units.
-
-=== ChocoTech's business unit tier mapping
-
-Based on the CIO's requirements document, ChocoTech's business units map to tiers as follows:
-
-[cols="1,1,2,1,2",options="header"]
-|===
-|Business Unit
-
-|Tier
-|Use Case
-|Priority
-|Models Allowed
-
-|Quality Control
-|Gold
-|Defect detection (production)
-|Highest
-|All models
-
-|R&D
-|Silver
-|Recipe optimization (development)
-|Medium
-|All models
-
-|Marketing
-|Bronze
-|Sentiment analysis (exploratory)
-|Lower
-|Select models
-|===
-
-////
-
-== In Module 3, you'll deploy two models:
-
-* *llama3-8b*: Accessible to all tiers (Gold, Silver, Bronze)
-* *nemotron-8b*: Accessible to Bronze and Silver only (demonstrating selective tier access)
-
-This mapping ensures Quality Control's production defect detection system gets guaranteed resources, while Marketing's exploratory sentiment analysis doesn't impact critical workloads.
-
-== Creating OpenShift groups
-
-OpenShift groups provide a way to organize users by department or function and assign permissions at the group level rather than individual users.
-
-////
+Now that you understand the strategy and enforcement mechanics, proceed to the next section to begin building these OpenShift groups in the cluster.

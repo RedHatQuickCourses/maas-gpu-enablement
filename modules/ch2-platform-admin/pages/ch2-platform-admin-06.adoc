@@ -1,545 +1,919 @@
-= 2.6: Configuring API access with ServiceAccounts and RBAC
+= 2.4: Deploying governance tier policies and verifying readiness
 
-With organizational structure in place, the next step is to enable programmatic API access for applications. Marketing's sentiment analysis application needs to access models without requiring human credentials.
+With organizational structure and authentication in place, the final step is to deploy tier-based governance policies that enforce rate limits and quotas across ChocoTech's business units.
 
-This section covers ServiceAccount-based authentication using JWT tokens and RBAC (Role-Based Access Control) for authorizing model access.
+This section covers creating MaaS Tier custom resources, verifying governance components, and completing a comprehensive pre-deployment readiness checklist.
 
-== Understanding ServiceAccount-based authentication
+== Understanding MaaS tier governance
 
-OpenShift provides two types of identities for accessing resources: User accounts and ServiceAccounts.
+Tier governance ensures fair resource allocation and prevents any single business unit from monopolizing GPU resources.
 
-=== User accounts vs. ServiceAccounts
+=== What are MaaS Tier custom resources?
 
-[cols="1,2,2",options="header"]
-|===
-|Identity Type
-|Intended For
-|Use Case
+MaaS Tier is a custom resource definition (CRD) provided by the Red Hat OpenShift AI MaaS operator. Each MaaS Tier resource defines:
 
-|User account
-|Humans (interactive login)
-|Developer logs into OpenShift AI dashboard, deploys models manually
+* *Tier properties*: Display name, priority level
+* *Rate limits*: Maximum requests per minute
+* *Quotas*: Maximum tokens per hour for LLM inference
+* *Group mapping*: Which OpenShift groups belong to this tier
 
-|ServiceAccount
-|Applications (programmatic access)
-|Marketing's sentiment analysis app calls MaaS API to classify customer feedback
-|===
+When you deploy a model in Module 3, you'll annotate it with tier names. The MaaS platform enforces the tier's rate limits and quotas on all requests to that model.
 
-The Marketing team's sentiment analysis application needs a ServiceAccount because:
+=== Why tier policies matter
 
-* The application runs in a container and cannot perform interactive login
-* User credentials should not be embedded in application code or container images
-* Tokens can be rotated without redeploying the application
-* ServiceAccount tokens provide audit trails (which application accessed which model)
+Without tier governance:
 
-=== The authentication flow
+* Bronze tier users (Marketing's exploratory experiments) could consume all available GPU capacity
+* Gold tier users (Quality Control's production defect detection) would be blocked waiting for resources
+* No mechanism exists to track or limit costs per business unit
 
-When an application makes an API request to the MaaS Gateway, the request flows through multiple authentication and authorization layers:
+With tier governance:
+
+* *Prioritized request processing*: Gold tier requests are processed first during peak demand
+* *Fair resource allocation*: Rate limits prevent Bronze tier from consuming all capacity
+* *Cost control*: Quotas cap token consumption (and thus GPU costs) per tier
+* *Chargeback reporting*: Track AI infrastructure costs by tier and business unit
+
+=== The tier enforcement flow
+
+When an application makes an inference request, the request flows through multiple governance layers:
 
 ----
-Application
-  ↓ (includes Bearer token in Authorization header)
+API Request (with Bearer token)
+  ↓
 Gateway (maas-default-gateway)
-  ↓ (routes to Authorino for authentication)
-Authorino
-  ↓ (validates JWT token signature with Kubernetes API server)
-Token Validation
-  ↓ (extracts ServiceAccount identity from token)
-RBAC Check (verifies ServiceAccount has required permissions)
-  ↓ (authorized request forwarded to backend)
-MaaS API
-  ↓ (routes to specific model)
-Model (LLMInferenceService)
+  ↓
+Authorino (validates token, extracts ServiceAccount identity)
+  ↓
+Authorino (determines which group/tier the ServiceAccount belongs to)
+  ↓
+Limitador (checks tier rate limit: has this tier exceeded requests/minute?)
+  ↓ (if rate limit OK)
+MaaS API (checks tier quota: has this tier exceeded tokens/hour?)
+  ↓ (if quota OK)
+Model (LLMInferenceService processes the request)
 ----
 
-If any step fails (invalid token, expired token, insufficient permissions), the request is rejected with HTTP 401 Unauthorized or 403 Forbidden.
+If rate limit is exceeded: HTTP 429 Too Many Requests
+If quota is exceeded: HTTP 429 with quota exhaustion message
 
-=== JWT tokens vs. permanent credentials
+=== ChocoTech's tier requirements
 
-MaaS uses JWT (JSON Web Token) tokens for authentication:
+Based on the CIO's requirements document:
 
-* *Time-limited*: Tokens expire after a configured duration (1 hour, 24 hours, etc.)
-** Reduces risk if a token is leaked (it expires automatically)
-** Forces applications to rotate tokens periodically
+[cols="1,2,1,1,1",options="header"]
+|===
+|Tier
+|Business Unit
+|Requests/Minute
+|Tokens/Hour
+|Level (Priority )
 
-* *Revocable*: Delete the ServiceAccount to immediately revoke all its tokens
-** No need to change passwords or regenerate credentials
-** Instant revocation across all applications using that ServiceAccount
+|Gold
+|Quality Control
+|100
+|50,000
+|High (100)
 
-* *Auditable*: Every API request includes the ServiceAccount identity
-** OpenShift audit logs track which ServiceAccount made which requests
-** Authorino and MaaS API logs provide detailed request histories
+|Silver
+|R&D
+|50
+|25,000
+|Medium (50)
 
-[NOTE]
-====
-For detailed information on ServiceAccount authentication patterns, see the official Red Hat documentation:
+|Bronze
+|Marketing
+|20
+|10,000
+|Low (10)
+|===
 
-* link:../../../reference/Distributed_Inference-en-US/full-document.md#making-authenticated-inference-requests[Distributed Inference Guide - Section 2.7: Making Authenticated Requests]
-* link:../../../reference/Deploying_models-en-US/full-document.md#token-authentication[Deploying Models Guide - Section 4.1-4.4: Token Authentication]
-====
+These limits ensure:
 
-== Creating ServiceAccounts
+* Quality Control's production workloads get guaranteed throughput
+* R&D has sufficient capacity for development without impacting production
+* Marketing can experiment without consuming resources needed by other teams
 
-Create a ServiceAccount for the Marketing team's sentiment analysis application.
+== Creating MaaS Tier custom resources
 
-=== Exercise 1: Create ServiceAccount for API access
+The tier-to-group-mapping ConfigMap defines the global business rules for your entire enterprise AI factory.
+
+The core OpenShift AI backend services—specifically the maas-api server and the Gen AI Studio UI—live in the redhat-ods-applications namespace. When an AI Administrator logs into the dashboard, the UI needs to read this ConfigMap to know what tiers exist and who belongs to them.
+
+Because it is a global controller, it expects its configuration files to live in its own system namespace. If you put it in chocotech-models, the MaaS API wouldn't know it exists, and the Gen AI Studio UI would show empty tiers.
+
+---
+
+Deploy tier policies for Gold, Silver, and Bronze tiers.
+
+=== Exercise 1: Deploy Gold tier policy
+
+Create the Gold tier policy for Quality Control:
 
 [source,role="execute"]
 ----
-oc create serviceaccount marketing-sentiment-app -n chocotech-models
-----
 
-Expected output:
-
-----
-serviceaccount/marketing-sentiment-app created
-----
-
-Verify the ServiceAccount was created:
-
-[source,role="execute"]
-----
-oc get serviceaccount marketing-sentiment-app -n chocotech-models
-----
-
-Expected output:
-
-----
-NAME                       SECRETS   AGE
-marketing-sentiment-app    0         15s
-----
-
-=== What was created?
-
-The `oc create serviceaccount` command created:
-
-* A *ServiceAccount* resource in the `chocotech-models` namespace
-* An identity that can be used to generate JWT tokens
-* A principal that can be granted RBAC permissions
-
-The ServiceAccount exists but currently has no permissions. You'll grant permissions in the next section using RBAC.
-
-== Creating RBAC roles
-
-RBAC (Role-Based Access Control) defines which actions a ServiceAccount can perform on which resources.
-
-=== Exercise 2: Create Role for model inference access
-
-The Marketing team's application needs to discover available models and send inference requests. This requires `get` and `list` permissions on `LLMInferenceService` resources.
-
-Create a Role that grants read-only access to LLMInferenceService resources:
-
-[source,role="execute"]
-----
-oc apply -f - <<EOF
-apiVersion: rbac.authorization.k8s.io/v1
-kind: Role
+cat <<EOF | oc apply -f -
+apiVersion: v1
+kind: ConfigMap
 metadata:
-  name: llm-inference-viewer
-  namespace: chocotech-models
-rules:
-- apiGroups: ["serving.kserve.io"]
-  resources: ["llminferenceservices"]
-  verbs: ["get", "list"]
-- apiGroups: ["serving.kserve.io"]
-  resources: ["llminferenceservices/status"]
-  verbs: ["get"]
+  name: tier-to-group-mapping
+  namespace: redhat-ods-applications
+data:
+  tiers: |
+    - name: gold-tier
+      description: Quality Control Production
+      level: 100
+      groups:
+      - chocotech-quality-control
+EOF
+----
+
+
+Expected output:
+
+----
+ratelimitpolicy.kuadrant.io/gold-tier-rate-limit created
+----
+
+=== Understanding the Gold tier definition
+
+* `level: 100`: Highest priority level for request processing
+** During peak demand, Gold tier requests are processed before Silver and Bronze
+** Ensures Quality Control's production defect detection system gets guaranteed resources
+
+* `rateLimit.requestsPerMinute: 100`: Maximum 100 inference requests per minute
+** Prevents excessive burst traffic that could overwhelm GPU resources
+** Allows steady production throughput
+
+* `quota.tokensPerHour: 50000`: Maximum 50,000 LLM tokens per hour
+** Tokens = input tokens + output tokens for all requests in the past hour
+** For context: GPT-3.5 level model processes ~500 tokens per request
+** 50,000 tokens ≈ 100 requests of 500 tokens each
+
+* `groups: [chocotech-quality-control]`: Maps this tier to the OpenShift group
+** Members of `chocotech-quality-control` group automatically belong to Gold tier
+** When they generate tokens from ServiceAccounts, requests count against Gold tier limits
+
+=== Architectural Note: The UI is a One-Way Street
+
+If you define a Kuadrant `RateLimitPolicy` using CEL via the CLI, it will work perfectly at the network edge. However, **it will not appear in the Gen AI Studio UI.**
+
+The OpenShift AI dashboard is an abstraction layer. It manages its Tiers in its own backend and *pushes* basic YAML down to Kuadrant. It does not read manual Kuadrant policies *up* from the cluster.
+
+**How to position this to customers:**
+
+* **The AI Admin (UI):** Uses the Gen AI Studio to create standard, easy-to-read "Free/Premium/Enterprise" tiers.
+* **The Platform Engineer (CLI):** Writes "Out-of-Band" or "Shadow" Kuadrant policies via GitOps when the business requires advanced logic that the UI cannot support (e.g., rate-limiting based on specific JWT claims or routing paths). 
+
+Both work simultaneously, but the Platform Engineer must document their custom GitOps policies, as the AI Admin will not see them in their dashboard.
+
+=== Exercise 2: Deploy Silver tier policy
+
+Create the Silver tier policy for R&D:
+
+[source,role="execute"]
+----
+
+cat <<EOF | oc apply -f -
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: tier-to-group-mapping
+  namespace: redhat-ods-applications
+data:
+  tiers: |
+    - name: silver-tier
+      description: R&D Development
+      level: 50
+      groups:
+      - chocotech-rd
+EOF
+
+----
+
+Expected output:
+
+----
+ratelimitpolicy.kuadrant.io/silver-tier-rate-limit created
+----
+
+The Silver tier provides balanced resources:
+
+* Half the rate limit of Gold tier (1000) vs 10000 requests/minute)
+* 1/10th the quota of Gold tier (60,000 vs 600,000 tokens/hour)
+* Medium priority (25) - processed after Gold, before Bronze
+
+This allocation is appropriate for R&D's recipe optimization work, which is important but not production-critical.
+
+=== Exercise 3: Deploy Bronze tier policy
+
+Create the Bronze tier policy for Marketing:
+
+[source,role="execute"]
+----
+cat <<EOF | oc apply -f -
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: tier-to-group-mapping
+  namespace: redhat-ods-applications
+data:
+  tiers: |
+    - name: bronze-tier
+      description: Marketing Exploratory
+      level: 10
+      groups:
+      - chocotech-marketing
 EOF
 ----
 
 Expected output:
 
 ----
-role.rbac.authorization.k8s.io/llm-inference-viewer created
+configmap/tier-to-group-mapping configured
 ----
 
-=== Understanding the RBAC role
+The Bronze tier provides cost-controlled resources:
 
-Let's break down the Role definition:
+* Conservative rate limit (100 requests/minute) for exploratory work
+* Lower quota (10,000 tokens/hour) to control costs
+* Lowest priority (10) - processed after Gold and Silver tiers
 
-* `apiGroups: ["serving.kserve.io"]`
-** The API group for KServe resources
-** LLMInferenceService is a custom resource provided by KServe
+This allocation is appropriate for Marketing's sentiment analysis experiments, which are exploratory and cost-sensitive.
 
-* `resources: ["llminferenceservices"]`
-** The specific resource type this Role grants access to
-** Corresponds to deployed models in the namespace
+=== Exercise 4: Verify tier policies
 
-* `verbs: ["get", "list"]`
-** `get`: Retrieve a specific LLMInferenceService by name
-** `list`: List all LLMInferenceService resources in the namespace
-** Notably *excludes* `create`, `update`, `delete` (read-only access)
-
-* `resources: ["llminferenceservices/status"]`
-** Access to the status subresource
-** Allows checking model deployment status (ready, loading, error)
-
-This Role grants the *minimum permissions* required for model inference. It does NOT grant:
-
-* Model deployment permissions (`create`, `update`, `delete` verbs)
-* Access to other resource types (pods, services, secrets)
-* Access to other namespaces (Role is namespace-scoped)
-* Cluster-wide permissions (ClusterRole would be required)
-
-=== Exercise 3: Create RoleBinding to connect ServiceAccount to Role
-
-A Role defines permissions, but doesn't grant them to anyone. A RoleBinding connects a ServiceAccount to a Role.
+List all deployed Tier resources:
 
 [source,role="execute"]
 ----
-oc create rolebinding marketing-sentiment-app-binding \
-  --role=llm-inference-viewer \
-  --serviceaccount=chocotech-models:marketing-sentiment-app \
-  -n chocotech-models
+oc get ratelimitpolicies -A
 ----
 
 Expected output:
 
 ----
-rolebinding.rbac.authorization.k8s.io/marketing-sentiment-app-binding created
+NAMESPACE             NAME                     AGE
+openshift-operators   gold-tier-rate-limit     13m
+openshift-operators   silver-tier-rate-limit   6m28s
 ----
 
-Verify the RoleBinding:
+Describe the Gold tier to see full details:
 
 [source,role="execute"]
 ----
-oc describe rolebinding marketing-sentiment-app-binding -n chocotech-models
+oc get ratelimitpolicy gold-tier-rate-limit -n openshift-operators -o yaml
 ----
 
 Expected output:
 
 ----
-Name:         marketing-sentiment-app-binding
-Namespace:    chocotech-models
-Labels:       <none>
-Annotations:  <none>
-Role:
-  Kind:  Role
-  Name:  llm-inference-viewer
-Subjects:
-  Kind            Name                      Namespace
-  ----            ----                      ---------
-  ServiceAccount  marketing-sentiment-app   chocotech-models
+apiVersion: kuadrant.io/v1
+kind: RateLimitPolicy
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"kuadrant.io/v1","kind":"RateLimitPolicy","metadata":{"annotations":{"openshift.io/display-name":"Gold Tier Model"},"name":"gold-tier-rate-limit","namespace":"chocotech-models"},"spec":{"limits":{"gold-request-limit":{"rates":[{"limit":10000,"window":"1m"}],"when":[{"predicate":"auth.identity.groups.contains('chocotech-quality-control')"}]}},"targetRef":{"group":"gateway.networking.k8s.io","kind":"Gateway","name":"maas-default-gateway"}}}
+    openshift.io/display-name: Gold Tier Model
+  creationTimestamp: "2026-05-06T19:41:29Z"
+  generation: 1
+  name: gold-tier-rate-limit
+  namespace: chocotech-models
+  resourceVersion: "309003"
+  uid: bebf00ac-efc1-45c0-8e25-75dd181c28df
+spec:
+  limits:
+    gold-request-limit:
+      rates:
+      - limit: 10000
+        window: 1m
+      when:
+      - predicate: auth.identity.groups.contains('chocotech-quality-control')
+...
 ----
 
-=== The RBAC authorization chain
+All three tiers should be present with correct configuration.
 
-The complete authorization chain is now:
+== Configuring Authorino authentication policies
 
-----
-ServiceAccount: marketing-sentiment-app
-  ↓ (bound via RoleBinding)
-RoleBinding: marketing-sentiment-app-binding
-  ↓ (references)
-Role: llm-inference-viewer
-  ↓ (grants permissions)
-Permissions: get/list LLMInferenceService resources
-----
+Authorino validates JWT tokens and enforces authentication policies. Verify the MaaS operator created the necessary AuthConfig resources.
 
-When the MaaS API receives a request with a JWT token from `marketing-sentiment-app`, Kubernetes RBAC checks:
+=== Exercise 5: Verify Authorino AuthConfig
 
-1. Is the token valid and not expired?
-2. Which ServiceAccount does this token belong to?
-3. Which RoleBindings reference this ServiceAccount?
-4. Which Roles do those RoleBindings grant?
-5. Do those Roles include the requested permission (e.g., `get llminferenceservices`)?
-
-If all checks pass, the request is authorized.
-
-== Generating and testing API tokens
-
-With RBAC configured, generate a JWT token from the ServiceAccount and test authentication against the MaaS Gateway.
-
-=== Exercise 4: Generate JWT token from ServiceAccount
-
-Generate a 1-hour JWT token:
+The MaaS operator should have created an AuthConfig for token authentication when you enabled MaaS in Module 1. Verify it exists:
 
 [source,role="execute"]
 ----
-TOKEN=$(oc create token marketing-sentiment-app -n chocotech-models --duration=1h)
-----
-
-Display the first 50 characters of the token:
-
-[source,role="execute"]
-----
-echo $TOKEN | cut -c1-50
+oc get authpolicies -A
 ----
 
 Expected output:
 
 ----
-eyJhbGciOiJSUzI1NiIsImtpZCI6IjRHN3BzeXQ3bkw5Ny1pZ
+NAMESPACE                 NAME                   AGE
+openshift-ingress         gateway-auth-policy    3h2m
+redhat-ods-applications   maas-api-auth-policy   3h2m
 ----
 
-=== Understanding JWT token properties
+Describe the AuthConfig to see its configuration:
 
-The generated token has these properties:
+[source,role="execute"]
+----
+oc describe authpolicies  maas-api-auth-policy -n redhat-ods-applications
+----
 
-* *Format*: JWT (JSON Web Token) - a cryptographically signed JSON payload
-* *Duration*: 1 hour (configurable: `1h`, `24h`, `168h` for 7 days)
-* *Encoding*: Base64-encoded JSON with three parts: header, payload, signature
-* *Signature*: Signed by the Kubernetes API server's private key
-** Authorino validates the signature using the API server's public key
-** Tampered tokens are rejected (signature verification fails)
+Expected output (partial):
 
-The token includes:
+----
+Name:         maas-api-auth-policy
+Namespace:    redhat-ods-applications
+Labels:       app.kubernetes.io/component=api
+              app.kubernetes.io/name=maas-api
+              app.kubernetes.io/part-of=models-as-a-service
+              app.opendatahub.io/modelsasservice=true
+              platform.opendatahub.io/part-of=modelsasservice
+Annotations:  internal.config.kubernetes.io/previousKinds: AuthPolicy
+              internal.config.kubernetes.io/previousNames: maas-api-auth-policy
+              internal.config.kubernetes.io/previousNamespaces: opendatahub
+              platform.opendatahub.io/instance.generation: 1
+              platform.opendatahub.io/instance.name: default-modelsasservice
+              platform.opendatahub.io/instance.uid: 576042f3-01c0-4663-aa50-ff88099601cc
+              platform.opendatahub.io/type: OpenShift AI Self-Managed
+              platform.opendatahub.io/version: 3.3.2
+API Version:  kuadrant.io/v1
+Kind:         AuthPolicy
+----
 
-* ServiceAccount identity (`system:serviceaccount:chocotech-models:marketing-sentiment-app`)
-* Expiration timestamp (`exp` claim)
-* Issuer (`kubernetes/serviceaccount`)
-* Audience (`aud` claim - who the token is intended for)
+.Click to reveal the full response
+[%collapsible]
+====
+....
+Name:         maas-api-auth-policy
+Namespace:    redhat-ods-applications
+Labels:       app.kubernetes.io/component=api
+              app.kubernetes.io/name=maas-api
+              app.kubernetes.io/part-of=models-as-a-service
+              app.opendatahub.io/modelsasservice=true
+              platform.opendatahub.io/part-of=modelsasservice
+Annotations:  internal.config.kubernetes.io/previousKinds: AuthPolicy
+              internal.config.kubernetes.io/previousNames: maas-api-auth-policy
+              internal.config.kubernetes.io/previousNamespaces: opendatahub
+              platform.opendatahub.io/instance.generation: 1
+              platform.opendatahub.io/instance.name: default-modelsasservice
+              platform.opendatahub.io/instance.uid: 576042f3-01c0-4663-aa50-ff88099601cc
+              platform.opendatahub.io/type: OpenShift AI Self-Managed
+              platform.opendatahub.io/version: 3.3.2
+API Version:  kuadrant.io/v1
+Kind:         AuthPolicy
+Metadata:
+  Creation Timestamp:  2026-05-06T16:43:30Z
+  Generation:          1
+  Owner References:
+    API Version:           components.platform.opendatahub.io/v1alpha1
+    Block Owner Deletion:  true
+    Controller:            true
+    Kind:                  ModelsAsService
+    Name:                  default-modelsasservice
+    UID:                   576042f3-01c0-4663-aa50-ff88099601cc
+  Resource Version:        93009
+  UID:                     99dc609a-6277-4b6b-8a02-906a2c45981c
+Spec:
+  Rules:
+    Authentication:
+      Openshift - Identities:
+        Kubernetes Token Review:
+          Audiences:
+            https://kubernetes.default.svc
+            maas-default-gateway-sa
+        Metrics:   false
+        Priority:  0
+    Response:
+      Success:
+        Headers:
+          X - Maa S - Group:
+            Metrics:  false
+            Plain:
+              Selector:  auth.identity.user.groups.@tostr
+            Priority:    0
+          X - Maa S - Username:
+            Metrics:  false
+            Plain:
+              Selector:  auth.identity.user.username
+            Priority:    0
+  Target Ref:
+    Group:  gateway.networking.k8s.io
+    Kind:   HTTPRoute
+    Name:   maas-api-route
+Status:
+  Conditions:
+    Last Transition Time:  2026-05-06T16:43:30Z
+    Message:               AuthPolicy has been accepted
+    Reason:                Accepted
+    Status:                True
+    Type:                  Accepted
+    Last Transition Time:  2026-05-06T16:43:31Z
+    Message:               AuthPolicy has been successfully enforced
+    Reason:                Enforced
+    Status:                True
+    Type:                  Enforced
+  Observed Generation:     1
+Events:                    <none>
+....
+====
+
+---
+
+=== Understanding the AuthConfig
+
+This AuthConfig provides:
+
+* *Host binding*: Applies to requests sent to the MaaS Gateway hostname
+* *Token validation*: Uses Kubernetes TokenReview API to validate JWT signatures
+** Ensures tokens are signed by the Kubernetes API server
+** Rejects tampered or forged tokens
+
+* *ServiceAccount extraction*: Extracts ServiceAccount identity from validated tokens
+* *RBAC authorization*: Checks if the ServiceAccount has required permissions
+** Uses Kubernetes SubjectAccessReview API
+** Enforces the RBAC Roles and RoleBindings you created in Section 2.2
+
+=== What if AuthConfig is missing?
+
+If the `oc get authconfig` command returns "No resources found", the MaaS operator may not have created it automatically. Recreate it manually:
 
 [WARNING]
 ====
-Never log or display full tokens in production. Treat tokens like passwords. The `cut -c1-50` command is for lab verification only.
+In most cases, the AuthConfig should exist. Only recreate if it's genuinely missing.
 ====
-
-=== Exercise 5: Test token authentication
-
-Test the token by calling the MaaS Gateway's `/v1/models` endpoint:
-
-First, get the Gateway hostname:
 
 [source,role="execute"]
 ----
-GATEWAY_HOST=$(oc get gateway maas-default-gateway -n openshift-ingress -o jsonpath='{.status.addresses[0].value}')
-echo "Gateway host: $GATEWAY_HOST"
-----
-
-Expected output:
-
-----
-Gateway host: maas-default-gateway-redhat-ods-applications.apps.cluster.example.com
-----
-
-Test authentication with the token:
-
-[source,role="execute"]
-----
-curl -s -w "\nHTTP Status: %{http_code}\n" \
-  http://$GATEWAY_HOST/v1/models \
-  -H "Authorization: Bearer $TOKEN" \
-  -k
-----
-
-Expected output:
-
-[source,json]
-----
-{
-  "object": "list",
-  "data": []
-}
-HTTP Status: 200
-----
-
-=== Understanding the test results
-
-Success indicators:
-
-* *HTTP 200 status*: Authentication successful
-** Token was valid and not expired
-** Token signature verified by Authorino
-** ServiceAccount authorized via RBAC
-
-* *Empty `data` array*: No models deployed yet
-** This is expected - models will be deployed in Module 3
-** The endpoint is working correctly (authentication passed)
-
-* *No "401 Unauthorized" error*: Authentication succeeded
-
-If you see `HTTP Status: 401`, this indicates an authentication failure. Common causes:
-
-* Token expired (regenerate with `oc create token`)
-* RBAC not configured correctly (verify RoleBinding exists)
-* Authorino not processing tokens (check in Section 2.3)
-
-[TIP]
-====
-The `-k` flag tells curl to accept self-signed certificates (common in lab environments). In production with valid TLS certificates, omit the `-k` flag.
-====
-
-== Token security best practices
-
-When using ServiceAccount tokens in production applications, follow these security guidelines:
-
-=== Short-lived tokens
-
-* *Testing/development*: 1-hour duration (`--duration=1h`)
-* *Production applications*: 24-hour duration (`--duration=24h`)
-* *Never*: Infinite duration tokens (tokens should always expire)
-
-Shorter durations reduce the window of opportunity if a token is compromised.
-
-=== Scoped permissions
-
-Grant the minimum required permissions:
-
-* *Read-only inference*: `get` and `list` verbs only (like the `llm-inference-viewer` Role)
-* *Model deployment*: Add `create`, `update`, `delete` verbs only if needed
-* *Namespace-scoped*: Use Role (not ClusterRole) to limit access to a single namespace
-
-Never grant `cluster-admin` or `*` permissions to ServiceAccounts used for model inference.
-
-=== Token rotation
-
-Regenerate tokens periodically rather than reusing the same token indefinitely:
-
-* *Application startup*: Generate a new token when the application starts
-* *Periodic rotation*: Regenerate tokens every 24 hours
-* *Never hardcode*: Don't embed tokens in source code or container images
-
-=== Audit trails
-
-All token usage is logged:
-
-* *OpenShift audit logs*: Track ServiceAccount token generation (`oc create token`)
-* *Authorino logs*: Log authentication attempts (successes and failures)
-* *MaaS API logs*: Log inference requests with ServiceAccount identity
-
-Use these logs to detect unusual access patterns or compromised tokens.
-
-=== Token revocation
-
-To immediately revoke all tokens for a ServiceAccount:
-
-[source,bash]
-----
-# Delete the ServiceAccount (revokes all tokens instantly)
-oc delete serviceaccount marketing-sentiment-app -n chocotech-models
-
-# Recreate the ServiceAccount (old tokens are now invalid)
-oc create serviceaccount marketing-sentiment-app -n chocotech-models
-
-# Recreate the RoleBinding
-oc create rolebinding marketing-sentiment-app-binding \
-  --role=llm-inference-viewer \
-  --serviceaccount=chocotech-models:marketing-sentiment-app \
-  -n chocotech-models
-----
-
-All previously generated tokens for the old ServiceAccount are immediately invalid (signature verification fails).
-
-=== Storing tokens in production
-
-For production applications running in Kubernetes, store tokens in Secrets and mount them into pods:
-
-[source,bash]
-----
-# Generate 24-hour token for production application
-oc create token marketing-sentiment-app -n chocotech-models --duration=24h > /tmp/maas-token.txt
-
-# Store token in a Kubernetes Secret
-oc create secret generic marketing-api-token \
-  --from-file=token=/tmp/maas-token.txt \
-  -n chocotech-models
-
-# Clean up temporary file
-rm /tmp/maas-token.txt
-----
-
-In your application Deployment, mount the Secret as a volume:
-
-[source,yaml]
-----
-apiVersion: apps/v1
-kind: Deployment
+# Only run this if AuthConfig does not exist
+oc apply -f - <<EOF
+apiVersion: authorino.kuadrant.io/v1beta2
+kind: AuthConfig
 metadata:
-  name: sentiment-analyzer
+  name: maas-auth
+  namespace: redhat-ods-applications
 spec:
-  template:
-    spec:
-      containers:
-      - name: app
-        image: quay.io/chocotech/sentiment-analyzer:latest
-        volumeMounts:
-        - name: maas-token
-          mountPath: /var/run/secrets/maas
-          readOnly: true
-      volumes:
-      - name: maas-token
-        secret:
-          secretName: marketing-api-token
+  hosts:
+  - maas-default-gateway-redhat-ods-applications.apps.cluster.example.com
+  authentication:
+    "k8s-service-account-tokens":
+      kubernetesTokenReview:
+        audiences:
+        - https://kubernetes.default.svc
+  authorization:
+    "k8s-rbac":
+      kubernetesSubjectAccessReview:
+        user:
+          selector: auth.identity.user.username
+EOF
 ----
 
-The application reads the token from `/var/run/secrets/maas/token` at runtime.
+Replace `cluster.example.com` with your actual cluster domain.
 
-== Verification
+== Verifying governance component health
 
-Confirm all RBAC and authentication components are configured correctly.
+Verify all governance components (Kuadrant, Authorino, Limitador) are deployed and healthy.
 
-=== Verification checklist
+=== Exercise 6: Verify Kuadrant components
 
-* [ ] ServiceAccount `marketing-sentiment-app` created in `chocotech-models` namespace
+Check Authorino pods (authentication):
+
+[source,role="execute"]
+----
+oc get pods -n kuadrant-system | grep authorino
+----
+
+Expected output:
+
+----
+authorino-abc123                 2/2     Running   0          20m
+----
+
+Check Limitador pods (rate limiting):
+
+[source,role="execute"]
+----
+oc get pods -n kuadrant-system | grep limitador
+----
+
+Expected output:
+
+----
+limitador-xyz789                 1/1     Running   0          20m
+----
+
+Check Kuadrant operator:
+
+[source,role="execute"]
+----
+oc get pods -n openshift-operators | grep kuadrant
+----
+
+Expected output:
+
+----
+kuadrant-operator-controller-manager-def456   2/2     Running   0          25m
+----
+
+All pods should show `Running` status with all containers ready (`2/2` or `1/1`).
+
+=== What if pods are not Running?
+
+If any pod shows `CrashLoopBackOff`, `ImagePullBackOff`, or `Pending`:
+
+1. Check pod events:
++
+[source,bash]
+----
+oc describe pod <pod-name> -n <namespace>
+----
+
+2. Check pod logs:
++
+[source,bash]
+----
+oc logs <pod-name> -n <namespace>
+----
+
+3. Common issues:
+** *Image pull errors*: Network connectivity to quay.io
+** *Resource constraints*: Insufficient CPU or memory on nodes
+** *Configuration errors*: Invalid AuthConfig or Kuadrant resources
+
+=== Exercise 7: Verify Gateway integration
+
+Check Gateway status:
+
+[source,role="execute"]
+----
+oc get gateway maas-default-gateway -n openshift-ingress
+----
+
+Expected output:
+
+----
+NAME                   CLASS                        ADDRESS        PROGRAMMED   AGE
+maas-default-gateway   data-science-gateway-class   10.10.10.200   True         3h16m
+----
+
+The `PROGRAMMED=True` status indicates the Gateway is configured and operational.
+
+Verify Gateway has AuthPolicy attached:
+
+[source,role="execute"]
+----
+oc get authpolicy -n redhat-ods-applications
+----
+
+Expected output:
+
+----
+NAME              READY   STATUS
+maas-auth-policy  True    AuthScheme ready
+----
+
+If no AuthPolicy exists, this is expected - the MaaS operator will create it when models are deployed. The important verification is that Authorino and the AuthConfig exist.
+
+== Pre-deployment readiness checklist
+
+Before proceeding to Module 3 (model deployment), verify all governance components are in place.
+
+=== Complete the readiness checklist
+
+Work through each section and confirm all items:
+
+==== Organizational Structure
+
+* [ ] Three business unit groups created (`chocotech-quality-control`, `chocotech-rd`, `chocotech-marketing`)
+* [ ] Current user is member of a business unit group
+* [ ] `chocotech-models` namespace exists and is labeled for MaaS (`maas.opendatahub.io/managed=true`)
+
+==== RBAC Configuration
+
+* [ ] ServiceAccount `marketing-sentiment-app` created for API access
 * [ ] Role `llm-inference-viewer` grants LLMInferenceService get/list permissions
 * [ ] RoleBinding connects ServiceAccount to Role
-* [ ] JWT token generated from ServiceAccount
-* [ ] Token authentication tested against Gateway (HTTP 200 status)
 
-Run this comprehensive verification:
+==== Authentication
+
+* [ ] JWT token generated from ServiceAccount
+* [ ] Token authentication tested successfully against Gateway (HTTP 200)
+* [ ] Authorino AuthConfig exists and references Gateway hostname
+
+==== Governance Policies
+
+* [ ] Three MaaS Tier resources deployed (gold, silver, bronze)
+* [ ] Each tier has rate limit (requestsPerMinute) defined
+* [ ] Each tier has quota (tokensPerHour) defined
+* [ ] Each tier is mapped to a business unit group
+
+==== Infrastructure Health
+
+* [ ] Kuadrant operator pod Running in `openshift-operators` namespace
+* [ ] Authorino pods Running (2/2 containers) in `redhat-ods-applications` namespace
+* [ ] Limitador pods Running (1/1 containers) in `redhat-ods-applications` namespace
+* [ ] Gateway shows `PROGRAMMED=True` status
+* [ ] AuthConfig exists in `redhat-ods-applications` namespace
+
+==== Dashboard Access
+
+* [ ] Gen AI Studio accessible via OpenShift AI dashboard
+* [ ] API tokens tab visible (even if model list is empty)
+
+=== Comprehensive verification command
+
+Run this command to verify all components:
 
 [source,role="execute"]
 ----
+echo "=== Groups ===" && \
+oc get groups | grep chocotech && \
+echo "=== Namespace ===" && \
+oc get namespace chocotech-models --show-labels | grep maas && \
 echo "=== ServiceAccount ===" && \
-oc get serviceaccount marketing-sentiment-app -n chocotech-models && \
-echo "=== Role ===" && \
-oc get role llm-inference-viewer -n chocotech-models && \
-echo "=== RoleBinding ===" && \
-oc describe rolebinding marketing-sentiment-app-binding -n chocotech-models | grep -E "Name:|Role:|ServiceAccount" && \
-echo "=== Token Test ===" && \
-TOKEN=$(oc create token marketing-sentiment-app -n chocotech-models --duration=1h) && \
-GATEWAY_HOST=$(oc get gateway maas-default-gateway -n openshift-ingress -o jsonpath='{.status.addresses[0].value}') && \
-curl -s -w "HTTP Status: %{http_code}\n" https://$GATEWAY_HOST/v1/models -H "Authorization: Bearer $TOKEN" -k | tail -1
+oc get sa -n chocotech-models | grep marketing && \
+echo "=== RBAC ===" && \
+oc get role,rolebinding -n chocotech-models && \
+echo "=== Tiers ===" && \
+oc get MaaS Tier && \
+echo "=== Governance Pods ===" && \
+oc get pods -n redhat-ods-applications | grep -E "authorino|limitador" && \
+echo "=== Gateway ===" && \
+oc get gateway -n redhat-ods-applications && \
+echo "=== AuthConfig ===" && \
+oc get authconfig -n redhat-ods-applications
 ----
 
 Expected output:
 
 ----
+=== Groups ===
+chocotech-marketing
+chocotech-quality-control
+chocotech-rd
+=== Namespace ===
+chocotech-models   Active   30m   maas.opendatahub.io/managed=true,...
 === ServiceAccount ===
-NAME                       SECRETS   AGE
-marketing-sentiment-app    0         15m
-=== Role ===
-NAME                    CREATED AT
-llm-inference-viewer    2024-01-15T10:30:00Z
-=== RoleBinding ===
-Name:         marketing-sentiment-app-binding
-  Name:  llm-inference-viewer
-  ServiceAccount  marketing-sentiment-app   chocotech-models
-=== Token Test ===
-HTTP Status: 200
+marketing-sentiment-app    0         20m
+=== RBAC ===
+NAME                                  CREATED AT
+role.rbac.authorization.k8s.io/llm-inference-viewer   2024-01-15T10:45:00Z
+NAME                                                          ROLE                          AGE
+rolebinding.rbac.authorization.k8s.io/marketing-sentiment-app-binding   Role/llm-inference-viewer   20m
+=== Tiers ===
+NAME     DISPLAY NAME                        PRIORITY   AGE
+bronze   Bronze Tier - Exploratory Workloads 10         15m
+gold     Gold Tier - Production Workloads    100        15m
+silver   Silver Tier - Development Workloads 50         15m
+=== Governance Pods ===
+authorino-abc123                 2/2     Running   0          25m
+limitador-xyz789                 1/1     Running   0          25m
+=== Gateway ===
+NAME                   CLASS   ADDRESS                                   PROGRAMMED   AGE
+maas-default-gateway   istio   maas-default-gateway-...apps.cluster...   True         30m
+=== AuthConfig ===
+NAME        AGE
+maas-auth   25m
 ----
 
-All checkboxes should be complete.
+All items should be present and healthy.
+
+== Understanding what's ready for Module 3
+
+You've established a complete governance foundation. Here's what's in place and what's still missing.
+
+=== What you've established
+
+[cols="1,3",options="header"]
+|===
+|Layer
+|Status
+
+|Identity layer
+|✅ OpenShift groups represent business units (Quality Control, R&D, Marketing)
+
+|Authentication layer
+|✅ ServiceAccounts + JWT tokens for API access (tested with HTTP 200)
+
+|Authorization layer
+|✅ RBAC Roles control who can access models (get/list permissions)
+
+|Policy layer
+|✅ MaaS Tier CRDs define rate limits and quotas (100/50/20 requests/min)
+
+|Enforcement layer
+|✅ Authorino validates tokens, Limitador enforces rate limits (pods Running)
+|===
+
+The governance architecture is complete and operational.
+
+=== What's missing (Module 3 will add)
+
+The following components are intentionally absent because no models have been deployed yet:
+
+* *No models in catalog*: The `/v1/models` endpoint returns an empty array
+** Module 3 will deploy `llama3-8b` and `nemotron-8b` models
+** Models will appear in the Gen AI Studio catalog
+
+* *No tier annotations on models*: No models exist to annotate
+** Module 3 will annotate models with tier names during deployment
+** Example: `alpha.maas.opendatahub.io/tiers: '["bronze", "silver", "gold"]'`
+
+* *No rate limiting triggered*: No inference traffic exists to limit
+** Module 3 will send inference requests and verify rate limits are enforced
+** You'll see HTTP 429 responses when exceeding tier limits
+
+* *No usage metrics*: No token consumption to track
+** Module 3 will generate usage metrics visible in the Gen AI Studio dashboard
+** Metrics will show token consumption per tier
+
+**The governance architecture is ready. Module 3 will deploy models that inherit these policies automatically.**
 
 == Business value
 
-By configuring ServiceAccount-based RBAC, you've enabled:
+You've established ChocoTech's governance foundation that meets all the CIO's requirements:
 
-* *Programmatic access*: Marketing team can deploy their sentiment analysis application with API token authentication
-* *Application identity*: Applications access models without human credentials or shared passwords
-* *Audit trail*: Every API request is traceable to a specific ServiceAccount and namespace
-* *Security*: Tokens are time-limited, revocable, and follow principle of least privilege
-* *Scalability*: Create ServiceAccounts for each application without creating OpenShift user accounts
+[cols="1,2,2",options="header"]
+|===
+|CIO Requirement
+|Implementation
+|Business Impact
 
-When the Marketing team asks "How do we authenticate our sentiment analysis app?", you can provide them with a ServiceAccount token that grants read-only model access with full audit logging.
+|Production-grade access for Quality Control
+|Gold tier: 100 requests/min, 50,000 tokens/hour, priority 100
+|Guaranteed resources for production defect detection
+
+|Development access for R&D
+|Silver tier: 50 requests/min, 25,000 tokens/hour, priority 50
+|Balanced capacity for recipe optimization
+
+|Exploratory access for Marketing
+|Bronze tier: 20 requests/min, 10,000 tokens/hour, priority 10
+|Cost-controlled sentiment analysis experiments
+
+|API token authentication
+|ServiceAccounts + JWT tokens with RBAC
+|Audit trails for all model access
+
+|Prevent resource monopolization
+|Tier rate limits and quotas enforced by Limitador
+|Fair allocation across business units
+|===
+
+All requirements are met before a single model is deployed. When the CIO asks "Are we ready for governed AI deployment?", the answer is yes.
+
+== Module summary
+
+In this module, you transformed ChocoTech's MaaS platform from infrastructure-only to governance-ready:
+
+=== What you accomplished
+
+* *Organizational structure*: Created OpenShift groups for business units and mapped them to access tiers
+* *Authentication*: Configured ServiceAccounts and JWT token-based API authentication with RBAC
+* *Tier policies*: Deployed Gold, Silver, and Bronze tier policies with rate limits and quotas
+* *Component health*: Verified all governance components (Kuadrant, Authorino, Limitador) are operational
+* *End-to-end testing*: Tested authentication flow from token generation to Gateway validation
+
+=== Key technical capabilities unlocked
+
+* *Identity management*: Business units represented as OpenShift groups, not individual users
+* *Programmatic access*: Applications can authenticate via ServiceAccount tokens (no human credentials)
+* *Least privilege RBAC*: ServiceAccounts have read-only model access (get/list only)
+* *Tier enforcement*: Rate limits and quotas automatically applied based on group membership
+* *Audit trails*: All requests traceable to ServiceAccounts and business unit groups
+
+=== What's next: Module 3
+
+The platform is now ready for governed model deployment. Module 3 will guide you through:
+
+1. *Deploying llama3-8b*: Meta's 8B parameter model for all tiers (Quality Control, R&D, Marketing can access)
+2. *Deploying nemotron-8b*: NVIDIA's 8B parameter model for Bronze and Silver only (demonstrates selective tier access)
+3. *Publishing to catalog*: Models appear in Gen AI Studio with tier annotations
+4. *Testing tier access control*: Verify Gold users see all models, Bronze users see subset
+5. *Verifying rate limits*: Send high-volume requests to trigger HTTP 429 responses
+
+By the end of Module 3, ChocoTech's teams will have self-service access to governed AI models through the Gen AI Studio dashboard and API endpoints.
 
 == Knowledge check
 
-Test your understanding before moving to the next section:
+Test your understanding of tier governance:
 
-1. *What is the difference between a ServiceAccount and a User account in OpenShift?*
+1. *Why are MaaS Tier policies created before model deployment, rather than after?*
 +
-User accounts are for humans performing interactive login (e.g., dashboard access). ServiceAccounts are for applications performing programmatic access (e.g., API calls from containers). ServiceAccounts use JWT tokens; user accounts use passwords or SSO.
+MaaS Tier policies must exist before deployment so the MaaS operator can enforce rate limits and quotas from the first inference request. Creating policies after deployment would allow a window of uncontrolled access.
 
-2. *Why use time-limited tokens instead of permanent API keys?*
+2. *What happens if a Bronze tier user tries to exceed 20 requests/minute?*
 +
-Time-limited tokens automatically expire, reducing the risk if a token is leaked. They force periodic rotation, provide natural audit checkpoints, and can be revoked without changing the ServiceAccount itself.
+Limitador tracks requests per tier and rejects requests exceeding the rate limit with HTTP 429 Too Many Requests. The user must wait until the next minute window to send more requests.
 
-3. *What RBAC verbs does the `llm-inference-viewer` Role grant, and which verbs are intentionally excluded?*
+3. *How does Authorino know which tier a user belongs to?*
 +
-Grants: `get` and `list` (read-only access to discover and query models). Excluded: `create`, `update`, `delete` (no model deployment permissions). This follows the principle of least privilege.
+Authorino validates the JWT token and extracts the ServiceAccount identity. It then checks which OpenShift groups that ServiceAccount's user belongs to. The MaaS Tier resources map groups to tiers (e.g., `chocotech-quality-control` → Gold tier).
 
-== What's next
+== Troubleshooting
 
-You've configured authentication and authorization for programmatic API access. In the next section, you'll deploy tier-based governance policies (Gold, Silver, Bronze) with rate limits and quotas, then verify all governance components are operational before model deployment in Module 3.
+If you encounter issues with governance components:
+
+=== AuthConfig not found
+
+**Issue**: `oc get authconfig -n redhat-ods-applications` returns "No resources found"
+
+**Solution**:
+
+1. Verify MaaS was enabled in Module 1:
++
+[source,bash]
+----
+oc get datasciencecluster default-dsc -o jsonpath='{.spec.components.modelsAsService.managementState}'
+----
++
+Should return: `Managed`
+
+2. Check MaaS operator logs:
++
+[source,bash]
+----
+oc logs -n redhat-ods-operator deployment/rhods-operator | grep -i authorino
+----
+
+3. Recreate AuthConfig manually using the command in Exercise 5
+
+=== Authorino pods not Running
+
+**Issue**: Authorino pods show `CrashLoopBackOff` or `Pending`
+
+**Solution**:
+
+1. Check pod events:
++
+[source,bash]
+----
+oc describe pod -l app=authorino -n redhat-ods-applications
+----
+
+2. Common causes:
+** *Insufficient resources*: Check node CPU/memory capacity
+** *Image pull errors*: Verify network connectivity to quay.io
+** *Kuadrant operator not installed*: Check Kuadrant operator in `openshift-operators`
+
+=== Token authentication returns 401 Unauthorized
+
+**Issue**: `curl` with Bearer token returns HTTP 401 instead of HTTP 200
+
+**Solution**:
+
+1. Verify token is valid and not expired:
++
+[source,bash]
+----
+# Regenerate token
+TOKEN=$(oc create token marketing-sentiment-app -n chocotech-models --duration=1h)
+----
+
+2. Verify RBAC is configured:
++
+[source,bash]
+----
+oc get role llm-inference-viewer -n chocotech-models
+oc get rolebinding marketing-sentiment-app-binding -n chocotech-models
+----
+
+3. Check Authorino logs for authentication errors:
++
+[source,bash]
+----
+oc logs -l app=authorino -n redhat-ods-applications
+----
+
+=== MaaS Tier resources not created
+
+**Issue**: `oc get MaaS Tier` returns "error: the server doesn't have a resource type 'MaaS Tier'"
+
+**Solution**:
+
+1. Verify MaaS CRDs are installed:
++
+[source,bash]
+----
+oc get crd | grep maas
+----
++
+Should show: `MaaS Tiers.maas.opendatahub.io`
+
+2. If CRD is missing, verify MaaS is enabled:
++
+[source,bash]
+----
+oc get datasciencecluster default-dsc -o jsonpath='{.spec.components.modelsAsService.managementState}'
+----
+
+3. Check OpenShift AI operator logs:
++
+[source,bash]
+----
+oc logs -n redhat-ods-operator deployment/rhods-operator | grep -i MaaS Tier
+----

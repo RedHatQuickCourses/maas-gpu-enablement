@@ -1,108 +1,60 @@
-= 1.1: Understanding the GPU silo crisis
+= 1.2: The MaaS architecture stack
 
-ChocoTech Industries has four teams independently managing GPU infrastructure. Let's examine the operational pain points this creates.
+Now that we understand the business problem—ChocoTech’s fragmented hardware and lack of centralized governance—we must look at *how* OpenShift AI solves it. 
 
-The current state of GPU allocations across ChocoTech's business units.
+If ChocoTech were to simply rent intelligence from a cheap public API, their corporate data would leave the company perimeter, and they would be subject to unpredictable "black box" costs. Instead, Red Hat OpenShift AI uses a disaggregated, three-layer architecture to provide enterprise-grade, edge-level governance while keeping data strictly on-premises.
 
-**Current state at ChocoTech**:
+Every request for model inference passes through three highly specialized layers: **The Gateway API**, **Kuadrant**, and **KServe**. 
 
-* **Quality Control**: 2x NVIDIA A100 GPUs running defect detection models
-* **R&D**: 4x NVIDIA L40S GPUs for recipe optimization
-* **Marketing**: 2x NVIDIA L4 GPUs for sentiment analysis
-* **Supply Chain**: 2x NVIDIA L40S GPUs for inventory prediction
+---
 
-== **The problem with dedicated accelerators:**
+== The Three-Layer Stack: Separation of Concerns
 
+By decoupling the network routing, the policy governance, and the execution engine, MaaS provides extreme flexibility. You can adjust user rate limits without redeploying massive models, and you can swap serving runtimes without touching the security perimeter.
 
-====
-**GPU under-utilization and over-provisioning**
+[cols="1a,2a,2a",options="header",frame="all",grid="rows"]
+|===
+| Layer | Core Component & Role | Enterprise Value ("The Why")
 
-Teams request and manage their own dedicated GPUs, leading to expensive hardware sitting under-utilized while other high-priority projects may be stalled or additional hardware is provisioned unnecessarily.
+| **Layer 1: The Front Door**
+| **Gateway API (Traffic Routing)**
 
-*ChocoTech example*: _Quality Control's A100 GPUs process defect images only during production shifts (8 hours/day), leaving $120,000 of hardware idle 67% of the time. Meanwhile, R&D waits three weeks for GPU capacity to test new flavor prediction models._
+* Exposes a single, unified endpoint (`maas-default-gateway`) for all models across the cluster.
+* Handles TLS termination and path-based routing (e.g., `/v1/chat/completions`).
+| **Simplified Connectivity:** Developers do not need to manage complex, per-model DNS routing or insecure internal IPs. It provides a standard, OpenAI-compatible entry point.
 
-====
+| **Layer 2: The Bouncer**
+| **Kuadrant (Policy & Governance)**
 
-====
-**Misallocation of engineer and data science expertise**
+* **Authorino:** Validates tokens and enforces zero-trust authentication. 
+* **Limitador:** Tracks token consumption and enforces tier-based rate limits.
+| **Ironclad Security & Chargebacks:** This layer mathematically guarantees that a team cannot exhaust GPU resources. It provides the exact token-usage telemetry required for Finance to bill departments accurately.
 
-Developers and Data scientists spend more time debugging CUDA drivers, Docker containers, and Kubernetes manifests than actually tuning models or analyzing data.
+| **Layer 3: The Engine Room**
 
-*ChocoTech example*: _Marketing's data science team spent 40 hours last quarter troubleshooting vLLM container startup issues instead of improving their customer sentiment models._
-====
+| **KServe & vLLM/llm-d (Model Execution)**
 
-====
-**Redundant model deployments**
+* Orchestrates the actual model serving infrastructure.
+* Uses distributed inference frameworks (like llm-d) to spread large models across multiple GPUs.
+| **Maximum ROI:** By decoupling the request handling from low-level GPU tensor operations, KServe maximizes throughput and minimizes idle hardware time. 
+|===
 
-Four different teams download and deploy the same generative AI model, leading to overall waste and duplication when they could be sharing resources efficiently.
+// NOTE FOR AUTHOR: Insert your reference image here.
+image::maas-layers.png[MaaS Three-Layer Architecture showing Gateway API routing to Kuadrant for policy, then to KServe for execution,link=self,window=blank,width=800,title="MaaS Architecture: The Three Layers of Governed Model Serving"]
 
-*ChocoTech example*: _All four teams independently deployed Llama-3 8B for different use cases, consuming 128GB of storage (4 x 32GB) and wasting GPU memory with duplicate model weights._
-====
+---
 
+== The Life of an Inference Request
 
-====
+To understand how these components work together, let's trace a real request from ChocoTech's Marketing team as they try to use the shared `llama-3-8b` model for a sentiment analysis application.
 
-**Security "black boxes"**
+1. **The Request Arrives (Gateway API):** The Marketing application sends a POST request to `/v1/chat/completions` containing their Bearer token and the prompt data. The Gateway API catches this at the network edge.
+2. **Identity Verification (Kuadrant - Authorino):** The Gateway pauses the request and asks Authorino, "Is this token valid, and what tier is this user?" Authorino confirms the user is in the "Bronze" tier. (If the token was invalid, it would immediately return a `401 Unauthorized` without touching the GPU).
+3. **Policy Enforcement (Kuadrant - Limitador):** Limitador checks the Bronze tier quota. "Has the Marketing team exceeded their 10,000 tokens-per-hour limit?" If they are within limits, the request is permitted. (If exceeded, it returns a `429 Too Many Requests`).
+4. **Execution (KServe):** The validated, governed request is handed off to KServe. The vLLM runtime processes the prompt against the `llama-3-8b` weights and generates the response.
+5. **The Audit Log:** The response flows back to the user, and Kuadrant meticulously logs the exact number of `prompt_tokens` and `completion_tokens` consumed by the Marketing user for the chargeback report.
 
-Without a centralized API gateway, there is zero visibility into who is sending what data to which model, making audit logs and PII filtering nearly impossible to enforce.
+This layered approach ensures that every request is authenticated, authorized, rate-limited, audited, and routed to the correct model serving infrastructure.
 
-*ChocoTech example*: _Marketing's sentiment analysis application processes customer feedback containing personally identifiable information (PII), but there's no way to audit which users accessed which models or implement PII filtering policies._
-====
+---
 
-
-====
-**No way to track usage or forecast needs**
-
-Without the ability to track model usage across users, applications, and different models, there is no way to forecast compute needs accurately.
-
-*ChocoTech example*: _Finance cannot justify GPU infrastructure expansion requests because there's no data showing which teams are consuming capacity, which models are heavily used, or whether existing hardware is properly utilized._
-====
-
-
-== The Solution - Centralized model hub with MaaS
-
-Models as a Service (MaaS) transforms GPU infrastructure from dedicated, single-team clusters into a consumable model backplane.
-
-**How MaaS changes the operating model**:
-
-**Central IT (Platform Engineers)**:
-
- * Manages the inference strategy, hardware allocation, and governance policies. Controls which models are available, enforces access tiers, and monitors infrastructure health.
-
- * Configure tiers, rate limits, quotas, and observability dashboards. Ensure fair resource allocation and compliance with organizational policies.
-
-**Lines of Business (Marketing, R&D, Quality Control, Supply Chain)**:
-
- * Consume AI capabilities via tokens, treating model inference as a metered, on-demand internal service. Focus on building applications, not managing infrastructure.
-
-**Developers**:
-
- * Integrate models via OpenAI-compatible APIs without worrying about GPU drivers, Kubernetes manifests, or model serving runtimes.
-
-== **Business impact realized**:
-
-**Without MaaS**:
-
-* Redundant model deployments waste storage and compute
-* No audit trail for compliance requirements
-* Cannot track usage or forecast future needs
-* Teams compete for scarce GPU resources
-
-**With MaaS**:
-
-* Centralized model catalog eliminates redundancy
-* Complete audit logs and PII filtering via API gateway
-* Token-based consumption enables accurate chargeback
-* Fair resource allocation prevents team conflicts
-
-// TODO: Add diagram showing before/after - siloed teams vs centralized hub
-// image::gpu-silo-before-after.png[Comparison of siloed GPU infrastructure vs centralized MaaS model hub,link=self,window=blank,width=800,title="Transforming GPU Infrastructure: From Silos to Centralized Hub"]
-
-== Verify your understanding
-
-Consider these questions based on ChocoTech's situation:
-
-* How would centralized model serving help Quality Control and R&D share GPU capacity?
-* What governance policies would prevent one team from monopolizing resources?
-* How does token-based consumption enable Finance to perform chargeback?
-* What role does the API gateway play in audit logging and PII filtering?
