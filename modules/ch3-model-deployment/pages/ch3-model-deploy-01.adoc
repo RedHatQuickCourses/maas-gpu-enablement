@@ -10,7 +10,7 @@ ChocoTech's R&D team has submitted an urgent request. "We need to deploy the Lla
 
 If ChocoTech used a cheap public API for this, the R&D team would be forced to send highly proprietary recipe formulations outside the corporate firewall. Furthermore, renting intelligence externally means their existing, expensive GPU hardware continues to sit idle. 
 
-By deploying models directly onto Red Hat OpenShift AI 3.3, ChocoTech keeps 100% of its intellectual property secure. Even better, OpenShift AI 3.x utilizes a disaggregated inference architecture powered by `llm-d` (Distributed Inference) and the vLLM engine[cite: 27]. This maximizes throughput and minimizes latency by decoupling request handling from low-level tensor operations, ensuring ChocoTech squeezes every drop of ROI out of their hardware. 
+By deploying models directly onto Red Hat OpenShift AI 3.3, ChocoTech keeps 100% of its intellectual property secure. Even better, OpenShift AI 3.x utilizes a disaggregated inference architecture powered by `llm-d` (Distributed Inference) and the vLLM engine. This maximizes throughput and minimizes latency by decoupling request handling from low-level tensor operations, ensuring ChocoTech squeezes every drop of ROI out of their hardware. 
 
 Your task is to deploy these generative AI models, configure distributed inference for multi-GPU scenarios, and publish them to the MaaS catalog where Kuadrant will automatically enforce the Gold/Silver/Bronze tiers you built in Module 2.
 
