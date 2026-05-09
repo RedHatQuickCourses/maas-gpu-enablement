@@ -1,25 +1,24 @@
 = 1.3: Enabling MaaS on your OpenShift AI platform
 
-You have explored the business problem and understand the three-layer architecture. Now it is time to activate MaaS on ChocoTech's OpenShift cluster.
+You have explored the business problem and understand the three-layer architecture. Now it is time to activate MaaS on ChocoTech's OpenShift cluster. 
 
-ChocoTech's GPU infrastructure is already operational from prior AI/ML experiments. Quality Control's A100 GPUs, R&D's L40S accelerators, Marketing's L4 GPUs, and Supply Chain's hardware are all running isolated workloads. Rather than starting from scratch, you will transform this fragmented hardware into a centralized MaaS platform by enabling the components that provide governance, routing, and multi-tenant model serving.
+ChocoTech's GPU infrastructure is already operational from prior AI/ML experiments. Rather than starting from scratch, you will transform this fragmented hardware into a centralized MaaS platform by enabling the components that provide governance, routing, and multi-tenant model serving. 
 
-This module guides you through the exact activation sequence: verifying required operators, creating the infrastructure foundation, and patching the OpenShift AI platform to expose the MaaS features. 
+This module guides you through the exact activation sequence: verifying required operators, creating the infrastructure foundation, deploying the required database, and patching the OpenShift AI platform to expose the MaaS features. 
 
 ---
 
 == Step 1: Configuration check & operator verification
 
-Before applying any configurations, ensure your cluster meets the baseline requirements. You must be running OpenShift version 4.20.0 (officially 4.19.9) or later. Furthermore, specific operators must be installed from the Ecosystem - Software Catalog (previously OperatorHub). If any of these are missing, the deployment will silently fail—your commands will appear to succeed, but the expected pods and resources will never materialize.
+Before applying any configurations, ensure your cluster meets the baseline requirements. You must be running OpenShift version 4.20.0 (officially 4.19.9) or later. Furthermore, specific operators must be installed from the Ecosystem - Software Catalog (previously OperatorHub). 
 
-[NOTE]
-_ChocoTech's platform team learned this lesson the hard way when they initially attempted to enable MaaS without the Connectivity Link operator installed. The `DataScienceCluster` patch appeared to succeed, but the `maas-api` pods never generated—no error messages, just silent failure. Verifying operators upfront prevents these frustrating troubleshooting sessions._
+If any of these are missing, the deployment will silently fail—your commands will appear to succeed, but the expected pods and resources will never materialize. 
 
 Ensure the following operators are installed and healthy:
 
-* **Red Hat OpenShift Service Mesh 3**: Provides the underlying Istio networking that powers the Gateway API implementation.
-* **Red Hat Connectivity Link (v1.2+)**: Delivers the Kuadrant governance framework.
-* **Red Hat OpenShift AI (v3.0+)**: The core platform operator that manages the DataScienceCluster.
+* **Red Hat OpenShift Service Mesh 3**: Provides the underlying Istio networking that powers the Gateway API implementation. 
+* **Red Hat Connectivity Link (v1.2+)**: Delivers the Kuadrant governance framework. 
+* **Red Hat OpenShift AI (v3.4+)**: The core platform operator that manages the DataScienceCluster.
 * **Leader Worker Set (LWS) Operator**: Mandatory for `llm-d` orchestration to manage models that exceed single-node VRAM capacity.
 
 Verify the installations:
@@ -28,24 +27,17 @@ Verify the installations:
 oc get csv -n openshift-operators | grep -E "(servicemesh|rhcl|rhods|limitador|authorino)"
 ----
 
-If any operators are missing, install them from the OpenShift console (**Ecosystem → Software Catalog**) and wait for their status to reach `Succeeded` before continuing.
+If any operators are missing, install them from the OpenShift console (**Ecosystem → Software Catalog**) and wait for their status to reach `Succeeded` before continuing. 
 
 ---
 
 == Step 2: The infrastructure foundation
 
-The OpenShift AI operator acts as a strict gatekeeper. It will not provision the MaaS API unless the foundational network routing and security engines are actively running on the cluster. 
+The OpenShift AI operator acts as a strict gatekeeper. It will not provision the MaaS API unless the foundational network routing, security engines, and databases are actively running on the cluster. 
 
 === Initialize the Governance Engine (Kuadrant)
 
-The Connectivity Link operator manages Kuadrant, but Kuadrant itself must be explicitly initialized. A Kuadrant custom resource (CR) must be created and ready in the `kuadrant-system` namespace.
-
-_*ChocoTech needs Kuadrant to enforce the tier-based quotas that prevent Marketing's applications from monopolizing GPU resources during campaign launches. Without Kuadrant's Limitador component, there is no mechanism to track and limit token consumption across teams.*_
-
-**Architectural Note: The Operator vs. Operand Pattern**
-Before applying the YAML, it is important to understand *why* we deploy the governance engine this specific way:
-* **The Operator (The Manager):** We install the top-level Operator in a cluster-wide namespace (`openshift-operators`). This prevents us from getting tangled in the complexities of namespace-scoped OLM behaviors.
-* **The Operand (The Instance):** We deploy the actual `Kuadrant` Custom Resource into its own dedicated namespace, `kuadrant-system`. This maintains consistency with upstream projects and ensures a cleaner, more secure GitOps foundation.
+The Connectivity Link operator manages Kuadrant, but Kuadrant itself must be explicitly initialized. A Kuadrant custom resource (CR) must be created and ready in the `kuadrant-system` namespace. 
 
 Create the namespace and Kuadrant instance:
 [source,role="execute"]
@@ -61,17 +53,9 @@ metadata:
 EOF
 ----
 
-Verify the Kuadrant components (Authorino and Limitador) are running (this may take 1-2 minutes):
-[source,role="execute"]
-----
-oc get pods -n kuadrant-system
-----
-
 === Create the MaaS Gateway
 
-Next, we establish the Front Door. A Gateway named `maas-default-gateway` must exist in the `openshift-ingress` namespace. 
-
-*This becomes the single API endpoint for all of ChocoTech's model inference traffic. Instead of four teams managing separate network routes, they all send requests to this single Gateway.*
+Next, we establish the Front Door. A Gateway named `maas-default-gateway` must exist in the `openshift-ingress` namespace. *This becomes the single API endpoint for all of ChocoTech's model inference traffic.*
 
 Create the Gateway resource:
 [source,role="execute"]
@@ -94,23 +78,75 @@ spec:
 EOF
 ----
 
-Verify the Gateway is programmed correctly (`PROGRAMMED` should show `True`):
+=== Deploy the MaaS API Database
+In OpenShift AI 3.4, the platform features native API key management. To store these keys securely, you must have a PostgreSQL database and create a Secret named `maas-db-config` in the `redhat-ods-applications` namespace. 
+
+Deploy a lightweight PostgreSQL instance and the required secret for the MaaS API:
 [source,role="execute"]
 ----
-oc get gateway maas-default-gateway -n openshift-ingress
+cat <<EOF | oc apply -f -
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: maas-postgres
+  namespace: redhat-ods-applications
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: maas-postgres
+  template:
+    metadata:
+      labels:
+        app: maas-postgres
+    spec:
+      containers:
+      - name: postgres
+        image: registry.redhat.io/rhel9/postgresql-15:latest
+        env:
+        - name: POSTGRESQL_USER
+          value: "maasuser"
+        - name: POSTGRESQL_PASSWORD
+          value: "maaspass"
+        - name: POSTGRESQL_DATABASE
+          value: "maasdb"
+        ports:
+        - containerPort: 5432
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: maas-postgres
+  namespace: redhat-ods-applications
+spec:
+  selector:
+    app: maas-postgres
+  ports:
+  - port: 5432
+    targetPort: 5432
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: maas-db-config
+  namespace: redhat-ods-applications
+type: Opaque
+stringData:
+  DB_CONNECTION_URL: 'postgresql://maasuser:maaspass@maas-postgres:5432/maasdb?sslmode=disable'
+EOF
 ----
 
 ---
 
 == Step 3: Platform activation
 
-With the operators verified, Kuadrant running, and the Gateway established, you can now instruct the OpenShift AI operator to build the MaaS API layer.
+With the operators verified, Kuadrant running, the Gateway established, and the database online, you can now instruct the OpenShift AI operator to build the MaaS API layer. 
 
-=== Enable the MaaS Backend
+=== Enable the MaaS Backend and Llama Stack
 
-You must edit the `default-dsc` CR. Under `spec.components.kserve`, add `modelsAsService` and set `managementState: Managed`.
-
-*This patch provisions the core MaaS API layer. Once enabled, Platform Engineers can deploy models to a central catalog, eliminating the redundant Llama-3 deployments that were wasting 128GB of ChocoTech's storage.*
+You must edit the `default-dsc` CR to enable two critical components:
+1. **Models As a Service:** Provisions the core governance and routing controllers. 
+2. **Llama Stack Operator:** Provides the required API layer for the Gen AI Studio UI to function.
 
 Apply the patch:
 [source,role="execute"]
@@ -118,6 +154,9 @@ Apply the patch:
 oc patch datasciencecluster default-dsc --type=merge -p '{
   "spec": {
     "components": {
+      "llamastackoperator": {
+        "managementState": "Managed"
+      },
       "kserve": {
         "managementState": "Managed",
         "modelsAsService": {
@@ -129,7 +168,7 @@ oc patch datasciencecluster default-dsc --type=merge -p '{
 }'
 ----
 
-Verify that the `maas-api` pod is running in the `redhat-ods-applications` namespace and that the `tier-to-group-mapping` ConfigMap has been generated:
+Verify that both the `maas-api` and `maas-controller-manager` pods are running:
 [source,role="execute"]
 ----
 oc get pods -n redhat-ods-applications | grep maas
@@ -137,9 +176,7 @@ oc get pods -n redhat-ods-applications | grep maas
 
 === Enable the Dashboard (Gen AI Studio)
 
-Even when deploying models via GitOps, administrators require the dashboard UI to manage user access tokens and monitor model usage. You must set `spec.dashboardConfig.modelAsService: true` and ensure the GenAI Studio menu is enabled (`spec.dashboardConfig.genAiStudio: true`).
-
-_*Marketing's team lead can now generate API tokens for their developers directly through the dashboard, rather than filing IT tickets.*_
+Even when deploying models via GitOps, administrators require the dashboard UI to manage user access tokens and monitor model usage. You have enabled Gen AI Studio: `spec.dashboardConfig.genAiStudio: true` in the OdhDashboardConfig custom resource.
 
 Apply the dashboard configuration patch:
 [source,role="execute"]
@@ -148,16 +185,13 @@ oc patch odhdashboardconfig odh-dashboard-config -n redhat-ods-applications --ty
   "spec": {
     "dashboardConfig": {
       "modelAsService": true,
-      "genAiStudio": true
+      "genAiStudio": true,
+      "maasAuthPolicies": true
     }
   }
 }'
 ----
 
-Verify the patch was accepted:
-[source,role="execute"]
-----
-oc get odhdashboardconfig odh-dashboard-config -n redhat-ods-applications -o jsonpath='{.spec.dashboardConfig}'
-----
+Refresh your OpenShift AI browser window. The **Gen AI Studio** menu option will now appear in your left-hand navigation pane. 
 
-Refresh your OpenShift AI browser window. The **Gen AI Studio** menu option will now appear in your left-hand navigation pane. ChocoTech's underlying infrastructure is now primed for centralized governance. Proceed to the next module to configure the explicit policies and tier definitions!
+ChocoTech's underlying infrastructure is now primed for centralized governance. Proceed to the next module to configure the explicit policies and subscription definitions!

@@ -1,85 +1,79 @@
-= 3.4: Publish model to the MaaS catalog
+= 3.3: Verifying the MaaS catalog and gateway publication
 
-Now that the model is deployed, verify it appears in the Gen AI Studio catalog and is accessible through the MaaS gateway.
+If ChocoTech had deployed this model using standard open-source tools, the Platform Engineering team's job would not be finished. They would still need to manually write documentation, email the endpoint URL to the developers, and coordinate API keys. 
 
-The `publishToGenAIStudio: true` setting in the LLMInferenceService manifest automatically registers the model with MaaS.
+With Models as a Service, the OpenShift AI operator handles all of this automatically. Because we set `publishToGenAIStudio: true` in our deployment manifest, the platform instantly registers the model, applies our governance tiers, and publishes it to a centralized self-service catalog.
 
-=== Verify model registration in MaaS
+== Exercise 1: Verify the backend MaaS registration
 
-Check that the model was registered with the MaaS API:
+When the KServe `LLMInferenceService` becomes ready, the MaaS operator detects the publish flag and automatically generates a companion `MaaSModel` custom resource. This resource acts as the bridge between the running container and the Gen AI Studio UI.
+
+Verify the model was successfully registered with the MaaS API:
 
 [source,role="execute"]
 ----
 oc get maasmodel -n chocotech-models
 ----
 
-Expected output:
-
+*Expected output:*
 ----
-NAME          MODEL                                    STATUS    AGE
-llama-3-8b    meta-llama/Meta-Llama-3-8B-Instruct     Published   5m
+NAME          MODEL                                  STATUS      AGE
+llama-3-8b    meta-llama/Meta-Llama-3-8B-Instruct    Published   5m
 ----
 
-Describe the MaaSModel resource:
+Next, describe the resource to see how it mapped our governance rules:
 
 [source,role="execute"]
 ----
 oc describe maasmodel llama-3-8b -n chocotech-models
 ----
 
-Look for:
+*What to look for in the output:*
+* **Status:** Must say `Published`.
+* **Tier Access:** You should see `bronze-tier`, `silver-tier`, and `gold-tier` explicitly listed. This confirms the "Bouncer List" we created in our YAML was successfully read.
+* **Gateway Endpoint:** The external URL that client applications will use to reach the model.
 
-* `Status: Published` - Model is available in catalog
-* `Gateway Endpoint` - External URL for model access
-* `Tier Access` - bronze, silver, gold, platinum
-* `Integration Status` - Kuadrant policies applied
+---
 
-=== Access the Gen AI Studio catalog
+== Exercise 2: The Developer Payoff (Gen AI Studio UI)
 
-. Open the OpenShift AI dashboard in your browser (or use Showroom "OpenShift AI" tab)
-. Navigate to **Gen AI Studio** in the left menu
-. Click on the **Models** tab
+Let's switch hats. You are now a developer on the Marketing team logging in to find a model for your sentiment analysis application. You do not need to know anything about `vLLM` or OpenShift routes; you simply use the self-service catalog.
 
-You should now see Llama-3 8B in the model catalog:
+1. Open the OpenShift AI dashboard in your browser.
+2. Navigate to **Gen AI Studio** in the left-hand menu.
+3. Click on the **Models** tab.
 
-----
-Model Name: meta-llama/Meta-Llama-3-8B-Instruct
-Status: Available
-Tier Access: Bronze, Silver, Gold, Platinum
-Endpoint: https://maas-default-gateway.{cluster_domain}/v1/chat/completions
-----
+You should immediately see the `meta-llama/Meta-Llama-3-8B-Instruct` model populated in the catalog grid. 
 
-// TODO: Add screenshot of model in Gen AI Studio catalog
-image::genai-studio-model-catalog.png[Gen AI Studio catalog showing Llama-3 8B model with tier access and endpoint information,link=self,window=blank,width=800,title="Model Catalog in Gen AI Studio Dashboard"]
+Clicking on the model card will reveal:
+* **Status:** Available
+* **Tier Access:** Gold, Silver, Bronze
+* **Endpoint:** `https://maas-default-gateway.../v1/chat/completions`
 
-=== Test model accessibility through MaaS gateway
+This completely eliminates developer friction. They can discover models, view their tier eligibility, and copy the exact endpoint URL without ever submitting an IT ticket.
 
-Get the MaaS gateway endpoint:
+---
 
-[source,role="execute"]
-----
-oc get route maas-default-gateway -n redhat-ods-applications -o jsonpath='{.spec.host}'
-----
+== Exercise 3: Test the Gateway API discovery
 
-Expected output:
+Finally, let's verify that the Kuadrant Gateway is correctly broadcasting the model's availability over the network. The MaaS Gateway is fully compliant with the OpenAI API specification, meaning client libraries can dynamically query the `/v1/models` endpoint to see what is available.
 
-----
-maas-default-gateway.apps.{cluster_domain}
-----
+*(Note: The `/v1/models` endpoint is used for discovery and does not require a Bearer token).*
 
-Generate an API token (covered in Module 5) or use a test token:
-
-Note: In Module 5, you'll learn how to generate proper Bearer tokens. For now, verify the model endpoint is reachable.
-
-Check the models list endpoint (no auth required for list):
+Retrieve your Gateway hostname and query the models list:
 
 [source,role="execute"]
 ----
-curl https://$(oc get route maas-default-gateway -n redhat-ods-applications -o jsonpath='{.spec.host}')/v1/models
+GATEWAY_HOST=$(oc get gateway maas-default-gateway -n openshift-ingress -o jsonpath='{.status.addresses[0].value}')
+
+curl -s http://$GATEWAY_HOST/v1/models | jq
 ----
 
-Expected output:
+=== Decoding the Results
 
+If MaaS integration is successful, the Gateway will return a JSON array containing your model:
+
+[source,json]
 ----
 {
   "object": "list",
@@ -94,14 +88,7 @@ Expected output:
 }
 ----
 
-Your model appears in the API response, confirming MaaS integration is working.
+### Module 3 Progress Check
+You have successfully deployed a governed, hardware-optimized LLM and published it to a centralized enterprise catalog. 
 
-=== Verification
-
-Confirm MaaS catalog publication:
-
-* MaaSModel resource exists with Status=Published
-* Model appears in Gen AI Studio Models tab
-* Model shows correct tier access permissions (bronze/silver/gold/platinum)
-* MaaS gateway `/v1/models` endpoint returns the model
-* Gateway endpoint URL is accessible
+Your infrastructure is live. The only thing left to discuss in Module 3 is how to safely manage this model on "Day 2."

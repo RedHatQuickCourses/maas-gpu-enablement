@@ -2,7 +2,13 @@
 
 You have successfully transformed ChocoTech's fragmented GPU infrastructure from a state of passive monitoring to active enablement. The physical and network foundations are now officially MaaS-capable.
 
-Before we move on to establishing the actual governance rules, verify that your environment is healthy. If you hit any roadblocks during setup, expand the troubleshooting guide below.
+Before we move on to establishing the actual governance rules, verify that your environment is healthy. 
+
+[TIP]
+====
+**OpenShift AI 3.4 Requirement** +
+In OpenShift AI 3.4, MaaS uses a subscription-based model for access control. If you are missing Custom Resource Definitions (like `MaaSSubscription`), check your Operator Lifecycle Manager (OLM) to ensure your cluster is subscribed to the `3.4` (or beta/EA) update channel, as version 3.3 does not support these features.
+====
 
 ---
 
@@ -11,53 +17,37 @@ Before we move on to establishing the actual governance rules, verify that your 
 ====
 If your verification checks failed in the previous step, locate your issue below to resolve it before proceeding to Module 2.
 
+**Issue: MaaS API pod is in `CrashLoopBackOff`**
+
+* **Check the Database Secret:** The `maas-api` pod strictly requires a database connection string. Check that the PostgreSQL database secret `maas-db-config` exists in the `redhat-ods-applications` namespace.
+* **Verify Secret Contents:** Run `oc extract secret/maas-db-config -n redhat-ods-applications --to=-` to ensure the `DB_CONNECTION_URL` is formatted correctly.
+
+**Issue: Gen AI Studio is not visible in the dashboard**
+
+* **Verify Llama Stack:** The UI relies on the Llama Stack Operator. Run `oc get datasciencecluster default-dsc -o jsonpath='{.spec.components.llamastackoperator.managementState}'`. It must be `Managed`.
+* **Verify Dashboard Patch:** Run `oc get odhdashboardconfig odh-dashboard-config -n redhat-ods-applications -o yaml | grep -A 5 dashboardConfig` to ensure `genAiStudio` is set to `true`.
+* **Hard Reload:** Clear your browser cache and hard-refresh the page (Ctrl+Shift+R or Cmd+Shift+R).
+
 **Issue: Kuadrant pods are not starting after creating the Kuadrant CR**
 
 * **Check Connectivity Link operator logs:** Run `oc logs -n openshift-operators deployment/connectivity-link-operator --tail=50`.
 * **Verify Kuadrant CRDs are installed:** Run `oc get crd | grep kuadrant`.
 
-**Issue: Gateway status shows `PROGRAMMED=Unknown` (Persists beyond 2 minutes)**
-
-* **Wait:** The Gateway controller needs 60-90 seconds to process the resource and provision listeners.
-* **Check Service Mesh:** Run `oc get pods -n openshift-ingress`.
-* **Check Gateway Controller:** Run `oc get pods -n openshift-ingress-operator`.
-* **Check Events:** Run `oc describe gateway maas-default-gateway -n openshift-ingress`.
-* *Root Cause:* The Istio control plane is not fully ready, or Gateway API CRDs are not installed.
-
-**Issue: Gateway status shows `PROGRAMMED=False`**
+**Issue: Gateway status shows `PROGRAMMED=False` or `Unknown`**
 
 * **Verify Service Mesh:** Ensure the control plane is healthy by running `oc get pods -n openshift-ingress`.
 * **Check for Errors:** Run `oc describe gateway maas-default-gateway -n openshift-ingress`.
 * *Root Cause:* The Service Mesh operator is not installed, or the Istio control plane is not deployed. Ensure the `openshift-ingress` namespace exists and contains running `istiod-*` and `istio-ingressgateway-*` pods.
-
-**Issue: MaaS API pods are not appearing after DataScienceCluster patch**
-
-* **Check DSC Status:** Run `oc get datasciencecluster default-dsc -o yaml | grep -A 10 conditions`.
-* **Verify Kuadrant is Running:** Run `oc get pods -n openshift-operators`. The MaaS API deployment strictly depends on Kuadrant being healthy.
-* **Check Operator Logs:** Run `oc logs -n redhat-ods-operator deployment/rhods-operator --tail=100` to find specific failures.
-
-**Issue: Gen AI Studio is not visible in the dashboard after configuration patch**
-
-* **Verify Patch:** Run `oc get odhdashboardconfig odh-dashboard-config -n redhat-ods-applications -o yaml | grep -A 5 dashboardConfig`.
-* **Hard Reload:** Clear your browser cache and hard-reload the page (Ctrl+Shift+R or Cmd+Shift+R).
-* **Check Pod Logs:** Run `oc logs -n redhat-ods-applications deployment/odh-dashboard --tail=50`.
-* **Restart Dashboard:** If needed, run `oc rollout restart deployment/odh-dashboard -n redhat-ods-applications`.
-
-**Issue: LeaderWorkerSet operator is missing from the operator list**
-
-* **Install:** Navigate to **Ecosystem → Software Catalog** in the OpenShift console. Search for "Leader Worker Set" and click **Install**, selecting the `openshift-lws-operator` namespace. *Note: This is strictly required for llm-d orchestration in later modules*.
 ====
 
 ---
 
 == The ChocoTech impact
 
-By completing this module, you have laid the groundwork to solve ChocoTech's GPU Silo Crisis. 
+By completing this module, you have laid the groundwork to solve ChocoTech's GPU Silo Crisis. **What you accomplished:**
 
-**What you accomplished:**
-
-* **Infrastructure Ready:** The platform can now logically route and enforce policies across Quality Control, R&D, Marketing, and Supply Chain. 
-* **Self-Service Enabled:** Business unit leads can now generate API tokens for their developers securely, bypassing traditional IT ticket bottlenecks.
+* **Infrastructure Ready:** The platform can now logically route and enforce policies across Quality Control, R&D, Marketing, and Supply Chain.
+* **Self-Service Enabled:** Business unit leads will soon be able to generate API tokens for their developers securely, bypassing traditional IT ticket bottlenecks.
 * **API Gateway Operational:** A single, robust endpoint has replaced the four separate, insecure model-serving endpoints that teams were managing independently.
 
 ---
@@ -77,4 +67,4 @@ _Application Integration_
 |===
 
 [quote]
-**Next steps:** You understand the business problem and have activated the MaaS platform. However, the foundation is operational but not yet configured for production. In Module 2, you will establish the actual governance rules, define tier-based access controls (Bronze, Silver, Gold), and continue to deploy your first models to the central catalog in Module 3.
+**Next steps:** You understand the business problem and have activated the MaaS platform. However, the foundation is operational but not yet configured for production. In Module 2, you will establish the actual governance rules, define subscription-based access controls (Bronze, Silver, Gold), and authorize Gateway traffic for your enterprise users.

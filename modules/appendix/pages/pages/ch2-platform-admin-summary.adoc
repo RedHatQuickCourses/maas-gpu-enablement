@@ -1,0 +1,73 @@
+= 2.5: Summary & troubleshooting
+
+You have successfully transformed ChocoTech's OpenShift AI platform from a raw, ungoverned infrastructure into a highly secure, multi-tenant enterprise AI factory. 
+
+If ChocoTech had opted for a generic public API, they would currently have zero internal cost control and no way to prioritize mission-critical workloads over experimental scripts. By building these policies directly into the OpenShift network edge, you have secured the company's ROI and established absolute Quality of Service (QoS).
+
+== What you accomplished
+
+* **Organizational Identity:** Created OpenShift groups to represent specific business units (`chocotech-quality-control`, `chocotech-rd`, `chocotech-marketing`), ensuring audit trails are mapped to departments, not just individuals.
+* **Programmatic Security:** Configured ServiceAccounts and ephemeral JWT token-based API authentication. You established least-privilege RBAC to ensure applications can only read and execute, not modify, the infrastructure.
+* **Tier Definition:** Deployed the `tier-to-group-mapping` ConfigMap, instructing the Gen AI Studio UI on exactly how to categorize ChocoTech's business units.
+* **Edge-Level Governance:** Deployed Gold, Silver, and Bronze `RateLimitPolicy` resources to Kuadrant. You successfully decoupled the inference request from the underlying GPU, ensuring that traffic limits are enforced mathematically at the Gateway.
+
+---
+
+== Knowledge check
+
+Test your understanding of the tier governance architecture before moving on:
+
+1. **Why are MaaS Tier policies created before model deployment, rather than after?**
++
+MaaS Tier policies must exist before deployment so the MaaS operator and Kuadrant can enforce rate limits and quotas from the very first inference request. Creating policies after deployment would leave a window of uncontrolled, ungoverned access.
+
+2. **What happens if a Bronze tier user (Marketing) tries to exceed 20 requests per minute?**
++
+Kuadrant's Limitador component, operating at the network edge, tracks the requests per tier. It immediately rejects any requests exceeding the limit with an `HTTP 429 Too Many Requests` status code, preventing the request from ever reaching the KServe model pod. The user's application must wait until the next minute window.
+
+3. **How does Authorino know which tier a programmatic user belongs to?**
++
+Authorino intercepts the API request, cryptographically validates the JWT token signature, and extracts the ServiceAccount identity. It evaluates the OpenShift groups associated with that identity and maps them against the defined tier rules, applying the highest priority tier available to that user.
+
+---
+
+.🛠️ Troubleshooting: Governance & Authentication (Click to expand)
+[%collapsible]
+====
+If you encountered any issues verifying your policies, check the following common resolutions:
+
+**Issue: Token authentication returns `401 Unauthorized`**
+
+* **Check Token Expiry:** Regenerate the token using `TOKEN=$(oc create token marketing-sentiment-app -n chocotech-models --duration=1h)`.
+* **Verify RBAC:** Ensure your `Role` and `RoleBinding` exist in the correct namespace: `oc get rolebinding marketing-sentiment-app-binding -n chocotech-models`.
+* **Check Authorino Logs:** Run `oc logs -l app=authorino -n kuadrant-system` to see exactly why the token was rejected.
+
+**Issue: AuthConfig not found in redhat-ods-applications**
+
+* **Verify MaaS State:** The operator creates this automatically. Verify MaaS is enabled: `oc get datasciencecluster default-dsc -o jsonpath='{.spec.components.modelsAsService.managementState}'` (Should return `Managed`).
+* **Check Operator Logs:** Run `oc logs -n redhat-ods-operator deployment/rhods-operator | grep -i authorino` to see if the creation failed.
+
+**Issue: Authorino or Limitador pods are crashing / pending**
+
+* **Check Pod Events:** Run `oc describe pod -l app=authorino -n kuadrant-system`.
+* **Common Causes:** Insufficient CPU/Memory on the cluster nodes, or a network issue preventing the cluster from pulling the Kuadrant images from `quay.io`.
+====
+
+---
+
+== Your journey progress
+
+[cols="1a,1a,1a,1a",frame="none",grid="none"]
+|===
+| **✅ Module 1** +
+_Architecture & Foundation_ 
+| **✅ Module 2** +
+_Policies & Governance_ 
+| **⏳ Module 3** +
+_Model Deployment_ 
+| **🚀 Module 4** +
+_Application Integration_
+|===
+
+[quote]
+**Next steps:** Your security perimeter is established, but the catalog is currently empty. In Module 3, you will deploy your first generative AI models (`llama-3-8b` and `nemotron-8b`). You will annotate these models with the tiers you just built, publish them to the Gen AI Studio catalog, and actively watch Kuadrant throttle traffic based on the Gold/Silver/Bronze limits.

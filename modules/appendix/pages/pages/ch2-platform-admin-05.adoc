@@ -1,0 +1,170 @@
+= 2.4: Defining tiers and enforcing rate limits
+
+We have identified our users (Groups) and given them their ID badges (ServiceAccounts and JWTs). Now, it is time to build the security fences. 
+
+If ChocoTech were relying on a cheap public API, the vendor would treat all ChocoTech traffic identically. If the Marketing team ran a massive, buggy script, they could easily consume the company's entire monthly API budget in an afternoon, simultaneously locking out the Quality Control team. 
+
+MaaS solves this by giving you **Enterprise Quality of Service (QoS)**. By decoupling the UI tier definitions from the network-edge rate limits, you gain absolute control over resource allocation.
+
+== The Enterprise Reality: Requests vs. Tokens
+
+When managing standard microservices, simple API rate limiting is enough. Generative AI requires a fundamentally different approach. In LLM inference, the computational cost of a single API request can vary wildly based on the sequence length. 
+
+Because of this, Kuadrant and MaaS enforce two distinct types of limits simultaneously:
+
+[cols="1a,2a",options="header",frame="all",grid="rows"]
+|===
+| The Limit Type | The Enterprise Function
+
+| **1. Request Rate Limits**
+| Controls **how many API calls** a user can make per minute. 
+
+*Why it matters:* Protects the Gateway and network from being overwhelmed by a sheer volume of simultaneous connections (e.g., stopping a DDoS or a broken retry script).
+
+| **2. Token Quotas**
+| Controls **how much GPU compute** a user can consume per minute by tracking the exact number of `prompt_tokens` and `completion_tokens`. 
+
+*Why it matters:* A single API request generating 2,000 tokens costs vastly more GPU memory than a request generating 10 tokens. Token quotas mathematically prevent a single user from hoarding VRAM.
+|===
+
+== The ChocoTech Governance Strategy
+
+Based on the CIO's requirements, we will implement the following tier structure:
+
+[cols="1a,1a,1a,2a",options="header",frame="all",grid="rows"]
+|===
+| Tier | Priority Level | Rate Limit | Enterprise Value
+
+| **Gold** (Quality Control)
+| `100` (Highest)
+| 100 requests/min
+| **Guaranteed Production:** Ensures the factory floor defect-detection models are never throttled during peak demand.
+
+| **Silver** (R&D)
+| `50` (Medium)
+| 50 requests/min
+| **Balanced Development:** Provides generous capacity for recipe optimization testing without threatening Gold tier resources.
+
+| **Bronze** (Marketing)
+| `10` (Lowest)
+| 20 requests/min
+| **Cost Control:** Strictly limits exploratory sentiment analysis, preventing runaway scripts from wasting expensive GPU cycles. 
+|===
+
+Creating these governed tiers in OpenShift AI 3.3 is a two-step process:
+
+1. **Define the Business Logic:** Tell the Gen AI Studio UI what the tiers are.
+2. **Enforce the Network Policy:** Tell the Kuadrant Gateway how to throttle the traffic.
+
+---
+
+== Step 1: Define the UI Business Logic (The ConfigMap)
+
+First, we must register the tiers in the `redhat-ods-applications` namespace. The Gen AI Studio UI reads this ConfigMap to know what tiers exist and which OpenShift groups belong to them. 
+
+Execute the following block to create the tier mappings:
+
+[source,role="execute"]
+----
+cat <<EOF | oc apply -f -
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: tier-to-group-mapping
+  namespace: redhat-ods-applications
+data:
+  tiers: |
+    - name: gold-tier
+      description: Quality Control Production
+      level: 100
+      groups:
+      - chocotech-quality-control
+    - name: silver-tier
+      description: R&D Development
+      level: 50
+      groups:
+      - chocotech-rd
+    - name: bronze-tier
+      description: Marketing Exploratory
+      level: 10
+      groups:
+      - chocotech-marketing
+EOF
+----
+
+*Expected output:* `configmap/tier-to-group-mapping configured`. When an AI Administrator logs into the dashboard, these tiers will now be globally visible.
+
+---
+
+== Step 2: Enforce the Network Rate Limits (Kuadrant)
+
+Now, we must apply the Kuadrant `RateLimitPolicy` to the `maas-default-gateway`. This physically enforces the traffic limits at the network edge based on the Common Expression Language (CEL) claims inside the user's JWT.
+
+Execute the following block to deploy all three rate limit policies into the `chocotech-models` namespace simultaneously:
+
+[source,role="execute"]
+----
+cat <<EOF | oc apply -f -
+---
+apiVersion: kuadrant.io/v1
+kind: RateLimitPolicy
+metadata:
+  name: gold-tier-rate-limit
+  namespace: chocotech-models
+spec:
+  targetRef:
+    group: gateway.networking.k8s.io
+    kind: Gateway
+    name: maas-default-gateway
+  limits:
+    "gold-request-limit":
+      rates:
+      - limit: 100
+        window: "1m"
+      when:
+      - predicate: "has(auth.identity) && 'chocotech-quality-control' in auth.identity.groups"
+---
+apiVersion: kuadrant.io/v1
+kind: RateLimitPolicy
+metadata:
+  name: silver-tier-rate-limit
+  namespace: chocotech-models
+spec:
+  targetRef:
+    group: gateway.networking.k8s.io
+    kind: Gateway
+    name: maas-default-gateway
+  limits:
+    "silver-request-limit":
+      rates:
+      - limit: 50
+        window: "1m"
+      when:
+      - predicate: "has(auth.identity) && 'chocotech-rd' in auth.identity.groups"
+---
+apiVersion: kuadrant.io/v1
+kind: RateLimitPolicy
+metadata:
+  name: bronze-tier-rate-limit
+  namespace: chocotech-models
+spec:
+  targetRef:
+    group: gateway.networking.k8s.io
+    kind: Gateway
+    name: maas-default-gateway
+  limits:
+    "bronze-request-limit":
+      rates:
+      - limit: 20
+        window: "1m"
+      when:
+      - predicate: "has(auth.identity) && 'chocotech-marketing' in auth.identity.groups"
+EOF
+----
+
+*Expected output:* The terminal will confirm the creation of `gold-tier-rate-limit`, `silver-tier-rate-limit`, and `bronze-tier-rate-limit`. 
+
+> **Architectural Note: The UI is a One-Way Street**
+> If you define a Kuadrant `RateLimitPolicy` using CEL via the CLI, it will work perfectly at the network edge. However, **it will not appear in the Gen AI Studio UI.** The OpenShift AI dashboard is an abstraction layer; it *pushes* basic YAML down to Kuadrant, but it does not read complex manual Kuadrant policies *up* from the cluster. Platform Engineers must document their custom GitOps policies, as the AI Admin will not see them in their dashboard.
+
+---

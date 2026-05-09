@@ -1,285 +1,148 @@
-= 3.1: Understanding serving runtimes and distributed inference
+= 3.2: Deploying the governed model via GitOps
 
-Before deploying a model, you need to understand the difference between standalone KServe deployment and MaaS-integrated deployment.
+With the hardware math verified, it is time to deliver the AI capabilities to ChocoTech's R&D team. 
 
-Only models deployed using the **Distributed Inference with llm-d** runtime can integrate with MaaS governance and appear in the Gen AI Studio catalog.
+In a production environment, pulling massive 16GB model weights directly from the public internet every time a pod scales up is highly inefficient and a security risk. Instead, ChocoTech uses a "Vault" strategy: we download the model once to a local, high-speed S3-compatible storage array (MinIO) inside the cluster, and all inference pods pull their weights from there.
 
-=== Standalone InferenceService vs MaaS-published model
+== Exercise 1: Stage the local vault
 
-**Standalone KServe InferenceService**:
+We have packaged the infrastructure setup into an automation script. This script will provision the MinIO vault, create the necessary Data Connection secrets, and use a Kubernetes Job to download the `Llama-3-8B` model weights from Hugging Face into your local storage.
 
-* Bypasses MaaS gateway entirely
-* No tier-based access control or authentication
-* No token consumption tracking for chargeback
-* No rate limiting or quotas enforcement
-* Direct model access without Bearer token
-* Cannot appear in Gen AI Studio catalog
-* Suitable for internal testing or non-governed workloads
-
-**MaaS-published model (Distributed Inference with llm-d)**:
-
-* Routes through Gateway API and Kuadrant policy layer
-* Enforces tier-based access control (bronze/silver/gold/platinum)
-* Tracks token consumption for accurate chargeback
-* Applies request rate limits and quotas per user tier
-* Requires Bearer token authentication for all API calls
-* Appears in Gen AI Studio catalog automatically
-* Suitable for production, multi-tenant, governed model serving
-
-IMPORTANT: If you deploy a model using any runtime other than "Distributed Inference with llm-d" (such as standard KServe, vLLM without llm-d, NVIDIA NIM, or MLServer), the option to "Publish as MaaS endpoint" will not appear in the dashboard.
-
-=== Why distributed inference matters for ChocoTech
-
-ChocoTech needs to deploy both small models (Llama-3 8B) and large models (Nemotron 70B) efficiently.
-
-**Small models (8B parameters)**:
-
-* Fit on a single GPU (24GB VRAM sufficient)
-* Can use single-replica deployment
-* Distributed inference still recommended for MaaS integration
-
-**Large models (70B+ parameters)**:
-
-* Exceed single GPU memory capacity
-* Require tensor parallelism across multiple GPUs
-* Must use distributed inference with LeaderWorkerSet
-
-**LeaderWorkerSet architecture**:
-
+1. Open your OpenShift Terminal.
+2. Clone the deployment repository:
++
+[source,role="execute"]
 ----
-Leader Pod (Coordinator)       Worker Pods (Inference)
-┌─────────────────┐           ┌───────────────┐
-│ Receives requests│───────────│ GPU 1 (shard 1)│
-│ Coordinates work │           ├───────────────┤
-│ Aggregates output│───────────│ GPU 2 (shard 2)│
-└─────────────────┘           ├───────────────┤
-                              │ GPU 3 (shard 3)│
-                              └───────────────┘
+git clone https://github.com/RedHatQuickCourses/rhoai3-maas-lab.git
+cd rhoai3-maas-lab
 ----
 
-The leader pod coordinates inference requests while worker pods process model shards in parallel across multiple GPUs.
+3. Execute the setup script:
++
+[source,role="execute"]
+----
+chmod u+x deploy/setup-vault.sh
+./deploy/setup-vault.sh
+----
 
-=== Verify distributed inference components
+*Expected Output:* The script will output its progress. Wait for the final `✅ SUCCESS: Model is now available in MinIO at s3://models/llama3` message. This may take 5-15 minutes depending on the cluster's network speed.
 
-Check that LeaderWorkerSet operator is installed:
+== Exercise 2: Extract the Serving Runtime (The Engine)
+
+OpenShift AI includes certified runtime templates. Instead of writing a complex vLLM container definition from scratch, we will extract the official template from the central RHOAI namespace and install it into our `chocotech-models` project.
+
+Execute the following command to process and apply the template:
 
 [source,role="execute"]
 ----
-oc get pods -n leaderworkerset-system
+oc process vllm-cuda-runtime-template -n redhat-ods-applications | \
+oc apply -f - -n chocotech-models
 ----
 
-Expected output:
+*Expected Output:* `servingruntime.serving.kserve.io/vllm-cuda-runtime created`.
 
-----
-NAME                                            READY   STATUS    RESTARTS   AGE
-leaderworkerset-controller-manager-xxx          1/1     Running   0          5d
-----
+== Exercise 3: Wire the Data Connection
 
-If LeaderWorkerSet operator is not installed, distributed inference cannot function.
+The setup script in Exercise 1 created a ServiceAccount (`fast-track-sa`) and a Secret containing the MinIO S3 credentials (`storage-config`). However, for the KServe storage puller to actually use those credentials to mount the model weights into the pod, we must explicitly link them.
 
-Check llm-d serving runtime controller:
+Link the data connection secret to the service account:
 
 [source,role="execute"]
 ----
-oc get pods -n redhat-ods-applications | grep llm-serving
+oc secret link fast-track-sa storage-config -n chocotech-models
 ----
 
-Expected output:
+== Exercise 4: The Infrastructure-as-Code (The Workload)
 
+To deploy distributed inference and integrate with MaaS, we must use the `LLMInferenceService` custom resource. This manifest binds our extracted Runtime (the engine) to our MinIO Storage (the fuel), and attaches the Kuadrant MaaS policies (the governance).
+
+Review and apply the `llama3-deployment.yaml` file:
+
+[source,yaml]
 ----
-llm-serving-runtime-controller-xxx   1/1     Running   0          5d
-----
-
-=== Verification
-
-Confirm distributed inference prerequisites:
-
-* LeaderWorkerSet operator is Running in leaderworkerset-system namespace
-* llm-serving-runtime controller is Running in redhat-ods-applications namespace
-* GPU nodes are available with sufficient VRAM for model deployment
-== Exercise 3: Deploy your first model with distributed inference
-
-Now you'll deploy Llama-3 8B using the LLMInferenceService custom resource for ChocoTech's R&D team.
-
-The LLMInferenceService CRD is the declarative way to deploy models with distributed inference and MaaS integration.
-
-=== Create a project for model deployment
-
-Create a dedicated namespace for model serving:
-
-[source,role="execute"]
-----
-oc new-project chocotech-models
-----
-
-Label the project to enable MaaS integration:
-
-[source,role="execute"]
-----
-oc label namespace chocotech-models modelsAsService=true
-----
-
-This label tells the MaaS operator to watch for LLMInferenceService resources in this namespace.
-
-=== Prepare the LLMInferenceService manifest
-
-Create a YAML file for Llama-3 8B deployment:
-
-[source,role="execute"]
-----
-cat > llama3-8b-llminferenceservice.yaml <<EOF
+cat <<EOF | oc apply -f -
 apiVersion: serving.kserve.io/v1alpha1
 kind: LLMInferenceService
 metadata:
   name: llama-3-8b
   namespace: chocotech-models
-  labels:
-    app: llama-3-8b
+  annotations:
+    # THE BOUNCER LIST: Defines exactly which UI Tiers are allowed to access this model
+    alpha.maas.opendatahub.io/tiers: '["gold-tier", "silver-tier", "bronze-tier"]'
 spec:
+  # THE CATALOG PUBLISHER: Pushes this model to the Gen AI Studio UI
+  publishToGenAIStudio: true
+  
+  # THE VAULT: Pointing to our secure local S3 storage connection
   model:
+    uri: s3://models/llama3
     name: meta-llama/Meta-Llama-3-8B-Instruct
-    source: huggingface
-  runtime:
-    name: vllm
-    version: v0.5.4
-  resources:
-    limits:
-      nvidia.com/gpu: 1
-    requests:
-      nvidia.com/gpu: 1
-      memory: 16Gi
-  scaling:
-    minReplicas: 1
-    maxReplicas: 3
-  maasConfig:
-    publishToGenAIStudio: true
-    tierAccess:
-      - bronze
-      - silver
-      - gold
-      - platinum
+    
+  # THE ENGINE: Utilizing the certified runtime we extracted in Exercise 2
+  servingRuntime: "vllm-cuda-runtime"
+  
+  # THE SCHEDULER: Bypassing standard round-robin for intelligent llm-d dispatching
+  router:
+    scheduler:
+      template:
+        containers:
+          - name: main
+            args:
+              - '--pool-group'
+              - 'inference.networking.x-k8s.io'
+              - '--pool-name'
+              - '{{ .ObjectMeta.Name }}-inference-pool'
+            
+  # ENGINE TUNING: Injecting native vLLM parameters for maximum throughput
+  template:
+    spec:
+      serviceAccountName: fast-track-sa
+      containers:
+        - name: main
+          env:
+            - name: VLLM_ADDITIONAL_ARGS
+              value: "--max-model-len=8192 --gpu-memory-utilization=0.90"
+              
+  # THE HARDWARE: Requesting exact VRAM and GPU requirements
+  placement:
+    accelerator:
+      name: "nvidia.com/gpu"
+      count: 1
 EOF
 ----
 
-**Key fields explained**:
+=== Breaking down the vLLM Tuning Variables
+* `--max-model-len=8192`: Prevents Out-Of-Memory (OOM) errors by capping the maximum context window. Limiting this ensures predictable memory allocation on ChocoTech's 24GB GPUs.
+* `--gpu-memory-utilization=0.90`: Reserves 90% of the VRAM strictly for the KV Cache and model weights, leaving 10% for PyTorch and system overhead. 
 
-* `spec.model.name` - Hugging Face model identifier
-* `spec.model.source` - Model source (huggingface, S3, PVC)
-* `spec.runtime.name` - Serving runtime (vllm with llm-d integration)
-* `spec.resources.limits` - GPU and memory allocation
-* `spec.scaling` - Autoscaling configuration (min/max replicas)
-* `spec.maasConfig.publishToGenAIStudio` - Publish to catalog (true/false)
-* `spec.maasConfig.tierAccess` - Which user tiers can access this model
+== Exercise 5: Monitor the deployment
 
-=== Deploy the model
+Because the weights are stored locally in your MinIO vault, the pod startup will be significantly faster than pulling from the public internet. 
 
-Apply the LLMInferenceService manifest:
+Check the KServe status condition to verify the model is healthy and ready to serve traffic:
 
 [source,role="execute"]
 ----
-oc apply -f llama3-8b-llminferenceservice.yaml
+oc wait --for=condition=Ready llminferenceservice/llama-3-8b -n chocotech-models --timeout=300s
 ----
 
-Expected output:
+*Expected output:* `llminferenceservice.serving.kserve.io/llama-3-8b condition met`.
 
-----
-llminferenceservice.serving.kserve.io/llama-3-8b created
-----
+---
 
-=== Monitor model deployment
+== Alternative: The UI Deployment Walkthrough
 
-Watch the LLMInferenceService status:
+While GitOps (Infrastructure-as-Code) is the standard for Platform Engineers, OpenShift AI administrators can also deploy and publish governed models directly through the dashboard UI. 
 
-[source,role="execute"]
-----
-oc get llminferenceservice -n chocotech-models -w
-----
+In the OpenShift AI dashboard, administrators simply navigate to the deployment wizard, select their data connection, and check the **"Publish as MaaS endpoint"** box. They can then use checkboxes to restrict the model to specific tiers.
 
-You'll see the status progress through phases:
+.📺 Video Walkthrough: UI Model Deployment
+[%collapsible]
+====
+_Click play below to watch a 2-minute demonstration of an AI Administrator deploying a model via the Gen AI Studio deployment wizard and applying the MaaS tier restrictions._
 
-----
-NAME          READY   REASON              AGE
-llama-3-8b    False   Initializing        10s
-llama-3-8b    False   DownloadingModel    45s
-llama-3-8b    False   LoadingModel        2m
-llama-3-8b    True    Ready               5m
-----
+// NOTE FOR AUTHOR: Insert your video embed code here.
+`[Video Embed: Deploying a MaaS Model via the OpenShift AI Dashboard]`
+====
 
-Press `Ctrl+C` once status shows `READY=True`.
-
-Watch the underlying pods being created:
-
-[source,role="execute"]
-----
-oc get pods -n chocotech-models -w
-----
-
-You'll see LeaderWorkerSet creating leader and worker pods:
-
-----
-NAME                                    READY   STATUS              RESTARTS   AGE
-llama-3-8b-0-0                          0/1     ContainerCreating   0          30s
-llama-3-8b-0-0                          0/1     PodInitializing     0          1m
-llama-3-8b-0-0                          1/1     Running             0          3m
-----
-
-Press `Ctrl+C` once pods are Running.
-
-=== Verify model deployment
-
-Check that the model is healthy:
-
-[source,role="execute"]
-----
-oc get llminferenceservice llama-3-8b -n chocotech-models -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}'
-----
-
-Expected output:
-
-----
-True
-----
-
-Check the model service was created:
-
-[source,role="execute"]
-----
-oc get svc -n chocotech-models | grep llama
-----
-
-Expected output:
-
-----
-llama-3-8b-predictor-00001   ClusterIP   172.30.xxx.xxx   <none>        8080/TCP   5m
-----
-
-Check model logs for successful startup:
-
-[source,role="execute"]
-----
-oc logs -n chocotech-models -l app=llama-3-8b --tail=20
-----
-
-Look for log messages indicating successful model loading:
-
-----
-INFO:     vLLM v0.5.4
-INFO:     Initializing engine for meta-llama/Meta-Llama-3-8B-Instruct
-INFO:     Model loaded successfully on GPU 0
-INFO:     Uvicorn running on 0.0.0.0:8080
-----
-
-=== Verification
-
-Confirm model deployment:
-
-* LLMInferenceService status shows READY=True
-* Leader pod is Running with 1/1 ready containers
-* Model service exists in chocotech-models namespace
-* Model logs show successful initialization and GPU loading
-* vLLM serving runtime is active on port 8080
-
-// TODO: Add screenshot of successful model deployment
-image::model-deployment-success.png[LLMInferenceService showing READY=True status and running pods,link=self,window=blank,width=800,title="Successful Model Deployment with Distributed Inference"]
-
-
+In the next section, we will verify our GitOps deployment succeeded by checking the MaaS Catalog and actively testing the Kuadrant rate limits!

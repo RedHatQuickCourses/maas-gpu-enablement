@@ -38,15 +38,6 @@ Notice the `modelRefs` section in the YAML below. Even though we will not deploy
 
 Execute the following block to deploy all three `MaaSSubscription` policies into the centralized `models-as-a-service` namespace:
 
- * First create the namespace:
-+
-[source, bash]
-----
-oc create namespace models-as-a-service
-----
-
-
-
 [source,role="execute"]
 ----
 cat <<EOF | oc apply -f -

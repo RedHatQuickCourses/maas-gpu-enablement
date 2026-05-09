@@ -1,0 +1,111 @@
+= 2.2: Creating OpenShift groups
+
+To enforce the CIO's tier strategy, the MaaS platform needs a mathematical way to identify which request belongs to which team. We achieve this by utilizing native OpenShift Groups. 
+
+By mapping OpenShift groups to our MaaS tiers, we gain massive enterprise advantages over standard public APIs:
+
+* **Scalable Onboarding:** You add a new data scientist to a group, and they automatically inherit the correct API rate limits and model access. No manual token tweaking required.
+* **Auditable Transparency:** Every API request is logged against the business unit (e.g., `chocotech-quality-control`), providing Finance with the exact metrics needed for departmental chargebacks.
+
+---
+
+== Exercise 1: Create the business unit groups
+
+Instead of creating individual users, let's create the three organizational groups that will soon be mapped to our Gold, Silver, and Bronze tiers. 
+
+Execute the following commands to create the ChocoTech groups:
+
+[source,role="execute"]
+----
+oc adm groups new chocotech-quality-control
+oc adm groups new chocotech-rd
+oc adm groups new chocotech-marketing
+----
+
+*Expected output:* The terminal will confirm creation with three lines reading `group.user.openshift.io/<group-name> created`.
+
+Next, to successfully complete the upcoming labs, you need to simulate being a member of the Quality Control team (our Gold tier). Add your current user account to the QC group:
+
+[source,role="execute"]
+----
+oc adm groups add-users chocotech-quality-control $(oc whoami)
+----
+
+Verify your group membership:
+
+[source]
+----
+oc get group chocotech-quality-control -o yaml
+----
+
+Expected output:
+
+[source,yaml]
+----
+apiVersion: user.openshift.io/v1
+kind: Group
+metadata:
+  name: chocotech-quality-control
+  resourceVersion: "123456"
+  uid: abc123...
+users:
+- user1 (or admin)
+----
+---
+
+== Exercise 2: Prepare the governed namespace
+
+Models must be deployed into a dedicated namespace (project). However, simply creating a namespace is not enough. You must explicitly label it so the Kuadrant policy engine knows to enforce governance rules on the traffic entering it.
+
+Create the new project for ChocoTech's centralized model hub:
+
+[source,role="execute"]
+----
+oc new-project chocotech-models
+----
+
+Now, apply the MaaS routing and governance labels:
+
+[source,role="execute"]
+----
+oc label namespace chocotech-models maas.opendatahub.io/managed=true
+oc label namespace chocotech-models modelmesh-enabled=false
+----
+
+=== Why are these labels required?
+* `maas.opendatahub.io/managed=true`: This is the activation switch. It instructs the OpenShift AI operator to attach Kuadrant rate-limiting and authorization policies to any model deployed within this namespace. 
+* `modelmesh-enabled=false`: MaaS utilizes the KServe engine (specifically the `LLMInferenceService`) to serve massive generative AI models. This label explicitly prevents the older ModelMesh architecture from attempting to manage models in this namespace.
+
+---
+
+== Exercise 3: Grant group access 
+
+Finally, grant the Quality Control group administrator access to this new namespace. This allows members of the Gold tier to deploy models and manage resources without needing cluster-admin privileges.
+
+[source,role="execute"]
+----
+oc create rolebinding chocotech-qc-admin \
+  --clusterrole=admin \
+  --group=chocotech-quality-control \
+  -n chocotech-models
+----
+
+> **Enterprise Note:** In a true production environment, you would create separate, tightly scoped `RoleBindings` for R&D and Marketing based on the principle of least privilege. For this QuickCourse, simulating the Gold tier administrator is sufficient.
+
+---
+
+== Verify your foundation
+
+Before moving on to authentication, run this combined verification script to ensure your groups, memberships, and labeled namespaces are perfectly staged:
+
+[source,role="execute"]
+----
+echo "=== Groups ===" && \
+oc get groups | grep chocotech && \
+echo "=== Gold Tier Membership ===" && \
+oc get group chocotech-quality-control -o jsonpath='{.users[*]}' && echo && \
+echo "=== Governed Namespace ===" && \
+oc get namespace chocotech-models --show-labels | grep maas
+----
+
+If the output confirms your groups exist, your username is listed under the Gold Tier, and the `chocotech-models` namespace displays the `maas.opendatahub.io/managed=true` label, your organizational foundation is secure.
