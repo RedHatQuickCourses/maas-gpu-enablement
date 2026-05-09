@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>3.4: Publish model to the MaaS catalog :: Models as a Service Breaking the GPU Silos on OpenShift AI 3.3</title>
+    <title>3.3: Verifying the MaaS catalog and gateway publication :: Models as a Service Breaking the GPU Silos on OpenShift AI 3.3</title>
     <link rel="prev" href="ch3-model-deploy-03.html">
     <link rel="next" href="ch3-model-deploy-05.html">
     <meta name="generator" content="Antora 3.1.3">
@@ -76,7 +76,7 @@
     <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-01.html">2: Access Control &amp; Governance</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-02.html">2.1: Tier-based governancep</a>
+    <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-02.html">2.1: Subscription-based governance</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-03.html">2.2: Creating OpenShift groups</a>
@@ -85,10 +85,13 @@
     <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-04.html">2.3: ServiceAccounts &amp; RBAC</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-05.html">2.4: Understanding Tier-Based Governance</a>
+    <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-05.html">2.4: Authorizing Gateway Access (MaaSAuthPolicy)</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-summary.html">2.5: Summary &amp; troubleshooting</a>
+    <a class="nav-link" href="#ch2-platform-admin-06.adoc">2.4: Understanding Tier-Based Governance</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-summary.html">2.6: Generating API Keys</a>
   </li>
 </ul>
   </li>
@@ -101,22 +104,22 @@
     <a class="nav-link" href="ch3-model-deploy-01.html">3. Model Deployment</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="ch3-model-deploy-01.html">3.1: Introduction to Model Deployment</a>
+    <a class="nav-link" href="ch3-model-deploy-02.html">3.1: Model Selection Strategy</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="ch3-model-deploy-02.html">3.2: Model Selection Strategy</a>
-  </li>
-  <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="ch3-model-deploy-03.html">3.3: Lab - Deploying with Serving Runtimes</a>
+    <a class="nav-link" href="ch3-model-deploy-03.html">3.2: Lab - Deploying with Serving Runtimes</a>
   </li>
   <li class="nav-item is-current-page" data-depth="2">
-    <a class="nav-link" href="ch3-model-deploy-04.html">3.4: Lab - Distributed Inference Configuration</a>
+    <a class="nav-link" href="ch3-model-deploy-04.html">3.3: Lab - Distributed Inference Configuration</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="ch3-model-deploy-05.html">3.5: Lab - Publishing to MaaS Catalog</a>
+    <a class="nav-link" href="ch3-model-deploy-05.html">3.4: Lab - Publishing to MaaS Catalog</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="ch3-model-deploy-06.html">3.6: Lifecycle Management with GitOps</a>
+    <a class="nav-link" href="ch3-model-deploy-06.html">3.5: Lifecycle Management with GitOps</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="ch3-model-deploy-summary.html">3.6: Summary and troubleshooting</a>
   </li>
 </ul>
   </li>
@@ -151,7 +154,7 @@
   <ul>
     <li><a href="../index.html">Models as a Service Breaking the GPU Silos on OpenShift AI 3.3</a></li>
     <li><a href="ch3-model-deploy-01.html">3. Model Deployment</a></li>
-    <li><a href="ch3-model-deploy-04.html">3.4: Lab - Distributed Inference Configuration</a></li>
+    <li><a href="ch3-model-deploy-04.html">3.3: Lab - Distributed Inference Configuration</a></li>
   </ul>
 </nav>
 </div>
@@ -160,21 +163,25 @@
   <div class="toc-menu"></div>
 </aside>
 <article class="doc">
-<h1 class="page">3.4: Publish model to the MaaS catalog</h1>
+<h1 class="page">3.3: Verifying the MaaS catalog and gateway publication</h1>
 <div id="preamble">
 <div class="sectionbody">
 <div class="paragraph">
-<p>Now that the model is deployed, verify it appears in the Gen AI Studio catalog and is accessible through the MaaS gateway.</p>
+<p>If ChocoTech had deployed this model using standard open-source tools, the Platform Engineering team&#8217;s job would not be finished. They would still need to manually write documentation, email the endpoint URL to the developers, and coordinate API keys.</p>
 </div>
 <div class="paragraph">
-<p>The <code>publishToGenAIStudio: true</code> setting in the LLMInferenceService manifest automatically registers the model with MaaS.</p>
+<p>With Models as a Service, the OpenShift AI operator handles all of this automatically. Because we set <code>publishToGenAIStudio: true</code> in our deployment manifest, the platform instantly registers the model, applies our governance tiers, and publishes it to a centralized self-service catalog.</p>
 </div>
 </div>
 </div>
-<div class="sect2">
-<h3 id="_verify_model_registration_in_maas"><a class="anchor" href="#_verify_model_registration_in_maas"></a>Verify model registration in MaaS</h3>
+<div class="sect1">
+<h2 id="_exercise_1_verify_the_backend_maas_registration"><a class="anchor" href="#_exercise_1_verify_the_backend_maas_registration"></a>Exercise 1: Verify the backend MaaS registration</h2>
+<div class="sectionbody">
 <div class="paragraph">
-<p>Check that the model was registered with the MaaS API:</p>
+<p>When the KServe <code>LLMInferenceService</code> becomes ready, the MaaS operator detects the publish flag and automatically generates a companion <code>MaaSModel</code> custom resource. This resource acts as the bridge between the running container and the Gen AI Studio UI.</p>
+</div>
+<div class="paragraph">
+<p>Verify the model was successfully registered with the MaaS API:</p>
 </div>
 <div class="listingblock execute">
 <div class="content">
@@ -182,16 +189,16 @@
 </div>
 </div>
 <div class="paragraph">
-<p>Expected output:</p>
+<p><strong>Expected output:</strong></p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre>NAME          MODEL                                    STATUS    AGE
-llama-3-8b    meta-llama/Meta-Llama-3-8B-Instruct     Published   5m</pre>
+<pre>NAME          MODEL                                  STATUS      AGE
+llama-3-8b    meta-llama/Meta-Llama-3-8B-Instruct    Published   5m</pre>
 </div>
 </div>
 <div class="paragraph">
-<p>Describe the MaaSModel resource:</p>
+<p>Next, describe the resource to see how it mapped our governance rules:</p>
 </div>
 <div class="listingblock execute">
 <div class="content">
@@ -199,96 +206,75 @@ llama-3-8b    meta-llama/Meta-Llama-3-8B-Instruct     Published   5m</pre>
 </div>
 </div>
 <div class="paragraph">
-<p>Look for:</p>
+<p><strong>What to look for in the output:</strong>
+* <strong>Status:</strong> Must say <code>Published</code>.
+* <strong>Tier Access:</strong> You should see <code>bronze-tier</code>, <code>silver-tier</code>, and <code>gold-tier</code> explicitly listed. This confirms the "Bouncer List" we created in our YAML was successfully read.
+* <strong>Gateway Endpoint:</strong> The external URL that client applications will use to reach the model.</p>
 </div>
-<div class="ulist">
-<ul>
-<li>
-<p><code>Status: Published</code> - Model is available in catalog</p>
-</li>
-<li>
-<p><code>Gateway Endpoint</code> - External URL for model access</p>
-</li>
-<li>
-<p><code>Tier Access</code> - bronze, silver, gold, platinum</p>
-</li>
-<li>
-<p><code>Integration Status</code> - Kuadrant policies applied</p>
-</li>
-</ul>
+<hr>
 </div>
 </div>
-<div class="sect2">
-<h3 id="_access_the_gen_ai_studio_catalog"><a class="anchor" href="#_access_the_gen_ai_studio_catalog"></a>Access the Gen AI Studio catalog</h3>
+<div class="sect1">
+<h2 id="_exercise_2_the_developer_payoff_gen_ai_studio_ui"><a class="anchor" href="#_exercise_2_the_developer_payoff_gen_ai_studio_ui"></a>Exercise 2: The Developer Payoff (Gen AI Studio UI)</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Let&#8217;s switch hats. You are now a developer on the Marketing team logging in to find a model for your sentiment analysis application. You do not need to know anything about <code>vLLM</code> or OpenShift routes; you simply use the self-service catalog.</p>
+</div>
 <div class="olist arabic">
 <ol class="arabic">
 <li>
-<p>Open the OpenShift AI dashboard in your browser (or use Showroom "OpenShift AI" tab)</p>
+<p>Open the OpenShift AI dashboard in your browser.</p>
 </li>
 <li>
-<p>Navigate to <strong>Gen AI Studio</strong> in the left menu</p>
+<p>Navigate to <strong>Gen AI Studio</strong> in the left-hand menu.</p>
 </li>
 <li>
-<p>Click on the <strong>Models</strong> tab</p>
+<p>Click on the <strong>Models</strong> tab.</p>
 </li>
 </ol>
 </div>
 <div class="paragraph">
-<p>You should now see Llama-3 8B in the model catalog:</p>
+<p>You should immediately see the <code>meta-llama/Meta-Llama-3-8B-Instruct</code> model populated in the catalog grid.</p>
 </div>
-<div class="listingblock">
+<div class="paragraph">
+<p>Clicking on the model card will reveal:
+* <strong>Status:</strong> Available
+* <strong>Tier Access:</strong> Gold, Silver, Bronze
+* <strong>Endpoint:</strong> <code><a href="https://maas-default-gateway&#8230;&#8203;/v1/chat/completions" class="bare">https://maas-default-gateway&#8230;&#8203;/v1/chat/completions</a></code></p>
+</div>
+<div class="paragraph">
+<p>This completely eliminates developer friction. They can discover models, view their tier eligibility, and copy the exact endpoint URL without ever submitting an IT ticket.</p>
+</div>
+<hr>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_exercise_3_test_the_gateway_api_discovery"><a class="anchor" href="#_exercise_3_test_the_gateway_api_discovery"></a>Exercise 3: Test the Gateway API discovery</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Finally, let&#8217;s verify that the Kuadrant Gateway is correctly broadcasting the model&#8217;s availability over the network. The MaaS Gateway is fully compliant with the OpenAI API specification, meaning client libraries can dynamically query the <code>/v1/models</code> endpoint to see what is available.</p>
+</div>
+<div class="paragraph">
+<p><strong>(Note: The <code>/v1/models</code> endpoint is used for discovery and does not require a Bearer token).</strong></p>
+</div>
+<div class="paragraph">
+<p>Retrieve your Gateway hostname and query the models list:</p>
+</div>
+<div class="listingblock execute">
 <div class="content">
-<pre>Model Name: meta-llama/Meta-Llama-3-8B-Instruct
-Status: Available
-Tier Access: Bronze, Silver, Gold, Platinum
-Endpoint: https://maas-default-gateway.{cluster_domain}/v1/chat/completions</pre>
-</div>
-</div>
-<div class="imageblock unresolved">
-<div class="content">
-<a class="image" href="genai-studio-model-catalog.png" target="blank"><img src="genai-studio-model-catalog.png" alt="Gen AI Studio catalog showing Llama-3 8B model with tier access and endpoint information" width="800"></a>
-</div>
-<div class="title">Figure 1. Model Catalog in Gen AI Studio Dashboard</div>
+<pre class="highlightjs highlight"><code class="language-none hljs">GATEWAY_HOST=$(oc get gateway maas-default-gateway -n openshift-ingress -o jsonpath='{.status.addresses[0].value}')
+
+curl -s http://$GATEWAY_HOST/v1/models | jq</code></pre>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_test_model_accessibility_through_maas_gateway"><a class="anchor" href="#_test_model_accessibility_through_maas_gateway"></a>Test model accessibility through MaaS gateway</h3>
+<h3 id="_decoding_the_results"><a class="anchor" href="#_decoding_the_results"></a>Decoding the Results</h3>
 <div class="paragraph">
-<p>Get the MaaS gateway endpoint:</p>
-</div>
-<div class="listingblock execute">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-none hljs">oc get route maas-default-gateway -n redhat-ods-applications -o jsonpath='{.spec.host}'</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>Expected output:</p>
+<p>If MaaS integration is successful, the Gateway will return a JSON array containing your model:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre>maas-default-gateway.apps.{cluster_domain}</pre>
-</div>
-</div>
-<div class="paragraph">
-<p>Generate an API token (covered in Module 5) or use a test token:</p>
-</div>
-<div class="paragraph">
-<p>Note: In Module 5, you&#8217;ll learn how to generate proper Bearer tokens. For now, verify the model endpoint is reachable.</p>
-</div>
-<div class="paragraph">
-<p>Check the models list endpoint (no auth required for list):</p>
-</div>
-<div class="listingblock execute">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-none hljs">curl https://$(oc get route maas-default-gateway -n redhat-ods-applications -o jsonpath='{.spec.host}')/v1/models</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>Expected output:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre>{
+<pre class="highlightjs highlight"><code class="language-json hljs" data-lang="json">{
   "object": "list",
   "data": [
     {
@@ -298,41 +284,24 @@ Endpoint: https://maas-default-gateway.{cluster_domain}/v1/chat/completions</pre
       "owned_by": "chocotech-models"
     }
   ]
-}</pre>
+}</code></pre>
 </div>
-</div>
-<div class="paragraph">
-<p>Your model appears in the API response, confirming MaaS integration is working.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_verification"><a class="anchor" href="#_verification"></a>Verification</h3>
+<h3 id="_module_3_progress_check"><a class="anchor" href="#_module_3_progress_check"></a>Module 3 Progress Check</h3>
 <div class="paragraph">
-<p>Confirm MaaS catalog publication:</p>
+<p>You have successfully deployed a governed, hardware-optimized LLM and published it to a centralized enterprise catalog.</p>
 </div>
-<div class="ulist">
-<ul>
-<li>
-<p>MaaSModel resource exists with Status=Published</p>
-</li>
-<li>
-<p>Model appears in Gen AI Studio Models tab</p>
-</li>
-<li>
-<p>Model shows correct tier access permissions (bronze/silver/gold/platinum)</p>
-</li>
-<li>
-<p>MaaS gateway <code>/v1/models</code> endpoint returns the model</p>
-</li>
-<li>
-<p>Gateway endpoint URL is accessible</p>
-</li>
-</ul>
+<div class="paragraph">
+<p>Your infrastructure is live. The only thing left to discuss in Module 3 is how to safely manage this model on "Day 2."</p>
+</div>
+</div>
 </div>
 </div>
 <nav class="pagination">
-  <span class="prev"><a href="ch3-model-deploy-03.html">3.3: Lab - Deploying with Serving Runtimes</a></span>
-  <span class="next"><a href="ch3-model-deploy-05.html">3.5: Lab - Publishing to MaaS Catalog</a></span>
+  <span class="prev"><a href="ch3-model-deploy-03.html">3.2: Lab - Deploying with Serving Runtimes</a></span>
+  <span class="next"><a href="ch3-model-deploy-05.html">3.4: Lab - Publishing to MaaS Catalog</a></span>
 </nav>
 </article>
   </div>

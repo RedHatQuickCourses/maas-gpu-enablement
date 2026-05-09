@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>3.1: Understanding serving runtimes and distributed inference :: Models as a Service Breaking the GPU Silos on OpenShift AI 3.3</title>
+    <title>3.2: Deploying the governed model via GitOps :: Models as a Service Breaking the GPU Silos on OpenShift AI 3.3</title>
     <link rel="prev" href="ch3-model-deploy-02.html">
     <link rel="next" href="ch3-model-deploy-04.html">
     <meta name="generator" content="Antora 3.1.3">
@@ -76,7 +76,7 @@
     <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-01.html">2: Access Control &amp; Governance</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-02.html">2.1: Tier-based governancep</a>
+    <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-02.html">2.1: Subscription-based governance</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-03.html">2.2: Creating OpenShift groups</a>
@@ -85,10 +85,13 @@
     <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-04.html">2.3: ServiceAccounts &amp; RBAC</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-05.html">2.4: Understanding Tier-Based Governance</a>
+    <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-05.html">2.4: Authorizing Gateway Access (MaaSAuthPolicy)</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-summary.html">2.5: Summary &amp; troubleshooting</a>
+    <a class="nav-link" href="#ch2-platform-admin-06.adoc">2.4: Understanding Tier-Based Governance</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-summary.html">2.6: Generating API Keys</a>
   </li>
 </ul>
   </li>
@@ -101,22 +104,22 @@
     <a class="nav-link" href="ch3-model-deploy-01.html">3. Model Deployment</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="ch3-model-deploy-01.html">3.1: Introduction to Model Deployment</a>
-  </li>
-  <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="ch3-model-deploy-02.html">3.2: Model Selection Strategy</a>
+    <a class="nav-link" href="ch3-model-deploy-02.html">3.1: Model Selection Strategy</a>
   </li>
   <li class="nav-item is-current-page" data-depth="2">
-    <a class="nav-link" href="ch3-model-deploy-03.html">3.3: Lab - Deploying with Serving Runtimes</a>
+    <a class="nav-link" href="ch3-model-deploy-03.html">3.2: Lab - Deploying with Serving Runtimes</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="ch3-model-deploy-04.html">3.4: Lab - Distributed Inference Configuration</a>
+    <a class="nav-link" href="ch3-model-deploy-04.html">3.3: Lab - Distributed Inference Configuration</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="ch3-model-deploy-05.html">3.5: Lab - Publishing to MaaS Catalog</a>
+    <a class="nav-link" href="ch3-model-deploy-05.html">3.4: Lab - Publishing to MaaS Catalog</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="ch3-model-deploy-06.html">3.6: Lifecycle Management with GitOps</a>
+    <a class="nav-link" href="ch3-model-deploy-06.html">3.5: Lifecycle Management with GitOps</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="ch3-model-deploy-summary.html">3.6: Summary and troubleshooting</a>
   </li>
 </ul>
   </li>
@@ -151,7 +154,7 @@
   <ul>
     <li><a href="../index.html">Models as a Service Breaking the GPU Silos on OpenShift AI 3.3</a></li>
     <li><a href="ch3-model-deploy-01.html">3. Model Deployment</a></li>
-    <li><a href="ch3-model-deploy-03.html">3.3: Lab - Deploying with Serving Runtimes</a></li>
+    <li><a href="ch3-model-deploy-03.html">3.2: Lab - Deploying with Serving Runtimes</a></li>
   </ul>
 </nav>
 </div>
@@ -160,456 +163,214 @@
   <div class="toc-menu"></div>
 </aside>
 <article class="doc">
-<h1 class="page">3.1: Understanding serving runtimes and distributed inference</h1>
+<h1 class="page">3.2: Deploying the governed model via GitOps</h1>
 <div id="preamble">
 <div class="sectionbody">
 <div class="paragraph">
-<p>Before deploying a model, you need to understand the difference between standalone KServe deployment and MaaS-integrated deployment.</p>
+<p>With the hardware math verified, it is time to deliver the AI capabilities to ChocoTech&#8217;s R&amp;D team.</p>
 </div>
 <div class="paragraph">
-<p>Only models deployed using the <strong>Distributed Inference with llm-d</strong> runtime can integrate with MaaS governance and appear in the Gen AI Studio catalog.</p>
+<p>In a production environment, pulling massive 16GB model weights directly from the public internet every time a pod scales up is highly inefficient and a security risk. Instead, ChocoTech uses a "Vault" strategy: we download the model once to a local, high-speed S3-compatible storage array (MinIO) inside the cluster, and all inference pods pull their weights from there.</p>
 </div>
 </div>
 </div>
-<div class="sect2">
-<h3 id="_standalone_inferenceservice_vs_maas_published_model"><a class="anchor" href="#_standalone_inferenceservice_vs_maas_published_model"></a>Standalone InferenceService vs MaaS-published model</h3>
+<div class="sect1">
+<h2 id="_exercise_1_stage_the_local_vault"><a class="anchor" href="#_exercise_1_stage_the_local_vault"></a>Exercise 1: Stage the local vault</h2>
+<div class="sectionbody">
 <div class="paragraph">
-<p><strong>Standalone KServe InferenceService</strong>:</p>
+<p>We have packaged the infrastructure setup into an automation script. This script will provision the MinIO vault, create the necessary Data Connection secrets, and use a Kubernetes Job to download the <code>Llama-3-8B</code> model weights from Hugging Face into your local storage.</p>
 </div>
-<div class="ulist">
-<ul>
+<div class="olist arabic">
+<ol class="arabic">
 <li>
-<p>Bypasses MaaS gateway entirely</p>
+<p>Open your OpenShift Terminal.</p>
 </li>
 <li>
-<p>No tier-based access control or authentication</p>
-</li>
-<li>
-<p>No token consumption tracking for chargeback</p>
-</li>
-<li>
-<p>No rate limiting or quotas enforcement</p>
-</li>
-<li>
-<p>Direct model access without Bearer token</p>
-</li>
-<li>
-<p>Cannot appear in Gen AI Studio catalog</p>
-</li>
-<li>
-<p>Suitable for internal testing or non-governed workloads</p>
-</li>
-</ul>
-</div>
-<div class="paragraph">
-<p><strong>MaaS-published model (Distributed Inference with llm-d)</strong>:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>Routes through Gateway API and Kuadrant policy layer</p>
-</li>
-<li>
-<p>Enforces tier-based access control (bronze/silver/gold/platinum)</p>
-</li>
-<li>
-<p>Tracks token consumption for accurate chargeback</p>
-</li>
-<li>
-<p>Applies request rate limits and quotas per user tier</p>
-</li>
-<li>
-<p>Requires Bearer token authentication for all API calls</p>
-</li>
-<li>
-<p>Appears in Gen AI Studio catalog automatically</p>
-</li>
-<li>
-<p>Suitable for production, multi-tenant, governed model serving</p>
-</li>
-</ul>
-</div>
-<div class="admonitionblock important">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-important" title="Important"></i>
-</td>
-<td class="content">
-If you deploy a model using any runtime other than "Distributed Inference with llm-d" (such as standard KServe, vLLM without llm-d, NVIDIA NIM, or MLServer), the option to "Publish as MaaS endpoint" will not appear in the dashboard.
-</td>
-</tr>
-</table>
+<p>Clone the deployment repository:</p>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">git clone https://github.com/RedHatQuickCourses/rhoai3-maas-lab.git
+cd rhoai3-maas-lab</code></pre>
 </div>
 </div>
-<div class="sect2">
-<h3 id="_why_distributed_inference_matters_for_chocotech"><a class="anchor" href="#_why_distributed_inference_matters_for_chocotech"></a>Why distributed inference matters for ChocoTech</h3>
-<div class="paragraph">
-<p>ChocoTech needs to deploy both small models (Llama-3 8B) and large models (Nemotron 70B) efficiently.</p>
+</li>
+<li>
+<p>Execute the setup script:</p>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">chmod u+x deploy/setup-vault.sh
+./deploy/setup-vault.sh</code></pre>
+</div>
+</div>
+</li>
+</ol>
 </div>
 <div class="paragraph">
-<p><strong>Small models (8B parameters)</strong>:</p>
+<p><strong>Expected Output:</strong> The script will output its progress. Wait for the final <code>✅ SUCCESS: Model is now available in MinIO at s3://models/llama3</code> message. This may take 5-15 minutes depending on the cluster&#8217;s network speed.</p>
 </div>
-<div class="ulist">
-<ul>
-<li>
-<p>Fit on a single GPU (24GB VRAM sufficient)</p>
-</li>
-<li>
-<p>Can use single-replica deployment</p>
-</li>
-<li>
-<p>Distributed inference still recommended for MaaS integration</p>
-</li>
-</ul>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_exercise_2_extract_the_serving_runtime_the_engine"><a class="anchor" href="#_exercise_2_extract_the_serving_runtime_the_engine"></a>Exercise 2: Extract the Serving Runtime (The Engine)</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>OpenShift AI includes certified runtime templates. Instead of writing a complex vLLM container definition from scratch, we will extract the official template from the central RHOAI namespace and install it into our <code>chocotech-models</code> project.</p>
 </div>
 <div class="paragraph">
-<p><strong>Large models (70B+ parameters)</strong>:</p>
+<p>Execute the following command to process and apply the template:</p>
 </div>
-<div class="ulist">
-<ul>
-<li>
-<p>Exceed single GPU memory capacity</p>
-</li>
-<li>
-<p>Require tensor parallelism across multiple GPUs</p>
-</li>
-<li>
-<p>Must use distributed inference with LeaderWorkerSet</p>
-</li>
-</ul>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">oc process vllm-cuda-runtime-template -n redhat-ods-applications | \
+oc apply -f - -n chocotech-models</code></pre>
+</div>
 </div>
 <div class="paragraph">
-<p><strong>LeaderWorkerSet architecture</strong>:</p>
+<p><strong>Expected Output:</strong> <code>servingruntime.serving.kserve.io/vllm-cuda-runtime created</code>.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_exercise_3_wire_the_data_connection"><a class="anchor" href="#_exercise_3_wire_the_data_connection"></a>Exercise 3: Wire the Data Connection</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The setup script in Exercise 1 created a ServiceAccount (<code>fast-track-sa</code>) and a Secret containing the MinIO S3 credentials (<code>storage-config</code>). However, for the KServe storage puller to actually use those credentials to mount the model weights into the pod, we must explicitly link them.</p>
+</div>
+<div class="paragraph">
+<p>Link the data connection secret to the service account:</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">oc secret link fast-track-sa storage-config -n chocotech-models</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_exercise_4_the_infrastructure_as_code_the_workload"><a class="anchor" href="#_exercise_4_the_infrastructure_as_code_the_workload"></a>Exercise 4: The Infrastructure-as-Code (The Workload)</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>To deploy distributed inference and integrate with MaaS, we must use the <code>LLMInferenceService</code> custom resource. This manifest binds our extracted Runtime (the engine) to our MinIO Storage (the fuel), and attaches the Kuadrant MaaS policies (the governance).</p>
+</div>
+<div class="paragraph">
+<p>Review and apply the <code>llama3-deployment.yaml</code> file:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre>Leader Pod (Coordinator)       Worker Pods (Inference)
-┌─────────────────┐           ┌───────────────┐
-│ Receives requests│───────────│ GPU 1 (shard 1)│
-│ Coordinates work │           ├───────────────┤
-│ Aggregates output│───────────│ GPU 2 (shard 2)│
-└─────────────────┘           ├───────────────┤
-                              │ GPU 3 (shard 3)│
-                              └───────────────┘</pre>
-</div>
-</div>
-<div class="paragraph">
-<p>The leader pod coordinates inference requests while worker pods process model shards in parallel across multiple GPUs.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_verify_distributed_inference_components"><a class="anchor" href="#_verify_distributed_inference_components"></a>Verify distributed inference components</h3>
-<div class="paragraph">
-<p>Check that LeaderWorkerSet operator is installed:</p>
-</div>
-<div class="listingblock execute">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-none hljs">oc get pods -n leaderworkerset-system</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>Expected output:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre>NAME                                            READY   STATUS    RESTARTS   AGE
-leaderworkerset-controller-manager-xxx          1/1     Running   0          5d</pre>
-</div>
-</div>
-<div class="paragraph">
-<p>If LeaderWorkerSet operator is not installed, distributed inference cannot function.</p>
-</div>
-<div class="paragraph">
-<p>Check llm-d serving runtime controller:</p>
-</div>
-<div class="listingblock execute">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-none hljs">oc get pods -n redhat-ods-applications | grep llm-serving</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>Expected output:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre>llm-serving-runtime-controller-xxx   1/1     Running   0          5d</pre>
-</div>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_verification"><a class="anchor" href="#_verification"></a>Verification</h3>
-<div class="paragraph">
-<p>Confirm distributed inference prerequisites:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>LeaderWorkerSet operator is Running in leaderworkerset-system namespace</p>
-</li>
-<li>
-<p>llm-serving-runtime controller is Running in redhat-ods-applications namespace</p>
-</li>
-<li>
-<p>GPU nodes are available with sufficient VRAM for model deployment
-== Exercise 3: Deploy your first model with distributed inference</p>
-</li>
-</ul>
-</div>
-<div class="paragraph">
-<p>Now you&#8217;ll deploy Llama-3 8B using the LLMInferenceService custom resource for ChocoTech&#8217;s R&amp;D team.</p>
-</div>
-<div class="paragraph">
-<p>The LLMInferenceService CRD is the declarative way to deploy models with distributed inference and MaaS integration.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_create_a_project_for_model_deployment"><a class="anchor" href="#_create_a_project_for_model_deployment"></a>Create a project for model deployment</h3>
-<div class="paragraph">
-<p>Create a dedicated namespace for model serving:</p>
-</div>
-<div class="listingblock execute">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-none hljs">oc new-project chocotech-models</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>Label the project to enable MaaS integration:</p>
-</div>
-<div class="listingblock execute">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-none hljs">oc label namespace chocotech-models modelsAsService=true</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>This label tells the MaaS operator to watch for LLMInferenceService resources in this namespace.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_prepare_the_llminferenceservice_manifest"><a class="anchor" href="#_prepare_the_llminferenceservice_manifest"></a>Prepare the LLMInferenceService manifest</h3>
-<div class="paragraph">
-<p>Create a YAML file for Llama-3 8B deployment:</p>
-</div>
-<div class="listingblock execute">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-none hljs">cat &gt; llama3-8b-llminferenceservice.yaml &lt;&lt;EOF
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">cat &lt;&lt;EOF | oc apply -f -
 apiVersion: serving.kserve.io/v1alpha1
 kind: LLMInferenceService
 metadata:
   name: llama-3-8b
   namespace: chocotech-models
-  labels:
-    app: llama-3-8b
+  annotations:
+    # THE BOUNCER LIST: Defines exactly which UI Tiers are allowed to access this model
+    alpha.maas.opendatahub.io/tiers: '["gold-tier", "silver-tier", "bronze-tier"]'
 spec:
+  # THE CATALOG PUBLISHER: Pushes this model to the Gen AI Studio UI
+  publishToGenAIStudio: true
+
+  # THE VAULT: Pointing to our secure local S3 storage connection
   model:
+    uri: s3://models/llama3
     name: meta-llama/Meta-Llama-3-8B-Instruct
-    source: huggingface
-  runtime:
-    name: vllm
-    version: v0.5.4
-  resources:
-    limits:
-      nvidia.com/gpu: 1
-    requests:
-      nvidia.com/gpu: 1
-      memory: 16Gi
-  scaling:
-    minReplicas: 1
-    maxReplicas: 3
-  maasConfig:
-    publishToGenAIStudio: true
-    tierAccess:
-      - bronze
-      - silver
-      - gold
-      - platinum
+
+  # THE ENGINE: Utilizing the certified runtime we extracted in Exercise 2
+  servingRuntime: "vllm-cuda-runtime"
+
+  # THE SCHEDULER: Bypassing standard round-robin for intelligent llm-d dispatching
+  router:
+    scheduler:
+      template:
+        containers:
+          - name: main
+            args:
+              - '--pool-group'
+              - 'inference.networking.x-k8s.io'
+              - '--pool-name'
+              - '{{ .ObjectMeta.Name }}-inference-pool'
+
+  # ENGINE TUNING: Injecting native vLLM parameters for maximum throughput
+  template:
+    spec:
+      serviceAccountName: fast-track-sa
+      containers:
+        - name: main
+          env:
+            - name: VLLM_ADDITIONAL_ARGS
+              value: "--max-model-len=8192 --gpu-memory-utilization=0.90"
+
+  # THE HARDWARE: Requesting exact VRAM and GPU requirements
+  placement:
+    accelerator:
+      name: "nvidia.com/gpu"
+      count: 1
 EOF</code></pre>
 </div>
 </div>
-<div class="paragraph">
-<p><strong>Key fields explained</strong>:</p>
-</div>
+<div class="sect2">
+<h3 id="_breaking_down_the_vllm_tuning_variables"><a class="anchor" href="#_breaking_down_the_vllm_tuning_variables"></a>Breaking down the vLLM Tuning Variables</h3>
 <div class="ulist">
 <ul>
 <li>
-<p><code>spec.model.name</code> - Hugging Face model identifier</p>
+<p><code>--max-model-len=8192</code>: Prevents Out-Of-Memory (OOM) errors by capping the maximum context window. Limiting this ensures predictable memory allocation on ChocoTech&#8217;s 24GB GPUs.</p>
 </li>
 <li>
-<p><code>spec.model.source</code> - Model source (huggingface, S3, PVC)</p>
-</li>
-<li>
-<p><code>spec.runtime.name</code> - Serving runtime (vllm with llm-d integration)</p>
-</li>
-<li>
-<p><code>spec.resources.limits</code> - GPU and memory allocation</p>
-</li>
-<li>
-<p><code>spec.scaling</code> - Autoscaling configuration (min/max replicas)</p>
-</li>
-<li>
-<p><code>spec.maasConfig.publishToGenAIStudio</code> - Publish to catalog (true/false)</p>
-</li>
-<li>
-<p><code>spec.maasConfig.tierAccess</code> - Which user tiers can access this model</p>
+<p><code>--gpu-memory-utilization=0.90</code>: Reserves 90% of the VRAM strictly for the KV Cache and model weights, leaving 10% for PyTorch and system overhead.</p>
 </li>
 </ul>
 </div>
 </div>
-<div class="sect2">
-<h3 id="_deploy_the_model"><a class="anchor" href="#_deploy_the_model"></a>Deploy the model</h3>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_exercise_5_monitor_the_deployment"><a class="anchor" href="#_exercise_5_monitor_the_deployment"></a>Exercise 5: Monitor the deployment</h2>
+<div class="sectionbody">
 <div class="paragraph">
-<p>Apply the LLMInferenceService manifest:</p>
+<p>Because the weights are stored locally in your MinIO vault, the pod startup will be significantly faster than pulling from the public internet.</p>
+</div>
+<div class="paragraph">
+<p>Check the KServe status condition to verify the model is healthy and ready to serve traffic:</p>
 </div>
 <div class="listingblock execute">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-none hljs">oc apply -f llama3-8b-llminferenceservice.yaml</code></pre>
+<pre class="highlightjs highlight"><code class="language-none hljs">oc wait --for=condition=Ready llminferenceservice/llama-3-8b -n chocotech-models --timeout=300s</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>Expected output:</p>
+<p><strong>Expected output:</strong> <code>llminferenceservice.serving.kserve.io/llama-3-8b condition met</code>.</p>
 </div>
-<div class="listingblock">
+<hr>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_alternative_the_ui_deployment_walkthrough"><a class="anchor" href="#_alternative_the_ui_deployment_walkthrough"></a>Alternative: The UI Deployment Walkthrough</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>While GitOps (Infrastructure-as-Code) is the standard for Platform Engineers, OpenShift AI administrators can also deploy and publish governed models directly through the dashboard UI.</p>
+</div>
+<div class="paragraph">
+<p>In the OpenShift AI dashboard, administrators simply navigate to the deployment wizard, select their data connection, and check the <strong>"Publish as MaaS endpoint"</strong> box. They can then use checkboxes to restrict the model to specific tiers.</p>
+</div>
+<details>
+<summary class="title">📺 Video Walkthrough: UI Model Deployment</summary>
 <div class="content">
-<pre>llminferenceservice.serving.kserve.io/llama-3-8b created</pre>
-</div>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_monitor_model_deployment"><a class="anchor" href="#_monitor_model_deployment"></a>Monitor model deployment</h3>
 <div class="paragraph">
-<p>Watch the LLMInferenceService status:</p>
-</div>
-<div class="listingblock execute">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-none hljs">oc get llminferenceservice -n chocotech-models -w</code></pre>
-</div>
+<p><em>Click play below to watch a 2-minute demonstration of an AI Administrator deploying a model via the Gen AI Studio deployment wizard and applying the MaaS tier restrictions.</em></p>
 </div>
 <div class="paragraph">
-<p>You&#8217;ll see the status progress through phases:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre>NAME          READY   REASON              AGE
-llama-3-8b    False   Initializing        10s
-llama-3-8b    False   DownloadingModel    45s
-llama-3-8b    False   LoadingModel        2m
-llama-3-8b    True    Ready               5m</pre>
+<p><code>[Video Embed: Deploying a MaaS Model via the OpenShift AI Dashboard]</code></p>
 </div>
 </div>
+</details>
 <div class="paragraph">
-<p>Press <code>Ctrl+C</code> once status shows <code>READY=True</code>.</p>
+<p>In the next section, we will verify our GitOps deployment succeeded by checking the MaaS Catalog and actively testing the Kuadrant rate limits!</p>
 </div>
-<div class="paragraph">
-<p>Watch the underlying pods being created:</p>
-</div>
-<div class="listingblock execute">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-none hljs">oc get pods -n chocotech-models -w</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>You&#8217;ll see LeaderWorkerSet creating leader and worker pods:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre>NAME                                    READY   STATUS              RESTARTS   AGE
-llama-3-8b-0-0                          0/1     ContainerCreating   0          30s
-llama-3-8b-0-0                          0/1     PodInitializing     0          1m
-llama-3-8b-0-0                          1/1     Running             0          3m</pre>
-</div>
-</div>
-<div class="paragraph">
-<p>Press <code>Ctrl+C</code> once pods are Running.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_verify_model_deployment"><a class="anchor" href="#_verify_model_deployment"></a>Verify model deployment</h3>
-<div class="paragraph">
-<p>Check that the model is healthy:</p>
-</div>
-<div class="listingblock execute">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-none hljs">oc get llminferenceservice llama-3-8b -n chocotech-models -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}'</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>Expected output:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre>True</pre>
-</div>
-</div>
-<div class="paragraph">
-<p>Check the model service was created:</p>
-</div>
-<div class="listingblock execute">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-none hljs">oc get svc -n chocotech-models | grep llama</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>Expected output:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre>llama-3-8b-predictor-00001   ClusterIP   172.30.xxx.xxx   &lt;none&gt;        8080/TCP   5m</pre>
-</div>
-</div>
-<div class="paragraph">
-<p>Check model logs for successful startup:</p>
-</div>
-<div class="listingblock execute">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-none hljs">oc logs -n chocotech-models -l app=llama-3-8b --tail=20</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>Look for log messages indicating successful model loading:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre>INFO:     vLLM v0.5.4
-INFO:     Initializing engine for meta-llama/Meta-Llama-3-8B-Instruct
-INFO:     Model loaded successfully on GPU 0
-INFO:     Uvicorn running on 0.0.0.0:8080</pre>
-</div>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_verification_2"><a class="anchor" href="#_verification_2"></a>Verification</h3>
-<div class="paragraph">
-<p>Confirm model deployment:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>LLMInferenceService status shows READY=True</p>
-</li>
-<li>
-<p>Leader pod is Running with 1/1 ready containers</p>
-</li>
-<li>
-<p>Model service exists in chocotech-models namespace</p>
-</li>
-<li>
-<p>Model logs show successful initialization and GPU loading</p>
-</li>
-<li>
-<p>vLLM serving runtime is active on port 8080</p>
-</li>
-</ul>
-</div>
-<div class="imageblock unresolved">
-<div class="content">
-<a class="image" href="model-deployment-success.png" target="blank"><img src="model-deployment-success.png" alt="LLMInferenceService showing READY=True status and running pods" width="800"></a>
-</div>
-<div class="title">Figure 1. Successful Model Deployment with Distributed Inference</div>
 </div>
 </div>
 <nav class="pagination">
-  <span class="prev"><a href="ch3-model-deploy-02.html">3.2: Model Selection Strategy</a></span>
-  <span class="next"><a href="ch3-model-deploy-04.html">3.4: Lab - Distributed Inference Configuration</a></span>
+  <span class="prev"><a href="ch3-model-deploy-02.html">3.1: Model Selection Strategy</a></span>
+  <span class="next"><a href="ch3-model-deploy-04.html">3.3: Lab - Distributed Inference Configuration</a></span>
 </nav>
 </article>
   </div>

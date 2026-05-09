@@ -76,7 +76,7 @@
     <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-01.html">2: Access Control &amp; Governance</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-02.html">2.1: Tier-based governancep</a>
+    <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-02.html">2.1: Subscription-based governance</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-03.html">2.2: Creating OpenShift groups</a>
@@ -85,10 +85,13 @@
     <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-04.html">2.3: ServiceAccounts &amp; RBAC</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-05.html">2.4: Understanding Tier-Based Governance</a>
+    <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-05.html">2.4: Authorizing Gateway Access (MaaSAuthPolicy)</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-summary.html">2.5: Summary &amp; troubleshooting</a>
+    <a class="nav-link" href="#ch2-platform-admin-06.adoc">2.4: Understanding Tier-Based Governance</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-summary.html">2.6: Generating API Keys</a>
   </li>
 </ul>
   </li>
@@ -101,22 +104,22 @@
     <a class="nav-link" href="../ch3-model-deployment/ch3-model-deploy-01.html">3. Model Deployment</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../ch3-model-deployment/ch3-model-deploy-01.html">3.1: Introduction to Model Deployment</a>
+    <a class="nav-link" href="../ch3-model-deployment/ch3-model-deploy-02.html">3.1: Model Selection Strategy</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../ch3-model-deployment/ch3-model-deploy-02.html">3.2: Model Selection Strategy</a>
+    <a class="nav-link" href="../ch3-model-deployment/ch3-model-deploy-03.html">3.2: Lab - Deploying with Serving Runtimes</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../ch3-model-deployment/ch3-model-deploy-03.html">3.3: Lab - Deploying with Serving Runtimes</a>
+    <a class="nav-link" href="../ch3-model-deployment/ch3-model-deploy-04.html">3.3: Lab - Distributed Inference Configuration</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../ch3-model-deployment/ch3-model-deploy-04.html">3.4: Lab - Distributed Inference Configuration</a>
+    <a class="nav-link" href="../ch3-model-deployment/ch3-model-deploy-05.html">3.4: Lab - Publishing to MaaS Catalog</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../ch3-model-deployment/ch3-model-deploy-05.html">3.5: Lab - Publishing to MaaS Catalog</a>
+    <a class="nav-link" href="../ch3-model-deployment/ch3-model-deploy-06.html">3.5: Lifecycle Management with GitOps</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../ch3-model-deployment/ch3-model-deploy-06.html">3.6: Lifecycle Management with GitOps</a>
+    <a class="nav-link" href="../ch3-model-deployment/ch3-model-deploy-summary.html">3.6: Summary and troubleshooting</a>
   </li>
 </ul>
   </li>
@@ -167,7 +170,22 @@
 <p>You have successfully transformed ChocoTech&#8217;s fragmented GPU infrastructure from a state of passive monitoring to active enablement. The physical and network foundations are now officially MaaS-capable.</p>
 </div>
 <div class="paragraph">
-<p>Before we move on to establishing the actual governance rules, verify that your environment is healthy. If you hit any roadblocks during setup, expand the troubleshooting guide below.</p>
+<p>Before we move on to establishing the actual governance rules, verify that your environment is healthy.</p>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p><strong>OpenShift AI 3.4 Requirement</strong><br>
+In OpenShift AI 3.4, MaaS uses a subscription-based model for access control. If you are missing Custom Resource Definitions (like <code>MaaSSubscription</code>), check your Operator Lifecycle Manager (OLM) to ensure your cluster is subscribed to the <code>3.4</code> (or beta/EA) update channel, as version 3.3 does not support these features.</p>
+</div>
+</td>
+</tr>
+</table>
 </div>
 <hr>
 <details>
@@ -175,6 +193,35 @@
 <div class="content">
 <div class="paragraph">
 <p>If your verification checks failed in the previous step, locate your issue below to resolve it before proceeding to Module 2.</p>
+</div>
+<div class="paragraph">
+<p><strong>Issue: MaaS API pod is in <code>CrashLoopBackOff</code></strong></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Check the Database Secret:</strong> The <code>maas-api</code> pod strictly requires a database connection string. Check that the PostgreSQL database secret <code>maas-db-config</code> exists in the <code>redhat-ods-applications</code> namespace.</p>
+</li>
+<li>
+<p><strong>Verify Secret Contents:</strong> Run <code>oc extract secret/maas-db-config -n redhat-ods-applications --to=-</code> to ensure the <code>DB_CONNECTION_URL</code> is formatted correctly.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>Issue: Gen AI Studio is not visible in the dashboard</strong></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Verify Llama Stack:</strong> The UI relies on the Llama Stack Operator. Run <code>oc get datasciencecluster default-dsc -o jsonpath='{.spec.components.llamastackoperator.managementState}'</code>. It must be <code>Managed</code>.</p>
+</li>
+<li>
+<p><strong>Verify Dashboard Patch:</strong> Run <code>oc get odhdashboardconfig odh-dashboard-config -n redhat-ods-applications -o yaml | grep -A 5 dashboardConfig</code> to ensure <code>genAiStudio</code> is set to <code>true</code>.</p>
+</li>
+<li>
+<p><strong>Hard Reload:</strong> Clear your browser cache and hard-refresh the page (Ctrl+Shift+R or Cmd+Shift+R).</p>
+</li>
+</ul>
 </div>
 <div class="paragraph">
 <p><strong>Issue: Kuadrant pods are not starting after creating the Kuadrant CR</strong></p>
@@ -190,29 +237,7 @@
 </ul>
 </div>
 <div class="paragraph">
-<p><strong>Issue: Gateway status shows <code>PROGRAMMED=Unknown</code> (Persists beyond 2 minutes)</strong></p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><strong>Wait:</strong> The Gateway controller needs 60-90 seconds to process the resource and provision listeners.</p>
-</li>
-<li>
-<p><strong>Check Service Mesh:</strong> Run <code>oc get pods -n openshift-ingress</code>.</p>
-</li>
-<li>
-<p><strong>Check Gateway Controller:</strong> Run <code>oc get pods -n openshift-ingress-operator</code>.</p>
-</li>
-<li>
-<p><strong>Check Events:</strong> Run <code>oc describe gateway maas-default-gateway -n openshift-ingress</code>.</p>
-</li>
-<li>
-<p><strong>Root Cause:</strong> The Istio control plane is not fully ready, or Gateway API CRDs are not installed.</p>
-</li>
-</ul>
-</div>
-<div class="paragraph">
-<p><strong>Issue: Gateway status shows <code>PROGRAMMED=False</code></strong></p>
+<p><strong>Issue: Gateway status shows <code>PROGRAMMED=False</code> or <code>Unknown</code></strong></p>
 </div>
 <div class="ulist">
 <ul>
@@ -227,51 +252,6 @@
 </li>
 </ul>
 </div>
-<div class="paragraph">
-<p><strong>Issue: MaaS API pods are not appearing after DataScienceCluster patch</strong></p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><strong>Check DSC Status:</strong> Run <code>oc get datasciencecluster default-dsc -o yaml | grep -A 10 conditions</code>.</p>
-</li>
-<li>
-<p><strong>Verify Kuadrant is Running:</strong> Run <code>oc get pods -n openshift-operators</code>. The MaaS API deployment strictly depends on Kuadrant being healthy.</p>
-</li>
-<li>
-<p><strong>Check Operator Logs:</strong> Run <code>oc logs -n redhat-ods-operator deployment/rhods-operator --tail=100</code> to find specific failures.</p>
-</li>
-</ul>
-</div>
-<div class="paragraph">
-<p><strong>Issue: Gen AI Studio is not visible in the dashboard after configuration patch</strong></p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><strong>Verify Patch:</strong> Run <code>oc get odhdashboardconfig odh-dashboard-config -n redhat-ods-applications -o yaml | grep -A 5 dashboardConfig</code>.</p>
-</li>
-<li>
-<p><strong>Hard Reload:</strong> Clear your browser cache and hard-reload the page (Ctrl+Shift+R or Cmd+Shift+R).</p>
-</li>
-<li>
-<p><strong>Check Pod Logs:</strong> Run <code>oc logs -n redhat-ods-applications deployment/odh-dashboard --tail=50</code>.</p>
-</li>
-<li>
-<p><strong>Restart Dashboard:</strong> If needed, run <code>oc rollout restart deployment/odh-dashboard -n redhat-ods-applications</code>.</p>
-</li>
-</ul>
-</div>
-<div class="paragraph">
-<p><strong>Issue: LeaderWorkerSet operator is missing from the operator list</strong></p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><strong>Install:</strong> Navigate to <strong>Ecosystem → Software Catalog</strong> in the OpenShift console. Search for "Leader Worker Set" and click <strong>Install</strong>, selecting the <code>openshift-lws-operator</code> namespace. <strong>Note: This is strictly required for llm-d orchestration in later modules</strong>.</p>
-</li>
-</ul>
-</div>
 </div>
 </details>
 <hr>
@@ -281,10 +261,7 @@
 <h2 id="_the_chocotech_impact"><a class="anchor" href="#_the_chocotech_impact"></a>The ChocoTech impact</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>By completing this module, you have laid the groundwork to solve ChocoTech&#8217;s GPU Silo Crisis.</p>
-</div>
-<div class="paragraph">
-<p><strong>What you accomplished:</strong></p>
+<p>By completing this module, you have laid the groundwork to solve ChocoTech&#8217;s GPU Silo Crisis. <strong>What you accomplished:</strong></p>
 </div>
 <div class="ulist">
 <ul>
@@ -292,7 +269,7 @@
 <p><strong>Infrastructure Ready:</strong> The platform can now logically route and enforce policies across Quality Control, R&amp;D, Marketing, and Supply Chain.</p>
 </li>
 <li>
-<p><strong>Self-Service Enabled:</strong> Business unit leads can now generate API tokens for their developers securely, bypassing traditional IT ticket bottlenecks.</p>
+<p><strong>Self-Service Enabled:</strong> Business unit leads will soon be able to generate API tokens for their developers securely, bypassing traditional IT ticket bottlenecks.</p>
 </li>
 <li>
 <p><strong>API Gateway Operational:</strong> A single, robust endpoint has replaced the four separate, insecure model-serving endpoints that teams were managing independently.</p>
@@ -335,7 +312,7 @@
 </table>
 <div class="quoteblock">
 <blockquote>
-<strong>Next steps:</strong> You understand the business problem and have activated the MaaS platform. However, the foundation is operational but not yet configured for production. In Module 2, you will establish the actual governance rules, define tier-based access controls (Bronze, Silver, Gold), and continue to deploy your first models to the central catalog in Module 3.
+<strong>Next steps:</strong> You understand the business problem and have activated the MaaS platform. However, the foundation is operational but not yet configured for production. In Module 2, you will establish the actual governance rules, define subscription-based access controls (Bronze, Silver, Gold), and authorize Gateway traffic for your enterprise users.
 </blockquote>
 </div>
 </div>

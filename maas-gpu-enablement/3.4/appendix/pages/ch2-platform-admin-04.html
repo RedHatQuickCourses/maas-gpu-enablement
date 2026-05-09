@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>2.3: Configuring programmatic access (ServiceAccounts &amp; RBAC) :: Models as a Service Breaking the GPU Silos on OpenShift AI 3.3</title>
+    <meta name="generator" content="Antora 3.1.3">
+    <link rel="stylesheet" href="../../../../_/css/site.css">
+    <script>var uiRootPath = '../../../../_'</script>
+  </head>
+  <body class="article">
+<header class="header">
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="https://www.redhat.com" target="_blank"><img src="../../../../_/img/redhat-logo.png" height="40px" alt="Red Hat"></a>
+      <a class="navbar-item" style="font-size: 24px; color: white" href="../../../..">Models as a Service Breaking the GPU Silos on OpenShift AI 3.3</a>
+      <button class="navbar-burger" data-target="topbar-nav">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+    <div id="topbar-nav" class="navbar-menu">
+      <div class="navbar-end">
+        <a class="navbar-item" href="https://github.com/RedHatQuickCourses/REPLACEREPONAME/issues" target="_blank">Report Issues</a>
+      </div>
+    </div>
+  </nav>
+</header>
+<div class="body">
+<div class="nav-container" data-component="maas-gpu-enablement" data-version="3.4">
+  <aside class="nav">
+    <div class="panels">
+<div class="nav-panel-menu is-active" data-panel="menu">
+  <nav class="nav-menu">
+    <h3 class="title"><a href="../../index.html">Models as a Service Breaking the GPU Silos on OpenShift AI 3.3</a></h3>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../../index.html">Models-as-a-Service Introduction</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../../ch1-mass-arch/ch1-scenario-01.html">Course Scenario - ChocoTech</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../../ch1-mass-arch/ch1-maas-arch-01.html">1: MaaS architecture</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../../ch1-mass-arch/ch1-maas-arch-02.html">1.1: GPU silo crisis</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../../ch1-mass-arch/ch1-maas-arch-03.html">1.2: MaaS architecture stack</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../../ch1-mass-arch/ch1-maas-arch-04.html">1.3: Enabling MaaS on RHOAI</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../../ch1-mass-arch/ch1-maas-arch-05.html">1.4: Summary &amp; troubleshooting</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../../ch2-platform-admin/ch2-platform-admin-01.html">2: Access Control &amp; Governance</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../../ch2-platform-admin/ch2-platform-admin-02.html">2.1: Subscription-based governance</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../../ch2-platform-admin/ch2-platform-admin-03.html">2.2: Creating OpenShift groups</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../../ch2-platform-admin/ch2-platform-admin-04.html">2.3: ServiceAccounts &amp; RBAC</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../../ch2-platform-admin/ch2-platform-admin-05.html">2.4: Authorizing Gateway Access (MaaSAuthPolicy)</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="#ch2-platform-admin-06.adoc">2.4: Understanding Tier-Based Governance</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../../ch2-platform-admin/ch2-platform-admin-summary.html">2.6: Generating API Keys</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../../ch3-model-deployment/ch3-model-deploy-01.html">3. Model Deployment</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../../ch3-model-deployment/ch3-model-deploy-02.html">3.1: Model Selection Strategy</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../../ch3-model-deployment/ch3-model-deploy-03.html">3.2: Lab - Deploying with Serving Runtimes</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../../ch3-model-deployment/ch3-model-deploy-04.html">3.3: Lab - Distributed Inference Configuration</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../../ch3-model-deployment/ch3-model-deploy-05.html">3.4: Lab - Publishing to MaaS Catalog</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../../ch3-model-deployment/ch3-model-deploy-06.html">3.5: Lifecycle Management with GitOps</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../../ch3-model-deployment/ch3-model-deploy-summary.html">3.6: Summary and troubleshooting</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+</ul>
+  </nav>
+</div>
+<div class="nav-panel-explore" data-panel="explore">
+  <div class="context">
+    <span class="title">Models as a Service Breaking the GPU Silos on OpenShift AI 3.3</span>
+    <span class="version">3.4</span>
+  </div>
+  <ul class="components">
+    <li class="component is-current">
+      <a class="title" href="../../index.html">Models as a Service Breaking the GPU Silos on OpenShift AI 3.3</a>
+      <ul class="versions">
+        <li class="version is-current is-latest">
+          <a href="../../index.html">3.4</a>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</div>
+    </div>
+  </aside>
+</div>
+<main class="article">
+<div class="toolbar" role="navigation">
+<button class="nav-toggle"></button>
+<nav class="breadcrumbs" aria-label="breadcrumbs">
+  <ul>
+    <li><a href="../../index.html">Models as a Service Breaking the GPU Silos on OpenShift AI 3.3</a></li>
+    <li><a href="ch2-platform-admin-04.html">2.3: Configuring programmatic access (ServiceAccounts &amp; RBAC)</a></li>
+  </ul>
+</nav>
+</div>
+  <div class="content">
+<aside class="toc sidebar" data-title="Contents" data-levels="2">
+  <div class="toc-menu"></div>
+</aside>
+<article class="doc">
+<h1 class="page">2.3: Configuring programmatic access (ServiceAccounts &amp; RBAC)</h1>
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>With the organizational structure in place, we must enable programmatic access for ChocoTech&#8217;s applications. The Marketing team&#8217;s sentiment analysis application runs in a container; it cannot perform an interactive human login.</p>
+</div>
+<div class="paragraph">
+<p>If ChocoTech were using a cheap public API, the developers would likely hardcode a static, permanent API key into their application. This is a massive enterprise security risk. If the key leaks, anyone can access the endpoint indefinitely.</p>
+</div>
+<div class="paragraph">
+<p>Instead, Models as a Service utilizes native Kubernetes <strong>ServiceAccounts</strong> combined with <strong>JSON Web Tokens (JWTs)</strong> and <strong>Role-Based Access Control (RBAC)</strong>.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_the_enterprise_advantage_jwts_vs_static_keys"><a class="anchor" href="#_the_enterprise_advantage_jwts_vs_static_keys"></a>The Enterprise Advantage: JWTs vs. Static Keys</h2>
+<div class="sectionbody">
+<table class="tableblock frame-all grid-rows stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 66.6667%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Feature</th>
+<th class="tableblock halign-left valign-top">The MaaS Security Benefit</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><strong>Time-Limited (Ephemeral)</strong></p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>JWTs automatically expire after a configured duration (e.g., 1 hour or 24 hours). This drastically reduces the blast radius of a compromised token.</p>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><strong>Instantly Revocable</strong></p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>If an application is compromised, you simply delete the ServiceAccount. All associated tokens become instantly invalid across the entire cluster.</p>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><strong>Cryptographically Signed</strong></p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>Tokens are signed by the Kubernetes API server&#8217;s private key. Kuadrant&#8217;s Authorino engine validates this signature at the network edge, ensuring tampered tokens are dropped before they ever reach the GPU.</p>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><strong>Strictly Auditable</strong></p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>Every API request includes the exact ServiceAccount identity, providing absolute transparency in OpenShift audit logs.</p>
+</div></div></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_exercise_1_establish_the_identity_and_rbac_permissions"><a class="anchor" href="#_exercise_1_establish_the_identity_and_rbac_permissions"></a>Exercise 1: Establish the Identity and RBAC Permissions</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>To follow the principle of least privilege, we must create an identity (the ServiceAccount), define what it is allowed to do (the Role), and link them together (the RoleBinding).</p>
+</div>
+<div class="paragraph">
+<p>The Marketing application only needs to discover available models and send inference requests. It does <strong>not</strong> need permission to deploy or delete models. We will grant it read-only access (<code>get</code> and <code>list</code> verbs) to the <code>llminferenceservices</code> resources.</p>
+</div>
+<div class="paragraph">
+<p>Execute the following block to create all three components in the <code>chocotech-models</code> namespace:</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs"># 1. Create the ServiceAccount
+oc create serviceaccount marketing-sentiment-app -n chocotech-models
+
+# 2. Create the strictly-scoped Role
+cat &lt;&lt;EOF | oc apply -f -
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: llm-inference-viewer
+  namespace: chocotech-models
+rules:
+- apiGroups: ["serving.kserve.io"]
+  resources: ["llminferenceservices", "llminferenceservices/status"]
+  verbs: ["get", "list"]
+EOF
+
+# 3. Bind the ServiceAccount to the Role
+oc create rolebinding marketing-sentiment-app-binding \
+  --role=llm-inference-viewer \
+  --serviceaccount=chocotech-models:marketing-sentiment-app \
+  -n chocotech-models</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>Expected output:</strong> The terminal will confirm the creation of the <code>serviceaccount</code>, <code>role</code>, and <code>rolebinding</code>.</p>
+</div>
+<hr>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_exercise_2_generate_and_test_the_jwt_token"><a class="anchor" href="#_exercise_2_generate_and_test_the_jwt_token"></a>Exercise 2: Generate and Test the JWT Token</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Now that the identity and permissions are established, we can generate a temporary token and test the authorization chain against the MaaS Gateway.</p>
+</div>
+<div class="paragraph">
+<p>Generate a 1-hour token and simulate an API request from the Marketing application:</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs"># Generate a 1-hour JWT token
+TOKEN=$(oc create token marketing-sentiment-app -n chocotech-models --duration=1h)
+
+# Retrieve the Gateway hostname
+GATEWAY_HOST=$(oc get gateway maas-default-gateway -n openshift-ingress -o jsonpath='{.status.addresses[0].value}')
+
+# Test authentication against the models endpoint
+curl -s -w "\nHTTP Status: %{http_code}\n" \
+  http://$GATEWAY_HOST/v1/models \
+  -H "Authorization: Bearer $TOKEN" \
+  -k</code></pre>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_decoding_the_results"><a class="anchor" href="#_decoding_the_results"></a>Decoding the Results</h3>
+<div class="paragraph">
+<p>If your configuration is correct, you will receive the following output:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-json hljs" data-lang="json">{
+  "object": "list",
+  "data": []
+}
+HTTP Status: 200</code></pre>
+</div>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>HTTP 200 OK:</strong> This is the critical success indicator. It proves that Authorino successfully validated the token signature, and Kubernetes RBAC confirmed the ServiceAccount has the <code>llm-inference-viewer</code> role.</p>
+</li>
+<li>
+<p><strong>Empty <code>data</code> array:</strong> This is completely expected. We have successfully authenticated, but we have not deployed any models into the catalog yet (we will do this in Module 3).</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>If you receive an <code>HTTP 401 Unauthorized</code> or <code>403 Forbidden</code>, Authorino has rejected the request. Ensure your token hasn&#8217;t expired and your RoleBinding was created in the correct <code>chocotech-models</code> namespace.</p>
+</div>
+<div class="paragraph">
+<p>ChocoTech&#8217;s programmatic authentication is now secure. In the next section, we will map these authenticated identities to strict tier policies to govern exactly how much compute they can consume.</p>
+</div>
+</div>
+</div>
+</div>
+</article>
+  </div>
+</main>
+</div>
+<footer class="footer">
+  <img src="../../../../_/img/rhl-logo-red.png" height="40px" alt="Red Hat"  href="https://redhat.com" >
+</footer><script id="site-script" src="../../../../_/js/site.js" data-ui-root-path="../../../../_"></script>
+<script async src="../../../../_/js/vendor/highlight.js"></script>
+  </body>
+</html>

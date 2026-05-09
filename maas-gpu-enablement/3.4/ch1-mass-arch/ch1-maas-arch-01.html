@@ -76,7 +76,7 @@
     <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-01.html">2: Access Control &amp; Governance</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-02.html">2.1: Tier-based governancep</a>
+    <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-02.html">2.1: Subscription-based governance</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-03.html">2.2: Creating OpenShift groups</a>
@@ -85,10 +85,13 @@
     <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-04.html">2.3: ServiceAccounts &amp; RBAC</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-05.html">2.4: Understanding Tier-Based Governance</a>
+    <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-05.html">2.4: Authorizing Gateway Access (MaaSAuthPolicy)</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-summary.html">2.5: Summary &amp; troubleshooting</a>
+    <a class="nav-link" href="#ch2-platform-admin-06.adoc">2.4: Understanding Tier-Based Governance</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-summary.html">2.6: Generating API Keys</a>
   </li>
 </ul>
   </li>
@@ -101,22 +104,22 @@
     <a class="nav-link" href="../ch3-model-deployment/ch3-model-deploy-01.html">3. Model Deployment</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../ch3-model-deployment/ch3-model-deploy-01.html">3.1: Introduction to Model Deployment</a>
+    <a class="nav-link" href="../ch3-model-deployment/ch3-model-deploy-02.html">3.1: Model Selection Strategy</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../ch3-model-deployment/ch3-model-deploy-02.html">3.2: Model Selection Strategy</a>
+    <a class="nav-link" href="../ch3-model-deployment/ch3-model-deploy-03.html">3.2: Lab - Deploying with Serving Runtimes</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../ch3-model-deployment/ch3-model-deploy-03.html">3.3: Lab - Deploying with Serving Runtimes</a>
+    <a class="nav-link" href="../ch3-model-deployment/ch3-model-deploy-04.html">3.3: Lab - Distributed Inference Configuration</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../ch3-model-deployment/ch3-model-deploy-04.html">3.4: Lab - Distributed Inference Configuration</a>
+    <a class="nav-link" href="../ch3-model-deployment/ch3-model-deploy-05.html">3.4: Lab - Publishing to MaaS Catalog</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../ch3-model-deployment/ch3-model-deploy-05.html">3.5: Lab - Publishing to MaaS Catalog</a>
+    <a class="nav-link" href="../ch3-model-deployment/ch3-model-deploy-06.html">3.5: Lifecycle Management with GitOps</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../ch3-model-deployment/ch3-model-deploy-06.html">3.6: Lifecycle Management with GitOps</a>
+    <a class="nav-link" href="../ch3-model-deployment/ch3-model-deploy-summary.html">3.6: Summary and troubleshooting</a>
   </li>
 </ul>
   </li>
@@ -163,17 +166,16 @@
 <div id="preamble">
 <div class="sectionbody">
 <div class="paragraph">
-<p>The CIO at ChocoTech Industries just called an emergency meeting. "We&#8217;ve invested over $500,000 in GPU infrastructure across four teams," she says, reviewing the quarterly report. "Yet our R&amp;D team is waiting three weeks for capacity while Quality Control&#8217;s GPUs sit idle 60% of the time. This doesn&#8217;t make sense."</p>
+<p>The CIO at ChocoTech Industries just called an emergency meeting.</p>
 </div>
 <div class="paragraph">
-<p>ChocoTech needs to align their AI Strategy to optimize for GPU utilization across business units, move to a
-centralized, governed platform where all teams can access AI models efficiently.</p>
+<p>"We&#8217;ve invested over $500,000 in GPU infrastructure across four teams," she says, reviewing the quarterly report. "Yet our R&amp;D team is waiting three weeks for capacity while Quality Control&#8217;s GPUs sit idle 60% of the time. This doesn&#8217;t make sense."</p>
 </div>
 <div class="paragraph">
-<p>You&#8217;ve been tasked with implementing Models as a Service (MaaS) on Red Hat OpenShift AI to solve this challenge.</p>
+<p>ChocoTech needs to align their AI Strategy to optimize for GPU utilization across business units, moving to a centralized, governed platform where all teams can access AI models efficiently.</p>
 </div>
 <div class="paragraph">
-<p>In this module, you&#8217;ll understand the business problem MaaS solves and explore the technical architecture that makes centralized model serving possible.</p>
+<p>You&#8217;ve been tasked with implementing Models as a Service (MaaS) on Red Hat OpenShift AI to solve this challenge. In this module, you&#8217;ll understand the business problem MaaS solves and explore the technical architecture that makes centralized model serving possible.</p>
 </div>
 <!-- toc disabled -->
 </div>
@@ -187,19 +189,19 @@ centralized, governed platform where all teams can access AI models efficiently.
 <div class="ulist">
 <ul>
 <li>
-<p>Articulate the business and operational problems created by the GPU silo crisis</p>
+<p>Articulate the business and operational problems created by the GPU silo crisis.</p>
 </li>
 <li>
-<p>Explain how MaaS transforms GPU infrastructure from hardware management to token delivery</p>
+<p>Explain how MaaS transforms GPU infrastructure from hardware management to token delivery.</p>
 </li>
 <li>
-<p>Map the three-layer MaaS architecture (KServe, Kuadrant, Gateway API) and their responsibilities</p>
+<p>Map the three-layer MaaS architecture (KServe, Kuadrant, Gateway API) and their responsibilities.</p>
 </li>
 <li>
-<p>Verify that the foundational components are installed and healthy in your OpenShift cluster</p>
+<p>Verify that the foundational components are installed and healthy in your OpenShift cluster.</p>
 </li>
 <li>
-<p>Understand the complete request flow from API client through Gateway, policy enforcement, to model serving</p>
+<p>Understand the complete request flow from API client through Gateway, policy enforcement, to model serving.</p>
 </li>
 </ul>
 </div>

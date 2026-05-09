@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>2.1: Understanding tier-based governance :: Models as a Service Breaking the GPU Silos on OpenShift AI 3.3</title>
+    <meta name="generator" content="Antora 3.1.3">
+    <link rel="stylesheet" href="../../../../_/css/site.css">
+    <script>var uiRootPath = '../../../../_'</script>
+  </head>
+  <body class="article">
+<header class="header">
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="https://www.redhat.com" target="_blank"><img src="../../../../_/img/redhat-logo.png" height="40px" alt="Red Hat"></a>
+      <a class="navbar-item" style="font-size: 24px; color: white" href="../../../..">Models as a Service Breaking the GPU Silos on OpenShift AI 3.3</a>
+      <button class="navbar-burger" data-target="topbar-nav">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+    <div id="topbar-nav" class="navbar-menu">
+      <div class="navbar-end">
+        <a class="navbar-item" href="https://github.com/RedHatQuickCourses/REPLACEREPONAME/issues" target="_blank">Report Issues</a>
+      </div>
+    </div>
+  </nav>
+</header>
+<div class="body">
+<div class="nav-container" data-component="maas-gpu-enablement" data-version="3.4">
+  <aside class="nav">
+    <div class="panels">
+<div class="nav-panel-menu is-active" data-panel="menu">
+  <nav class="nav-menu">
+    <h3 class="title"><a href="../../index.html">Models as a Service Breaking the GPU Silos on OpenShift AI 3.3</a></h3>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../../index.html">Models-as-a-Service Introduction</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../../ch1-mass-arch/ch1-scenario-01.html">Course Scenario - ChocoTech</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../../ch1-mass-arch/ch1-maas-arch-01.html">1: MaaS architecture</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../../ch1-mass-arch/ch1-maas-arch-02.html">1.1: GPU silo crisis</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../../ch1-mass-arch/ch1-maas-arch-03.html">1.2: MaaS architecture stack</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../../ch1-mass-arch/ch1-maas-arch-04.html">1.3: Enabling MaaS on RHOAI</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../../ch1-mass-arch/ch1-maas-arch-05.html">1.4: Summary &amp; troubleshooting</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../../ch2-platform-admin/ch2-platform-admin-01.html">2: Access Control &amp; Governance</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../../ch2-platform-admin/ch2-platform-admin-02.html">2.1: Subscription-based governance</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../../ch2-platform-admin/ch2-platform-admin-03.html">2.2: Creating OpenShift groups</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../../ch2-platform-admin/ch2-platform-admin-04.html">2.3: ServiceAccounts &amp; RBAC</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../../ch2-platform-admin/ch2-platform-admin-05.html">2.4: Authorizing Gateway Access (MaaSAuthPolicy)</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="#ch2-platform-admin-06.adoc">2.4: Understanding Tier-Based Governance</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../../ch2-platform-admin/ch2-platform-admin-summary.html">2.6: Generating API Keys</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../../ch3-model-deployment/ch3-model-deploy-01.html">3. Model Deployment</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../../ch3-model-deployment/ch3-model-deploy-02.html">3.1: Model Selection Strategy</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../../ch3-model-deployment/ch3-model-deploy-03.html">3.2: Lab - Deploying with Serving Runtimes</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../../ch3-model-deployment/ch3-model-deploy-04.html">3.3: Lab - Distributed Inference Configuration</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../../ch3-model-deployment/ch3-model-deploy-05.html">3.4: Lab - Publishing to MaaS Catalog</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../../ch3-model-deployment/ch3-model-deploy-06.html">3.5: Lifecycle Management with GitOps</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../../ch3-model-deployment/ch3-model-deploy-summary.html">3.6: Summary and troubleshooting</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+</ul>
+  </nav>
+</div>
+<div class="nav-panel-explore" data-panel="explore">
+  <div class="context">
+    <span class="title">Models as a Service Breaking the GPU Silos on OpenShift AI 3.3</span>
+    <span class="version">3.4</span>
+  </div>
+  <ul class="components">
+    <li class="component is-current">
+      <a class="title" href="../../index.html">Models as a Service Breaking the GPU Silos on OpenShift AI 3.3</a>
+      <ul class="versions">
+        <li class="version is-current is-latest">
+          <a href="../../index.html">3.4</a>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</div>
+    </div>
+  </aside>
+</div>
+<main class="article">
+<div class="toolbar" role="navigation">
+<button class="nav-toggle"></button>
+<nav class="breadcrumbs" aria-label="breadcrumbs">
+  <ul>
+    <li><a href="../../index.html">Models as a Service Breaking the GPU Silos on OpenShift AI 3.3</a></li>
+    <li><a href="ch2-platform-admin-02.html">2.1: Understanding tier-based governance</a></li>
+  </ul>
+</nav>
+</div>
+  <div class="content">
+<aside class="toc sidebar" data-title="Contents" data-levels="2">
+  <div class="toc-menu"></div>
+</aside>
+<article class="doc">
+<h1 class="page">2.1: Understanding tier-based governance</h1>
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>Before we configure OpenShift groups or generate ServiceAccount tokens, we must define the core mechanism that makes MaaS governance possible: <strong>Tiers</strong>.</p>
+</div>
+<div class="paragraph">
+<p>In a traditional, decentralized AI setup, any user with access to an API endpoint can theoretically send massive, computationally expensive prompts to an LLM. This leads to immediate resource exhaustion and makes cross-departmental chargebacks impossible.</p>
+</div>
+<div class="paragraph">
+<p>Models as a Service solves this by placing a strict, tier-based governance layer between the user and the underlying KServe infrastructure.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_what_is_a_tier"><a class="anchor" href="#_what_is_a_tier"></a>What is a tier?</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>A tier is a logical boundary that controls which AI models a user can access, how fast they can access them, and how their usage is tracked.</p>
+</div>
+<div class="paragraph">
+<p>When multiple business units share expensive large language models, tiers serve four critical enterprise functions:</p>
+</div>
+<table class="tableblock frame-all grid-rows stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 66.6667%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">The Strategic Capability</th>
+<th class="tableblock halign-left valign-top">The Enterprise Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><strong>Preventing Resource Exhaustion</strong></p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>Generative AI compute costs are directly correlated to sequence length. Tiers enforce rate limits and token quotas, preventing a single team from overwhelming the cluster.</p>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><strong>Differential Service Levels</strong></p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>Tiers allow you to prioritize mission-critical workloads. For example, a production defect-detection system can be granted higher throughput than an exploratory R&amp;D application.</p>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><strong>Granular Cost Tracking</strong></p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>Finance teams can track exact consumption metrics (prompt and completion tokens) based on tier assignments, enabling highly accurate departmental billing and cost allocation.</p>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><strong>Model Access Control</strong></p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>Tiers dictate which groups are granted access to specific models. You can restrict massive, 70-billion parameter models to top-tier users while offering smaller 8-billion parameter models to entry-level users.</p>
+</div></div></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_how_tier_assignments_work"><a class="anchor" href="#_how_tier_assignments_work"></a>How tier assignments work</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>MaaS relies on your native OpenShift organizational structure. Administrators map OpenShift user groups directly to logical tiers.</p>
+</div>
+<div class="paragraph">
+<p>When a user requests a model, the system checks their group membership and assigns them a tier based on a strict numeric hierarchy.</p>
+</div>
+<div class="sect2">
+<h3 id="_the_hierarchy_rule"><a class="anchor" href="#_the_hierarchy_rule"></a>The Hierarchy Rule</h3>
+<div class="paragraph">
+<p>If a user holds membership in multiple groups associated with different tiers, <strong>MaaS will default to assigning them to the tier with the numerically highest level (priority)</strong>.</p>
+</div>
+<div class="paragraph">
+<p>Users are restricted to accessing <strong>only</strong> those models explicitly made available to their assigned tier. They are precluded from accessing models restricted exclusively to lower-level tiers, even if they belong to groups associated with those lower tiers.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_the_0_100_priority_spectrum"><a class="anchor" href="#_the_0_100_priority_spectrum"></a>The 0-100 Priority Spectrum</h3>
+<div class="paragraph">
+<p>To support highly complex enterprise structures, <strong>tier levels can be configured anywhere on a spectrum from <code>0</code> to <code>100</code>.</strong> This provides massive granularity. An organization might reserve <code>0</code> for basic exploratory access, use the <code>10-50</code> range for various departmental development environments, and reserve <code>100</code> strictly for mission-critical, revenue-generating production workloads that require absolute priority.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_the_default_maas_tiers"><a class="anchor" href="#_the_default_maas_tiers"></a>The Default MaaS Tiers</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Out of the box, the MaaS platform incorporates three default tiers to demonstrate this spectrum at a basic level (<code>0</code>, <code>1</code>, and <code>2</code>). Each tier is automatically associated with a dedicated OpenShift namespace and identity group.</p>
+</div>
+<table class="tableblock frame-all grid-rows stretch">
+<colgroup>
+<col style="width: 20%;">
+<col style="width: 40%;">
+<col style="width: 20%;">
+<col style="width: 20%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Tier Name</th>
+<th class="tableblock halign-left valign-top">Description</th>
+<th class="tableblock halign-left valign-top">Level (Priority)</th>
+<th class="tableblock halign-left valign-top">Default Associated Group</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Free</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Entry-level tier for basic or exploratory users.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>0</code> (Lowest)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>system:authenticated</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Premium</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Intermediate tier for higher throughput and token requirements.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>1</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>premium-users</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Enterprise</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Top tier, designed for production and mission-critical workloads.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>2</code> (Highest)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>enterprise-users</code></p></td>
+</tr>
+</tbody>
+</table>
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-warning" title="Warning"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p><strong>CRITICAL:</strong> It is strongly advised not to delete all tiers from the system. Should the last remaining tier be deleted, the OpenShift AI dashboard will cease to display the "Add tier" button, permanently preventing the creation of new tiers through the User Interface. Ensure at least one tier remains present at all times.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_the_chocotech_tier_strategy"><a class="anchor" href="#_the_chocotech_tier_strategy"></a>The ChocoTech tier strategy</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>To solve ChocoTech&#8217;s GPU Silo Crisis, we will not use the generic defaults. Instead, the CIO has mandated a custom tier mapping tailored to the company&#8217;s business units.</p>
+</div>
+<div class="paragraph">
+<p>In the upcoming sections, you will build the following structure:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Gold Tier (Level 100):</strong> Mapped to the <code>chocotech-quality-control</code> group. This tier will have the highest rate limits to ensure the factory floor&#8217;s defect detection models never experience throttling.</p>
+</li>
+<li>
+<p><strong>Silver Tier (Level 50):</strong> Mapped to the <code>chocotech-rd</code> group. This tier will have moderate throughput limits for recipe optimization testing.</p>
+</li>
+<li>
+<p><strong>Bronze Tier (Level 10):</strong> Mapped to the <code>chocotech-marketing</code> group. This tier will have strict limits to prevent their exploratory sentiment analysis from monopolizing GPU capacity.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Now that you understand the strategy and enforcement mechanics, proceed to the next section to begin building these OpenShift groups in the cluster.</p>
+</div>
+</div>
+</div>
+</article>
+  </div>
+</main>
+</div>
+<footer class="footer">
+  <img src="../../../../_/img/rhl-logo-red.png" height="40px" alt="Red Hat"  href="https://redhat.com" >
+</footer><script id="site-script" src="../../../../_/js/site.js" data-ui-root-path="../../../../_"></script>
+<script async src="../../../../_/js/vendor/highlight.js"></script>
+  </body>
+</html>

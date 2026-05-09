@@ -76,7 +76,7 @@
     <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-01.html">2: Access Control &amp; Governance</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-02.html">2.1: Tier-based governancep</a>
+    <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-02.html">2.1: Subscription-based governance</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-03.html">2.2: Creating OpenShift groups</a>
@@ -85,10 +85,13 @@
     <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-04.html">2.3: ServiceAccounts &amp; RBAC</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-05.html">2.4: Understanding Tier-Based Governance</a>
+    <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-05.html">2.4: Authorizing Gateway Access (MaaSAuthPolicy)</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-summary.html">2.5: Summary &amp; troubleshooting</a>
+    <a class="nav-link" href="#ch2-platform-admin-06.adoc">2.4: Understanding Tier-Based Governance</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-summary.html">2.6: Generating API Keys</a>
   </li>
 </ul>
   </li>
@@ -101,22 +104,22 @@
     <a class="nav-link" href="../ch3-model-deployment/ch3-model-deploy-01.html">3. Model Deployment</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../ch3-model-deployment/ch3-model-deploy-01.html">3.1: Introduction to Model Deployment</a>
+    <a class="nav-link" href="../ch3-model-deployment/ch3-model-deploy-02.html">3.1: Model Selection Strategy</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../ch3-model-deployment/ch3-model-deploy-02.html">3.2: Model Selection Strategy</a>
+    <a class="nav-link" href="../ch3-model-deployment/ch3-model-deploy-03.html">3.2: Lab - Deploying with Serving Runtimes</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../ch3-model-deployment/ch3-model-deploy-03.html">3.3: Lab - Deploying with Serving Runtimes</a>
+    <a class="nav-link" href="../ch3-model-deployment/ch3-model-deploy-04.html">3.3: Lab - Distributed Inference Configuration</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../ch3-model-deployment/ch3-model-deploy-04.html">3.4: Lab - Distributed Inference Configuration</a>
+    <a class="nav-link" href="../ch3-model-deployment/ch3-model-deploy-05.html">3.4: Lab - Publishing to MaaS Catalog</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../ch3-model-deployment/ch3-model-deploy-05.html">3.5: Lab - Publishing to MaaS Catalog</a>
+    <a class="nav-link" href="../ch3-model-deployment/ch3-model-deploy-06.html">3.5: Lifecycle Management with GitOps</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../ch3-model-deployment/ch3-model-deploy-06.html">3.6: Lifecycle Management with GitOps</a>
+    <a class="nav-link" href="../ch3-model-deployment/ch3-model-deploy-summary.html">3.6: Summary and troubleshooting</a>
   </li>
 </ul>
   </li>
@@ -181,43 +184,33 @@
 <p><strong>Marketing</strong>: 2x NVIDIA L4 GPUs for sentiment analysis</p>
 </li>
 <li>
-<p><strong>Supply Chain</strong>: 2x NVIDIA L40S GPUs for inventory prediction</p>
+<p><strong>Supply Chain</strong>: 2x NVIDIA L40S GPUs for inventory prediction
+== The Solution: What is Models as a Service (MaaS)?</p>
 </li>
 </ul>
 </div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_the_solution_what_is_models_as_a_service_maas"><a class="anchor" href="#_the_solution_what_is_models_as_a_service_maas"></a>The Solution: What is Models as a Service (MaaS)?</h2>
-<div class="sectionbody">
 <div class="paragraph">
 <p>Before we dive into the technical architecture, let&#8217;s define exactly what we are building to solve this crisis.</p>
 </div>
 <div class="paragraph">
-<p>The Models-as-a-Service (MaaS) platform acts as a governance layer between users and model serving infrastructure. When users request access to a model, MaaS authenticates the user and determines their assigned tier based on group membership. Policy enforcement checks rate limits and quotas for that tier.</p>
+<p>The Models-as-a-Service (MaaS) platform acts as a governance layer between users and the model serving infrastructure. This architecture enables centralized policy enforcement without modifying the underlying model serving components.</p>
 </div>
 <div class="paragraph">
-<p>Authorized requests are forwarded to the appropriate model endpoint, and usage metrics are recorded for tracking and cost allocation purposes. This architecture enables centralized policy enforcement without modifying the underlying model serving infrastructure.</p>
-</div>
-<div class="paragraph">
-<p>To achieve this, MaaS provides five core capabilities:</p>
+<p>To achieve this, OpenShift AI 3.4 provides four core capabilities:</p>
 </div>
 <div class="ulist">
 <ul>
 <li>
-<p><strong>Tier-based access control:</strong> Define multiple service tiers, such as free, premium, or enterprise, with different rate limits, quotas, and model access permissions for different user groups.</p>
+<p><strong>Subscription-based access control:</strong> Define multiple subscriptions that grant specific groups access to models with configurable token limits.</p>
 </li>
 <li>
-<p><strong>Policy and quota management:</strong> Enforce rate limiting and quota policies to prevent resource exhaustion.</p>
+<p><strong>Self-service API key management:</strong> Users can create, list, and revoke their own API keys for model access through the Gen AI Studio.</p>
 </li>
 <li>
-<p><strong>API key authentication:</strong> Control access to models through tier-based resource allocation and API key-based authentication.</p>
+<p><strong>Policy and quota management:</strong> Enforce token limit policies to prevent resource exhaustion.</p>
 </li>
 <li>
-<p><strong>Usage tracking:</strong> Track consumption metrics for cost allocation and billing.</p>
-</li>
-<li>
-<p><strong>Observability:</strong> Monitor model access patterns, policy enforcement, and resource utilization.</p>
+<p><strong>Usage tracking and observability:</strong> Track consumption metrics for cost allocation, billing, and showback reporting to finance teams.</p>
 </li>
 </ul>
 </div>
@@ -258,7 +251,7 @@ Data scientists spend 40% of their time debugging CUDA drivers and Kubernetes ma
 </div></div></td>
 <td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
 <p><strong>Simplified Consumption</strong>
-Developers skip the infrastructure completely. They access powerful models instantly via secure, OpenAI-compatible API endpoints using simple token authentication.</p>
+Developers skip the infrastructure completely. They access powerful models instantly via secure, OpenAI-compatible API endpoints using native API keys.</p>
 </div></div></td>
 </tr>
 <tr>
@@ -274,11 +267,11 @@ A single, highly optimized model deployment serves all business units simultaneo
 <tr>
 <td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
 <p><strong>The Security "Black Box"</strong>
-Zero visibility into who is sending what data to which model. Audit logs and PII filtering are impossible.</p>
+Zero visibility into who is sending what data to which model.</p>
 </div></div></td>
 <td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
 <p><strong>Edge-Level Governance</strong>
-Centralized API gateways enforce strict authentication, zero-trust access, and rate limiting directly at the network edge.</p>
+Centralized API gateways enforce strict authentication, zero-trust access, and token quotas directly at the network edge.</p>
 </div></div></td>
 </tr>
 <tr>
@@ -288,7 +281,7 @@ Finance cannot justify infrastructure costs because they cannot track which team
 </div></div></td>
 <td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
 <p><strong>Granular Token Tracking</strong>
-Exact consumption metrics (prompt/completion tokens) are tracked per user and tier, enabling precise capacity forecasting and accurate departmental chargebacks.</p>
+Exact consumption metrics (prompt/completion tokens) are tracked per user and subscription, enabling precise capacity forecasting and accurate departmental chargebacks.</p>
 </div></div></td>
 </tr>
 </tbody>
@@ -307,13 +300,10 @@ Exact consumption metrics (prompt/completion tokens) are tracked per user and ti
 <p>How would centralized model serving help Quality Control and R&amp;D share GPU capacity?</p>
 </li>
 <li>
-<p>What governance policies would prevent one team from monopolizing resources?</p>
+<p>What governance policies would prevent one team&#8217;s script from monopolizing the shared resources?</p>
 </li>
 <li>
-<p>How does token-based consumption enable Finance to perform chargeback?</p>
-</li>
-<li>
-<p>What role does the API gateway play in audit logging and PII filtering?</p>
+<p>How does token-based consumption enable Finance to perform chargebacks?</p>
 </li>
 </ul>
 </div>
