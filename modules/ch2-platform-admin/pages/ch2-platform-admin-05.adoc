@@ -72,6 +72,7 @@ oc get maasauthpolicy -n models-as-a-service
 ----
 
 You have now successfully locked down the platform! 
+
 1. Only users in the QC, R&D, and Marketing groups can access the Gateway.
 2. When they do, their traffic will be strictly throttled based on their Subscription tier.
 

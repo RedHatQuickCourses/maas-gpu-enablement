@@ -3,6 +3,7 @@
 To enforce the CIO's subscription strategy, the MaaS platform needs a mathematical way to identify which request belongs to which team. We achieve this by utilizing native OpenShift Groups. 
 
 By mapping OpenShift groups to our MaaS Subscriptions, we gain massive enterprise advantages over standard public APIs:
+
 * **Scalable Onboarding:** You add a new data scientist to a group, and they automatically inherit the correct API token limits and model access. No manual policy tweaking required.
 * **Auditable Transparency:** Every API request is logged against the business unit (e.g., `chocotech-quality-control`), providing Finance with the exact metrics needed for departmental chargebacks.
 

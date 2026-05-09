@@ -3,8 +3,8 @@
 ** xref:ch2-platform-admin-03.adoc[2.2: Creating OpenShift groups]
 ** xref:ch2-platform-admin-04.adoc[2.3: ServiceAccounts & RBAC]
 ** xref:ch2-platform-admin-05.adoc[2.4: Authorizing Gateway Access (MaaSAuthPolicy)]
-** xref:ch2-platform-admin-06.adoc[2.4: Understanding Tier-Based Governance]
-** xref:ch2-platform-admin-summary.adoc[2.6: Generating API Keys]
+** xref:ch2-platform-admin-06.adoc[2.5: Generating API Keys]
+** xref:ch2-platform-admin-summary.adoc[2.6: Summary and troubleshooting]
 
 
 
