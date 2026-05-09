@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>3.4: Expanding the catalog with selective tier access :: Models as a Service Breaking the GPU Silos on OpenShift AI 3.4</title>
+    <link rel="prev" href="ch3-model-deploy-04.html">
+    <link rel="next" href="ch3-model-deploy-06.html">
+    <meta name="generator" content="Antora 3.1.3">
+    <link rel="stylesheet" href="../../../_/css/site.css">
+    <script>var uiRootPath = '../../../_'</script>
+  </head>
+  <body class="article">
+<header class="header">
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="https://www.redhat.com" target="_blank"><img src="../../../_/img/redhat-logo.png" height="40px" alt="Red Hat"></a>
+      <a class="navbar-item" style="font-size: 24px; color: white" href="../../..">Models as a Service Breaking the GPU Silos on OpenShift AI 3.4</a>
+      <button class="navbar-burger" data-target="topbar-nav">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+    <div id="topbar-nav" class="navbar-menu">
+      <div class="navbar-end">
+        <a class="navbar-item" href="https://github.com/RedHatQuickCourses/REPLACEREPONAME/issues" target="_blank">Report Issues</a>
+      </div>
+    </div>
+  </nav>
+</header>
+<div class="body">
+<div class="nav-container" data-component="maas" data-version="3.4">
+  <aside class="nav">
+    <div class="panels">
+<div class="nav-panel-menu is-active" data-panel="menu">
+  <nav class="nav-menu">
+    <h3 class="title"><a href="../index.html">Models as a Service Breaking the GPU Silos on OpenShift AI 3.4</a></h3>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../index.html">Models-as-a-Service Introduction</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../ch1-mass-arch/ch1-scenario-01.html">Course Scenario - ChocoTech</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../ch1-mass-arch/ch1-maas-arch-01.html">1: MaaS architecture</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch1-mass-arch/ch1-maas-arch-02.html">1.1: GPU silo crisis</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch1-mass-arch/ch1-maas-arch-03.html">1.2: MaaS architecture stack</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch1-mass-arch/ch1-maas-arch-04.html">1.3: Enabling MaaS on RHOAI</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch1-mass-arch/ch1-maas-arch-05.html">1.4: Summary &amp; troubleshooting</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-01.html">2: Access Control &amp; Governance</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-02.html">2.1: Subscription-based governance</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-03.html">2.2: Creating OpenShift groups</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-04.html">2.3: ServiceAccounts &amp; RBAC</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-05.html">2.4: Authorizing Gateway Access (MaaSAuthPolicy)</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-06.html">2.5: Generating API Keys</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-summary.html">2.6: Summary and troubleshooting</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="ch3-model-deploy-01.html">3. Model Deployment</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="ch3-model-deploy-02.html">3.1: Model Selection Strategy</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="ch3-model-deploy-03.html">3.2: Lab - Deploying with Serving Runtimes</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="ch3-model-deploy-04.html">3.3: Lab - Distributed Inference Configuration</a>
+  </li>
+  <li class="nav-item is-current-page" data-depth="2">
+    <a class="nav-link" href="ch3-model-deploy-05.html">3.4: Lab - Publishing to MaaS Catalog</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="ch3-model-deploy-06.html">3.5: Lifecycle Management with GitOps</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="ch3-model-deploy-summary.html">3.6: Summary and troubleshooting</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+</ul>
+  </nav>
+</div>
+<div class="nav-panel-explore" data-panel="explore">
+  <div class="context">
+    <span class="title">Models as a Service Breaking the GPU Silos on OpenShift AI 3.4</span>
+    <span class="version">3.4</span>
+  </div>
+  <ul class="components">
+    <li class="component is-current">
+      <a class="title" href="../index.html">Models as a Service Breaking the GPU Silos on OpenShift AI 3.4</a>
+      <ul class="versions">
+        <li class="version is-current is-latest">
+          <a href="../index.html">3.4</a>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</div>
+    </div>
+  </aside>
+</div>
+<main class="article">
+<div class="toolbar" role="navigation">
+<button class="nav-toggle"></button>
+<nav class="breadcrumbs" aria-label="breadcrumbs">
+  <ul>
+    <li><a href="../index.html">Models as a Service Breaking the GPU Silos on OpenShift AI 3.4</a></li>
+    <li><a href="ch3-model-deploy-01.html">3. Model Deployment</a></li>
+    <li><a href="ch3-model-deploy-05.html">3.4: Lab - Publishing to MaaS Catalog</a></li>
+  </ul>
+</nav>
+</div>
+  <div class="content">
+<aside class="toc sidebar" data-title="Contents" data-levels="2">
+  <div class="toc-menu"></div>
+</aside>
+<article class="doc">
+<h1 class="page">3.4: Expanding the catalog with selective tier access</h1>
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>ChocoTech&#8217;s Marketing team requests access to a smaller, faster model for sentiment analysis. To accommodate this, we will deploy a second model to demonstrate multi-model catalog management.</p>
+</div>
+<div class="paragraph">
+<p>This exercise shows how easily you can expand the model catalog as new business requirements emerge. More importantly, it demonstrates how to apply strict, selective access controls so that expensive or restricted models do not appear for unauthorized users.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_exercise_1_the_restricted_deployment_manifest"><a class="anchor" href="#_exercise_1_the_restricted_deployment_manifest"></a>Exercise 1: The restricted deployment manifest</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>We will deploy the <code>nvidia/nemotron-4-8b-instruct</code> model. Unlike our general-purpose Llama-3 deployment, this model is restricted to bronze and silver tiers, demonstrating selective access control.</p>
+</div>
+<div class="paragraph">
+<p>To maintain our secure GitOps and Vault strategy, we will assume the weights have been staged in our local MinIO vault (<code>s3://models/nemotron</code>). We will use the exact same <code>llm-d</code> routing structure as before, but we will alter the "Bouncer List" annotation.</p>
+</div>
+<div class="paragraph">
+<p>Review and apply the <code>nemotron-deployment.yaml</code> manifest:</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">cat &lt;&lt;EOF | oc apply -f -
+apiVersion: serving.kserve.io/v1alpha1
+kind: LLMInferenceService
+metadata:
+  name: nemotron-8b
+  namespace: chocotech-models
+  annotations:
+    # THE BOUNCER LIST: Explicitly omitting 'gold-tier'
+    alpha.maas.opendatahub.io/tiers: '["silver-tier", "bronze-tier"]'
+spec:
+  publishToGenAIStudio: true
+  model:
+    uri: s3://models/nemotron
+    name: nvidia/nemotron-4-8b-instruct
+  servingRuntime: "vllm-cuda-runtime"
+  router:
+    scheduler:
+      template:
+        containers:
+          - name: main
+            args:
+              - '--pool-group'
+              - 'inference.networking.x-k8s.io'
+              - '--pool-name'
+              - '{{ .ObjectMeta.Name }}-inference-pool'
+  template:
+    spec:
+      serviceAccountName: fast-track-sa
+      containers:
+        - name: main
+          env:
+            - name: VLLM_ADDITIONAL_ARGS
+              value: "--max-model-len=8192 --gpu-memory-utilization=0.90"
+  placement:
+    accelerator:
+      name: "nvidia.com/gpu"
+      count: 1
+EOF</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Wait for the deployment to become ready:</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">oc wait --for=condition=ready llminferenceservice/nemotron-8b -n chocotech-models --timeout=600s</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>Expected output:</strong> <code>llminferenceservice.serving.kserve.io/nemotron-8b condition met</code>.</p>
+</div>
+<hr>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_exercise_2_verify_the_multi_model_catalog"><a class="anchor" href="#_exercise_2_verify_the_multi_model_catalog"></a>Exercise 2: Verify the multi-model catalog</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>With a single <code>oc apply</code> command, the MaaS operator automatically registers the new endpoint, attaches the Kuadrant rate limit policies for Silver and Bronze, and updates the Gen AI Studio UI.</p>
+</div>
+<div class="paragraph">
+<p>Let&#8217;s verify this multi-model environment.</p>
+</div>
+<div class="paragraph">
+<p><strong>1. List all deployed models</strong>:</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">oc get llminferenceservice -n chocotech-models</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>Expected output:</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>NAME           READY   REASON   AGE
+llama-3-8b     True    Ready    20m
+nemotron-8b    True    Ready    5m</pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>2. Check the model catalog via API</strong>:
+Because MaaS is OpenAI-compliant, applications can dynamically discover available models.</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">GATEWAY_HOST=$(oc get gateway maas-default-gateway -n openshift-ingress -o jsonpath='{.status.addresses[0].value}')
+curl -s http://$GATEWAY_HOST/v1/models | jq</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong class="cite_start">Expected output showing both models</strong>:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-json hljs" data-lang="json">{
+  "object": "list",
+  "data": [
+    {
+      "id": "meta-llama/Meta-Llama-3-8B-Instruct",
+      "object": "model",
+      "owned_by": "chocotech-models"
+    },
+    {
+      "id": "nvidia/nemotron-4-8b-instruct",
+      "object": "model",
+      "owned_by": "chocotech-models"
+    }
+  ]
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>3. The UI Payoff</strong>
+Refresh the Gen AI Studio Models tab in the dashboard. You should now see both models listed with their respective tier access controls.</p>
+</div>
+<div class="paragraph">
+<p>Verify the restrictions: Models show different tier access (Llama-3: all tiers, Nemotron: bronze/silver only).</p>
+</div>
+<div class="paragraph">
+<p>ChocoTech now operates a fully governed, multi-model AI factory. Quality Control relies on the universally available Llama-3, while Marketing and R&amp;D can utilize the Nemotron model without risking exposure to the Gold tier production workloads.</p>
+</div>
+</div>
+</div>
+<nav class="pagination">
+  <span class="prev"><a href="ch3-model-deploy-04.html">3.3: Lab - Distributed Inference Configuration</a></span>
+  <span class="next"><a href="ch3-model-deploy-06.html">3.5: Lifecycle Management with GitOps</a></span>
+</nav>
+</article>
+  </div>
+</main>
+</div>
+<footer class="footer">
+  <img src="../../../_/img/rhl-logo-red.png" height="40px" alt="Red Hat"  href="https://redhat.com" >
+</footer><script id="site-script" src="../../../_/js/site.js" data-ui-root-path="../../../_"></script>
+<script async src="../../../_/js/vendor/highlight.js"></script>
+  </body>
+</html>
