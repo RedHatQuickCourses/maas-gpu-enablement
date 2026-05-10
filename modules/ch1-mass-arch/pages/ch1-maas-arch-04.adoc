@@ -25,6 +25,7 @@ Verify the installations:
 [source,role="execute"]
 ----
 oc get csv -n openshift-operators | grep -E "(servicemesh|rhcl|rhods|limitador|authorino)"
+oc get csv -n openshift-lws-operator
 ----
 
 If any operators are missing, install them from the OpenShift console (**Ecosystem → Software Catalog**) and wait for their status to reach `Succeeded` before continuing. 
@@ -145,6 +146,7 @@ With the operators verified, Kuadrant running, the Gateway established, and the 
 === Enable the MaaS Backend and Llama Stack
 
 You must edit the `default-dsc` CR to enable two critical components:
+
 1. **Models As a Service:** Provisions the core governance and routing controllers. 
 2. **Llama Stack Operator:** Provides the required API layer for the Gen AI Studio UI to function.
 
@@ -158,7 +160,7 @@ oc patch datasciencecluster default-dsc --type=merge -p '{
         "managementState": "Managed"
       },
       "kserve": {
-        "managementState": "Managed",
+        "managementState": "Managed"
         "modelsAsService": {
           "managementState": "Managed"
         }
@@ -194,4 +196,4 @@ oc patch odhdashboardconfig odh-dashboard-config -n redhat-ods-applications --ty
 
 Refresh your OpenShift AI browser window. The **Gen AI Studio** menu option will now appear in your left-hand navigation pane. 
 
-ChocoTech's underlying infrastructure is now primed for centralized governance. Proceed to the next module to configure the explicit policies and subscription definitions!
+ChocoTech's underlying infrastructure is now primed for centralized governance. Proceed to the Summary and troubleshooting page to close out this module. 

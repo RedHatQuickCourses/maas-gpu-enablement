@@ -120,3 +120,10 @@ If you deploy a model using a standard standalone KServe InferenceService, it by
 `llm-d` (Large Language Model Distributed) is a specialized Kubernetes operator designed to orchestrate the `vLLM` inference engine across multiple accelerators. Even if you are only deploying Llama-3 8B onto a single GPU today, using `llm-d` future-proofs your architecture. When ChocoTech eventually deploys a 70B parameter model, `llm-d` seamlessly handles the tensor parallelism required to split that model across multiple GPUs using the LeaderWorkerSet architecture.
 
 Now that we have verified the business requirements, calculated the hardware limits, and selected the `llm-d` runtime to guarantee governance, proceed to the next section to write the deployment manifest.
+
+.vLLM runtime with Models-as-a-Servce is Out of Scope for this course
+[NOTE]
+If you plan to use vLLM runtime with Models-as-a-Service, you have enabled the vLLM
+deployment on MaaS feature flag: spec.dashboardConfig.vLLMDeploymentOnMaaS: true in
+the OdhDashboardConfig custom resource. vLLM runtime support for Models-as-a-Service is a
+Technology Preview feature.

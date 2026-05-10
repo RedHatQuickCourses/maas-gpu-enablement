@@ -1,10 +1,10 @@
-= Models as a Service: Breaking the GPU Silos on OpenShift AI 3.3
+= Models as a Service: Breaking the GPU Silos on OpenShift AI 3.4
 
-Welcome to this *Red Hat OpenShift AI 3 - Models as a Service* QuickCourse! 
+Welcome to this *Red Hat OpenShift AI 3.4 - Models as a Service* QuickCourse! 
 
 == Course Overview: The MaaS Mandate
 
-Designed for Platform Engineers and Developers, this course provides the exact steps to build a governed Models as a Service (MaaS) ecosystem on OpenShift AI 3.3. We skip the trial-and-error of figuring out which operators and registries to install. Instead - you will learn how to immediately transform fragmented, isolated hardware into a fairly scheduled, multi-tenant shared service, empowering your business units to deploy agentic AI smoothly, securely, and at scale.
+Designed for Platform Engineers and Developers, this course provides the exact steps to build a governed Models as a Service (MaaS) ecosystem on OpenShift AI 3.4. We skip the trial-and-error of figuring out which operators and registries to install. Instead - you will learn how to immediately transform fragmented, isolated hardware into a fairly scheduled, multi-tenant shared service, empowering your business units to deploy agentic AI smoothly, securely, and at scale.
 
 By the end of this course, you will be equipped to empower your lines of business with self-service models to build agentic AI applications smoothly and securely.
 
@@ -37,17 +37,17 @@ In this hands-on QuickCourse, you will:
 
 == QuickCourse Environment
 
-This lab requires a robust setup. The recommended environment is a **Single Node OpenShift (SNO) cluster** with multiple NVIDIA GPUs (minimum 48GB total, e.g., 2x24GB).
+This lab requires a robust setup. The recommended environment is a **OpenShift cluster** with multiple NVIDIA GPUs (minimum 48GB total, e.g., 2x24GB).
 
 [IMPORTANT]
 ====
 **Pre-flight Checklist**
 The following components **must** be pre-configured before you begin:
 
-* **OpenShift Cluster**: SNO with GPU nodes configured (version 4.20 or later).
+* **OpenShift Cluster**: OCP with GPU nodes configured (version 4.20 or later).
 * **GPU Operators**: NVIDIA GPU Operator and Node Feature Discovery installed.
 * **OpenShift AI Operator**: Installed via the `stable-3.x` channel.
-* **Service Mesh Operator**: Installed (required for Gateway API routing).
+* **Service Mesh 3 Operator**: Installed (required for Gateway API routing).
 * **Red Hat Connectivity Link**: Kuadrant installed for auth and rate limiting.
 * **LeaderWorkerSet Operator**: Installed for llm-d (required for Mixture of Expoert (MOE) Model) inference.
 * **CLI Access**: Web Terminal Operator or Developer Spaces active, with the `oc` command accessible.
@@ -105,4 +105,4 @@ This QuickCourse incorporates expert guidance from the Red Hat OpenShift AI busi
 
 Ready to dive in? Click on **QuickCourse Overview** in the navigation to begin your learning journey. 
 
-You'll start by meeting **ChocoTech Industries**—a rapidly growing chocolate manufacturer desperately looking for a solution to their GPU silo crisis. Let's help them build a better AI infrastructure!
+You'll start by meeting **ChocoTech Industries**—a rapidly growing chocolate manufacturer looking for a solution to their GPU silo crisis. Let's help them build a better AI infrastructure!

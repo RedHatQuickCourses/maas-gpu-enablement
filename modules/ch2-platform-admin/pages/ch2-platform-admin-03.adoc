@@ -73,3 +73,11 @@ oc get namespace chocotech-models --show-labels | grep maas
 ----
 
 If the output confirms your groups exist, your username is listed under the Quality Control group, and the `chocotech-models` namespace displays the managed label, your organizational foundation is secure. Proceed to define the subscription limits.
+
+.Remove for the final version.
+[NOTE]
+You have enabled User Workload Monitoring on your OpenShift cluster. User Workload
+Monitoring is required for MaaS to collect and expose usage metrics for token consumption,
+request counts, and rate limiting. Without User Workload Monitoring enabled, the MaaS
+installation will show a Degraded status. For information about enabling User Workload
+Monitoring, see Enabling monitoring for user-defined projects.

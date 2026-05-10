@@ -16,10 +16,24 @@ The Models-as-a-Service (MaaS) platform acts as a governance layer between users
 
 To achieve this, OpenShift AI 3.4 provides four core capabilities:
 
-* **Subscription-based access control:** Define multiple subscriptions that grant specific groups access to models with configurable token limits.
-* **Self-service API key management:** Users can create, list, and revoke their own API keys for model access through the Gen AI Studio.
+* **Subscription-based access control:** Define multiple subscriptions that grant specific groups access to models with configurable token limits. Users can belong to multiple subscriptions, with priority levels determining which
+Note
+subscription is used when multiple options are available.
+* **Self-service API key management:** Users can create, list, and revoke their own API keys for model access. Administrators can also
+provision and manage API keys on behalf of users. API keys can be permanent or configured
+with custom expiration times, and individual keys can be revoked without affecting other keys
+for the same user.
 * **Policy and quota management:** Enforce token limit policies to prevent resource exhaustion.
 * **Usage tracking and observability:** Track consumption metrics for cost allocation, billing, and showback reporting to finance teams.
+
+.Out of Scope for this course
+[NOTE]
+ * **External models:** Route inference requests to models hosted by external cloud providers such as AWS Bedrock,
+Azure OpenAI, or Google Vertex AI through the same MaaS gateway used for locally deployed
+models. External models is a Technology Preview feature in Red Hat OpenShift AI.
+ * **Multi-runtime support:** Expose models served with llm-d or vLLM runtimes through MaaS governance. This provides
+runtime flexibility and enables consistent governance across different serving infrastructures.
+vLLM runtime support is a Technology Preview feature in Red Hat OpenShift AI.
 
 == The MaaS Impact: Problem vs. Payoff
 

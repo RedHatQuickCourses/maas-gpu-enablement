@@ -1,4 +1,4 @@
-name: maas
+name: maas-gpu-enablement
 title: Models as a Service Breaking the GPU Silos on OpenShift AI 3.4
 version: 3.4
 nav:

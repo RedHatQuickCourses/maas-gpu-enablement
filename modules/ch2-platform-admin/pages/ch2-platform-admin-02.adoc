@@ -29,6 +29,11 @@ When multiple business units share expensive large language models, MaaS subscri
 | Subscriptions eliminate the need for complex, manual Kubernetes ServiceAccounts. Developers can generate secure, revocable API keys directly through the Gen AI Studio UI.
 |===
 
+[NOTE]
+MaaS assigns users to subscriptions based on their OpenShift group membership. When a user
+belongs to multiple groups with different subscriptions, the system uses the subscription with the
+highest priority level.
+
 == The Two-Part Access Rule
 
 In OpenShift AI 3.4, granting a team access to the AI platform requires exactly two custom resources working together. Think of it like joining a gym:
