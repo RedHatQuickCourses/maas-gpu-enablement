@@ -24,8 +24,7 @@ Ensure the following operators are installed and healthy:
 Verify the installations:
 [source,role="execute"]
 ----
-oc get csv -n openshift-operators | grep -E "(servicemesh|rhcl|rhods|limitador|authorino)"
-oc get csv -n openshift-lws-operator
+oc get csv -n openshift-lws-operator | grep -E "(servicemesh|rhcl|rhods|limitador|authorino|leader)"
 ----
 
 If any operators are missing, install them from the OpenShift console (**Ecosystem → Software Catalog**) and wait for their status to reach `Succeeded` before continuing. 
@@ -160,7 +159,6 @@ oc patch datasciencecluster default-dsc --type=merge -p '{
         "managementState": "Managed"
       },
       "kserve": {
-        "managementState": "Managed"
         "modelsAsService": {
           "managementState": "Managed"
         }
@@ -197,3 +195,43 @@ oc patch odhdashboardconfig odh-dashboard-config -n redhat-ods-applications --ty
 Refresh your OpenShift AI browser window. The **Gen AI Studio** menu option will now appear in your left-hand navigation pane. 
 
 ChocoTech's underlying infrastructure is now primed for centralized governance. Proceed to the Summary and troubleshooting page to close out this module. 
+
+
+
+///
+
+# Set SSL environment variables for outbound communication
+oc -n kuadrant-system set env deployment/authorino \
+SSL_CERT_FILE=/etc/ssl/certs/openshift-service-ca/service-ca-bundle.crt \
+REQUESTS_CA_BUNDLE=/etc/ssl/certs/openshift-service-ca/service-ca-bundle.crt
+
+# Annotate the existing gateway to enable TLS bootstrap
+oc annotate gateway maas-default-gateway \
+-n openshift-ingress \
+security.opendatahub.io/authorino-tls-bootstrap="true" \
+--overwrite
+
+cat <<EOF | oc apply -f -
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: maas-default-gateway
+  namespace: openshift-ingress
+  annotations:
+    # Mandatory for MaaS to bootstrap TLS and Authorino integration
+    security.opendatahub.io/authorino-tls-bootstrap: "true" 
+spec:
+  gatewayClassName: data-science-gateway-class 
+  listeners:
+  - name: https # MaaS requires secure communication
+    port: 443
+    protocol: HTTPS
+    tls:
+      mode: Terminate
+      certificateRefs:
+      - name: maas-gateway-cert # Ensure this certificate exists
+    allowedRoutes:
+      namespaces:
+        from: All
+EOF
+
