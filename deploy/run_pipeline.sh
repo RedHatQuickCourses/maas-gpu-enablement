@@ -4,7 +4,7 @@ set -e
 # --- CONFIGURATION ---
 NAMESPACE="rhoai-maas-lab"
 MODEL_ID="nvidia/Llama-3.1-Nemotron-Nano-8B-v1"
-REGISTRY_HOST="http://model-registry-lab.rhoai-model-registries.svc.cluster.local"
+REGISTRY_HOST="http://rhoai-maas-lab.rhoai-model-registries.svc.cluster.local"
 SERVICE_ACCOUNT="model-ingestion-sa"
 
 echo "🚀 Preparing Supply Chain Job for $MODEL_ID..."

@@ -2,9 +2,17 @@
 
 Welcome to this *Red Hat OpenShift AI 3.4 - Models as a Service* QuickCourse! 
 
-== Course Overview: The MaaS Mandate
+---
 
-Designed for Platform Engineers and Developers, this course provides the exact steps to build a governed Models as a Service (MaaS) ecosystem on OpenShift AI 3.4. We skip the trial-and-error of figuring out which operators and registries to install. Instead - you will learn how to immediately transform fragmented, isolated hardware into a fairly scheduled, multi-tenant shared service, empowering your business units to deploy agentic AI smoothly, securely, and at scale.
+The CIO at ChocoTech Industries just called an emergency meeting.
+
+"We’ve invested over $500,000 in GPU infrastructure across four teams," she says, reviewing the quarterly report. "Yet our R&D team is waiting three weeks for capacity while Quality Control’s GPUs sit idle 60% of the time. This doesn’t make sense."
+
+ChocoTech needs to align their AI Strategy to optimize for GPU utilization across business units, moving to a centralized, governed platform where all teams can access AI models efficiently.
+
+== The MaaS Mandate
+
+Designed for Platform Engineers and Developers, this course provides the steps to build a governed Models as a Service (MaaS) ecosystem on OpenShift AI 3.4. We skip the trial-and-error of figuring out which operators and registries to install. Instead - you will learn how to immediately transform fragmented, isolated hardware into a fairly scheduled, multi-tenant shared service, empowering your business units to deploy agentic AI smoothly, securely, and at scale.
 
 By the end of this course, you will be equipped to empower your lines of business with self-service models to build agentic AI applications smoothly and securely.
 
@@ -22,44 +30,80 @@ To get the most out of this QuickCourse, you should come to the table with:
 * Familiarity with core GPU concepts and generic GPU enablement
 * An understanding of API concepts and REST principles
 * Basic command-line experience
+* Networking - Routing traffic via Gateway API to the Mass Endpoint. 
 
 == What You'll Learn
 
 In this hands-on QuickCourse, you will:
 
-* **Master MaaS**: Understand how Models as a Service solves complex GPU resource allocation challenges.
+* **MaaS Strategy**: Understand how Models as a Service solves complex GPU resource allocation challenges.
 * **Architect a Hub**: Design and implement a centralized model hub featuring governed, token-based consumption.
 * **Configure and Deploy**: Set up MaaS on OpenShift AI using operators and CRDs, and deploy generative AI models (using llm-d, vLLM, and KServe) for distributed inference.
-* **Publish for Self-Service**: Publish models to the OpenShift AI `ModelsAsService` catalog, complete with role-based access permissions.
-* **Enforce Governance**: Implement tiered service limits and rate limiting using Kuadrant.
+* **Publish for Self-Service**: Publish models to the OpenShift AI `ModelsAsService` catalog, complete with subscription-based access permissions.
+* **Enforce Governance**: Implement subscription service limits and rate limiting using Kuadrant.
 * **Monitor and Report**: Generate chargeback reports and track GPU utilization metrics using Grafana.
 * **Integrate Seamlessly**: Connect AI models into applications using OpenAI-compatible APIs with robust retry logic.
 
-== QuickCourse Environment
 
-This lab requires a robust setup. The recommended environment is a **OpenShift cluster** with multiple NVIDIA GPUs (minimum 48GB total, e.g., 2x24GB).
-
+== Required Operators and Components
 [IMPORTANT]
+
+MaaS requires the following operators and infrastructure components:
+
+[cols="2,1,2,1",options="header"]
+|===
+| Component | Version | Installation Namespace | Status
+
+| **Red Hat OpenShift**
+| 4.19.9+
+| N/A (Platform)
+| ✅ Required
+
+| **Red Hat OpenShift AI Operator**
+| 3.4+
+| `redhat-ods-applications`
+| ✅ Required
+
+| **Red Hat Connectivity Link Operator**
+| 1.2+
+| `openshift-operators`
+| ✅ Required
+
+| **Llama Stack Operator**
+| 3.4+
+| `redhat-ods-applications`
+| ⚠️ Required for dashboard UI
+
+| **User Workload Monitoring**
+| N/A
+| `openshift-monitoring`
+| ✅ Required
+
+| **PostgreSQL Database**
+| N/A
+| `redhat-ods-applications`
+| ✅ Required
+
+| **Gateway API**
+| Built-in
+| `openshift-ingress`
+| ✅ Required
+
+| **Cluster Observability Operator**
+| Latest
+| `openshift-operators`
+| ⭕ Optional (Tech Preview)
+|===
+
+[NOTE]
 ====
-**Pre-flight Checklist**
-The following components **must** be pre-configured before you begin:
+**Legend:**
 
-* **OpenShift Cluster**: OCP with GPU nodes configured (version 4.20 or later).
-* **GPU Operators**: NVIDIA GPU Operator and Node Feature Discovery installed.
-* **OpenShift AI Operator**: Installed via the `stable-3.x` channel.
-* **Service Mesh 3 Operator**: Installed (required for Gateway API routing).
-* **Red Hat Connectivity Link**: Kuadrant installed for auth and rate limiting.
-* **LeaderWorkerSet Operator**: Installed for llm-d (required for Mixture of Expoert (MOE) Model) inference.
-* **CLI Access**: Web Terminal Operator or Developer Spaces active, with the `oc` command accessible.
-* **Serving & Drivers**: KServe components deployed, and NVIDIA drivers loaded/tested.
+✅ Required for MaaS core functionality +
+⚠️ Required for specific features +
+⭕ Optional for enhanced capabilities
 ====
 
-**Why do we need multiple GPUs for this lab?**
-
-* The LlamaStack model powers the MaaS Dashboard and consumes 1 dedicated GPU.
-* It allows us to simulate realistic, multi-tenant model serving scenarios.
-* It enables proper demonstrations of load balancing and autoscaling.
-* It provides the capacity to deploy the NVIDIA-Nemotron-3-Nano-4B-FP8 (or 30B A3B) model.
 
 == Estimated Time & Agenda
 
@@ -85,13 +129,13 @@ Plan for approximately **3 to 4 hours** to complete the full journey.
 
 == Authors and Contributors
 
-**Primary Author**::
+**Author**::
 Karlos Knox +
 Content Services Architect
 
 * **Last Updated**: May 2026
 * **QuickCourse Version**: 3.4
-* **Based on**: Red Hat OpenShift AI 3.3+ MaaS capabilities
+* **Based on**: Red Hat OpenShift AI 3.4+ MaaS capabilities
 
 **Contact Information**:
 
@@ -99,7 +143,7 @@ Content Services Architect
 * **Content updates**: Submit GitHub issues via the https://github.com/RedHatQuickCourses/maas-gpu-enablement.git[QuickCourse repository., window=_blank].
 
 **Acknowledgments**: 
-This QuickCourse incorporates expert guidance from the Red Hat OpenShift AI business unit and product engineering architects working with enterprise AI deployments. Special thanks to **Taylor Jordan Smith** and **James Harmison**. 
+This QuickCourse incorporates expert guidance from the Red Hat OpenShift AI business unit and product engineering architects working with enterprise AI deployments. Special thanks to **Taylor Jordan Smith**, **James Harmison**, and  **Shumaila Yaseen**.
 
 == Let's Get Started!
 

@@ -197,7 +197,6 @@ Refresh your OpenShift AI browser window. The **Gen AI Studio** menu option will
 ChocoTech's underlying infrastructure is now primed for centralized governance. Proceed to the Summary and troubleshooting page to close out this module. 
 
 
-
 ////
 
 # Set SSL environment variables for outbound communication
@@ -234,81 +233,5 @@ spec:
       namespaces:
         from: All
 EOF
-
-
-
-export INFERENCE_URL=$(oc get gateway openshift-ai-inference -n openshift-ingress -o jsonpath='{.status.addresses[0].value}')
-echo "Targeting Gateway: http://$INFERENCE_URL/chocotech-models/llama-32-3b-instruct/v1"
-
-curl -k -X POST "http://$INFERENCE_URL/chocotech-models/llama-32-3b-instruct/v1/chat/completions" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "model": "llama-32-3b-instruct",
-    "messages": [
-      {"role": "system", "content": "You are a highly efficient enterprise IT Copilot."},
-      {"role": "user", "content": "Explain the concept of intelligent load balancing in 50 words."}
-    ]
-  }'
-
-
-cat > diagnose-maas.sh <<'EOF'                                                                                                                     
-  #!/bin/bash                                                                                                                                        
-  echo "=== MaaS Tenant CRD Diagnostic ==="
-  echo ""                                                                                                                                            
-                                                                                                                                                     
-  echo "1. RHOAI Version:"
-  oc get csv -n redhat-ods-applications -o json 2>/dev/null | jq -r '.items[] | select(.metadata.name | startswith("rhods-operator")) |              
-  "\(.metadata.name) - \(.spec.version)"'                                                                                                            
-  echo ""
-                                                                                                                                                     
-  echo "2. MaaS CRDs Installed:"                                                                                                                     
-  oc get crd | grep maas.opendatahub.io
-  echo ""                                                                                                                                            
-                                                            
-  echo "3. ModelsAsService Resource:"
-  oc get modelsasservice 2>/dev/null || echo "NOT FOUND"
-  echo ""                                                                                                                                            
-   
-  echo "4. MaaS Management State:"                                                                                                                   
-  oc get datasciencecluster default -n redhat-ods-applications -o jsonpath='{.spec.components.kserve.modelsAsService}' 2>/dev/null | jq
-  echo ""                                                                                                                                            
-   
-  echo "5. MaaS API Pod:"                                                                                                                            
-  oc get pods -n redhat-ods-applications -l app.kubernetes.io/name=maas-api
-  echo ""                                                                                                                                            
-   
-  echo "6. Recent MaaS API Logs (errors):"                                                                                                           
-  oc logs -n redhat-ods-applications deployment/maas-api --tail=50 2>/dev/null | grep -i "error\|fail\|tenant\|crd" | tail -10
-  echo ""                                                                                                                                            
-                                                            
-  echo "7. rhods-operator Recent Logs (MaaS related):"
-  oc logs -n redhat-ods-applications deployment/rhods-operator --tail=100 2>/dev/null | grep -i "maas\|tenant\|crd" | tail -10
-  echo ""                                                                                                                                            
-  EOF
-                                                                                                                                                     
-  chmod +x diagnose-maas.sh                                 
-  ./diagnose-maas.sh
-
-
-
-curl -X POST "https://maas.apps.apps.ocp.kpw9p.sandbox2279.opentlc.com/api/v1/apikeys" \
-  -H "Authorization: Bearer ${OC_TOKEN}" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "name": "chocotech-test-key",
-    "description": "Test API key for ChocoTech models",
-    "subscription": "chocotech-quality-control"
-  }' | jq -r '.apiKey'
-
-
-# Create an API key (permanent, no expiration)
-curl -X POST "https://maas.apps.apps.ocp.b7mnw.sandbox2788.opentlc.com/api/v1/apikeys" \
-  -H "Authorization: Bearer ${OC_TOKEN}" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "name": "chocotech-test-key",
-    "description": "Test API key for ChocoTech models",
-    "subscription": "gold-plan"
-  }' | jq -r '.apiKey'
 
 ////
