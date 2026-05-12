@@ -1,4 +1,0 @@
-* xref:index.adoc[Model Selection Strategy]
-** xref:s6-model-evaluation.adoc[Evaluating Models and Optimizing Weights]
-** xref:s6-sizing-lab.adoc[(Lab) Sizing and Parallelism Configuration]
-** xref:s6-conclusion.adoc[Conclusion and Knowledge Check]

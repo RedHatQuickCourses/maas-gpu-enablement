@@ -1,7 +1,0 @@
-= Monitor GPU Telemetry and Health
-
-Goal::
-
-Build a comprehensive observability stack for GPU infrastructure by integrating NVIDIA DCGM telemetry with OpenShift's monitoring platform and Grafana. Understand how hardware telemetry flows to the platform observability plane and learn to correlate platform, node, and accelerator metrics for effective MaaS operations.
-
-This chapter covers enabling user-workload monitoring in OpenShift, exposing GPU metrics via DCGM Exporter, deploying and configuring the Grafana Operator, and creating custom dashboards that visualize GPU health, performance, and utilization metrics alongside standard infrastructure metrics.

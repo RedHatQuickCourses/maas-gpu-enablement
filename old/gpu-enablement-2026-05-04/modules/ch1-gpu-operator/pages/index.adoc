@@ -1,9 +1,0 @@
-= Operator Foundations and GPU Stack Deployment
-
-Goal::
-
-Master the foundational operator pattern that powers enterprise AI platform automation, understand the GPU software stack architecture, and deploy the complete NVIDIA GPU Operator stack using OpenShift's Operator Lifecycle Manager.
-
-This chapter establishes the patterns required for managing GPU infrastructure at enterprise scale. You will learn why operators are the foundational building block for AI platform lifecycle management, how OpenShift's Operator Lifecycle Manager orchestrates software delivery, and gain hands-on experience deploying, troubleshooting, and managing the complete NVIDIA GPU Operator stack.
-
-
