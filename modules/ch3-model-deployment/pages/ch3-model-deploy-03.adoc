@@ -67,8 +67,8 @@ metadata:
   name: llama-3-8b
   namespace: chocotech-models
   annotations:
-    # THE BOUNCER LIST: Defines exactly which UI Tiers are allowed to access this model
-    alpha.maas.opendatahub.io/tiers: '["gold-tier", "silver-tier", "bronze-tier"]'
+    # THE BOUNCER LIST: Defines exactly which UI subscriptions are allowed to access this model
+    alpha.maas.opendatahub.io/subscriptions: '["gold-tier", "silver-tier", "bronze-tier"]'
 spec:
   # THE CATALOG PUBLISHER: Pushes this model to the Gen AI Studio UI
   publishToGenAIStudio: true
@@ -134,7 +134,7 @@ oc wait --for=condition=Ready llminferenceservice/llama-3-8b -n chocotech-models
 
 While GitOps (Infrastructure-as-Code) is the standard for Platform Engineers, OpenShift AI administrators can also deploy and publish governed models directly through the dashboard UI. 
 
-In the OpenShift AI dashboard, administrators simply navigate to the deployment wizard, select their data connection, and check the **"Publish as MaaS endpoint"** box. They can then use checkboxes to restrict the model to specific tiers.
+In the OpenShift AI dashboard, administrators simply navigate to the deployment wizard, select their data connection, and check the **"Publish as MaaS endpoint"** box. They can then use checkboxes to restrict the model to specific subscriptions.
 
 .📺 Video Walkthrough: UI Model Deployment
 [%collapsible]

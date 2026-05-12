@@ -7,3 +7,41 @@
 ** xref:ch1-maas-arch-05.adoc[1.4: Summary & troubleshooting]
 * xref:maas-lab.adoc[TEMP- Deploy MaaS End-to-End]
 * xref:maas-troubleshooting-routing.adoc[TEMP -TROUBLESHOOTING: Gateway Routing Issues]
+
+
+Subject: Implementation of Client-Side Progress Tracking for Antora/GitHub Pages.
+
+Goal: I am building a "Visual Progress" feature for an Antora course hosted on GitHub Pages. The goal is to show checkmarks in the navigation sidebar for pages a user has visited.
+
+Architecture Requirements:
+
+Environment: Static HTML (Serverless), hosted on GitHub Pages.
+
+State Management: Must use browser localStorage to store a JSON array of visited window.location.pathname strings.
+
+UI Integration: Use Antora's Handlebars (nav.hbs) templates to inject unique identifiers (like data-path) into navigation links.
+
+Logic: A vanilla JavaScript "hydration" script that runs on DOMContentLoaded, updates the localStorage array with the current page, and toggles visibility for checkmark spans in the sidebar.
+
+Task for this session: [Context: I want to implement a client-side "Visual Progress" feature for this Antora-based course. We host on GitHub Pages.
+
+evalute the following to determine if this is the optional way to perform the tasks, then implement the logic. 
+Task: > 1. Identify Template: Locate the Handlebars template responsible for rendering the navigation sidebar (likely src/partials/nav-tree.hbs or nav-explore.hbs).
+2. Modify Links: Add a data-path="{{{./url}}}" attribute to the <a> tags. Inside the tag, add a <span> with a class nav-progress-mark (hidden by default) to hold a checkmark icon.
+3. Create Logic: Create a new JavaScript file src/js/03-progress-tracker.js. This script must:
+
+Check localStorage for a visited_pages array.
+
+Add the current window.location.pathname to that array on page load.
+
+Scan the navigation menu and display the nav-progress-mark span for any link whose data-path matches an entry in the array.
+
+Documentation: Create a maintenance.adoc file in the root. Document:
+
+How the feature works (localStorage + Handlebars).
+
+How to change the "Completion" icon.
+
+How to clear the progress for testing purposes.
+
+Constraint: Ensure the JS handles URL normalization (e.g., matching paths regardless of trailing slashes) so checkmarks appear reliably.].

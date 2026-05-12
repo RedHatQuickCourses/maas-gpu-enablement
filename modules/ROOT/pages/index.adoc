@@ -110,10 +110,10 @@ MaaS requires the following operators and infrastructure components:
 Plan for approximately **3 to 4 hours** to complete the full journey. 
 
 . **MaaS Architecture** (30 mins)
-. **MaaS Configuration** (40 mins)
-. **Model Deployment to the MaaS Catalog** (55 mins)
-. **MaaS Governance, Observability, and Chargeback** (50 mins)
-. **API Integration and Consumer Experience** (40 mins)
+. **MaaS Access Control & Governance** (40 mins)
+. **Model Deployment** (55 mins)
+. (coming soon)**MaaS Governance, Observability, and Chargeback** (50 mins)
+. (coming soon)**API Integration and Consumer Experience** (40 mins)
 
 [TIP]
 ====

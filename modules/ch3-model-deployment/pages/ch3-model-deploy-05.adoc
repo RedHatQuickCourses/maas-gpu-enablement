@@ -6,7 +6,7 @@ This exercise shows how easily you can expand the model catalog as new business 
 
 == Exercise 1: The restricted deployment manifest
 
-We will deploy the `nvidia/nemotron-4-8b-instruct` model. Unlike our general-purpose Llama-3 deployment, this model is restricted to bronze and silver tiers, demonstrating selective access control. 
+We will deploy the `nvidia/nemotron-4-8b-instruct` model. Unlike our general-purpose Llama-3 deployment, this model is restricted to bronze and silver subscriptions, demonstrating selective access control. 
 
 To maintain our secure GitOps and Vault strategy, we will assume the weights have been staged in our local MinIO vault (`s3://models/nemotron`). We will use the exact same `llm-d` routing structure as before, but we will alter the "Bouncer List" annotation.
 
@@ -22,7 +22,7 @@ metadata:
   namespace: chocotech-models
   annotations:
     # THE BOUNCER LIST: Explicitly omitting 'gold-tier'
-    alpha.maas.opendatahub.io/tiers: '["silver-tier", "bronze-tier"]'
+    alpha.maas.opendatahub.io/subscriptions: '["silver-tier", "bronze-tier"]'
 spec:
   publishToGenAIStudio: true
   model:
@@ -117,6 +117,6 @@ curl -s http://$GATEWAY_HOST/v1/models | jq
 **3. The UI Payoff**
 Refresh the Gen AI Studio Models tab in the dashboard. You should now see both models listed with their respective tier access controls. 
 
-Verify the restrictions: Models show different tier access (Llama-3: all tiers, Nemotron: bronze/silver only). 
+Verify the restrictions: Models show different tier access (Llama-3: all subscriptions, Nemotron: bronze/silver only). 
 
 ChocoTech now operates a fully governed, multi-model AI factory. Quality Control relies on the universally available Llama-3, while Marketing and R&D can utilize the Nemotron model without risking exposure to the Gold tier production workloads.

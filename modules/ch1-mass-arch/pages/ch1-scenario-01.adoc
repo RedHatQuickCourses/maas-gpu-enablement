@@ -44,7 +44,7 @@ If your MaaS implementation succeeds, here is the impact you will deliver to Cho
 **Immediate Improvements (Short-Term)**
 
 * **Eliminated Redundancy**: A single Llama-3 8B deployment serves all four teams, resulting in a 75% reduction in storage and compute waste.
-* **Fair Resource Allocation**: Tier-based quotas prevent Quality Control from monopolizing GPUs while R&D waits, ensuring balanced access.
+* **Fair Resource Allocation**: Subscription-based quotas prevent Quality Control from monopolizing GPUs while R&D waits, ensuring balanced access.
 * **Complete Audit Trail**: Every API request is logged with user identity, the model accessed, and tokens consumed to satisfy compliance requirements.
 * **Simplified Developer Experience**: The Marketing team can integrate models via an OpenAI-compatible API in hours instead of weeks.
 

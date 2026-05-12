@@ -45,11 +45,17 @@ Create the namespace and Kuadrant instance:
 oc create namespace kuadrant-system
 
 cat <<EOF | oc apply -f -
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: kuadrant-system
+---
 apiVersion: kuadrant.io/v1beta1
 kind: Kuadrant
 metadata:
   name: kuadrant
   namespace: kuadrant-system
+spec: {}
 EOF
 ----
 
