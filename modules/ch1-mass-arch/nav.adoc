@@ -5,5 +5,5 @@
 ** xref:ch1-maas-arch-03.adoc[1.2: MaaS architecture stack]
 ** xref:ch1-maas-arch-04.adoc[1.3: Enabling MaaS on RHOAI]
 ** xref:ch1-maas-arch-05.adoc[1.4: Summary & troubleshooting]
-* xref:maas-lab.adoc[LAB: Deploy MaaS End-to-End]
-* xref:maas-troubleshooting-routing.adoc[TROUBLESHOOTING: Gateway Routing Issues]
+* xref:maas-lab.adoc[TEMP- Deploy MaaS End-to-End]
+* xref:maas-troubleshooting-routing.adoc[TEMP -TROUBLESHOOTING: Gateway Routing Issues]
