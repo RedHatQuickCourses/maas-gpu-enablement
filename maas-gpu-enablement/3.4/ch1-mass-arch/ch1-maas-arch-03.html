@@ -236,7 +236,7 @@
 <p><strong>Authorino:</strong> Validates tokens and enforces zero-trust authentication.</p>
 </li>
 <li>
-<p><strong>Limitador:</strong> Tracks token consumption and enforces tier-based rate limits.</p>
+<p><strong>Limitador:</strong> Tracks token consumption and enforces subscription-based token limits.</p>
 </li>
 </ul>
 </div></div></td>
@@ -285,7 +285,7 @@
 <div class="olist arabic">
 <ol class="arabic">
 <li>
-<p><strong>The Request Arrives (Gateway API):</strong> The Marketing application sends a POST request to <code>/v1/chat/completions</code> containing their Bearer token and the prompt data. The Gateway API catches this at the network edge.</p>
+<p><strong>The Request Arrives (Gateway API):</strong> The Marketing application sends a POST request to `/v1/chat/completions containing their MaaS API key (passed as a Bearer token) and the prompt data.. The Gateway API catches this at the network edge.</p>
 </li>
 <li>
 <p><strong>Identity Verification (Kuadrant - Authorino):</strong> The Gateway pauses the request and asks Authorino, "Is this token valid, and what subscription level does this user have?" Authorino confirms the user is in the "Bronze" subscription group. Next it checks the Authorization policy which (TobeAdded)
