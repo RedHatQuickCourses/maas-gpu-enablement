@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>2.1: Understanding subscription-based governance :: Models as a Service Breaking the GPU Silos on OpenShift AI 3.4</title>
+    <link rel="prev" href="ch2-platform-admin-01.html">
+    <link rel="next" href="ch2-platform-admin-03.html">
+    <meta name="generator" content="Antora 3.1.3">
+    <link rel="stylesheet" href="../../../_/css/site.css">
+    <script>var uiRootPath = '../../../_'</script>
+  </head>
+  <body class="article">
+<header class="header">
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="https://www.redhat.com" target="_blank"><img src="../../../_/img/redhat-logo.png" height="40px" alt="Red Hat"></a>
+      <a class="navbar-item" style="font-size: 24px; color: white" href="../../..">Models as a Service Breaking the GPU Silos on OpenShift AI 3.4</a>
+      <button class="navbar-burger" data-target="topbar-nav">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+    <div id="topbar-nav" class="navbar-menu">
+      <div class="navbar-end">
+        <a class="navbar-item" href="https://github.com/RedHatQuickCourses/REPLACEREPONAME/issues" target="_blank">Report Issues</a>
+      </div>
+    </div>
+  </nav>
+</header>
+<div class="body">
+<div class="nav-container" data-component="maas-gpu-enablement" data-version="3.4">
+  <aside class="nav">
+    <div class="panels">
+<div class="nav-panel-menu is-active" data-panel="menu">
+  <nav class="nav-menu">
+    <h3 class="title"><a href="../index.html">Models as a Service Breaking the GPU Silos on OpenShift AI 3.4</a></h3>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../index.html">Models-as-a-Service Introduction</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../ch1-mass-arch/ch1-scenario-01.html">Course Scenario - ChocoTech</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../ch1-mass-arch/ch1-maas-arch-01.html">1: MaaS architecture</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch1-mass-arch/ch1-maas-arch-02.html">1.1: GPU silo crisis</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch1-mass-arch/ch1-maas-arch-03.html">1.2: MaaS architecture stack</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch1-mass-arch/ch1-maas-arch-04.html">1.3: Enabling MaaS on RHOAI</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch1-mass-arch/ch1-maas-arch-05.html">1.4: Summary &amp; troubleshooting</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../ch1-mass-arch/maas-lab.html">LAB: Deploy MaaS End-to-End</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../ch1-mass-arch/maas-troubleshooting-routing.html">TROUBLESHOOTING: Gateway Routing Issues</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="ch2-platform-admin-01.html">2: Access Control &amp; Governance</a>
+<ul class="nav-list">
+  <li class="nav-item is-current-page" data-depth="2">
+    <a class="nav-link" href="ch2-platform-admin-02.html">2.1: Subscription-based governance</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="ch2-platform-admin-03.html">2.2: Creating OpenShift groups</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="ch2-platform-admin-04.html">2.3: Subscriptions and quotas</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="ch2-platform-admin-05.html">2.4: Authorizing Gateway Access (MaaSAuthPolicy)</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="ch2-platform-admin-06.html">2.5: Generating API Keys</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="ch2-platform-admin-summary.html">2.6: Summary and troubleshooting</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../ch3-model-deployment/ch3-model-deploy-01.html">3. Model Deployment</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch3-model-deployment/ch3-model-deploy-02.html">3.1: Model Selection Strategy</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch3-model-deployment/ch3-model-deploy-03.html">3.2: Lab - Deploying with Serving Runtimes</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch3-model-deployment/ch3-model-deploy-04.html">3.3: Lab - Distributed Inference Configuration</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch3-model-deployment/ch3-model-deploy-05.html">3.4: Lab - Publishing to MaaS Catalog</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch3-model-deployment/ch3-model-deploy-06.html">3.5: Lifecycle Management with GitOps</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch3-model-deployment/ch3-model-deploy-summary.html">3.6: Summary and troubleshooting</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+</ul>
+  </nav>
+</div>
+<div class="nav-panel-explore" data-panel="explore">
+  <div class="context">
+    <span class="title">Models as a Service Breaking the GPU Silos on OpenShift AI 3.4</span>
+    <span class="version">3.4</span>
+  </div>
+  <ul class="components">
+    <li class="component is-current">
+      <a class="title" href="../index.html">Models as a Service Breaking the GPU Silos on OpenShift AI 3.4</a>
+      <ul class="versions">
+        <li class="version is-current is-latest">
+          <a href="../index.html">3.4</a>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</div>
+    </div>
+  </aside>
+</div>
+<main class="article">
+<div class="toolbar" role="navigation">
+<button class="nav-toggle"></button>
+<nav class="breadcrumbs" aria-label="breadcrumbs">
+  <ul>
+    <li><a href="../index.html">Models as a Service Breaking the GPU Silos on OpenShift AI 3.4</a></li>
+    <li><a href="ch2-platform-admin-01.html">2: Access Control &amp; Governance</a></li>
+    <li><a href="ch2-platform-admin-02.html">2.1: Subscription-based governance</a></li>
+  </ul>
+</nav>
+</div>
+  <div class="content">
+<aside class="toc sidebar" data-title="Contents" data-levels="2">
+  <div class="toc-menu"></div>
+</aside>
+<article class="doc">
+<h1 class="page">2.1: Understanding subscription-based governance</h1>
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>Before we configure OpenShift groups or write any YAML, we must define the core mechanism that makes OpenShift AI 3.4 governance possible: <strong>Subscriptions</strong>.</p>
+</div>
+<div class="paragraph">
+<p>In a traditional, decentralized AI setup, any user with access to an API endpoint can theoretically send massive, computationally expensive prompts to an LLM. This leads to immediate resource exhaustion and makes cross-departmental chargebacks impossible.</p>
+</div>
+<div class="paragraph">
+<p>Models as a Service solves this by placing a strict, subscription-based governance layer between the user and the underlying KServe infrastructure.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_what_is_a_subscription"><a class="anchor" href="#_what_is_a_subscription"></a>What is a Subscription?</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>A subscription is a logical boundary that controls which AI models a user can access, how much compute they can consume, and how their usage is tracked.</p>
+</div>
+<div class="paragraph">
+<p>When multiple business units share expensive large language models, MaaS subscriptions serve four critical enterprise functions:</p>
+</div>
+<table class="tableblock frame-all grid-rows stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 66.6667%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">The Strategic Capability</th>
+<th class="tableblock halign-left valign-top">The Enterprise Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><strong>Preventing Resource Exhaustion</strong></p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>Generative AI compute costs are directly correlated to sequence length. Subscriptions enforce token limits, mathematically preventing a single team&#8217;s runaway script from overwhelming the cluster.</p>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><strong>Differential Service Levels</strong></p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>Subscriptions allow you to prioritize mission-critical workloads. The system evaluates a user&#8217;s subscription priority level when handling simultaneous requests.</p>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><strong>Granular Cost Tracking</strong></p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>Finance teams can track exact consumption metrics (prompt and completion tokens) based on subscription assignments, enabling highly accurate departmental billing.</p>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><strong>Native API Key Authentication</strong></p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>Subscriptions eliminate the need for complex, manual Kubernetes ServiceAccounts. Developers can generate secure, revocable API keys directly through the Gen AI Studio UI.</p>
+</div></div></td>
+</tr>
+</tbody>
+</table>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+MaaS assigns users to subscriptions based on their OpenShift group membership. When a user
+belongs to multiple groups with different subscriptions, the system uses the subscription with the
+highest priority level.
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_the_two_part_access_rule"><a class="anchor" href="#_the_two_part_access_rule"></a>The Two-Part Access Rule</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>In OpenShift AI 3.4, granting a team access to the AI platform requires exactly two custom resources working together. Think of it like joining a gym:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>The <code>MaaSSubscription</code> (The Membership Contract):</strong> This defines the terms. It states that the "Marketing Group" belongs to the "Bronze Plan," which grants them access to the <code>nemotron-8b</code> model with a limit of 1,000 tokens per minute.</p>
+</li>
+<li>
+<p><strong>The <code>MaaSAuthPolicy</code> (The Keycard Reader):</strong> This is the physical enforcement mechanism. It attaches to the OpenShift API Gateway and says, "If someone presents a valid API key belonging to the Marketing Group, let them through the door."</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p><strong>If you deploy a Subscription without an Auth Policy, the user&#8217;s API key will be rejected at the network edge with a <code>403 Forbidden</code> error.</strong></p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_the_chocotech_governance_strategy"><a class="anchor" href="#_the_chocotech_governance_strategy"></a>The ChocoTech Governance Strategy</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>To solve ChocoTech&#8217;s GPU Silo Crisis, the CIO has mandated a custom subscription mapping tailored to the company&#8217;s business units.</p>
+</div>
+<div class="paragraph">
+<p>In the upcoming sections, you will build the following structure using <code>MaaSSubscription</code> resources:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Gold Plan:</strong> Mapped to the <code>chocotech-quality-control</code> group. This subscription will have the highest priority and massive token limits to ensure the factory floor&#8217;s defect detection models never experience throttling.</p>
+</li>
+<li>
+<p><strong>Silver Plan:</strong> Mapped to the <code>chocotech-rd</code> group. This subscription will have moderate token limits for recipe optimization testing.</p>
+</li>
+<li>
+<p><strong>Bronze Plan:</strong> Mapped to the <code>chocotech-marketing</code> group. This subscription will have strict token limits to prevent their exploratory sentiment analysis from wasting expensive GPU cycles.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Now that you understand the strategy and enforcement mechanics, proceed to the next section to begin building these OpenShift groups in the cluster.</p>
+</div>
+</div>
+</div>
+<nav class="pagination">
+  <span class="prev"><a href="ch2-platform-admin-01.html">2: Access Control &amp; Governance</a></span>
+  <span class="next"><a href="ch2-platform-admin-03.html">2.2: Creating OpenShift groups</a></span>
+</nav>
+</article>
+  </div>
+</main>
+</div>
+<footer class="footer">
+  <img src="../../../_/img/rhl-logo-red.png" height="40px" alt="Red Hat"  href="https://redhat.com" >
+</footer><script id="site-script" src="../../../_/js/site.js" data-ui-root-path="../../../_"></script>
+<script async src="../../../_/js/vendor/highlight.js"></script>
+  </body>
+</html>

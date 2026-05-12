@@ -1,0 +1,2719 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Hands-On Lab: Deploy and Configure Models-as-a-Service :: Models as a Service Breaking the GPU Silos on OpenShift AI 3.4</title>
+    <link rel="prev" href="ch1-maas-arch-05.html">
+    <link rel="next" href="maas-troubleshooting-routing.html">
+    <meta name="generator" content="Antora 3.1.3">
+    <link rel="stylesheet" href="../../../_/css/site.css">
+    <script>var uiRootPath = '../../../_'</script>
+  </head>
+  <body class="article">
+<header class="header">
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="https://www.redhat.com" target="_blank"><img src="../../../_/img/redhat-logo.png" height="40px" alt="Red Hat"></a>
+      <a class="navbar-item" style="font-size: 24px; color: white" href="../../..">Models as a Service Breaking the GPU Silos on OpenShift AI 3.4</a>
+      <button class="navbar-burger" data-target="topbar-nav">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+    <div id="topbar-nav" class="navbar-menu">
+      <div class="navbar-end">
+        <a class="navbar-item" href="https://github.com/RedHatQuickCourses/REPLACEREPONAME/issues" target="_blank">Report Issues</a>
+      </div>
+    </div>
+  </nav>
+</header>
+<div class="body">
+<div class="nav-container" data-component="maas-gpu-enablement" data-version="3.4">
+  <aside class="nav">
+    <div class="panels">
+<div class="nav-panel-menu is-active" data-panel="menu">
+  <nav class="nav-menu">
+    <h3 class="title"><a href="../index.html">Models as a Service Breaking the GPU Silos on OpenShift AI 3.4</a></h3>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../index.html">Models-as-a-Service Introduction</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="ch1-scenario-01.html">Course Scenario - ChocoTech</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="ch1-maas-arch-01.html">1: MaaS architecture</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="ch1-maas-arch-02.html">1.1: GPU silo crisis</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="ch1-maas-arch-03.html">1.2: MaaS architecture stack</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="ch1-maas-arch-04.html">1.3: Enabling MaaS on RHOAI</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="ch1-maas-arch-05.html">1.4: Summary &amp; troubleshooting</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item is-current-page" data-depth="1">
+    <a class="nav-link" href="maas-lab.html">LAB: Deploy MaaS End-to-End</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="maas-troubleshooting-routing.html">TROUBLESHOOTING: Gateway Routing Issues</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-01.html">2: Access Control &amp; Governance</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-02.html">2.1: Subscription-based governance</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-03.html">2.2: Creating OpenShift groups</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-04.html">2.3: Subscriptions and quotas</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-05.html">2.4: Authorizing Gateway Access (MaaSAuthPolicy)</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-06.html">2.5: Generating API Keys</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-summary.html">2.6: Summary and troubleshooting</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../ch3-model-deployment/ch3-model-deploy-01.html">3. Model Deployment</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch3-model-deployment/ch3-model-deploy-02.html">3.1: Model Selection Strategy</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch3-model-deployment/ch3-model-deploy-03.html">3.2: Lab - Deploying with Serving Runtimes</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch3-model-deployment/ch3-model-deploy-04.html">3.3: Lab - Distributed Inference Configuration</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch3-model-deployment/ch3-model-deploy-05.html">3.4: Lab - Publishing to MaaS Catalog</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch3-model-deployment/ch3-model-deploy-06.html">3.5: Lifecycle Management with GitOps</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch3-model-deployment/ch3-model-deploy-summary.html">3.6: Summary and troubleshooting</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+</ul>
+  </nav>
+</div>
+<div class="nav-panel-explore" data-panel="explore">
+  <div class="context">
+    <span class="title">Models as a Service Breaking the GPU Silos on OpenShift AI 3.4</span>
+    <span class="version">3.4</span>
+  </div>
+  <ul class="components">
+    <li class="component is-current">
+      <a class="title" href="../index.html">Models as a Service Breaking the GPU Silos on OpenShift AI 3.4</a>
+      <ul class="versions">
+        <li class="version is-current is-latest">
+          <a href="../index.html">3.4</a>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</div>
+    </div>
+  </aside>
+</div>
+<main class="article">
+<div class="toolbar" role="navigation">
+<button class="nav-toggle"></button>
+<nav class="breadcrumbs" aria-label="breadcrumbs">
+  <ul>
+    <li><a href="../index.html">Models as a Service Breaking the GPU Silos on OpenShift AI 3.4</a></li>
+    <li><a href="maas-lab.html">LAB: Deploy MaaS End-to-End</a></li>
+  </ul>
+</nav>
+</div>
+  <div class="content">
+<aside class="toc sidebar" data-title="Contents" data-levels="2">
+  <div class="toc-menu"></div>
+</aside>
+<article class="doc">
+<h1 class="page">Hands-On Lab: Deploy and Configure Models-as-a-Service</h1>
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p><em>Estimated completion time: <strong>45 minutes</strong>.</em></p>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1">Objective</dt>
+<dd>
+<p>In this hands-on lab, you will deploy and configure the complete Models-as-a-Service (MaaS) platform for ChocoTech Industries. You will enable the MaaS backend component, configure TLS for secure authentication, create organizational groups, publish models to the MaaS gateway, establish subscription-based governance with token limits, configure authorization policies, and generate API keys for secure model access. By the end of this lab, you will have a production-ready MaaS platform that enforces the Gold, Silver, and Bronze subscription plans required by ChocoTech&#8217;s CIO.</p>
+</dd>
+</dl>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_lab_scenario"><a class="anchor" href="#_lab_scenario"></a>Lab Scenario</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Recall ChocoTech&#8217;s business requirements from the CIO:</p>
+</div>
+<table class="tableblock frame-all grid-rows stretch">
+<colgroup>
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Business Unit</th>
+<th class="tableblock halign-left valign-top">Subscription Plan</th>
+<th class="tableblock halign-left valign-top">Infrastructure Requirement</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><strong>Quality Control</strong></p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>Gold Plan</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>Production-grade access with guaranteed availability and highest token limits for real-time defect detection.</p>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><strong>R&amp;D</strong></p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>Silver Plan</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>Development access with moderate token limits for recipe optimization testing.</p>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><strong>Marketing</strong></p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>Bronze Plan</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>Exploratory access with strict token limits for sentiment analysis to prevent budget overruns.</p>
+</div></div></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>Your mission: Build the governance infrastructure to deliver these three distinct service levels using MaaS subscriptions, authorization policies, and API key authentication.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_part_1_verify_prerequisites_and_environment"><a class="anchor" href="#_part_1_verify_prerequisites_and_environment"></a>Part 1: Verify Prerequisites and Environment</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Before deploying MaaS, verify that your cluster meets all platform and operator requirements.</p>
+</div>
+<div class="sect2">
+<h3 id="_required_operators_and_components"><a class="anchor" href="#_required_operators_and_components"></a>Required Operators and Components</h3>
+<div class="paragraph">
+<p>MaaS requires the following operators and infrastructure components:</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 16.6666%;">
+<col style="width: 33.3333%;">
+<col style="width: 16.6668%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Component</th>
+<th class="tableblock halign-left valign-top">Version</th>
+<th class="tableblock halign-left valign-top">Installation Namespace</th>
+<th class="tableblock halign-left valign-top">Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Red Hat OpenShift</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">4.19.9+</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">N/A (Platform)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✅ Required</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Red Hat OpenShift AI Operator</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">3.4+</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>redhat-ods-applications</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✅ Required</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Red Hat Connectivity Link Operator</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1.2+</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>openshift-operators</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✅ Required</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Llama Stack Operator</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">3.4+</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>redhat-ods-applications</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">⚠️ Required for dashboard UI</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>User Workload Monitoring</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">N/A</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>openshift-monitoring</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✅ Required</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>PostgreSQL Database</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">N/A</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>redhat-ods-applications</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✅ Required</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Gateway API</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Built-in</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>openshift-ingress</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✅ Required</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Cluster Observability Operator</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Latest</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>openshift-operators</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">⭕ Optional (Tech Preview)</p></td>
+</tr>
+</tbody>
+</table>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p><strong>Legend:</strong>
+✅ Required for MaaS core functionality
+⚠️ Required for specific features
+⭕ Optional for enhanced capabilities</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_step_1_verify_openshift_platform_version"><a class="anchor" href="#_step_1_verify_openshift_platform_version"></a>Step 1: Verify OpenShift Platform Version</h3>
+<div class="paragraph">
+<p>MaaS requires OpenShift 4.19.9 or later for Gateway API support.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc version</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Expected output:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-text hljs" data-lang="text">Client Version: 4.19.9
+Server Version: 4.19.9
+Kubernetes Version: v1.32.0+4fc5e18</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Verify the server version is 4.19.9 or higher:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc version -o json | jq -r '.openshiftVersion'</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Expected output:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-text hljs" data-lang="text">4.19.9</code></pre>
+</div>
+</div>
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-warning" title="Warning"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>If your OpenShift version is below 4.19.9, upgrade your cluster before proceeding. Earlier versions lack the required Gateway API CRDs that MaaS depends on for API gateway functionality.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_step_2_verify_red_hat_openshift_ai_operator"><a class="anchor" href="#_step_2_verify_red_hat_openshift_ai_operator"></a>Step 2: Verify Red Hat OpenShift AI Operator</h3>
+<div class="paragraph">
+<p>Confirm that OpenShift AI 3.4 or later is installed.</p>
+</div>
+<div class="paragraph">
+<p><strong>Check operator installation:</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get csv -n redhat-ods-applications | grep rhods</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Expected output:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-text hljs" data-lang="text">rhods-operator.v3.4.0   Red Hat OpenShift AI   3.4.0   Succeeded</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Verify the operator version is 3.4.0 or higher:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get csv -n redhat-ods-applications -o json | \
+  jq -r '.items[] | select(.metadata.name | startswith("rhods-operator")) | .spec.version'</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Expected output: <code>3.4.0</code> or higher</p>
+</div>
+<div class="paragraph">
+<p><strong>Check DataScienceCluster resource:</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get datasciencecluster -A</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Expected output:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-text hljs" data-lang="text">NAME          READY   REASON
+default-dsc   True</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>Troubleshooting:</strong></p>
+</div>
+<div class="paragraph">
+<p>If the OpenShift AI operator is not installed:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Open the OpenShift Console → <strong>Operators → OperatorHub</strong></p>
+</li>
+<li>
+<p>Search for <strong>"Red Hat OpenShift AI"</strong></p>
+</li>
+<li>
+<p>Click <strong>Install</strong></p>
+</li>
+<li>
+<p>Select <strong>fast</strong> update channel</p>
+</li>
+<li>
+<p>Select <strong>redhat-ods-applications</strong> namespace</p>
+</li>
+<li>
+<p>Click <strong>Install</strong> and wait 3-5 minutes</p>
+</li>
+</ol>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_step_3_verify_red_hat_connectivity_link_operator"><a class="anchor" href="#_step_3_verify_red_hat_connectivity_link_operator"></a>Step 3: Verify Red Hat Connectivity Link Operator</h3>
+<div class="paragraph">
+<p>MaaS requires Red Hat Connectivity Link v1.2 or later for Kuadrant (Authorino, Limitador, and Gateway API integration).</p>
+</div>
+<div class="paragraph">
+<p><strong>Check operator installation:</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get csv -n openshift-operators | grep connectivity-link</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Expected output:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-text hljs" data-lang="text">connectivity-link.v1.2.0   Red Hat Connectivity Link   1.2.0   Succeeded</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Verify the operator version is 1.2.0 or higher:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get csv -n openshift-operators -o json | \
+  jq -r '.items[] | select(.metadata.name | startswith("connectivity-link")) | .spec.version'</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Expected output: <code>1.2.0</code> or higher</p>
+</div>
+<div class="paragraph">
+<p><strong>Check Kuadrant resource:</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get kuadrant -n kuadrant-system</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Expected output:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-text hljs" data-lang="text">NAME       STATUS   AGE
+kuadrant   Ready    2d</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Verify Kuadrant status is <code>Ready</code>:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get kuadrant kuadrant -n kuadrant-system -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}'</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Expected output: <code>True</code></p>
+</div>
+<div class="paragraph">
+<p><strong>Verify Kuadrant components are running:</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get pods -n kuadrant-system</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Expected output (all pods Running):</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-text hljs" data-lang="text">NAME                                                  READY   STATUS    AGE
+authorino-7d8c9f6b5c-x9k2m                           1/1     Running   2d
+authorino-operator-5f9d8c7b6d-p4j8l                  1/1     Running   2d
+kuadrant-operator-controller-manager-6c8d9f5-h7m3n   1/1     Running   2d
+limitador-6f8d9c7b6d-q5k8m                           1/1     Running   2d</code></pre>
+</div>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p><strong>If Kuadrant shows a non-Ready status:</strong></p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Check the Kuadrant operator logs:</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc logs -n kuadrant-system deployment/kuadrant-operator-controller-manager --tail=100</code></pre>
+</div>
+</div>
+</li>
+<li>
+<p>Check for missing CRDs:</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get crd | grep kuadrant.io</code></pre>
+</div>
+</div>
+</li>
+<li>
+<p>Restart the operator:</p>
+<div class="ulist">
+<ul>
+<li>
+<p>OpenShift Console → <strong>Operators → Installed Operators</strong></p>
+</li>
+<li>
+<p>Select <code>kuadrant-system</code> namespace</p>
+</li>
+<li>
+<p>Click <strong>Red Hat Connectivity Link</strong></p>
+</li>
+<li>
+<p><strong>Actions → Restart</strong></p>
+</li>
+</ul>
+</div>
+</li>
+</ol>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p><strong>Troubleshooting:</strong></p>
+</div>
+<div class="paragraph">
+<p>If Red Hat Connectivity Link is not installed:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Open the OpenShift Console → <strong>Operators → OperatorHub</strong></p>
+</li>
+<li>
+<p>Search for <strong>"Red Hat Connectivity Link"</strong></p>
+</li>
+<li>
+<p>Click <strong>Install</strong></p>
+</li>
+<li>
+<p>Select <strong>stable</strong> update channel</p>
+</li>
+<li>
+<p>Select <strong>All namespaces</strong> installation mode (installs to <code>openshift-operators</code>)</p>
+</li>
+<li>
+<p>Click <strong>Install</strong></p>
+</li>
+<li>
+<p>Wait ~2 minutes for operator to install</p>
+</li>
+<li>
+<p>Create Kuadrant resource:</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">cat &lt;&lt;EOF | oc apply -f -
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: kuadrant-system
+---
+apiVersion: kuadrant.io/v1beta1
+kind: Kuadrant
+metadata:
+  name: kuadrant
+  namespace: kuadrant-system
+spec: {}
+EOF</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Wait ~3 minutes for Kuadrant components to deploy.</p>
+</div>
+</li>
+</ol>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_step_4_verify_llama_stack_operator"><a class="anchor" href="#_step_4_verify_llama_stack_operator"></a>Step 4: Verify Llama Stack Operator</h3>
+<div class="paragraph">
+<p>The Llama Stack Operator is required for MaaS dashboard features including Gen AI Studio, API Keys page, and Playground.</p>
+</div>
+<div class="paragraph">
+<p><strong>Check operator enablement in DataScienceCluster:</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get datasciencecluster default -n redhat-ods-applications -o jsonpath='{.spec.components.llamastackoperator.managementState}'</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Expected output: <code>Managed</code></p>
+</div>
+<div class="paragraph">
+<p><strong>Verify Llama Stack Operator pods:</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get pods -n redhat-ods-applications -l app.kubernetes.io/name=llama-stack-operator</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Expected output:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-text hljs" data-lang="text">NAME                                      READY   STATUS    AGE
+llama-stack-operator-5d8c9f6b5c-x4j2m     1/1     Running   2d</code></pre>
+</div>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p><strong>If Llama Stack Operator is not enabled</strong>, you will not be able to access:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Gen AI Studio</strong> menu in the dashboard</p>
+</li>
+<li>
+<p><strong>API Keys</strong> management page</p>
+</li>
+<li>
+<p><strong>AI Asset Endpoints</strong> page</p>
+</li>
+<li>
+<p><strong>Playground</strong> for model testing</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Enable the operator:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc patch datasciencecluster default -n redhat-ods-applications \
+  --type merge \
+  -p '{"spec":{"components":{"llamastackoperator":{"managementState":"Managed"}}}}'</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Wait ~60 seconds for the operator pod to start.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_step_5_verify_user_workload_monitoring"><a class="anchor" href="#_step_5_verify_user_workload_monitoring"></a>Step 5: Verify User Workload Monitoring</h3>
+<div class="paragraph">
+<p>User Workload Monitoring is <strong>critical</strong> for MaaS. Without it, the Tenant resource will show <code>Degraded</code> status and MaaS metrics will not be collected.</p>
+</div>
+<div class="paragraph">
+<p><strong>Check if User Workload Monitoring is enabled:</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get configmap cluster-monitoring-config -n openshift-monitoring -o jsonpath='{.data.config\.yaml}' | grep enableUserWorkload</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Expected output:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">enableUserWorkload: true</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>Verify User Workload Monitoring pods are running:</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get pods -n openshift-user-workload-monitoring</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Expected output (pods Running):</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-text hljs" data-lang="text">NAME                                   READY   STATUS    AGE
+prometheus-operator-5f8d9c7b6d-q5k8m   2/2     Running   5d
+prometheus-user-workload-0             6/6     Running   5d
+prometheus-user-workload-1             6/6     Running   5d
+thanos-ruler-user-workload-0           4/4     Running   5d
+thanos-ruler-user-workload-1           4/4     Running   5d</code></pre>
+</div>
+</div>
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-warning" title="Warning"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p><strong>If User Workload Monitoring is not enabled</strong>, the MaaS Tenant will show <code>Degraded</code> status with the error:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">User Workload Monitoring is not enabled</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>Enable User Workload Monitoring:</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">cat &lt;&lt;EOF | oc apply -f -
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cluster-monitoring-config
+  namespace: openshift-monitoring
+data:
+  config.yaml: |
+    enableUserWorkload: true
+EOF</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Wait 2-3 minutes for the <code>openshift-user-workload-monitoring</code> namespace to be created and pods to start.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_step_6_verify_postgresql_database_secret"><a class="anchor" href="#_step_6_verify_postgresql_database_secret"></a>Step 6: Verify PostgreSQL Database Secret</h3>
+<div class="paragraph">
+<p>MaaS requires a PostgreSQL database for API key storage and subscription metadata.</p>
+</div>
+<div class="paragraph">
+<p><strong>Check for database secret:</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get secret maas-db-config -n redhat-ods-applications</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Expected output:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-text hljs" data-lang="text">NAME             TYPE     DATA   AGE
+maas-db-config   Opaque   1      5d</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>Verify secret contains database connection string:</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get secret maas-db-config -n redhat-ods-applications -o jsonpath='{.data.connection-string}' | base64 -d | cut -c1-20</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Expected output (first 20 characters):</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-text hljs" data-lang="text">postgresql://maas_us</code></pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>The database secret should contain a connection string in the format:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-text hljs" data-lang="text">postgresql://&lt;username&gt;:&lt;password&gt;@&lt;host&gt;:&lt;port&gt;/&lt;database&gt;?sslmode=require</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Your cluster administrator has provisioned this PostgreSQL database during the initial OpenShift AI setup. The database stores:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>API keys and their metadata (owner, subscription, expiration)</p>
+</li>
+<li>
+<p>Subscription configurations</p>
+</li>
+<li>
+<p>Token consumption metrics (for observability)</p>
+</li>
+</ul>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p><strong>Troubleshooting:</strong></p>
+</div>
+<div class="paragraph">
+<p>If the secret is missing, contact your cluster administrator. The database and secret are prerequisites that must be configured before enabling MaaS.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_step_7_verify_gateway_api_resources"><a class="anchor" href="#_step_7_verify_gateway_api_resources"></a>Step 7: Verify Gateway API Resources</h3>
+<div class="paragraph">
+<p>MaaS uses OpenShift&#8217;s Gateway API for external model access routing.</p>
+</div>
+<div class="paragraph">
+<p><strong>Check GatewayClass:</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get gatewayclass openshift-gateway-api</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Expected output:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-text hljs" data-lang="text">NAME                     CONTROLLER                        ACCEPTED   AGE
+openshift-gateway-api    openshift.io/gateway-controller   True       5d</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>Check MaaS Gateway:</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get gateway maas-default-gateway -n openshift-ingress</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Expected output:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-text hljs" data-lang="text">NAME                   CLASS                    ADDRESS   PROGRAMMED   AGE
+maas-default-gateway   openshift-gateway-api              True         5d</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Verify Gateway is programmed:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get gateway maas-default-gateway -n openshift-ingress -o jsonpath='{.status.conditions[?(@.type=="Programmed")].status}'</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Expected output: <code>True</code></p>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p><strong>If the Gateway does not exist</strong>, your cluster administrator must create it. The Gateway defines the external API endpoint for MaaS model access.</p>
+</div>
+<div class="paragraph">
+<p>Example Gateway configuration:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: maas-default-gateway
+  namespace: openshift-ingress
+spec:
+  gatewayClassName: openshift-gateway-api
+  listeners:
+  - name: https
+    port: 443
+    protocol: HTTPS
+    hostname: "maas.apps.&lt;cluster-domain&gt;"
+    tls:
+      mode: Terminate
+      certificateRefs:
+      - kind: Secret
+        name: maas-tls-cert</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Consult the OpenShift AI documentation for complete Gateway setup instructions.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_step_8_optional_verify_cluster_observability_operator"><a class="anchor" href="#_step_8_optional_verify_cluster_observability_operator"></a>Step 8: (Optional) Verify Cluster Observability Operator</h3>
+<div class="paragraph">
+<p>The Cluster Observability Operator enables the MaaS observability dashboard (Technology Preview) for token consumption tracking and usage analytics.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>This operator is <strong>optional</strong>. MaaS core functionality works without it. The observability dashboard is a Tech Preview feature for usage monitoring and showback reporting.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p><strong>Check if Cluster Observability Operator is installed:</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get csv -n openshift-operators | grep cluster-observability-operator</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Expected output (if installed):</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-text hljs" data-lang="text">cluster-observability-operator.v0.3.0   Cluster Observability Operator   0.3.0   Succeeded</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>If not installed and you want observability features:</strong></p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Open OpenShift Console → <strong>Operators → OperatorHub</strong></p>
+</li>
+<li>
+<p>Search for <strong>"Cluster Observability Operator"</strong></p>
+</li>
+<li>
+<p>Click <strong>Install</strong></p>
+</li>
+<li>
+<p>Select <strong>stable</strong> channel</p>
+</li>
+<li>
+<p>Install to <strong>All namespaces</strong></p>
+</li>
+<li>
+<p>Click <strong>Install</strong></p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>After installation, you&#8217;ll need to enable observability in:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Kuadrant: <code>spec.observability.enable: true</code></p>
+</li>
+<li>
+<p>Tenant: <code>spec.telemetry.enabled: true</code></p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_step_9_prerequisites_verification_summary"><a class="anchor" href="#_step_9_prerequisites_verification_summary"></a>Step 9: Prerequisites Verification Summary</h3>
+<div class="paragraph">
+<p>Run this comprehensive verification script to confirm all components:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">cat &gt; verify-maas-prereqs.sh &lt;&lt;'EOF'
+#!/bin/bash
+
+echo "=== MaaS Prerequisites Verification ==="
+echo ""
+
+# 1. OpenShift Version
+echo "1. OpenShift Platform Version:"
+OCP_VERSION=$(oc version -o json 2&gt;/dev/null | jq -r '.openshiftVersion' 2&gt;/dev/null || echo "ERROR")
+echo "   Version: ${OCP_VERSION}"
+[[ "${OCP_VERSION}" == "ERROR" ]] &amp;&amp; echo "   ❌ FAILED" || echo "   ✅ PASSED"
+echo ""
+
+# 2. OpenShift AI Operator
+echo "2. Red Hat OpenShift AI Operator:"
+RHOAI_CSV=$(oc get csv -n redhat-ods-applications 2&gt;/dev/null | grep rhods-operator | awk '{print $1}')
+echo "   CSV: ${RHOAI_CSV:-NOT FOUND}"
+[[ -z "${RHOAI_CSV}" ]] &amp;&amp; echo "   ❌ FAILED" || echo "   ✅ PASSED"
+echo ""
+
+# 3. Red Hat Connectivity Link
+echo "3. Red Hat Connectivity Link Operator:"
+RCL_CSV=$(oc get csv -n openshift-operators 2&gt;/dev/null | grep connectivity-link | awk '{print $1}')
+echo "   CSV: ${RCL_CSV:-NOT FOUND}"
+KUADRANT_STATUS=$(oc get kuadrant kuadrant -n kuadrant-system -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}' 2&gt;/dev/null || echo "ERROR")
+echo "   Kuadrant Ready: ${KUADRANT_STATUS}"
+[[ "${KUADRANT_STATUS}" == "True" ]] &amp;&amp; echo "   ✅ PASSED" || echo "   ❌ FAILED"
+echo ""
+
+# 4. Llama Stack Operator
+echo "4. Llama Stack Operator:"
+LLAMA_STATE=$(oc get datasciencecluster default -n redhat-ods-applications -o jsonpath='{.spec.components.llamastackoperator.managementState}' 2&gt;/dev/null || echo "ERROR")
+echo "   Management State: ${LLAMA_STATE}"
+[[ "${LLAMA_STATE}" == "Managed" ]] &amp;&amp; echo "   ✅ PASSED" || echo "   ⚠️  WARNING: Required for dashboard features"
+echo ""
+
+# 5. User Workload Monitoring
+echo "5. User Workload Monitoring:"
+UWM_ENABLED=$(oc get configmap cluster-monitoring-config -n openshift-monitoring -o jsonpath='{.data.config\.yaml}' 2&gt;/dev/null | grep -o "enableUserWorkload: true" || echo "NOT ENABLED")
+echo "   Status: ${UWM_ENABLED}"
+[[ "${UWM_ENABLED}" == "enableUserWorkload: true" ]] &amp;&amp; echo "   ✅ PASSED" || echo "   ❌ FAILED"
+echo ""
+
+# 6. PostgreSQL Database Secret
+echo "6. PostgreSQL Database Secret:"
+DB_SECRET=$(oc get secret maas-db-config -n redhat-ods-applications -o jsonpath='{.metadata.name}' 2&gt;/dev/null || echo "NOT FOUND")
+echo "   Secret: ${DB_SECRET}"
+[[ "${DB_SECRET}" == "maas-db-config" ]] &amp;&amp; echo "   ✅ PASSED" || echo "   ❌ FAILED"
+echo ""
+
+# 7. Gateway API
+echo "7. Gateway API Resources:"
+GW_CLASS=$(oc get gatewayclass openshift-gateway-api -o jsonpath='{.metadata.name}' 2&gt;/dev/null || echo "NOT FOUND")
+echo "   GatewayClass: ${GW_CLASS}"
+GW_STATUS=$(oc get gateway maas-default-gateway -n openshift-ingress -o jsonpath='{.status.conditions[?(@.type=="Programmed")].status}' 2&gt;/dev/null || echo "NOT FOUND")
+echo "   Gateway Programmed: ${GW_STATUS}"
+[[ "${GW_STATUS}" == "True" ]] &amp;&amp; echo "   ✅ PASSED" || echo "   ❌ FAILED"
+echo ""
+
+# 8. KServe Component
+echo "8. KServe Component (Required for MaaS):"
+KSERVE_STATE=$(oc get datasciencecluster default -n redhat-ods-applications -o jsonpath='{.spec.components.kserve.managementState}' 2&gt;/dev/null || echo "ERROR")
+echo "   Management State: ${KSERVE_STATE}"
+[[ "${KSERVE_STATE}" == "Managed" ]] &amp;&amp; echo "   ✅ PASSED" || echo "   ❌ FAILED"
+echo ""
+
+echo "=== Summary ==="
+echo "Review any ❌ FAILED items above before proceeding with MaaS deployment."
+echo ""
+echo "Optional Components:"
+echo "  • Cluster Observability Operator: For MaaS usage dashboard (Tech Preview)"
+echo "  • ExternalModel CRD: For routing to external LLM providers (Tech Preview)"
+EOF
+
+chmod +x verify-maas-prereqs.sh
+./verify-maas-prereqs.sh</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Expected output shows ✅ PASSED for all required components.</p>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p><strong>Save this script</strong> for future MaaS deployments. It provides a quick health check of all prerequisites before enabling MaaS.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_part_2_enable_and_deploy_maas"><a class="anchor" href="#_part_2_enable_and_deploy_maas"></a>Part 2: Enable and Deploy MaaS</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Now that prerequisites are verified, enable the MaaS backend component.</p>
+</div>
+<div class="sect2">
+<h3 id="_step_1_enable_maas_in_datasciencecluster"><a class="anchor" href="#_step_1_enable_maas_in_datasciencecluster"></a>Step 1: Enable MaaS in DataScienceCluster</h3>
+<div class="paragraph">
+<p>Enable the MaaS backend by patching the DataScienceCluster custom resource:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc patch datasciencecluster default -n redhat-ods-applications \
+  --type merge \
+  -p '{"spec":{"components":{"kserve":{"modelsAsService":{"managementState":"Managed"}}}}}'</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Expected output:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-text hljs" data-lang="text">datasciencecluster.datasciencecluster.opendatahub.io/default patched</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>What happens:</strong></p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>The OpenShift AI operator detects the configuration change (reconciliation occurs every 30 seconds)</p>
+</li>
+<li>
+<p>Controller creates the <code>maas-api</code> Deployment in the <code>redhat-ods-applications</code> namespace</p>
+</li>
+<li>
+<p>MaaS API service starts listening on port 8080 for subscription and API key management</p>
+</li>
+<li>
+<p><strong>Tenant custom resource <code>default-tenant</code> is automatically created</strong> in <code>models-as-a-service</code> namespace</p>
+</li>
+<li>
+<p><strong>ModelsAsService custom resource <code>default-modelsasservice</code> is automatically created</strong> cluster-wide</p>
+</li>
+</ol>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p><strong>Automatic Resource Creation:</strong> The <code>default-tenant</code> and <code>default-modelsasservice</code> resources are <strong>automatically created</strong> by the MaaS operator when you enable MaaS. You do not need to create these manually.</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>default-tenant</strong> - Singleton tenant resource that configures API key expiration, telemetry, and external OIDC settings</p>
+</li>
+<li>
+<p><strong>default-modelsasservice</strong> - Cluster-wide resource that configures platform-wide MaaS settings</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>While it&#8217;s technically possible to create additional Tenant resources via YAML (since Tenant is a CRD), OpenShift AI 3.4 MaaS is designed for single-tenant operation. The documentation only references <code>default-tenant</code>.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_step_2_verify_maas_deployment"><a class="anchor" href="#_step_2_verify_maas_deployment"></a>Step 2: Verify MaaS Deployment</h3>
+<div class="paragraph">
+<p>Watch the MaaS API pod until it reaches Running state:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get pods -n redhat-ods-applications -l app.kubernetes.io/name=maas-api -w</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Expected output (after ~60 seconds):</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-text hljs" data-lang="text">NAME                        READY   STATUS    RESTARTS   AGE
+maas-api-7c8f9d5b6c-x4j2m   1/1     Running   0          62s</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Press <code>Ctrl+C</code> to stop watching.</p>
+</div>
+<div class="paragraph">
+<p>Verify the MaaS custom resource definitions were installed:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get crd | grep maas.opendatahub.io
+maasauthpolicies.maas.opendatahub.io          2024-05-11T14:23:10Z
+maasmodelrefs.maas.opendatahub.io             2024-05-11T14:23:10Z
+maassubscriptions.maas.opendatahub.io         2024-05-11T14:23:10Z
+externalmodels.maas.opendatahub.io            2024-05-11T14:23:10Z
+tenants.maas.opendatahub.io                   2024-05-11T14:23:10Z</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>MaaS Custom Resource Definitions Explained:</strong></p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 40%;">
+<col style="width: 60%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">CRD</th>
+<th class="tableblock halign-left valign-top">Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>MaaSSubscription</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Defines subscription-based access control with token limits and group assignments</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>MaaSAuthPolicy</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Authorizes groups to access model endpoints through the API gateway</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>MaaSModelRef</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">References models deployed in OpenShift AI and published to MaaS</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>ExternalModel</strong> (Tech Preview)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Routes requests to external cloud providers (OpenAI, Anthropic, AWS Bedrock, Azure OpenAI, Google Vertex AI) through MaaS governance</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Tenant</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Configures tenant-specific settings including API key expiration, external OIDC, and telemetry</p></td>
+</tr>
+</tbody>
+</table>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p><strong>ExternalModel Support:</strong> The <code>externalmodels.maas.opendatahub.io</code> CRD enables routing to external LLM providers without deploying additional containers. When you create an ExternalModel resource, the existing <strong>maas-api pod</strong> handles request routing:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>User authenticates with MaaS API key</p>
+</li>
+<li>
+<p>MaaS validates subscription and token limits</p>
+</li>
+<li>
+<p>MaaS injects the provider API key from a Kubernetes secret</p>
+</li>
+<li>
+<p>Request is routed through Istio ServiceMesh to the external provider (auto-generated ServiceEntry/DestinationRule)</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>No additional pods are deployed for external models. This is a <strong>Technology Preview feature</strong> in OpenShift AI 3.4.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>Check the Tenant resource status:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get tenant default-tenant -n models-as-a-service -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}'</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Expected output: <code>True</code></p>
+</div>
+<div class="paragraph">
+<p>If the status shows <code>False</code>, check the condition message:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get tenant default-tenant -n models-as-a-service -o jsonpath='{.status.conditions[?(@.type=="Ready")].message}'</code></pre>
+</div>
+</div>
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-warning" title="Warning"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>If the Tenant shows <code>Degraded</code> status, the most common cause is User Workload Monitoring not being enabled. Verify Step 4 in Part 1 and wait 2-3 minutes for the monitoring stack to stabilize.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_step_3_configure_tls_for_authorino"><a class="anchor" href="#_step_3_configure_tls_for_authorino"></a>Step 3: Configure TLS for Authorino</h3>
+<div class="paragraph">
+<p>MaaS uses Authorino (from Kuadrant) for authentication. Configure TLS for secure communication between Authorino and the MaaS API:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc -n kuadrant-system set env deployment/authorino \
+  SSL_CERT_FILE=/etc/ssl/certs/openshift-service-ca/service-ca-bundle.crt \
+  REQUESTS_CA_BUNDLE=/etc/ssl/certs/openshift-service-ca/service-ca-bundle.crt</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Expected output:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-text hljs" data-lang="text">deployment.apps/authorino updated</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Annotate the Gateway to enable automatic TLS configuration:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc annotate gateway maas-default-gateway \
+  -n openshift-ingress \
+  security.opendatahub.io/authorino-tls-bootstrap="true" \
+  --overwrite</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Verify the TLS configuration:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get deployment/authorino -n kuadrant-system -o jsonpath='{.spec.template.spec.containers[0].env[?(@.name=="SSL_CERT_FILE")].value}'</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Expected output:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-text hljs" data-lang="text">/etc/ssl/certs/openshift-service-ca/service-ca-bundle.crt</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Wait ~15 seconds for the Authorino pod to restart with the new environment variables.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_step_4_enable_maas_dashboard_features"><a class="anchor" href="#_step_4_enable_maas_dashboard_features"></a>Step 4: Enable MaaS Dashboard Features</h3>
+<div class="paragraph">
+<p>Enable the MaaS user interface in the OpenShift AI dashboard:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc patch odhdashboardconfig odh-dashboard-config \
+  -n redhat-ods-applications \
+  --type merge \
+  -p '{
+    "spec": {
+      "dashboardConfig": {
+        "genAiStudio": true,
+        "modelAsService": true,
+        "maasAuthPolicies": true
+      }
+    }
+  }'</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>What changed:</strong></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>genAiStudio: true</code> enables the <strong>Gen AI Studio</strong> menu with API Keys and AI Asset Endpoints</p>
+</li>
+<li>
+<p><code>modelAsService: true</code> enables MaaS subscription and authorization policy management</p>
+</li>
+<li>
+<p><code>maasAuthPolicies: true</code> enables authorization policy UI in Settings</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Wait ~20 seconds for the dashboard pods to reload the configuration.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_part_3_create_organizational_groups"><a class="anchor" href="#_part_3_create_organizational_groups"></a>Part 3: Create Organizational Groups</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Create OpenShift groups for ChocoTech&#8217;s three business units.</p>
+</div>
+<div class="sect2">
+<h3 id="_step_1_create_quality_control_group_gold_plan"><a class="anchor" href="#_step_1_create_quality_control_group_gold_plan"></a>Step 1: Create Quality Control Group (Gold Plan)</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc adm groups new quality-control</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Add your username to the group for testing:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc adm groups add-users quality-control $(oc whoami)</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Verify the group:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get group quality-control
+NAME               USERS
+quality-control    &lt;your-username&gt;</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_step_2_create_rd_group_silver_plan"><a class="anchor" href="#_step_2_create_rd_group_silver_plan"></a>Step 2: Create R&amp;D Group (Silver Plan)</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc adm groups new research-development
+oc adm groups add-users research-development $(oc whoami)</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_step_3_create_marketing_group_bronze_plan"><a class="anchor" href="#_step_3_create_marketing_group_bronze_plan"></a>Step 3: Create Marketing Group (Bronze Plan)</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc adm groups new marketing-analytics
+oc adm groups add-users marketing-analytics $(oc whoami)</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Verify all three groups exist:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get groups | grep -E "quality-control|research-development|marketing-analytics"
+quality-control          &lt;your-username&gt;
+research-development     &lt;your-username&gt;
+marketing-analytics      &lt;your-username&gt;</code></pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>In production, you would add specific users to each group based on their business unit. For this lab, you&#8217;re adding yourself to all three groups to test each subscription tier.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_part_4_deploy_and_publish_a_model_to_maas"><a class="anchor" href="#_part_4_deploy_and_publish_a_model_to_maas"></a>Part 4: Deploy and Publish a Model to MaaS</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Deploy a demonstration model and publish it to the MaaS gateway.</p>
+</div>
+<div class="sect2">
+<h3 id="_step_1_create_a_model_deployment_project"><a class="anchor" href="#_step_1_create_a_model_deployment_project"></a>Step 1: Create a Model Deployment Project</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc new-project chocotech-models</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_step_2_deploy_a_model_via_the_dashboard"><a class="anchor" href="#_step_2_deploy_a_model_via_the_dashboard"></a>Step 2: Deploy a Model via the Dashboard</h3>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>For this lab, you&#8217;ll deploy the model using the OpenShift AI dashboard. In production, you can automate this using <code>LLMInferenceService</code> YAML manifests.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Open the OpenShift AI dashboard: <code><a href="https://rhods-dashboard-redhat-ods-applications.apps.&lt;your-cluster-domain&gt" class="bare">https://rhods-dashboard-redhat-ods-applications.apps.&lt;your-cluster-domain&gt</a>;</code></p>
+</li>
+<li>
+<p>Click <strong>Projects</strong> in the left navigation</p>
+</li>
+<li>
+<p>Click <strong>chocotech-models</strong></p>
+</li>
+<li>
+<p>Click the <strong>Deployments</strong> tab</p>
+</li>
+<li>
+<p>Click <strong>Deploy model</strong></p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p><strong>Model details:</strong>
+* Model storage: Select your model repository connection
+* Model path: <code>/models/facebook/opt-125m</code> (or your preferred model)
+* Model type: <strong>Generative AI model (Example, LLM)</strong>
+* ✅ Ensure <strong>Use legacy deployment method</strong> is <strong>unchecked</strong> (MaaS requires LLMInferenceService)</p>
+</div>
+<div class="paragraph">
+<p><strong>Model deployment:</strong>
+* Model deployment name: <code>chocotech-defect-detection</code>
+* Serving runtime: <strong>Distributed inference with llm-d</strong>
+* Hardware profile: <strong>Small</strong> (2 CPU, 8Gi RAM)
+* Replicas: <code>1</code></p>
+</div>
+<div class="paragraph">
+<p><strong>Advanced settings:</strong>
+* ✅ <strong>Publish as MaaS</strong> - Enable this to make the model available via MaaS gateway
+* ✅ <strong>Publish as AI asset endpoint</strong> - Enable to test in Playground
+* ☐ Require token authentication - Leave unchecked (MaaS handles authentication)</p>
+</div>
+<div class="paragraph">
+<p>Click <strong>Deploy model</strong>.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_step_3_verify_model_deployment"><a class="anchor" href="#_step_3_verify_model_deployment"></a>Step 3: Verify Model Deployment</h3>
+<div class="paragraph">
+<p>Wait 3-5 minutes for the model to download and initialize. Monitor the status:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get llminferenceservice -n chocotech-models -w</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Expected output (when ready):</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-text hljs" data-lang="text">NAME                           READY   AGE
+chocotech-defect-detection     True    4m32s</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Press <code>Ctrl+C</code> to stop watching.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_step_4_verify_maasmodelref_creation"><a class="anchor" href="#_step_4_verify_maasmodelref_creation"></a>Step 4: Verify MaaSModelRef Creation</h3>
+<div class="paragraph">
+<p>When you publish a model to MaaS, a <code>MaaSModelRef</code> custom resource is automatically created:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get maasmodelref -n chocotech-models
+NAME                           AGE
+chocotech-defect-detection     5m</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Inspect the MaaSModelRef:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get maasmodelref chocotech-defect-detection -n chocotech-models -o yaml</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Key fields to observe:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">apiVersion: maas.opendatahub.io/v1alpha1
+kind: MaaSModelRef
+metadata:
+  name: chocotech-defect-detection
+  namespace: chocotech-models
+spec:
+  modelId: facebook/opt-125m              <i class="conum" data-value="1"></i><b>(1)</b>
+  endpointName: chocotech-defect-detection <i class="conum" data-value="2"></i><b>(2)</b>
+  namespace: chocotech-models
+status:
+  ready: true                              <i class="conum" data-value="3"></i><b>(3)</b></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>The model ID from the model repository</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>The model deployment name (used in API requests)</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>Model is ready for MaaS subscription assignment</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_part_5_create_maas_subscriptions"><a class="anchor" href="#_part_5_create_maas_subscriptions"></a>Part 5: Create MaaS Subscriptions</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Create three subscription tiers for ChocoTech&#8217;s business units.</p>
+</div>
+<div class="sect2">
+<h3 id="_step_1_create_gold_plan_subscription_quality_control"><a class="anchor" href="#_step_1_create_gold_plan_subscription_quality_control"></a>Step 1: Create Gold Plan Subscription (Quality Control)</h3>
+<div class="paragraph">
+<p>Use the OpenShift AI dashboard to create the Gold subscription:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Click <strong>Settings → Subscriptions</strong></p>
+</li>
+<li>
+<p>Click <strong>Create subscription</strong></p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p><strong>Configuration:</strong></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Name:</strong> <code>Gold Plan - Quality Control</code></p>
+</li>
+<li>
+<p><strong>Resource name:</strong> <code>gold-quality-control</code> (auto-generated)</p>
+</li>
+<li>
+<p><strong>Description:</strong> <code>Production-grade access with highest token limits for real-time defect detection</code></p>
+</li>
+<li>
+<p><strong>Priority:</strong> <code>100</code> (highest priority for production workloads)</p>
+</li>
+<li>
+<p><strong>Groups:</strong> Select <code>quality-control</code></p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>Add Models:</strong></p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Click <strong>Add models</strong></p>
+</li>
+<li>
+<p>Select <strong>chocotech-defect-detection</strong></p>
+</li>
+<li>
+<p>Click <strong>Add models</strong></p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p><strong>Configure Token Limits:</strong></p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Click <strong>Add token limit</strong> for the <code>chocotech-defect-detection</code> model</p>
+</li>
+<li>
+<p>Token limit configuration:</p>
+<div class="ulist">
+<ul>
+<li>
+<p>Tokens: <code>10000</code></p>
+</li>
+<li>
+<p>Time period: <code>1</code></p>
+</li>
+<li>
+<p>Unit: <code>hour</code></p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p>Click <strong>Add token rate limit</strong> to add a second limit:</p>
+<div class="ulist">
+<ul>
+<li>
+<p>Tokens: <code>200</code></p>
+</li>
+<li>
+<p>Time period: <code>1</code></p>
+</li>
+<li>
+<p>Unit: <code>minute</code></p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p>Click <strong>Save</strong></p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p><strong>Authorization:</strong></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>✅ <strong>Create a matching authorization policy</strong> (enable this)</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Click <strong>Create subscription</strong>.</p>
+</div>
+<div class="paragraph">
+<p><strong>What happened:</strong></p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>MaaS created a <code>MaaSSubscription</code> custom resource in the <code>models-as-a-service</code> namespace</p>
+</li>
+<li>
+<p>Token limits were configured: 10,000 tokens/hour AND 200 tokens/minute (whichever is more restrictive)</p>
+</li>
+<li>
+<p>A matching <code>MaaSAuthPolicy</code> was automatically created to authorize the <code>quality-control</code> group</p>
+</li>
+<li>
+<p>The subscription entered <code>Active</code> phase after validation</p>
+</li>
+</ol>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_step_2_create_silver_plan_subscription_rd"><a class="anchor" href="#_step_2_create_silver_plan_subscription_rd"></a>Step 2: Create Silver Plan Subscription (R&amp;D)</h3>
+<div class="paragraph">
+<p>Create the Silver subscription following the same process:</p>
+</div>
+<div class="paragraph">
+<p><strong>Configuration:</strong></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Name:</strong> <code>Silver Plan - Research &amp; Development</code></p>
+</li>
+<li>
+<p><strong>Priority:</strong> <code>50</code> (staging/pre-production priority)</p>
+</li>
+<li>
+<p><strong>Groups:</strong> Select <code>research-development</code></p>
+</li>
+<li>
+<p><strong>Models:</strong> <code>chocotech-defect-detection</code></p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>Token Limits:</strong></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Primary limit: <code>5000</code> tokens per <code>1</code> hour</p>
+</li>
+<li>
+<p>Burst limit: <code>100</code> tokens per <code>1</code> minute</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>✅ <strong>Create a matching authorization policy</strong></p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_step_3_create_bronze_plan_subscription_marketing"><a class="anchor" href="#_step_3_create_bronze_plan_subscription_marketing"></a>Step 3: Create Bronze Plan Subscription (Marketing)</h3>
+<div class="paragraph">
+<p>Create the Bronze subscription:</p>
+</div>
+<div class="paragraph">
+<p><strong>Configuration:</strong></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Name:</strong> <code>Bronze Plan - Marketing Analytics</code></p>
+</li>
+<li>
+<p><strong>Priority:</strong> <code>0</code> (development/experimental priority)</p>
+</li>
+<li>
+<p><strong>Groups:</strong> Select <code>marketing-analytics</code></p>
+</li>
+<li>
+<p><strong>Models:</strong> <code>chocotech-defect-detection</code></p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>Token Limits:</strong></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Primary limit: <code>1000</code> tokens per <code>1</code> hour</p>
+</li>
+<li>
+<p>Burst limit: <code>25</code> tokens per <code>1</code> minute</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>✅ <strong>Create a matching authorization policy</strong></p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_step_4_verify_all_subscriptions"><a class="anchor" href="#_step_4_verify_all_subscriptions"></a>Step 4: Verify All Subscriptions</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get maassubscriptions -n models-as-a-service
+NAME                       PHASE    GROUPS   MODELS   PRIORITY   AGE
+gold-quality-control       Active   1        1        100        2m
+silver-research-dev        Active   1        1        50         1m
+bronze-marketing           Active   1        1        0          30s</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Verify that matching authorization policies were created:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get maasauthpolicies -n models-as-a-service
+NAME                                PHASE    GROUPS   MODELS   AGE
+gold-quality-control-authpolicy     Active   1        1        2m
+silver-research-dev-authpolicy      Active   1        1        1m
+bronze-marketing-authpolicy         Active   1        1        30s</code></pre>
+</div>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p><strong>Priority Level Strategy:</strong> When a user belongs to multiple groups, MaaS uses the subscription with the highest priority. Since you added yourself to all three groups, requests will default to the Gold subscription (priority 100). To test the Silver or Bronze subscriptions, you&#8217;ll need to explicitly select them when creating API keys.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_part_6_generate_and_test_api_keys"><a class="anchor" href="#_part_6_generate_and_test_api_keys"></a>Part 6: Generate and Test API Keys</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Create API keys for each subscription tier and test model access.</p>
+</div>
+<div class="sect2">
+<h3 id="_step_1_generate_gold_plan_api_key"><a class="anchor" href="#_step_1_generate_gold_plan_api_key"></a>Step 1: Generate Gold Plan API Key</h3>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Open the OpenShift AI dashboard</p>
+</li>
+<li>
+<p>Click <strong>Gen AI Studio → API Keys</strong></p>
+</li>
+<li>
+<p>Click <strong>Create API key</strong></p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p><strong>Configuration:</strong></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Name:</strong> <code>Gold QC Production Key</code></p>
+</li>
+<li>
+<p><strong>Description:</strong> <code>Production key for Quality Control defect detection</code></p>
+</li>
+<li>
+<p><strong>Subscription:</strong> Select <code>Gold Plan - Quality Control</code></p>
+</li>
+<li>
+<p><strong>Expiration:</strong> <code>30 days</code> (or <code>Never</code> for permanent testing)</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Click <strong>Create</strong>.</p>
+</div>
+<div class="paragraph">
+<p><strong>Critical: Copy the API key immediately</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-text hljs" data-lang="text">sk-oai-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Store this in a secure location. This is the only time you&#8217;ll see it.</p>
+</div>
+<div class="paragraph">
+<p>Export the key as an environment variable:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">export GOLD_API_KEY="sk-oai-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_step_2_get_the_maas_gateway_url"><a class="anchor" href="#_step_2_get_the_maas_gateway_url"></a>Step 2: Get the MaaS Gateway URL</h3>
+<div class="paragraph">
+<p>Find the external API endpoint URL:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>In the dashboard, click <strong>Gen AI Studio → AI Asset Endpoints</strong></p>
+</li>
+<li>
+<p>Click <strong>View</strong> for the <code>chocotech-defect-detection</code> model</p>
+</li>
+<li>
+<p>Copy the <strong>External API endpoint</strong> URL</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>It will look like:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-text hljs" data-lang="text">https://maas.apps.&lt;cluster-domain&gt;/llm/chocotech-defect-detection</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Export the base gateway URL (without the model path):</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">export MAAS_URL="https://maas.apps.&lt;cluster-domain&gt;"</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_step_3_test_gold_plan_api_access"><a class="anchor" href="#_step_3_test_gold_plan_api_access"></a>Step 3: Test Gold Plan API Access</h3>
+<div class="paragraph">
+<p>List available models:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">curl -X GET "${MAAS_URL}/v1/models" \
+  -H "Authorization: Bearer ${GOLD_API_KEY}" \
+  -s | jq</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Expected response:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-json hljs" data-lang="json">{
+  "object": "list",
+  "data": [
+    {
+      "id": "chocotech-defect-detection",
+      "object": "model",
+      "created": 1234567890,
+      "owned_by": "llm",
+      "ready": true
+    }
+  ]
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Make a test inference request:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">curl -X POST "${MAAS_URL}/llm/chocotech-defect-detection/v1/completions" \
+  -H "Authorization: Bearer ${GOLD_API_KEY}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "chocotech-defect-detection",
+    "prompt": "Analyze chocolate defect: surface bubbles detected",
+    "max_tokens": 50,
+    "temperature": 0.7
+  }' \
+  -s | jq</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Expected response:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-json hljs" data-lang="json">{
+  "id": "chatcmpl-abc123",
+  "object": "text.completion",
+  "created": 1234567890,
+  "model": "chocotech-defect-detection",
+  "choices": [
+    {
+      "index": 0,
+      "text": "Surface bubbles in chocolate typically indicate...",
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 12,
+    "completion_tokens": 38,
+    "total_tokens": 50
+  }
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>Observe the rate limit headers:</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">curl -X POST "${MAAS_URL}/llm/chocotech-defect-detection/v1/completions" \
+  -H "Authorization: Bearer ${GOLD_API_KEY}" \
+  -H "Content-Type: application/json" \
+  -d '{"model": "chocotech-defect-detection", "prompt": "Test", "max_tokens": 10}' \
+  -i -s | grep -i "x-ratelimit"</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Expected headers:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-text hljs" data-lang="text">X-RateLimit-Limit: 200
+X-RateLimit-Remaining: 199
+X-RateLimit-Reset: 1715445660</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_step_4_test_token_limit_enforcement"><a class="anchor" href="#_step_4_test_token_limit_enforcement"></a>Step 4: Test Token Limit Enforcement</h3>
+<div class="paragraph">
+<p>Create a script to exceed the per-minute token limit (200 tokens/minute for Gold):</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">cat &gt; test-rate-limit.sh &lt;&lt;'EOF'
+#!/bin/bash
+for i in {1..25}; do
+  echo "Request $i:"
+  curl -X POST "${MAAS_URL}/llm/chocotech-defect-detection/v1/completions" \
+    -H "Authorization: Bearer ${GOLD_API_KEY}" \
+    -H "Content-Type: application/json" \
+    -d '{"model": "chocotech-defect-detection", "prompt": "Test prompt", "max_tokens": 15}' \
+    -w "\nHTTP Status: %{http_code}\n" \
+    -s -o /dev/null
+  sleep 1
+done
+EOF
+
+chmod +x test-rate-limit.sh
+./test-rate-limit.sh</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>Expected behavior:</strong></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>First 10-12 requests: HTTP 200 (success)</p>
+</li>
+<li>
+<p>After ~200 tokens consumed: HTTP 429 (rate limited)</p>
+</li>
+<li>
+<p>Response body on 429:</p>
+</li>
+</ul>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-json hljs" data-lang="json">{
+  "error": {
+    "message": "Token limit exceeded. You have consumed the maximum number of tokens allowed for this model in your subscription.",
+    "type": "token_limit_error",
+    "code": 429
+  }
+}</code></pre>
+</div>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>This demonstrates the MaaS token governance in action. The Gold subscription allows 200 tokens/minute. Once you exceed this limit, MaaS returns HTTP 429 until the time window resets. In production applications, implement exponential backoff retry logic to handle these scenarios gracefully.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_step_5_generate_and_test_silver_plan_api_key"><a class="anchor" href="#_step_5_generate_and_test_silver_plan_api_key"></a>Step 5: Generate and Test Silver Plan API Key</h3>
+<div class="paragraph">
+<p>Repeat the API key creation process for the Silver subscription:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Name:</strong> <code>Silver R&amp;D Development Key</code></p>
+</li>
+<li>
+<p><strong>Subscription:</strong> <code>Silver Plan - Research &amp; Development</code></p>
+</li>
+<li>
+<p><strong>Expiration:</strong> <code>30 days</code></p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Export the Silver API key:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">export SILVER_API_KEY="sk-oai-yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy"</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Test the Silver subscription limits (100 tokens/minute):</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">curl -X POST "${MAAS_URL}/llm/chocotech-defect-detection/v1/completions" \
+  -H "Authorization: Bearer ${SILVER_API_KEY}" \
+  -H "Content-Type: application/json" \
+  -d '{"model": "chocotech-defect-detection", "prompt": "Test R&amp;D access", "max_tokens": 10}' \
+  -i -s | grep -i "x-ratelimit-limit"</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Expected:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-text hljs" data-lang="text">X-RateLimit-Limit: 100</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Notice the Silver subscription has a lower token limit (100/minute) compared to Gold (200/minute).</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_part_7_verify_maas_dashboard_features"><a class="anchor" href="#_part_7_verify_maas_dashboard_features"></a>Part 7: Verify MaaS Dashboard Features</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Explore the MaaS administrative and user interfaces.</p>
+</div>
+<div class="sect2">
+<h3 id="_step_1_view_subscriptions_dashboard"><a class="anchor" href="#_step_1_view_subscriptions_dashboard"></a>Step 1: View Subscriptions Dashboard</h3>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Open OpenShift AI dashboard</p>
+</li>
+<li>
+<p>Click <strong>Settings → Subscriptions</strong></p>
+</li>
+<li>
+<p>Observe the three subscriptions with their phase, groups, models, and priority levels</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>Click on <strong>Gold Plan - Quality Control</strong> to view details:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Groups: <code>quality-control</code></p>
+</li>
+<li>
+<p>Models: <code>chocotech-defect-detection</code> with token limits</p>
+</li>
+<li>
+<p>Priority: <code>100</code></p>
+</li>
+<li>
+<p>Phase: <code>Active</code></p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_step_2_view_authorization_policies"><a class="anchor" href="#_step_2_view_authorization_policies"></a>Step 2: View Authorization Policies</h3>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Click <strong>Settings → Authorization Policies</strong></p>
+</li>
+<li>
+<p>Observe the three auto-created authorization policies</p>
+</li>
+<li>
+<p>Click on <code>gold-quality-control-authpolicy</code> to view details</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>Verify that the policy authorizes:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Groups: <code>quality-control</code></p>
+</li>
+<li>
+<p>Models: <code>chocotech-defect-detection</code></p>
+</li>
+<li>
+<p>Phase: <code>Active</code></p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_step_3_view_api_keys"><a class="anchor" href="#_step_3_view_api_keys"></a>Step 3: View API Keys</h3>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Click <strong>Gen AI Studio → API Keys</strong></p>
+</li>
+<li>
+<p>Observe your created API keys with status, subscription, creation date, and expiration</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>Notice the <strong>Last used</strong> column updates as you make API requests.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_step_4_test_model_in_playground"><a class="anchor" href="#_step_4_test_model_in_playground"></a>Step 4: Test Model in Playground</h3>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Click <strong>Gen AI Studio → AI Asset Endpoints</strong></p>
+</li>
+<li>
+<p>Click <strong>Add to playground</strong> for <code>chocotech-defect-detection</code></p>
+</li>
+<li>
+<p>In the Playground:</p>
+<div class="ulist">
+<ul>
+<li>
+<p>Select <strong>Subscription:</strong> <code>Gold Plan - Quality Control</code></p>
+</li>
+<li>
+<p>Enter a test prompt: <code>"What are common chocolate manufacturing defects?"</code></p>
+</li>
+<li>
+<p>Click <strong>Send</strong></p>
+</li>
+</ul>
+</div>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>The Playground uses your subscription&#8217;s token quota to make the request.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>The Playground is a user-facing feature that demonstrates how data scientists and developers can test models before integrating them into applications. Behind the scenes, it uses the same MaaS gateway and subscription system as programmatic API access.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_part_8_troubleshooting_and_validation"><a class="anchor" href="#_part_8_troubleshooting_and_validation"></a>Part 8: Troubleshooting and Validation</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Validate the complete MaaS deployment and troubleshoot common issues.</p>
+</div>
+<div class="sect2">
+<h3 id="_validation_checklist"><a class="anchor" href="#_validation_checklist"></a>Validation Checklist</h3>
+<div class="paragraph">
+<p>Verify each component of your MaaS deployment:</p>
+</div>
+<div class="paragraph">
+<p><strong>Platform Components:</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get tenant default-tenant -n models-as-a-service -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}'</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>✅ Expected: <code>True</code></p>
+</div>
+<div class="paragraph">
+<p><strong>Model Deployment:</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get llminferenceservice chocotech-defect-detection -n chocotech-models -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}'</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>✅ Expected: <code>True</code></p>
+</div>
+<div class="paragraph">
+<p><strong>MaaSModelRef:</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get maasmodelref chocotech-defect-detection -n chocotech-models -o jsonpath='{.status.ready}'</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>✅ Expected: <code>true</code></p>
+</div>
+<div class="paragraph">
+<p><strong>Subscriptions:</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get maassubscriptions -n models-as-a-service --no-headers | wc -l</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>✅ Expected: <code>3</code> (Gold, Silver, Bronze)</p>
+</div>
+<div class="paragraph">
+<p><strong>Authorization Policies:</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get maasauthpolicies -n models-as-a-service --no-headers | wc -l</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>✅ Expected: <code>3</code> (matching policies for each subscription)</p>
+</div>
+<div class="paragraph">
+<p><strong>API Access:</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">curl -X GET "${MAAS_URL}/v1/models" \
+  -H "Authorization: Bearer ${GOLD_API_KEY}" \
+  -w "\nHTTP Status: %{http_code}\n" \
+  -s -o /dev/null</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>✅ Expected: <code>HTTP Status: 200</code></p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_common_issues_and_solutions"><a class="anchor" href="#_common_issues_and_solutions"></a>Common Issues and Solutions</h3>
+<div class="paragraph">
+<p><strong>Issue: 403 Forbidden when accessing model</strong></p>
+</div>
+<div class="paragraph">
+<p><strong>Cause:</strong> Missing authorization policy or user not in authorized group.</p>
+</div>
+<div class="paragraph">
+<p><strong>Solution:</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Verify authorization policy exists
+oc get maasauthpolicy -n models-as-a-service | grep gold
+
+# Verify your group membership
+oc get group quality-control -o jsonpath='{.users}' | grep $(oc whoami)</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>If the authorization policy is missing, create it from the Subscriptions page by editing the subscription and ensuring the matching authorization policy option is enabled.</p>
+</div>
+<div class="paragraph">
+<p><strong>Issue: 401 Unauthorized</strong></p>
+</div>
+<div class="paragraph">
+<p><strong>Cause:</strong> Invalid or expired API key.</p>
+</div>
+<div class="paragraph">
+<p><strong>Solution:</strong></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Verify the API key is prefixed with <code>sk-oai-</code></p>
+</li>
+<li>
+<p>Check expiration date in <strong>Gen AI Studio → API Keys</strong></p>
+</li>
+<li>
+<p>Regenerate a new API key if expired</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>Issue: Model not appearing in subscription model list</strong></p>
+</div>
+<div class="paragraph">
+<p><strong>Cause:</strong> Model was not published to MaaS.</p>
+</div>
+<div class="paragraph">
+<p><strong>Solution:</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Check if MaaSModelRef exists
+oc get maasmodelref -n chocotech-models
+
+# If missing, edit the LLMInferenceService and ensure publishAsMaaS: true
+oc edit llminferenceservice chocotech-defect-detection -n chocotech-models</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>Issue: Subscription shows Failed phase</strong></p>
+</div>
+<div class="paragraph">
+<p><strong>Cause:</strong> Invalid model reference or group name.</p>
+</div>
+<div class="paragraph">
+<p><strong>Solution:</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Check subscription status conditions
+oc describe maassubscription gold-quality-control -n models-as-a-service
+
+# Review the status.conditions for error messages</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Common failures include referencing a model that doesn&#8217;t exist or a group that isn&#8217;t a valid OpenShift group.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_summary_and_next_steps"><a class="anchor" href="#_summary_and_next_steps"></a>Summary and Next Steps</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p><strong>What You Accomplished:</strong></p>
+</div>
+<div class="paragraph">
+<p>In this lab, you built a complete production-ready MaaS governance platform for ChocoTech Industries. You:</p>
+</div>
+<div class="paragraph">
+<p>✅ Verified and configured all MaaS prerequisites (Kuadrant, User Workload Monitoring, Gateway API)</p>
+</div>
+<div class="paragraph">
+<p>✅ Enabled the MaaS backend component and verified Tenant readiness</p>
+</div>
+<div class="paragraph">
+<p>✅ Configured TLS authentication between Authorino and the MaaS API</p>
+</div>
+<div class="paragraph">
+<p>✅ Created three OpenShift groups representing ChocoTech&#8217;s business units</p>
+</div>
+<div class="paragraph">
+<p>✅ Deployed a generative AI model and published it to the MaaS gateway</p>
+</div>
+<div class="paragraph">
+<p>✅ Established three subscription tiers with distinct token limits (Gold: 10,000/hr, Silver: 5,000/hr, Bronze: 1,000/hr)</p>
+</div>
+<div class="paragraph">
+<p>✅ Configured authorization policies to enable API gateway access</p>
+</div>
+<div class="paragraph">
+<p>✅ Generated API keys and validated subscription-based token enforcement</p>
+</div>
+<div class="paragraph">
+<p>✅ Tested the complete end-to-end model access workflow</p>
+</div>
+<div class="paragraph">
+<p><strong>Business Impact:</strong></p>
+</div>
+<div class="paragraph">
+<p>ChocoTech now has a centralized AI governance platform that:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Prevents resource exhaustion through enforced token quotas</p>
+</li>
+<li>
+<p>Enables accurate cost allocation by tracking consumption per business unit</p>
+</li>
+<li>
+<p>Provides secure, auditable access via API key authentication</p>
+</li>
+<li>
+<p>Delivers differentiated service levels aligned with business priorities (Gold/Silver/Bronze)</p>
+</li>
+<li>
+<p>Eliminates the GPU silo crisis by enabling dynamic multi-tenancy</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>Next Steps:</strong></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Production Deployment:</strong> Deploy additional models for R&amp;D recipe optimization and Marketing sentiment analysis</p>
+</li>
+<li>
+<p><strong>User Onboarding:</strong> Add real users to the appropriate OpenShift groups and provision API keys</p>
+</li>
+<li>
+<p><strong>Monitoring:</strong> Configure MaaS observability dashboard to track token consumption and costs</p>
+</li>
+<li>
+<p><strong>External Models:</strong> Integrate external LLM providers (OpenAI, Anthropic) through MaaS for unified governance</p>
+</li>
+<li>
+<p><strong>Automation:</strong> Implement GitOps workflows for subscription and authorization policy management</p>
+</li>
+</ul>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p><strong>Production Best Practice:</strong> In production, separate the model deployment namespace (<code>chocotech-models</code>) from the subscription management namespace (<code>models-as-a-service</code>). This follows the principle of separation of concerns: platform administrators manage subscriptions, while data science teams manage model deployments.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_additional_resources"><a class="anchor" href="#_additional_resources"></a>Additional Resources</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p>Red Hat OpenShift AI Documentation: <a href="https://docs.redhat.com/en/documentation/red_hat_openshift_ai/" class="bare">https://docs.redhat.com/en/documentation/red_hat_openshift_ai/</a></p>
+</li>
+<li>
+<p>Models-as-a-Service Administration Guide</p>
+</li>
+<li>
+<p>Kuadrant Rate Limiting Configuration</p>
+</li>
+<li>
+<p>OpenShift Gateway API Documentation</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<nav class="pagination">
+  <span class="prev"><a href="ch1-maas-arch-05.html">1.4: Summary &amp; troubleshooting</a></span>
+  <span class="next"><a href="maas-troubleshooting-routing.html">TROUBLESHOOTING: Gateway Routing Issues</a></span>
+</nav>
+</article>
+  </div>
+</main>
+</div>
+<footer class="footer">
+  <img src="../../../_/img/rhl-logo-red.png" height="40px" alt="Red Hat"  href="https://redhat.com" >
+</footer><script id="site-script" src="../../../_/js/site.js" data-ui-root-path="../../../_"></script>
+<script async src="../../../_/js/vendor/highlight.js"></script>
+  </body>
+</html>

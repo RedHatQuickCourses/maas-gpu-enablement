@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>2.2: Creating OpenShift groups :: Models as a Service Breaking the GPU Silos on OpenShift AI 3.4</title>
+    <meta name="generator" content="Antora 3.1.3">
+    <link rel="stylesheet" href="../../../../_/css/site.css">
+    <script>var uiRootPath = '../../../../_'</script>
+  </head>
+  <body class="article">
+<header class="header">
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="https://www.redhat.com" target="_blank"><img src="../../../../_/img/redhat-logo.png" height="40px" alt="Red Hat"></a>
+      <a class="navbar-item" style="font-size: 24px; color: white" href="../../../..">Models as a Service Breaking the GPU Silos on OpenShift AI 3.4</a>
+      <button class="navbar-burger" data-target="topbar-nav">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+    <div id="topbar-nav" class="navbar-menu">
+      <div class="navbar-end">
+        <a class="navbar-item" href="https://github.com/RedHatQuickCourses/REPLACEREPONAME/issues" target="_blank">Report Issues</a>
+      </div>
+    </div>
+  </nav>
+</header>
+<div class="body">
+<div class="nav-container" data-component="maas-gpu-enablement" data-version="3.4">
+  <aside class="nav">
+    <div class="panels">
+<div class="nav-panel-menu is-active" data-panel="menu">
+  <nav class="nav-menu">
+    <h3 class="title"><a href="../../index.html">Models as a Service Breaking the GPU Silos on OpenShift AI 3.4</a></h3>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../../index.html">Models-as-a-Service Introduction</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../../ch1-mass-arch/ch1-scenario-01.html">Course Scenario - ChocoTech</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../../ch1-mass-arch/ch1-maas-arch-01.html">1: MaaS architecture</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../../ch1-mass-arch/ch1-maas-arch-02.html">1.1: GPU silo crisis</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../../ch1-mass-arch/ch1-maas-arch-03.html">1.2: MaaS architecture stack</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../../ch1-mass-arch/ch1-maas-arch-04.html">1.3: Enabling MaaS on RHOAI</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../../ch1-mass-arch/ch1-maas-arch-05.html">1.4: Summary &amp; troubleshooting</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../../ch1-mass-arch/maas-lab.html">LAB: Deploy MaaS End-to-End</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../../ch1-mass-arch/maas-troubleshooting-routing.html">TROUBLESHOOTING: Gateway Routing Issues</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../../ch2-platform-admin/ch2-platform-admin-01.html">2: Access Control &amp; Governance</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../../ch2-platform-admin/ch2-platform-admin-02.html">2.1: Subscription-based governance</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../../ch2-platform-admin/ch2-platform-admin-03.html">2.2: Creating OpenShift groups</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../../ch2-platform-admin/ch2-platform-admin-04.html">2.3: Subscriptions and quotas</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../../ch2-platform-admin/ch2-platform-admin-05.html">2.4: Authorizing Gateway Access (MaaSAuthPolicy)</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../../ch2-platform-admin/ch2-platform-admin-06.html">2.5: Generating API Keys</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../../ch2-platform-admin/ch2-platform-admin-summary.html">2.6: Summary and troubleshooting</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../../ch3-model-deployment/ch3-model-deploy-01.html">3. Model Deployment</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../../ch3-model-deployment/ch3-model-deploy-02.html">3.1: Model Selection Strategy</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../../ch3-model-deployment/ch3-model-deploy-03.html">3.2: Lab - Deploying with Serving Runtimes</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../../ch3-model-deployment/ch3-model-deploy-04.html">3.3: Lab - Distributed Inference Configuration</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../../ch3-model-deployment/ch3-model-deploy-05.html">3.4: Lab - Publishing to MaaS Catalog</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../../ch3-model-deployment/ch3-model-deploy-06.html">3.5: Lifecycle Management with GitOps</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../../ch3-model-deployment/ch3-model-deploy-summary.html">3.6: Summary and troubleshooting</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+</ul>
+  </nav>
+</div>
+<div class="nav-panel-explore" data-panel="explore">
+  <div class="context">
+    <span class="title">Models as a Service Breaking the GPU Silos on OpenShift AI 3.4</span>
+    <span class="version">3.4</span>
+  </div>
+  <ul class="components">
+    <li class="component is-current">
+      <a class="title" href="../../index.html">Models as a Service Breaking the GPU Silos on OpenShift AI 3.4</a>
+      <ul class="versions">
+        <li class="version is-current is-latest">
+          <a href="../../index.html">3.4</a>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</div>
+    </div>
+  </aside>
+</div>
+<main class="article">
+<div class="toolbar" role="navigation">
+<button class="nav-toggle"></button>
+<nav class="breadcrumbs" aria-label="breadcrumbs">
+  <ul>
+    <li><a href="../../index.html">Models as a Service Breaking the GPU Silos on OpenShift AI 3.4</a></li>
+    <li><a href="ch2-platform-admin-03.html">2.2: Creating OpenShift groups</a></li>
+  </ul>
+</nav>
+</div>
+  <div class="content">
+<aside class="toc sidebar" data-title="Contents" data-levels="2">
+  <div class="toc-menu"></div>
+</aside>
+<article class="doc">
+<h1 class="page">2.2: Creating OpenShift groups</h1>
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>To enforce the CIO&#8217;s tier strategy, the MaaS platform needs a mathematical way to identify which request belongs to which team. We achieve this by utilizing native OpenShift Groups.</p>
+</div>
+<div class="paragraph">
+<p>By mapping OpenShift groups to our MaaS tiers, we gain massive enterprise advantages over standard public APIs:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Scalable Onboarding:</strong> You add a new data scientist to a group, and they automatically inherit the correct API rate limits and model access. No manual token tweaking required.</p>
+</li>
+<li>
+<p><strong>Auditable Transparency:</strong> Every API request is logged against the business unit (e.g., <code>chocotech-quality-control</code>), providing Finance with the exact metrics needed for departmental chargebacks.</p>
+</li>
+</ul>
+</div>
+<hr>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_exercise_1_create_the_business_unit_groups"><a class="anchor" href="#_exercise_1_create_the_business_unit_groups"></a>Exercise 1: Create the business unit groups</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Instead of creating individual users, let&#8217;s create the three organizational groups that will soon be mapped to our Gold, Silver, and Bronze tiers.</p>
+</div>
+<div class="paragraph">
+<p>Execute the following commands to create the ChocoTech groups:</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">oc adm groups new chocotech-quality-control
+oc adm groups new chocotech-rd
+oc adm groups new chocotech-marketing</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>Expected output:</strong> The terminal will confirm creation with three lines reading <code>group.user.openshift.io/&lt;group-name&gt; created</code>.</p>
+</div>
+<div class="paragraph">
+<p>Next, to successfully complete the upcoming labs, you need to simulate being a member of the Quality Control team (our Gold tier). Add your current user account to the QC group:</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">oc adm groups add-users chocotech-quality-control $(oc whoami)</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Verify your group membership:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">oc get group chocotech-quality-control -o yaml</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Expected output:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">apiVersion: user.openshift.io/v1
+kind: Group
+metadata:
+  name: chocotech-quality-control
+  resourceVersion: "123456"
+  uid: abc123...
+users:
+- user1 (or admin)</code></pre>
+</div>
+</div>
+<hr>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_exercise_2_prepare_the_governed_namespace"><a class="anchor" href="#_exercise_2_prepare_the_governed_namespace"></a>Exercise 2: Prepare the governed namespace</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Models must be deployed into a dedicated namespace (project). However, simply creating a namespace is not enough. You must explicitly label it so the Kuadrant policy engine knows to enforce governance rules on the traffic entering it.</p>
+</div>
+<div class="paragraph">
+<p>Create the new project for ChocoTech&#8217;s centralized model hub:</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">oc new-project chocotech-models</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Now, apply the MaaS routing and governance labels:</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">oc label namespace chocotech-models maas.opendatahub.io/managed=true
+oc label namespace chocotech-models modelmesh-enabled=false</code></pre>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_why_are_these_labels_required"><a class="anchor" href="#_why_are_these_labels_required"></a>Why are these labels required?</h3>
+<div class="ulist">
+<ul>
+<li>
+<p><code>maas.opendatahub.io/managed=true</code>: This is the activation switch. It instructs the OpenShift AI operator to attach Kuadrant rate-limiting and authorization policies to any model deployed within this namespace.</p>
+</li>
+<li>
+<p><code>modelmesh-enabled=false</code>: MaaS utilizes the KServe engine (specifically the <code>LLMInferenceService</code>) to serve massive generative AI models. This label explicitly prevents the older ModelMesh architecture from attempting to manage models in this namespace.</p>
+</li>
+</ul>
+</div>
+<hr>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_exercise_3_grant_group_access"><a class="anchor" href="#_exercise_3_grant_group_access"></a>Exercise 3: Grant group access</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Finally, grant the Quality Control group administrator access to this new namespace. This allows members of the Gold tier to deploy models and manage resources without needing cluster-admin privileges.</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">oc create rolebinding chocotech-qc-admin \
+  --clusterrole=admin \
+  --group=chocotech-quality-control \
+  -n chocotech-models</code></pre>
+</div>
+</div>
+<div class="quoteblock">
+<blockquote>
+<div class="paragraph">
+<p><strong>Enterprise Note:</strong> In a true production environment, you would create separate, tightly scoped <code>RoleBindings</code> for R&amp;D and Marketing based on the principle of least privilege. For this QuickCourse, simulating the Gold tier administrator is sufficient.</p>
+</div>
+</blockquote>
+</div>
+<hr>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_verify_your_foundation"><a class="anchor" href="#_verify_your_foundation"></a>Verify your foundation</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Before moving on to authentication, run this combined verification script to ensure your groups, memberships, and labeled namespaces are perfectly staged:</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">echo "=== Groups ===" &amp;&amp; \
+oc get groups | grep chocotech &amp;&amp; \
+echo "=== Gold Tier Membership ===" &amp;&amp; \
+oc get group chocotech-quality-control -o jsonpath='{.users[*]}' &amp;&amp; echo &amp;&amp; \
+echo "=== Governed Namespace ===" &amp;&amp; \
+oc get namespace chocotech-models --show-labels | grep maas</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>If the output confirms your groups exist, your username is listed under the Gold Tier, and the <code>chocotech-models</code> namespace displays the <code>maas.opendatahub.io/managed=true</code> label, your organizational foundation is secure.</p>
+</div>
+</div>
+</div>
+</article>
+  </div>
+</main>
+</div>
+<footer class="footer">
+  <img src="../../../../_/img/rhl-logo-red.png" height="40px" alt="Red Hat"  href="https://redhat.com" >
+</footer><script id="site-script" src="../../../../_/js/site.js" data-ui-root-path="../../../../_"></script>
+<script async src="../../../../_/js/vendor/highlight.js"></script>
+  </body>
+</html>

@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>3.5: Day-2 operations and lifecycle management :: Models as a Service Breaking the GPU Silos on OpenShift AI 3.4</title>
+    <link rel="prev" href="ch3-model-deploy-05.html">
+    <link rel="next" href="ch3-model-deploy-summary.html">
+    <meta name="generator" content="Antora 3.1.3">
+    <link rel="stylesheet" href="../../../_/css/site.css">
+    <script>var uiRootPath = '../../../_'</script>
+  </head>
+  <body class="article">
+<header class="header">
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="https://www.redhat.com" target="_blank"><img src="../../../_/img/redhat-logo.png" height="40px" alt="Red Hat"></a>
+      <a class="navbar-item" style="font-size: 24px; color: white" href="../../..">Models as a Service Breaking the GPU Silos on OpenShift AI 3.4</a>
+      <button class="navbar-burger" data-target="topbar-nav">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+    <div id="topbar-nav" class="navbar-menu">
+      <div class="navbar-end">
+        <a class="navbar-item" href="https://github.com/RedHatQuickCourses/REPLACEREPONAME/issues" target="_blank">Report Issues</a>
+      </div>
+    </div>
+  </nav>
+</header>
+<div class="body">
+<div class="nav-container" data-component="maas-gpu-enablement" data-version="3.4">
+  <aside class="nav">
+    <div class="panels">
+<div class="nav-panel-menu is-active" data-panel="menu">
+  <nav class="nav-menu">
+    <h3 class="title"><a href="../index.html">Models as a Service Breaking the GPU Silos on OpenShift AI 3.4</a></h3>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../index.html">Models-as-a-Service Introduction</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../ch1-mass-arch/ch1-scenario-01.html">Course Scenario - ChocoTech</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../ch1-mass-arch/ch1-maas-arch-01.html">1: MaaS architecture</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch1-mass-arch/ch1-maas-arch-02.html">1.1: GPU silo crisis</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch1-mass-arch/ch1-maas-arch-03.html">1.2: MaaS architecture stack</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch1-mass-arch/ch1-maas-arch-04.html">1.3: Enabling MaaS on RHOAI</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch1-mass-arch/ch1-maas-arch-05.html">1.4: Summary &amp; troubleshooting</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../ch1-mass-arch/maas-lab.html">LAB: Deploy MaaS End-to-End</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../ch1-mass-arch/maas-troubleshooting-routing.html">TROUBLESHOOTING: Gateway Routing Issues</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-01.html">2: Access Control &amp; Governance</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-02.html">2.1: Subscription-based governance</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-03.html">2.2: Creating OpenShift groups</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-04.html">2.3: Subscriptions and quotas</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-05.html">2.4: Authorizing Gateway Access (MaaSAuthPolicy)</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-06.html">2.5: Generating API Keys</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-summary.html">2.6: Summary and troubleshooting</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="ch3-model-deploy-01.html">3. Model Deployment</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="ch3-model-deploy-02.html">3.1: Model Selection Strategy</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="ch3-model-deploy-03.html">3.2: Lab - Deploying with Serving Runtimes</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="ch3-model-deploy-04.html">3.3: Lab - Distributed Inference Configuration</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="ch3-model-deploy-05.html">3.4: Lab - Publishing to MaaS Catalog</a>
+  </li>
+  <li class="nav-item is-current-page" data-depth="2">
+    <a class="nav-link" href="ch3-model-deploy-06.html">3.5: Lifecycle Management with GitOps</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="ch3-model-deploy-summary.html">3.6: Summary and troubleshooting</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+</ul>
+  </nav>
+</div>
+<div class="nav-panel-explore" data-panel="explore">
+  <div class="context">
+    <span class="title">Models as a Service Breaking the GPU Silos on OpenShift AI 3.4</span>
+    <span class="version">3.4</span>
+  </div>
+  <ul class="components">
+    <li class="component is-current">
+      <a class="title" href="../index.html">Models as a Service Breaking the GPU Silos on OpenShift AI 3.4</a>
+      <ul class="versions">
+        <li class="version is-current is-latest">
+          <a href="../index.html">3.4</a>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</div>
+    </div>
+  </aside>
+</div>
+<main class="article">
+<div class="toolbar" role="navigation">
+<button class="nav-toggle"></button>
+<nav class="breadcrumbs" aria-label="breadcrumbs">
+  <ul>
+    <li><a href="../index.html">Models as a Service Breaking the GPU Silos on OpenShift AI 3.4</a></li>
+    <li><a href="ch3-model-deploy-01.html">3. Model Deployment</a></li>
+    <li><a href="ch3-model-deploy-06.html">3.5: Lifecycle Management with GitOps</a></li>
+  </ul>
+</nav>
+</div>
+  <div class="content">
+<aside class="toc sidebar" data-title="Contents" data-levels="2">
+  <div class="toc-menu"></div>
+</aside>
+<article class="doc">
+<h1 class="page">3.5: Day-2 operations and lifecycle management</h1>
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>ChocoTech&#8217;s Quality Control team has been successfully using the <code>llama-3-8b</code> model for several weeks. Now, they want to upgrade to a new version that has been fine-tuned specifically on ChocoTech manufacturing defects.</p>
+</div>
+<div class="paragraph">
+<p>"We cannot risk downtime," explains the QC Director. "Our production line depends on real-time defect detection. How do we update the model without causing an outage?"</p>
+</div>
+<div class="paragraph">
+<p>This is a classic "Day 2" production challenge. Because we deployed the model using MaaS and GitOps, updating it is safe, auditable, and seamless.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_version_management_strategy"><a class="anchor" href="#_version_management_strategy"></a>Version Management Strategy</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Production AI systems require disciplined version management, just like application code. ChocoTech should use semantic versioning for its model weights stored in the MinIO vault:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>v1.0.0:</strong> Base Llama-3 8B Instruct (Currently deployed)</p>
+</li>
+<li>
+<p><strong>v1.1.0:</strong> Fine-tuned on chocolate defect images (The requested upgrade)</p>
+</li>
+<li>
+<p><strong>v2.0.0:</strong> Major architecture change (e.g., swapping to Llama-3 70B)</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>By keeping the model weights in distinct folders within the S3 vault (e.g., <code>s3://models/llama3/v1.1.0</code>), you ensure that the previous version is always preserved and ready for an instant rollback.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_the_gitops_update_workflow"><a class="anchor" href="#_the_gitops_update_workflow"></a>The GitOps Update Workflow</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>To update the model, a Platform Engineer does <strong>not</strong> delete the running pod, nor do they click around the OpenShift UI. Instead, they update the declarative YAML file in their Git repository.</p>
+</div>
+<div class="paragraph">
+<p>When updating the <code>LLMInferenceService</code>, the only line that needs to change is the <code>uri</code> pointing to the new vault location:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">apiVersion: serving.kserve.io/v1alpha1
+kind: LLMInferenceService
+metadata:
+  name: llama-3-8b
+# ... [truncating for brevity] ...
+spec:
+  model:
+    uri: s3://models/llama3/v1.1.0  # &lt;--- Update the path to the new version
+    name: meta-llama/Meta-Llama-3-8B-Instruct</code></pre>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_graceful_rollouts_zero_downtime"><a class="anchor" href="#_graceful_rollouts_zero_downtime"></a>Graceful Rollouts (Zero-Downtime)</h3>
+<div class="paragraph">
+<p>When you commit this change and apply it to the cluster, OpenShift AI and KServe perform a <strong>Rolling Update</strong>:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>The system spins up a completely new vLLM pod and begins downloading the <code>v1.1.0</code> weights from the MinIO vault.</p>
+</li>
+<li>
+<p>During this time, the <code>v1.0.0</code> pod continues serving live traffic from the Gateway. No user requests are dropped.</p>
+</li>
+<li>
+<p>Once the <code>v1.1.0</code> pod reports a <code>Ready</code> status (meaning the weights are fully loaded into VRAM), KServe automatically flips the network route.</p>
+</li>
+<li>
+<p>All new traffic flows to <code>v1.1.0</code>. The old <code>v1.0.0</code> pod is then gracefully terminated.</p>
+</li>
+</ol>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_the_rollback"><a class="anchor" href="#_the_rollback"></a>The Rollback</h3>
+<div class="paragraph">
+<p>If the Quality Control team reports that the <code>v1.1.0</code> model is hallucinating or underperforming, the rollback process takes seconds. You simply revert the Git commit back to <code>uri: s3://models/llama3/v1.0.0</code> and KServe repeats the rolling update process to restore the known-good state.</p>
+</div>
+<div class="paragraph">
+<p>Now that you understand how to safely manage the lifecycle of these models, you have completed the Platform Engineering infrastructure build!</p>
+</div>
+<div class="paragraph">
+<p>Proceed to the Module 3 Summary to review your AI Factory before we switch roles and become application developers.</p>
+</div>
+</div>
+</div>
+</div>
+<nav class="pagination">
+  <span class="prev"><a href="ch3-model-deploy-05.html">3.4: Lab - Publishing to MaaS Catalog</a></span>
+  <span class="next"><a href="ch3-model-deploy-summary.html">3.6: Summary and troubleshooting</a></span>
+</nav>
+</article>
+  </div>
+</main>
+</div>
+<footer class="footer">
+  <img src="../../../_/img/rhl-logo-red.png" height="40px" alt="Red Hat"  href="https://redhat.com" >
+</footer><script id="site-script" src="../../../_/js/site.js" data-ui-root-path="../../../_"></script>
+<script async src="../../../_/js/vendor/highlight.js"></script>
+  </body>
+</html>

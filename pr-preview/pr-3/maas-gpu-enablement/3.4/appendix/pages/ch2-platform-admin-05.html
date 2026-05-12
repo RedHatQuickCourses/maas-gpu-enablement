@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>2.4: Defining tiers and enforcing rate limits :: Models as a Service Breaking the GPU Silos on OpenShift AI 3.4</title>
+    <meta name="generator" content="Antora 3.1.3">
+    <link rel="stylesheet" href="../../../../_/css/site.css">
+    <script>var uiRootPath = '../../../../_'</script>
+  </head>
+  <body class="article">
+<header class="header">
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="https://www.redhat.com" target="_blank"><img src="../../../../_/img/redhat-logo.png" height="40px" alt="Red Hat"></a>
+      <a class="navbar-item" style="font-size: 24px; color: white" href="../../../..">Models as a Service Breaking the GPU Silos on OpenShift AI 3.4</a>
+      <button class="navbar-burger" data-target="topbar-nav">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+    <div id="topbar-nav" class="navbar-menu">
+      <div class="navbar-end">
+        <a class="navbar-item" href="https://github.com/RedHatQuickCourses/REPLACEREPONAME/issues" target="_blank">Report Issues</a>
+      </div>
+    </div>
+  </nav>
+</header>
+<div class="body">
+<div class="nav-container" data-component="maas-gpu-enablement" data-version="3.4">
+  <aside class="nav">
+    <div class="panels">
+<div class="nav-panel-menu is-active" data-panel="menu">
+  <nav class="nav-menu">
+    <h3 class="title"><a href="../../index.html">Models as a Service Breaking the GPU Silos on OpenShift AI 3.4</a></h3>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../../index.html">Models-as-a-Service Introduction</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../../ch1-mass-arch/ch1-scenario-01.html">Course Scenario - ChocoTech</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../../ch1-mass-arch/ch1-maas-arch-01.html">1: MaaS architecture</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../../ch1-mass-arch/ch1-maas-arch-02.html">1.1: GPU silo crisis</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../../ch1-mass-arch/ch1-maas-arch-03.html">1.2: MaaS architecture stack</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../../ch1-mass-arch/ch1-maas-arch-04.html">1.3: Enabling MaaS on RHOAI</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../../ch1-mass-arch/ch1-maas-arch-05.html">1.4: Summary &amp; troubleshooting</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../../ch1-mass-arch/maas-lab.html">LAB: Deploy MaaS End-to-End</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../../ch1-mass-arch/maas-troubleshooting-routing.html">TROUBLESHOOTING: Gateway Routing Issues</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../../ch2-platform-admin/ch2-platform-admin-01.html">2: Access Control &amp; Governance</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../../ch2-platform-admin/ch2-platform-admin-02.html">2.1: Subscription-based governance</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../../ch2-platform-admin/ch2-platform-admin-03.html">2.2: Creating OpenShift groups</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../../ch2-platform-admin/ch2-platform-admin-04.html">2.3: Subscriptions and quotas</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../../ch2-platform-admin/ch2-platform-admin-05.html">2.4: Authorizing Gateway Access (MaaSAuthPolicy)</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../../ch2-platform-admin/ch2-platform-admin-06.html">2.5: Generating API Keys</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../../ch2-platform-admin/ch2-platform-admin-summary.html">2.6: Summary and troubleshooting</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../../ch3-model-deployment/ch3-model-deploy-01.html">3. Model Deployment</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../../ch3-model-deployment/ch3-model-deploy-02.html">3.1: Model Selection Strategy</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../../ch3-model-deployment/ch3-model-deploy-03.html">3.2: Lab - Deploying with Serving Runtimes</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../../ch3-model-deployment/ch3-model-deploy-04.html">3.3: Lab - Distributed Inference Configuration</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../../ch3-model-deployment/ch3-model-deploy-05.html">3.4: Lab - Publishing to MaaS Catalog</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../../ch3-model-deployment/ch3-model-deploy-06.html">3.5: Lifecycle Management with GitOps</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../../ch3-model-deployment/ch3-model-deploy-summary.html">3.6: Summary and troubleshooting</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+</ul>
+  </nav>
+</div>
+<div class="nav-panel-explore" data-panel="explore">
+  <div class="context">
+    <span class="title">Models as a Service Breaking the GPU Silos on OpenShift AI 3.4</span>
+    <span class="version">3.4</span>
+  </div>
+  <ul class="components">
+    <li class="component is-current">
+      <a class="title" href="../../index.html">Models as a Service Breaking the GPU Silos on OpenShift AI 3.4</a>
+      <ul class="versions">
+        <li class="version is-current is-latest">
+          <a href="../../index.html">3.4</a>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</div>
+    </div>
+  </aside>
+</div>
+<main class="article">
+<div class="toolbar" role="navigation">
+<button class="nav-toggle"></button>
+<nav class="breadcrumbs" aria-label="breadcrumbs">
+  <ul>
+    <li><a href="../../index.html">Models as a Service Breaking the GPU Silos on OpenShift AI 3.4</a></li>
+    <li><a href="ch2-platform-admin-05.html">2.4: Defining tiers and enforcing rate limits</a></li>
+  </ul>
+</nav>
+</div>
+  <div class="content">
+<aside class="toc sidebar" data-title="Contents" data-levels="2">
+  <div class="toc-menu"></div>
+</aside>
+<article class="doc">
+<h1 class="page">2.4: Defining tiers and enforcing rate limits</h1>
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>We have identified our users (Groups) and given them their ID badges (ServiceAccounts and JWTs). Now, it is time to build the security fences.</p>
+</div>
+<div class="paragraph">
+<p>If ChocoTech were relying on a cheap public API, the vendor would treat all ChocoTech traffic identically. If the Marketing team ran a massive, buggy script, they could easily consume the company&#8217;s entire monthly API budget in an afternoon, simultaneously locking out the Quality Control team.</p>
+</div>
+<div class="paragraph">
+<p>MaaS solves this by giving you <strong>Enterprise Quality of Service (QoS)</strong>. By decoupling the UI tier definitions from the network-edge rate limits, you gain absolute control over resource allocation.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_the_enterprise_reality_requests_vs_tokens"><a class="anchor" href="#_the_enterprise_reality_requests_vs_tokens"></a>The Enterprise Reality: Requests vs. Tokens</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>When managing standard microservices, simple API rate limiting is enough. Generative AI requires a fundamentally different approach. In LLM inference, the computational cost of a single API request can vary wildly based on the sequence length.</p>
+</div>
+<div class="paragraph">
+<p>Because of this, Kuadrant and MaaS enforce two distinct types of limits simultaneously:</p>
+</div>
+<table class="tableblock frame-all grid-rows stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 66.6667%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">The Limit Type</th>
+<th class="tableblock halign-left valign-top">The Enterprise Function</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><strong>1. Request Rate Limits</strong></p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>Controls <strong>how many API calls</strong> a user can make per minute.</p>
+</div>
+<div class="paragraph">
+<p><strong>Why it matters:</strong> Protects the Gateway and network from being overwhelmed by a sheer volume of simultaneous connections (e.g., stopping a DDoS or a broken retry script).</p>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><strong>2. Token Quotas</strong></p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>Controls <strong>how much GPU compute</strong> a user can consume per minute by tracking the exact number of <code>prompt_tokens</code> and <code>completion_tokens</code>.</p>
+</div>
+<div class="paragraph">
+<p><strong>Why it matters:</strong> A single API request generating 2,000 tokens costs vastly more GPU memory than a request generating 10 tokens. Token quotas mathematically prevent a single user from hoarding VRAM.</p>
+</div></div></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_the_chocotech_governance_strategy"><a class="anchor" href="#_the_chocotech_governance_strategy"></a>The ChocoTech Governance Strategy</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Based on the CIO&#8217;s requirements, we will implement the following tier structure:</p>
+</div>
+<table class="tableblock frame-all grid-rows stretch">
+<colgroup>
+<col style="width: 20%;">
+<col style="width: 20%;">
+<col style="width: 20%;">
+<col style="width: 40%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Tier</th>
+<th class="tableblock halign-left valign-top">Priority Level</th>
+<th class="tableblock halign-left valign-top">Rate Limit</th>
+<th class="tableblock halign-left valign-top">Enterprise Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><strong>Gold</strong> (Quality Control)</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><code>100</code> (Highest)</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>100 requests/min</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><strong>Guaranteed Production:</strong> Ensures the factory floor defect-detection models are never throttled during peak demand.</p>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><strong>Silver</strong> (R&amp;D)</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><code>50</code> (Medium)</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>50 requests/min</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><strong>Balanced Development:</strong> Provides generous capacity for recipe optimization testing without threatening Gold tier resources.</p>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><strong>Bronze</strong> (Marketing)</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><code>10</code> (Lowest)</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>20 requests/min</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><strong>Cost Control:</strong> Strictly limits exploratory sentiment analysis, preventing runaway scripts from wasting expensive GPU cycles.</p>
+</div></div></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>Creating these governed tiers in OpenShift AI 3.3 is a two-step process:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>Define the Business Logic:</strong> Tell the Gen AI Studio UI what the tiers are.</p>
+</li>
+<li>
+<p><strong>Enforce the Network Policy:</strong> Tell the Kuadrant Gateway how to throttle the traffic.</p>
+</li>
+</ol>
+</div>
+<hr>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_step_1_define_the_ui_business_logic_the_configmap"><a class="anchor" href="#_step_1_define_the_ui_business_logic_the_configmap"></a>Step 1: Define the UI Business Logic (The ConfigMap)</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>First, we must register the tiers in the <code>redhat-ods-applications</code> namespace. The Gen AI Studio UI reads this ConfigMap to know what tiers exist and which OpenShift groups belong to them.</p>
+</div>
+<div class="paragraph">
+<p>Execute the following block to create the tier mappings:</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">cat &lt;&lt;EOF | oc apply -f -
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: tier-to-group-mapping
+  namespace: redhat-ods-applications
+data:
+  tiers: |
+    - name: gold-tier
+      description: Quality Control Production
+      level: 100
+      groups:
+      - chocotech-quality-control
+    - name: silver-tier
+      description: R&amp;D Development
+      level: 50
+      groups:
+      - chocotech-rd
+    - name: bronze-tier
+      description: Marketing Exploratory
+      level: 10
+      groups:
+      - chocotech-marketing
+EOF</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>Expected output:</strong> <code>configmap/tier-to-group-mapping configured</code>. When an AI Administrator logs into the dashboard, these tiers will now be globally visible.</p>
+</div>
+<hr>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_step_2_enforce_the_network_rate_limits_kuadrant"><a class="anchor" href="#_step_2_enforce_the_network_rate_limits_kuadrant"></a>Step 2: Enforce the Network Rate Limits (Kuadrant)</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Now, we must apply the Kuadrant <code>RateLimitPolicy</code> to the <code>maas-default-gateway</code>. This physically enforces the traffic limits at the network edge based on the Common Expression Language (CEL) claims inside the user&#8217;s JWT.</p>
+</div>
+<div class="paragraph">
+<p>Execute the following block to deploy all three rate limit policies into the <code>chocotech-models</code> namespace simultaneously:</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">cat &lt;&lt;EOF | oc apply -f -
+---
+apiVersion: kuadrant.io/v1
+kind: RateLimitPolicy
+metadata:
+  name: gold-tier-rate-limit
+  namespace: chocotech-models
+spec:
+  targetRef:
+    group: gateway.networking.k8s.io
+    kind: Gateway
+    name: maas-default-gateway
+  limits:
+    "gold-request-limit":
+      rates:
+      - limit: 100
+        window: "1m"
+      when:
+      - predicate: "has(auth.identity) &amp;&amp; 'chocotech-quality-control' in auth.identity.groups"
+---
+apiVersion: kuadrant.io/v1
+kind: RateLimitPolicy
+metadata:
+  name: silver-tier-rate-limit
+  namespace: chocotech-models
+spec:
+  targetRef:
+    group: gateway.networking.k8s.io
+    kind: Gateway
+    name: maas-default-gateway
+  limits:
+    "silver-request-limit":
+      rates:
+      - limit: 50
+        window: "1m"
+      when:
+      - predicate: "has(auth.identity) &amp;&amp; 'chocotech-rd' in auth.identity.groups"
+---
+apiVersion: kuadrant.io/v1
+kind: RateLimitPolicy
+metadata:
+  name: bronze-tier-rate-limit
+  namespace: chocotech-models
+spec:
+  targetRef:
+    group: gateway.networking.k8s.io
+    kind: Gateway
+    name: maas-default-gateway
+  limits:
+    "bronze-request-limit":
+      rates:
+      - limit: 20
+        window: "1m"
+      when:
+      - predicate: "has(auth.identity) &amp;&amp; 'chocotech-marketing' in auth.identity.groups"
+EOF</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>Expected output:</strong> The terminal will confirm the creation of <code>gold-tier-rate-limit</code>, <code>silver-tier-rate-limit</code>, and <code>bronze-tier-rate-limit</code>.</p>
+</div>
+<div class="quoteblock">
+<blockquote>
+<div class="paragraph">
+<p><strong>Architectural Note: The UI is a One-Way Street</strong>
+If you define a Kuadrant <code>RateLimitPolicy</code> using CEL via the CLI, it will work perfectly at the network edge. However, <strong>it will not appear in the Gen AI Studio UI.</strong> The OpenShift AI dashboard is an abstraction layer; it <strong>pushes</strong> basic YAML down to Kuadrant, but it does not read complex manual Kuadrant policies <strong>up</strong> from the cluster. Platform Engineers must document their custom GitOps policies, as the AI Admin will not see them in their dashboard.</p>
+</div>
+</blockquote>
+</div>
+<hr>
+</div>
+</div>
+</article>
+  </div>
+</main>
+</div>
+<footer class="footer">
+  <img src="../../../../_/img/rhl-logo-red.png" height="40px" alt="Red Hat"  href="https://redhat.com" >
+</footer><script id="site-script" src="../../../../_/js/site.js" data-ui-root-path="../../../../_"></script>
+<script async src="../../../../_/js/vendor/highlight.js"></script>
+  </body>
+</html>

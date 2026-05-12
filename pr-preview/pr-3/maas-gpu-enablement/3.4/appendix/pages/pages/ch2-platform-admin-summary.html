@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>2.5: Summary &amp; troubleshooting :: Models as a Service Breaking the GPU Silos on OpenShift AI 3.4</title>
+    <meta name="generator" content="Antora 3.1.3">
+    <link rel="stylesheet" href="../../../../../_/css/site.css">
+    <script>var uiRootPath = '../../../../../_'</script>
+  </head>
+  <body class="article">
+<header class="header">
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="https://www.redhat.com" target="_blank"><img src="../../../../../_/img/redhat-logo.png" height="40px" alt="Red Hat"></a>
+      <a class="navbar-item" style="font-size: 24px; color: white" href="../../../../..">Models as a Service Breaking the GPU Silos on OpenShift AI 3.4</a>
+      <button class="navbar-burger" data-target="topbar-nav">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+    <div id="topbar-nav" class="navbar-menu">
+      <div class="navbar-end">
+        <a class="navbar-item" href="https://github.com/RedHatQuickCourses/REPLACEREPONAME/issues" target="_blank">Report Issues</a>
+      </div>
+    </div>
+  </nav>
+</header>
+<div class="body">
+<div class="nav-container" data-component="maas-gpu-enablement" data-version="3.4">
+  <aside class="nav">
+    <div class="panels">
+<div class="nav-panel-menu is-active" data-panel="menu">
+  <nav class="nav-menu">
+    <h3 class="title"><a href="../../../index.html">Models as a Service Breaking the GPU Silos on OpenShift AI 3.4</a></h3>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../../../index.html">Models-as-a-Service Introduction</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../../../ch1-mass-arch/ch1-scenario-01.html">Course Scenario - ChocoTech</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../../../ch1-mass-arch/ch1-maas-arch-01.html">1: MaaS architecture</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../../../ch1-mass-arch/ch1-maas-arch-02.html">1.1: GPU silo crisis</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../../../ch1-mass-arch/ch1-maas-arch-03.html">1.2: MaaS architecture stack</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../../../ch1-mass-arch/ch1-maas-arch-04.html">1.3: Enabling MaaS on RHOAI</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../../../ch1-mass-arch/ch1-maas-arch-05.html">1.4: Summary &amp; troubleshooting</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../../../ch1-mass-arch/maas-lab.html">LAB: Deploy MaaS End-to-End</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../../../ch1-mass-arch/maas-troubleshooting-routing.html">TROUBLESHOOTING: Gateway Routing Issues</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../../../ch2-platform-admin/ch2-platform-admin-01.html">2: Access Control &amp; Governance</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../../../ch2-platform-admin/ch2-platform-admin-02.html">2.1: Subscription-based governance</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../../../ch2-platform-admin/ch2-platform-admin-03.html">2.2: Creating OpenShift groups</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../../../ch2-platform-admin/ch2-platform-admin-04.html">2.3: Subscriptions and quotas</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../../../ch2-platform-admin/ch2-platform-admin-05.html">2.4: Authorizing Gateway Access (MaaSAuthPolicy)</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../../../ch2-platform-admin/ch2-platform-admin-06.html">2.5: Generating API Keys</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../../../ch2-platform-admin/ch2-platform-admin-summary.html">2.6: Summary and troubleshooting</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../../../ch3-model-deployment/ch3-model-deploy-01.html">3. Model Deployment</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../../../ch3-model-deployment/ch3-model-deploy-02.html">3.1: Model Selection Strategy</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../../../ch3-model-deployment/ch3-model-deploy-03.html">3.2: Lab - Deploying with Serving Runtimes</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../../../ch3-model-deployment/ch3-model-deploy-04.html">3.3: Lab - Distributed Inference Configuration</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../../../ch3-model-deployment/ch3-model-deploy-05.html">3.4: Lab - Publishing to MaaS Catalog</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../../../ch3-model-deployment/ch3-model-deploy-06.html">3.5: Lifecycle Management with GitOps</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../../../ch3-model-deployment/ch3-model-deploy-summary.html">3.6: Summary and troubleshooting</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+</ul>
+  </nav>
+</div>
+<div class="nav-panel-explore" data-panel="explore">
+  <div class="context">
+    <span class="title">Models as a Service Breaking the GPU Silos on OpenShift AI 3.4</span>
+    <span class="version">3.4</span>
+  </div>
+  <ul class="components">
+    <li class="component is-current">
+      <a class="title" href="../../../index.html">Models as a Service Breaking the GPU Silos on OpenShift AI 3.4</a>
+      <ul class="versions">
+        <li class="version is-current is-latest">
+          <a href="../../../index.html">3.4</a>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</div>
+    </div>
+  </aside>
+</div>
+<main class="article">
+<div class="toolbar" role="navigation">
+<button class="nav-toggle"></button>
+<nav class="breadcrumbs" aria-label="breadcrumbs">
+  <ul>
+    <li><a href="../../../index.html">Models as a Service Breaking the GPU Silos on OpenShift AI 3.4</a></li>
+    <li><a href="ch2-platform-admin-summary.html">2.5: Summary &amp; troubleshooting</a></li>
+  </ul>
+</nav>
+</div>
+  <div class="content">
+<aside class="toc sidebar" data-title="Contents" data-levels="2">
+  <div class="toc-menu"></div>
+</aside>
+<article class="doc">
+<h1 class="page">2.5: Summary &amp; troubleshooting</h1>
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>You have successfully transformed ChocoTech&#8217;s OpenShift AI platform from a raw, ungoverned infrastructure into a highly secure, multi-tenant enterprise AI factory.</p>
+</div>
+<div class="paragraph">
+<p>If ChocoTech had opted for a generic public API, they would currently have zero internal cost control and no way to prioritize mission-critical workloads over experimental scripts. By building these policies directly into the OpenShift network edge, you have secured the company&#8217;s ROI and established absolute Quality of Service (QoS).</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_what_you_accomplished"><a class="anchor" href="#_what_you_accomplished"></a>What you accomplished</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Organizational Identity:</strong> Created OpenShift groups to represent specific business units (<code>chocotech-quality-control</code>, <code>chocotech-rd</code>, <code>chocotech-marketing</code>), ensuring audit trails are mapped to departments, not just individuals.</p>
+</li>
+<li>
+<p><strong>Programmatic Security:</strong> Configured ServiceAccounts and ephemeral JWT token-based API authentication. You established least-privilege RBAC to ensure applications can only read and execute, not modify, the infrastructure.</p>
+</li>
+<li>
+<p><strong>Tier Definition:</strong> Deployed the <code>tier-to-group-mapping</code> ConfigMap, instructing the Gen AI Studio UI on exactly how to categorize ChocoTech&#8217;s business units.</p>
+</li>
+<li>
+<p><strong>Edge-Level Governance:</strong> Deployed Gold, Silver, and Bronze <code>RateLimitPolicy</code> resources to Kuadrant. You successfully decoupled the inference request from the underlying GPU, ensuring that traffic limits are enforced mathematically at the Gateway.</p>
+</li>
+</ul>
+</div>
+<hr>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_knowledge_check"><a class="anchor" href="#_knowledge_check"></a>Knowledge check</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Test your understanding of the tier governance architecture before moving on:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>Why are MaaS Tier policies created before model deployment, rather than after?</strong></p>
+<div class="paragraph">
+<p>MaaS Tier policies must exist before deployment so the MaaS operator and Kuadrant can enforce rate limits and quotas from the very first inference request. Creating policies after deployment would leave a window of uncontrolled, ungoverned access.</p>
+</div>
+</li>
+<li>
+<p><strong>What happens if a Bronze tier user (Marketing) tries to exceed 20 requests per minute?</strong></p>
+<div class="paragraph">
+<p>Kuadrant&#8217;s Limitador component, operating at the network edge, tracks the requests per tier. It immediately rejects any requests exceeding the limit with an <code>HTTP 429 Too Many Requests</code> status code, preventing the request from ever reaching the KServe model pod. The user&#8217;s application must wait until the next minute window.</p>
+</div>
+</li>
+<li>
+<p><strong>How does Authorino know which tier a programmatic user belongs to?</strong></p>
+<div class="paragraph">
+<p>Authorino intercepts the API request, cryptographically validates the JWT token signature, and extracts the ServiceAccount identity. It evaluates the OpenShift groups associated with that identity and maps them against the defined tier rules, applying the highest priority tier available to that user.</p>
+</div>
+</li>
+</ol>
+</div>
+<hr>
+<details>
+<summary class="title">🛠️ Troubleshooting: Governance &amp; Authentication (Click to expand)</summary>
+<div class="content">
+<div class="paragraph">
+<p>If you encountered any issues verifying your policies, check the following common resolutions:</p>
+</div>
+<div class="paragraph">
+<p><strong>Issue: Token authentication returns <code>401 Unauthorized</code></strong></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Check Token Expiry:</strong> Regenerate the token using <code>TOKEN=$(oc create token marketing-sentiment-app -n chocotech-models --duration=1h)</code>.</p>
+</li>
+<li>
+<p><strong>Verify RBAC:</strong> Ensure your <code>Role</code> and <code>RoleBinding</code> exist in the correct namespace: <code>oc get rolebinding marketing-sentiment-app-binding -n chocotech-models</code>.</p>
+</li>
+<li>
+<p><strong>Check Authorino Logs:</strong> Run <code>oc logs -l app=authorino -n kuadrant-system</code> to see exactly why the token was rejected.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>Issue: AuthConfig not found in redhat-ods-applications</strong></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Verify MaaS State:</strong> The operator creates this automatically. Verify MaaS is enabled: <code>oc get datasciencecluster default-dsc -o jsonpath='{.spec.components.modelsAsService.managementState}'</code> (Should return <code>Managed</code>).</p>
+</li>
+<li>
+<p><strong>Check Operator Logs:</strong> Run <code>oc logs -n redhat-ods-operator deployment/rhods-operator | grep -i authorino</code> to see if the creation failed.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>Issue: Authorino or Limitador pods are crashing / pending</strong></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Check Pod Events:</strong> Run <code>oc describe pod -l app=authorino -n kuadrant-system</code>.</p>
+</li>
+<li>
+<p><strong>Common Causes:</strong> Insufficient CPU/Memory on the cluster nodes, or a network issue preventing the cluster from pulling the Kuadrant images from <code>quay.io</code>.</p>
+</li>
+</ul>
+</div>
+</div>
+</details>
+<hr>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_your_journey_progress"><a class="anchor" href="#_your_journey_progress"></a>Your journey progress</h2>
+<div class="sectionbody">
+<table class="tableblock frame-none grid-none stretch">
+<colgroup>
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 25%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><strong>✅ Module 1</strong><br>
+<em>Architecture &amp; Foundation</em></p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><strong>✅ Module 2</strong><br>
+<em>Policies &amp; Governance</em></p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><strong>⏳ Module 3</strong><br>
+<em>Model Deployment</em></p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><strong>🚀 Module 4</strong><br>
+<em>Application Integration</em></p>
+</div></div></td>
+</tr>
+</tbody>
+</table>
+<div class="quoteblock">
+<blockquote>
+<strong>Next steps:</strong> Your security perimeter is established, but the catalog is currently empty. In Module 3, you will deploy your first generative AI models (<code>llama-3-8b</code> and <code>nemotron-8b</code>). You will annotate these models with the tiers you just built, publish them to the Gen AI Studio catalog, and actively watch Kuadrant throttle traffic based on the Gold/Silver/Bronze limits.
+</blockquote>
+</div>
+</div>
+</div>
+</article>
+  </div>
+</main>
+</div>
+<footer class="footer">
+  <img src="../../../../../_/img/rhl-logo-red.png" height="40px" alt="Red Hat"  href="https://redhat.com" >
+</footer><script id="site-script" src="../../../../../_/js/site.js" data-ui-root-path="../../../../../_"></script>
+<script async src="../../../../../_/js/vendor/highlight.js"></script>
+  </body>
+</html>

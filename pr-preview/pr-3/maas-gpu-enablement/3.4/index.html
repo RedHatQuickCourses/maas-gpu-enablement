@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Models as a Service: Breaking the GPU Silos on OpenShift AI 3.4 :: Models as a Service Breaking the GPU Silos on OpenShift AI 3.4</title>
+    <link rel="next" href="ch1-mass-arch/ch1-scenario-01.html">
+    <meta name="generator" content="Antora 3.1.3">
+    <link rel="stylesheet" href="../../_/css/site.css">
+    <script>var uiRootPath = '../../_'</script>
+  </head>
+  <body class="article">
+<header class="header">
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="https://www.redhat.com" target="_blank"><img src="../../_/img/redhat-logo.png" height="40px" alt="Red Hat"></a>
+      <a class="navbar-item" style="font-size: 24px; color: white" href="../..">Models as a Service Breaking the GPU Silos on OpenShift AI 3.4</a>
+      <button class="navbar-burger" data-target="topbar-nav">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+    <div id="topbar-nav" class="navbar-menu">
+      <div class="navbar-end">
+        <a class="navbar-item" href="https://github.com/RedHatQuickCourses/REPLACEREPONAME/issues" target="_blank">Report Issues</a>
+      </div>
+    </div>
+  </nav>
+</header>
+<div class="body">
+<div class="nav-container" data-component="maas-gpu-enablement" data-version="3.4">
+  <aside class="nav">
+    <div class="panels">
+<div class="nav-panel-menu is-active" data-panel="menu">
+  <nav class="nav-menu">
+    <h3 class="title"><a href="index.html">Models as a Service Breaking the GPU Silos on OpenShift AI 3.4</a></h3>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item is-current-page" data-depth="1">
+    <a class="nav-link" href="index.html">Models-as-a-Service Introduction</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="ch1-mass-arch/ch1-scenario-01.html">Course Scenario - ChocoTech</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="ch1-mass-arch/ch1-maas-arch-01.html">1: MaaS architecture</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="ch1-mass-arch/ch1-maas-arch-02.html">1.1: GPU silo crisis</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="ch1-mass-arch/ch1-maas-arch-03.html">1.2: MaaS architecture stack</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="ch1-mass-arch/ch1-maas-arch-04.html">1.3: Enabling MaaS on RHOAI</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="ch1-mass-arch/ch1-maas-arch-05.html">1.4: Summary &amp; troubleshooting</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="ch1-mass-arch/maas-lab.html">LAB: Deploy MaaS End-to-End</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="ch1-mass-arch/maas-troubleshooting-routing.html">TROUBLESHOOTING: Gateway Routing Issues</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="ch2-platform-admin/ch2-platform-admin-01.html">2: Access Control &amp; Governance</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="ch2-platform-admin/ch2-platform-admin-02.html">2.1: Subscription-based governance</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="ch2-platform-admin/ch2-platform-admin-03.html">2.2: Creating OpenShift groups</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="ch2-platform-admin/ch2-platform-admin-04.html">2.3: Subscriptions and quotas</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="ch2-platform-admin/ch2-platform-admin-05.html">2.4: Authorizing Gateway Access (MaaSAuthPolicy)</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="ch2-platform-admin/ch2-platform-admin-06.html">2.5: Generating API Keys</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="ch2-platform-admin/ch2-platform-admin-summary.html">2.6: Summary and troubleshooting</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="ch3-model-deployment/ch3-model-deploy-01.html">3. Model Deployment</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="ch3-model-deployment/ch3-model-deploy-02.html">3.1: Model Selection Strategy</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="ch3-model-deployment/ch3-model-deploy-03.html">3.2: Lab - Deploying with Serving Runtimes</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="ch3-model-deployment/ch3-model-deploy-04.html">3.3: Lab - Distributed Inference Configuration</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="ch3-model-deployment/ch3-model-deploy-05.html">3.4: Lab - Publishing to MaaS Catalog</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="ch3-model-deployment/ch3-model-deploy-06.html">3.5: Lifecycle Management with GitOps</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="ch3-model-deployment/ch3-model-deploy-summary.html">3.6: Summary and troubleshooting</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+</ul>
+  </nav>
+</div>
+<div class="nav-panel-explore" data-panel="explore">
+  <div class="context">
+    <span class="title">Models as a Service Breaking the GPU Silos on OpenShift AI 3.4</span>
+    <span class="version">3.4</span>
+  </div>
+  <ul class="components">
+    <li class="component is-current">
+      <a class="title" href="index.html">Models as a Service Breaking the GPU Silos on OpenShift AI 3.4</a>
+      <ul class="versions">
+        <li class="version is-current is-latest">
+          <a href="index.html">3.4</a>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</div>
+    </div>
+  </aside>
+</div>
+<main class="article">
+<div class="toolbar" role="navigation">
+<button class="nav-toggle"></button>
+<nav class="breadcrumbs" aria-label="breadcrumbs">
+  <ul>
+    <li><a href="index.html">Models as a Service Breaking the GPU Silos on OpenShift AI 3.4</a></li>
+    <li><a href="index.html">Models-as-a-Service Introduction</a></li>
+  </ul>
+</nav>
+</div>
+  <div class="content">
+<aside class="toc sidebar" data-title="Contents" data-levels="2">
+  <div class="toc-menu"></div>
+</aside>
+<article class="doc">
+<h1 class="page">Models as a Service: Breaking the GPU Silos on OpenShift AI 3.4</h1>
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>Welcome to this <strong>Red Hat OpenShift AI 3.4 - Models as a Service</strong> QuickCourse!</p>
+</div>
+<hr>
+<div class="paragraph">
+<p>The CIO at ChocoTech Industries just called an emergency meeting.</p>
+</div>
+<div class="paragraph">
+<p>"We’ve invested over $500,000 in GPU infrastructure across four teams," she says, reviewing the quarterly report. "Yet our R&amp;D team is waiting three weeks for capacity while Quality Control’s GPUs sit idle 60% of the time. This doesn’t make sense."</p>
+</div>
+<div class="paragraph">
+<p>ChocoTech needs to align their AI Strategy to optimize for GPU utilization across business units, moving to a centralized, governed platform where all teams can access AI models efficiently.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_the_maas_mandate"><a class="anchor" href="#_the_maas_mandate"></a>The MaaS Mandate</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Designed for Platform Engineers and Developers, this course provides the steps to build a governed Models as a Service (MaaS) ecosystem on OpenShift AI 3.4. We skip the trial-and-error of figuring out which operators and registries to install. Instead - you will learn how to immediately transform fragmented, isolated hardware into a fairly scheduled, multi-tenant shared service, empowering your business units to deploy agentic AI smoothly, securely, and at scale.</p>
+</div>
+<div class="paragraph">
+<p>By the end of this course, you will be equipped to empower your lines of business with self-service models to build agentic AI applications smoothly and securely.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p><strong>Experience Level</strong>: Intermediate</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_prerequisites"><a class="anchor" href="#_prerequisites"></a>Prerequisites</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>To get the most out of this QuickCourse, you should come to the table with:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Red Hat OpenShift administration experience (version 4.20 or later)</p>
+</li>
+<li>
+<p>Basic Kubernetes operator management knowledge</p>
+</li>
+<li>
+<p>Familiarity with core GPU concepts and generic GPU enablement</p>
+</li>
+<li>
+<p>An understanding of API concepts and REST principles</p>
+</li>
+<li>
+<p>Basic command-line experience</p>
+</li>
+<li>
+<p>Networking - Routing traffic via Gateway API to the Mass Endpoint.</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_what_youll_learn"><a class="anchor" href="#_what_youll_learn"></a>What You&#8217;ll Learn</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>In this hands-on QuickCourse, you will:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>MaaS Strategy</strong>: Understand how Models as a Service solves complex GPU resource allocation challenges.</p>
+</li>
+<li>
+<p><strong>Architect a Hub</strong>: Design and implement a centralized model hub featuring governed, token-based consumption.</p>
+</li>
+<li>
+<p><strong>Configure and Deploy</strong>: Set up MaaS on OpenShift AI using operators and CRDs, and deploy generative AI models (using llm-d, vLLM, and KServe) for distributed inference.</p>
+</li>
+<li>
+<p><strong>Publish for Self-Service</strong>: Publish models to the OpenShift AI <code>ModelsAsService</code> catalog, complete with subscription-based access permissions.</p>
+</li>
+<li>
+<p><strong>Enforce Governance</strong>: Implement subscription service limits and rate limiting using Kuadrant.</p>
+</li>
+<li>
+<p><strong>Monitor and Report</strong>: Generate chargeback reports and track GPU utilization metrics using Grafana.</p>
+</li>
+<li>
+<p><strong>Integrate Seamlessly</strong>: Connect AI models into applications using OpenAI-compatible APIs with robust retry logic.</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_required_operators_and_components"><a class="anchor" href="#_required_operators_and_components"></a>Required Operators and Components</h2>
+<div class="sectionbody">
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+MaaS requires the following operators and infrastructure components:
+</td>
+</tr>
+</table>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 16.6666%;">
+<col style="width: 33.3333%;">
+<col style="width: 16.6668%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Component</th>
+<th class="tableblock halign-left valign-top">Version</th>
+<th class="tableblock halign-left valign-top">Installation Namespace</th>
+<th class="tableblock halign-left valign-top">Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Red Hat OpenShift</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">4.19.9+</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">N/A (Platform)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✅ Required</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Red Hat OpenShift AI Operator</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">3.4+</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>redhat-ods-applications</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✅ Required</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Red Hat Connectivity Link Operator</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1.2+</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>openshift-operators</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✅ Required</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Llama Stack Operator</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">3.4+</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>redhat-ods-applications</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">⚠️ Required for dashboard UI</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>User Workload Monitoring</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">N/A</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>openshift-monitoring</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✅ Required</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>PostgreSQL Database</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">N/A</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>redhat-ods-applications</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✅ Required</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Gateway API</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Built-in</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>openshift-ingress</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✅ Required</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Cluster Observability Operator</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Latest</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>openshift-operators</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">⭕ Optional (Tech Preview)</p></td>
+</tr>
+</tbody>
+</table>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p><strong>Legend:</strong></p>
+</div>
+<div class="paragraph">
+<p>✅ Required for MaaS core functionality<br>
+⚠️ Required for specific features<br>
+⭕ Optional for enhanced capabilities</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_estimated_time_agenda"><a class="anchor" href="#_estimated_time_agenda"></a>Estimated Time &amp; Agenda</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Plan for approximately <strong>3 to 4 hours</strong> to complete the full journey.</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>MaaS Architecture</strong> (30 mins)</p>
+</li>
+<li>
+<p><strong>MaaS Configuration</strong> (40 mins)</p>
+</li>
+<li>
+<p><strong>Model Deployment to the MaaS Catalog</strong> (55 mins)</p>
+</li>
+<li>
+<p><strong>MaaS Governance, Observability, and Chargeback</strong> (50 mins)</p>
+</li>
+<li>
+<p><strong>API Integration and Consumer Experience</strong> (40 mins)</p>
+</li>
+</ol>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p><strong>Pacing Yourself:</strong> You can work through the modules at your own pace. We highly recommend to <strong>shut down the expensive GPU lab environment</strong> between active sessions!</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_follow_up_resources"><a class="anchor" href="#_follow_up_resources"></a>Follow-up Resources</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p><a href="https://docs.redhat.com/en/documentation/red_hat_openshift_ai_self-managed/3.4" target="_blank" rel="noopener">Red Hat OpenShift AI Documentation</a></p>
+</li>
+<li>
+<p><a href="https://developers.redhat.com/products/red-hat-ai" target="_blank" rel="noopener">Red Hat Developer - OpenShift AI Resources</a></p>
+</li>
+<li>
+<p><a href="https://access.redhat.com/articles/rhoai-supported-configs-3.x" target="_blank" rel="noopener">Red Hat OpenShift AI 3.x Supported Configurations</a></p>
+</li>
+<li>
+<p><a href="https://www.redhat.com/en/technologies/cloud-computing/openshift/openshift-ai" target="_blank" rel="noopener">Red Hat OpenShift AI Product Page</a></p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_authors_and_contributors"><a class="anchor" href="#_authors_and_contributors"></a>Authors and Contributors</h2>
+<div class="sectionbody">
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>Author</strong></dt>
+<dd>
+<p>Karlos Knox<br>
+Content Services Architect</p>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Last Updated</strong>: May 2026</p>
+</li>
+<li>
+<p><strong>QuickCourse Version</strong>: 3.4</p>
+</li>
+<li>
+<p><strong>Based on</strong>: Red Hat OpenShift AI 3.4+ MaaS capabilities</p>
+</li>
+</ul>
+</div>
+</dd>
+</dl>
+</div>
+<div class="paragraph">
+<p><strong>Contact Information</strong>:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>QuickCourse feedback</strong>: Submit GitHub issues via the <a href="https://github.com/RedHatQuickCourses/maas-gpu-enablement.git" target="_blank" rel="noopener">QuickCourse repository.</a></p>
+</li>
+<li>
+<p><strong>Content updates</strong>: Submit GitHub issues via the <a href="https://github.com/RedHatQuickCourses/maas-gpu-enablement.git" target="_blank" rel="noopener">QuickCourse repository.</a>.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>Acknowledgments</strong>:
+This QuickCourse incorporates expert guidance from the Red Hat OpenShift AI business unit and product engineering architects working with enterprise AI deployments. Special thanks to <strong>Taylor Jordan Smith</strong>, <strong>James Harmison</strong>, and  <strong>Shumaila Yaseen</strong>.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_lets_get_started"><a class="anchor" href="#_lets_get_started"></a>Let&#8217;s Get Started!</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Ready to dive in? Click on <strong>QuickCourse Overview</strong> in the navigation to begin your learning journey.</p>
+</div>
+<div class="paragraph">
+<p>You&#8217;ll start by meeting <strong>ChocoTech Industries</strong>—a rapidly growing chocolate manufacturer looking for a solution to their GPU silo crisis. Let&#8217;s help them build a better AI infrastructure!</p>
+</div>
+</div>
+</div>
+<nav class="pagination">
+  <span class="next"><a href="ch1-mass-arch/ch1-scenario-01.html">Course Scenario - ChocoTech</a></span>
+</nav>
+</article>
+  </div>
+</main>
+</div>
+<footer class="footer">
+  <img src="../../_/img/rhl-logo-red.png" height="40px" alt="Red Hat"  href="https://redhat.com" >
+</footer><script id="site-script" src="../../_/js/site.js" data-ui-root-path="../../_"></script>
+<script async src="../../_/js/vendor/highlight.js"></script>
+  </body>
+</html>
