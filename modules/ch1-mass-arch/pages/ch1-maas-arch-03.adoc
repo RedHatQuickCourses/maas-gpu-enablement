@@ -25,7 +25,7 @@ By decoupling the network routing, the policy governance, and the execution engi
 | **Kuadrant (Policy & Governance)**
 
 * **Authorino:** Validates tokens and enforces zero-trust authentication. 
-* **Limitador:** Tracks token consumption and enforces tier-based rate limits.
+* **Limitador:** Tracks token consumption and enforces subscription-based token limits.
 | **Security & Chargebacks:** This layer mathematically guarantees that a team cannot exhaust GPU resources. It provides the exact token-usage telemetry required for Finance to bill departments accurately.
 
 | **Layer 3: The Engine Room**
@@ -46,7 +46,7 @@ image::maas-layers.png[MaaS Three-Layer Architecture showing Gateway API routing
 
 To understand how these components work together, let's trace a real request from ChocoTech's Marketing team as they try to use the shared `llama-3-8b` model for a sentiment analysis application.
 
-1. **The Request Arrives (Gateway API):** The Marketing application sends a POST request to `/v1/chat/completions` containing their Bearer token and the prompt data. The Gateway API catches this at the network edge.
+1. **The Request Arrives (Gateway API):** The Marketing application sends a POST request to `/v1/chat/completions containing their MaaS API key (passed as a Bearer token) and the prompt data.. The Gateway API catches this at the network edge.
 2. **Identity Verification (Kuadrant - Authorino):** The Gateway pauses the request and asks Authorino, "Is this token valid, and what subscription level does this user have?" Authorino confirms the user is in the "Bronze" subscription group. Next it checks the Authorization policy which (TobeAdded)
 (If the token was invalid, it would immediately return a `401 Unauthorized` without touching the GPU).
 3. **Policy Enforcement (Kuadrant - Limitador):** Policies (MaaSAuthPolicy) and subscriptions (MaaSSubscription) work together. Both use RBAC references (subjects or owners). A user must have both a matching policy (access) and a matching subscription (quota) to use a model. Limitador checks the Bronze subscription quota. "Has the Marketing team exceeded their 10,000 tokens-per-hour limit?" If they are within limits, the request is permitted. (If exceeded, it returns a `429 Too Many Requests`).
