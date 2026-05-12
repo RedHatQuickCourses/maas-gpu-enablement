@@ -79,7 +79,7 @@
 <ul class="nav-list">
   <li class="nav-item" data-depth="1">
     <button class="nav-item-toggle"></button>
-    <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-01.html">2: Access Control &amp; Governance</a>
+    <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-01.html">2: MaaS Access Control &amp; Governance</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-02.html">2.1: Subscription-based governance</a>
@@ -246,11 +246,17 @@
 <pre class="highlightjs highlight"><code class="language-none hljs">oc create namespace kuadrant-system
 
 cat &lt;&lt;EOF | oc apply -f -
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: kuadrant-system
+---
 apiVersion: kuadrant.io/v1beta1
 kind: Kuadrant
 metadata:
   name: kuadrant
   namespace: kuadrant-system
+spec: {}
 EOF</code></pre>
 </div>
 </div>

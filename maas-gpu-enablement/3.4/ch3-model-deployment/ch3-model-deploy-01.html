@@ -79,7 +79,7 @@
 <ul class="nav-list">
   <li class="nav-item" data-depth="1">
     <button class="nav-item-toggle"></button>
-    <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-01.html">2: Access Control &amp; Governance</a>
+    <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-01.html">2: MaaS Access Control &amp; Governance</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-02.html">2.1: Subscription-based governance</a>
@@ -185,7 +185,7 @@
 <p>By deploying models directly onto Red Hat OpenShift AI 3.3, ChocoTech keeps 100% of its intellectual property secure. Even better, OpenShift AI 3.x utilizes a disaggregated inference architecture powered by <code>llm-d</code> (Distributed Inference) and the vLLM engine. This maximizes throughput and minimizes latency by decoupling request handling from low-level tensor operations, ensuring ChocoTech squeezes every drop of ROI out of their hardware.</p>
 </div>
 <div class="paragraph">
-<p>Your task is to deploy these generative AI models, configure distributed inference for multi-GPU scenarios, and publish them to the MaaS catalog where Kuadrant will automatically enforce the Gold/Silver/Bronze tiers you built in Module 2.</p>
+<p>Your task is to deploy these generative AI models, configure distributed inference for multi-GPU scenarios, and publish them to the MaaS catalog where Kuadrant will automatically enforce the Gold/Silver/Bronze subscriptions you built in Module 2.</p>
 </div>
 <!-- toc disabled -->
 </div>
@@ -208,7 +208,7 @@
 <p>Deploy a generative AI model using the <code>LLMInferenceService</code> custom resource.</p>
 </li>
 <li>
-<p>Annotate models with specific tier access permissions (<code>alpha.maas.opendatahub.io/tiers</code>) to restrict access[cite: 85].</p>
+<p>Annotate models with specific tier access permissions (<code>alpha.maas.opendatahub.io/subscriptions</code>) to restrict access.</p>
 </li>
 <li>
 <p>Monitor token metrics and verify that rate limit policies are actively throttling excessive requests.</p>
@@ -222,7 +222,7 @@
 <h2 id="_the_deployment_strategy"><a class="anchor" href="#_the_deployment_strategy"></a>The deployment strategy</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Currently, only the <strong>Distributed inference with llm-d</strong> serving runtime supports MaaS integration[cite: 236]. Deploying models using any other runtime bypasses the Gateway and Kuadrant, leaving the model completely ungoverned.</p>
+<p>Currently, only the <strong>Distributed inference with llm-d</strong> serving runtime supports MaaS integration. Deploying models using any other runtime bypasses the Gateway and Kuadrant, leaving the model completely ungoverned.</p>
 </div>
 <div class="paragraph">
 <p>In this module, you will execute the following strategy to ensure complete governance:</p>
@@ -260,7 +260,7 @@
 <p><strong>3. Tier Application</strong></p>
 </div></div></td>
 <td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
-<p>Apply the specific UI tier annotations directly to the model deployments. Llama-3 will be exposed to all tiers, while Nemotron will be restricted strictly to Gold and Silver users.</p>
+<p>Apply the specific UI tier annotations directly to the model deployments. Llama-3 will be exposed to all subscriptions, while Nemotron will be restricted strictly to Gold and Silver users.</p>
 </div></div></td>
 </tr>
 <tr>

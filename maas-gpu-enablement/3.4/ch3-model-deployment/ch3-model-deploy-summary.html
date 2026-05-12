@@ -78,7 +78,7 @@
 <ul class="nav-list">
   <li class="nav-item" data-depth="1">
     <button class="nav-item-toggle"></button>
-    <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-01.html">2: Access Control &amp; Governance</a>
+    <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-01.html">2: MaaS Access Control &amp; Governance</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-02.html">2.1: Subscription-based governance</a>
@@ -236,8 +236,8 @@ metadata:
   name: llama-3-8b
   namespace: chocotech-models
   annotations:
-    # THE BOUNCER LIST: Defines exactly which UI Tiers are allowed to access this model
-    alpha.maas.opendatahub.io/tiers: '["gold-tier", "silver-tier", "bronze-tier"]'
+    # THE BOUNCER LIST: Defines exactly which UI subscriptions are allowed to access this model
+    alpha.maas.opendatahub.io/subscriptions: '["gold-tier", "silver-tier", "bronze-tier"]'
 spec:
   # THE CATALOG PUBLISHER: Pushes this model to the Gen AI Studio UI for developers
   publishToGenAIStudio: true
@@ -315,7 +315,7 @@ spec:
 <p>While GitOps (Infrastructure-as-Code) is the standard for Platform Engineers, OpenShift AI administrators can also deploy and publish governed models directly through the dashboard UI.</p>
 </div>
 <div class="paragraph">
-<p>In the OpenShift AI dashboard, the process has been updated to use a streamlined deployment wizard. When deploying, administrators simply navigate to the "Advanced settings" and check the <strong>"Publish as MaaS endpoint"</strong> box. They can then use multi-select checkboxes to restrict the model to "Specific tiers" (e.g., hiding a massive model from the Free tier).</p>
+<p>In the OpenShift AI dashboard, the process has been updated to use a streamlined deployment wizard. When deploying, administrators simply navigate to the "Advanced settings" and check the <strong>"Publish as MaaS endpoint"</strong> box. They can then use multi-select checkboxes to restrict the model to "Specific subscriptions" (e.g., hiding a massive model from the Free tier).</p>
 </div>
 <details>
 <summary class="title">📺 Video Walkthrough: UI Model Deployment</summary>

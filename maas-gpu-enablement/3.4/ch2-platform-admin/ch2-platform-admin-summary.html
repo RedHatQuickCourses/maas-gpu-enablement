@@ -79,7 +79,7 @@
 <ul class="nav-list">
   <li class="nav-item" data-depth="1">
     <button class="nav-item-toggle"></button>
-    <a class="nav-link" href="ch2-platform-admin-01.html">2: Access Control &amp; Governance</a>
+    <a class="nav-link" href="ch2-platform-admin-01.html">2: MaaS Access Control &amp; Governance</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="ch2-platform-admin-02.html">2.1: Subscription-based governance</a>
@@ -160,7 +160,7 @@
 <nav class="breadcrumbs" aria-label="breadcrumbs">
   <ul>
     <li><a href="../index.html">Models as a Service Breaking the GPU Silos on OpenShift AI 3.4</a></li>
-    <li><a href="ch2-platform-admin-01.html">2: Access Control &amp; Governance</a></li>
+    <li><a href="ch2-platform-admin-01.html">2: MaaS Access Control &amp; Governance</a></li>
     <li><a href="ch2-platform-admin-summary.html">2.6: Summary and troubleshooting</a></li>
   </ul>
 </nav>
@@ -174,10 +174,7 @@
 <div id="preamble">
 <div class="sectionbody">
 <div class="paragraph">
-<p>You have successfully transformed ChocoTech&#8217;s OpenShift AI platform from a raw, ungoverned infrastructure into a highly secure, multi-tenant enterprise AI factory.</p>
-</div>
-<div class="paragraph">
-<p>If ChocoTech had opted for a generic public API, they would currently have zero internal cost control and no way to prioritize mission-critical workloads over experimental scripts. By building these policies directly into the OpenShift network edge, you have secured the company&#8217;s ROI and established absolute Quality of Service (QoS).</p>
+<p>You have successfully transformed ChocoTech&#8217;s OpenShift AI platform from a raw, ungoverned infrastructure into a highly secure, multi-tenant enterprise AI factory. If ChocoTech had opted for a generic public API, they would currently have zero internal cost control and no way to prioritize mission-critical workloads over experimental scripts. By building these policies directly into the OpenShift network edge, you have secured the company&#8217;s ROI and established absolute Quality of Service (QoS).</p>
 </div>
 </div>
 </div>
@@ -190,13 +187,13 @@
 <p><strong>Organizational Identity:</strong> Created OpenShift groups to represent specific business units (<code>chocotech-quality-control</code>, <code>chocotech-rd</code>, <code>chocotech-marketing</code>), ensuring audit trails are mapped to departments, not just individuals.</p>
 </li>
 <li>
-<p><strong>Programmatic Security:</strong> Configured ServiceAccounts and ephemeral JWT token-based API authentication. You established least-privilege RBAC to ensure applications can only read and execute, not modify, the infrastructure.</p>
+<p><strong>Programmatic Security:</strong> Replaced legacy ServiceAccounts with Native API Key Management. You established a workflow where developers can self-serve secure, revocable <code>sk-oai-</code> API keys directly from the Gen AI Studio dashboard.</p>
 </li>
 <li>
-<p><strong>Tier Definition:</strong> Deployed the <code>tier-to-group-mapping</code> ConfigMap, instructing the Gen AI Studio UI on exactly how to categorize ChocoTech&#8217;s business units.</p>
+<p><strong>Subscription Definition:</strong> Deployed <code>MaaSSubscription</code> custom resources into the <code>models-as-a-service</code> namespace, instructing the platform on exactly how to categorize ChocoTech&#8217;s business units and enforce token quotas.</p>
 </li>
 <li>
-<p><strong>Edge-Level Governance:</strong> Deployed Gold, Silver, and Bronze <code>RateLimitPolicy</code> resources to Kuadrant. You successfully decoupled the inference request from the underlying GPU, ensuring that traffic limits are enforced mathematically at the Gateway.</p>
+<p><strong>Edge-Level Governance:</strong> Deployed <code>MaaSAuthPolicy</code> resources to physically authorize Gateway access for your groups. You successfully decoupled the inference request from the underlying GPU, ensuring that traffic limits are enforced mathematically at the network edge.</p>
 </li>
 </ul>
 </div>
@@ -207,26 +204,26 @@
 <h2 id="_knowledge_check"><a class="anchor" href="#_knowledge_check"></a>Knowledge check</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Test your understanding of the tier governance architecture before moving on:</p>
+<p>Test your understanding of the subscription governance architecture before moving on:</p>
 </div>
 <div class="olist arabic">
 <ol class="arabic">
 <li>
-<p><strong>Why are MaaS Tier policies created before model deployment, rather than after?</strong></p>
+<p><strong>Why are MaaS Subscription policies created before model deployment, rather than after?</strong></p>
 <div class="paragraph">
-<p>MaaS Tier policies must exist before deployment so the MaaS operator and Kuadrant can enforce rate limits and quotas from the very first inference request. Creating policies after deployment would leave a window of uncontrolled, ungoverned access.</p>
+<p>MaaS Subscription policies must exist before deployment so the MaaS operator and Kuadrant can enforce token limits and quotas from the very first inference request. Creating policies after deployment would leave a window of uncontrolled, ungoverned access.</p>
 </div>
 </li>
 <li>
-<p><strong>What happens if a Bronze tier user (Marketing) tries to exceed 20 requests per minute?</strong></p>
+<p><strong>What happens if a Bronze subscription user (Marketing) tries to exceed 2,000 tokens per minute?</strong></p>
 <div class="paragraph">
-<p>Kuadrant&#8217;s Limitador component, operating at the network edge, tracks the requests per tier. It immediately rejects any requests exceeding the limit with an <code>HTTP 429 Too Many Requests</code> status code, preventing the request from ever reaching the KServe model pod. The user&#8217;s application must wait until the next minute window.</p>
+<p>Kuadrant&#8217;s Limitador component, operating at the network edge, tracks the token consumption per subscription. It immediately rejects any requests exceeding the limit with an <code>HTTP 429 Too Many Requests</code> status code, preventing the request from ever reaching the KServe model pod. The user&#8217;s application must wait until the next minute window resets.</p>
 </div>
 </li>
 <li>
-<p><strong>How does Authorino know which tier a programmatic user belongs to?</strong></p>
+<p><strong>How does the system know which subscription limits to apply to a programmatic user&#8217;s request?</strong></p>
 <div class="paragraph">
-<p>Authorino intercepts the API request, cryptographically validates the JWT token signature, and extracts the ServiceAccount identity. It evaluates the OpenShift groups associated with that identity and maps them against the defined tier rules, applying the highest priority tier available to that user.</p>
+<p>The API gateway intercepts the request and validates the provided API key (<code>sk-oai-&#8230;&#8203;</code>). Because the key was permanently bound to the user&#8217;s OpenShift group membership and highest priority subscription at the time it was created, the gateway immediately applies the correct token limits.</p>
 </div>
 </li>
 </ol>
@@ -244,26 +241,23 @@
 <div class="ulist">
 <ul>
 <li>
-<p><strong>Check Token Expiry:</strong> Regenerate the token using <code>TOKEN=$(oc create token marketing-sentiment-app -n chocotech-models --duration=1h)</code>.</p>
+<p><strong>Check API Key:</strong> OpenShift tokens are not supported for MaaS inference. Ensure you are using a MaaS API key (starting with <code>sk-oai-</code>) generated from the Gen AI Studio dashboard.</p>
 </li>
 <li>
-<p><strong>Verify RBAC:</strong> Ensure your <code>Role</code> and <code>RoleBinding</code> exist in the correct namespace: <code>oc get rolebinding marketing-sentiment-app-binding -n chocotech-models</code>.</p>
-</li>
-<li>
-<p><strong>Check Authorino Logs:</strong> Run <code>oc logs -l app=authorino -n kuadrant-system</code> to see exactly why the token was rejected.</p>
+<p><strong>Check Key Revocation:</strong> Verify in the Gen AI Studio UI that your API Key is marked as "Active" and has not been revoked or expired.</p>
 </li>
 </ul>
 </div>
 <div class="paragraph">
-<p><strong>Issue: AuthConfig not found in redhat-ods-applications</strong></p>
+<p><strong>Issue: Request returns <code>403 Forbidden</code></strong></p>
 </div>
 <div class="ulist">
 <ul>
 <li>
-<p><strong>Verify MaaS State:</strong> The operator creates this automatically. Verify MaaS is enabled: <code>oc get datasciencecluster default-dsc -o jsonpath='{.spec.components.modelsAsService.managementState}'</code> (Should return <code>Managed</code>).</p>
+<p><strong>Verify AuthPolicy:</strong> A subscription grants limits, but an AuthPolicy grants access. Verify your <code>MaaSAuthPolicy</code> exists in the <code>models-as-a-service</code> namespace and explicitly lists both your model and your OpenShift group.</p>
 </li>
 <li>
-<p><strong>Check Operator Logs:</strong> Run <code>oc logs -n redhat-ods-operator deployment/rhods-operator | grep -i authorino</code> to see if the creation failed.</p>
+<p><strong>Check Group Membership:</strong> Ensure your user account is actually a member of the required OpenShift group (e.g., <code>oc get group chocotech-quality-control -o yaml</code>).</p>
 </li>
 </ul>
 </div>
@@ -318,7 +312,7 @@
 </table>
 <div class="quoteblock">
 <blockquote>
-<strong>Next steps:</strong> Your security perimeter is established, but the catalog is currently empty. In Module 3, you will deploy your first generative AI models (<code>llama-3-8b</code> and <code>nemotron-8b</code>). You will annotate these models with the tiers you just built, publish them to the Gen AI Studio catalog, and actively watch Kuadrant throttle traffic based on the Gold/Silver/Bronze limits.
+<strong>Next steps:</strong> Your security perimeter is established, but the catalog is currently empty. In Module 3, you will deploy your first generative AI models (<code>llama-3-8b</code> and <code>nemotron-8b</code>). You will publish these models as MaaS endpoints (enabling the automatic generation of <code>MaaSModelRef</code> objects) and actively watch Kuadrant throttle traffic based on your Gold, Silver, and Bronze subscription limits.
 </blockquote>
 </div>
 </div>
