@@ -1,0 +1,364 @@
+:time_estimate: 15
+
+= TROUBLESHOOTING: MaaS Gateway Routing Issues
+
+_Estimated time: *{time_estimate} minutes*._
+
+== Problem: Model Inference Through Gateway Fails
+
+**Symptoms:**
+* ✅ Model deployed successfully
+* ✅ Model published to MaaS (MaaSModelRef exists)
+* ✅ Subscriptions and authorization policies created
+* ✅ API keys generated
+* ❌ **Inference requests fail** - Gateway cannot route traffic
+* ❌ **Playground cannot connect** to models
+* ❌ `/v1/models` endpoint returns connection errors
+
+== Root Cause: Missing TLS Certificate
+
+Check your Gateway listener status:
+
+[source,bash]
+----
+oc get gateway maas-default-gateway -n openshift-ingress \
+  -o jsonpath='{.status.listeners[0].conditions[?(@.type=="ResolvedRefs")]}'
+----
+
+If you see:
+
+[source,json]
+----
+{
+  "type": "ResolvedRefs",
+  "status": "False",
+  "reason": "InvalidCertificateRef",
+  "message": "secret openshift-ingress/maas-gateway-cert not found"
+}
+----
+
+**The Gateway cannot route traffic because the TLS certificate secret is missing.**
+
+== Solution: Create TLS Certificate
+
+Follow these steps to create a TLS certificate and fix Gateway routing.
+
+=== Step 1: Generate Self-Signed Certificate
+
+[source,bash]
+----
+# Get cluster domain
+CLUSTER_DOMAIN=$(oc get ingresses.config.openshift.io cluster -o jsonpath='{.spec.domain}')
+echo "Cluster domain: ${CLUSTER_DOMAIN}"
+
+# Generate self-signed certificate (valid 365 days)
+openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+  -keyout /tmp/maas-gateway.key \
+  -out /tmp/maas-gateway.crt \
+  -subj "/CN=maas.apps.${CLUSTER_DOMAIN}" \
+  -addext "subjectAltName=DNS:maas.apps.${CLUSTER_DOMAIN}"
+----
+
+=== Step 2: Create TLS Secret
+
+[source,bash]
+----
+# Delete old secret if it exists
+oc delete secret maas-gateway-cert -n openshift-ingress --ignore-not-found
+
+# Create new TLS secret
+oc create secret tls maas-gateway-cert \
+  --cert=/tmp/maas-gateway.crt \
+  --key=/tmp/maas-gateway.key \
+  -n openshift-ingress
+
+# Clean up temporary files
+rm -f /tmp/maas-gateway.key /tmp/maas-gateway.crt
+----
+
+Expected output:
+[source,text]
+----
+secret "maas-gateway-cert" created
+----
+
+=== Step 3: Verify Secret Created
+
+[source,bash]
+----
+oc get secret maas-gateway-cert -n openshift-ingress
+----
+
+Expected output:
+[source,text]
+----
+NAME                 TYPE                DATA   AGE
+maas-gateway-cert    kubernetes.io/tls   2      5s
+----
+
+=== Step 4: Wait for Gateway Reconciliation
+
+[source,bash]
+----
+# Wait 30 seconds for Gateway to detect the new certificate
+echo "Waiting for Gateway to reconcile..."
+sleep 30
+----
+
+=== Step 5: Verify Gateway Listener Fixed
+
+[source,bash]
+----
+oc get gateway maas-default-gateway -n openshift-ingress \
+  -o jsonpath='{.status.listeners[0].conditions[?(@.type=="ResolvedRefs")].status}'
+----
+
+Expected output: `True`
+
+Verify Gateway is programmed:
+
+[source,bash]
+----
+oc get gateway maas-default-gateway -n openshift-ingress \
+  -o jsonpath='{.status.conditions[?(@.type=="Programmed")].status}'
+----
+
+Expected output: `True`
+
+== Test Model Inference
+
+=== Prerequisites
+
+Before testing, verify you have:
+
+**1. Model deployed and published to MaaS:**
+
+[source,bash]
+----
+oc get maasmodelref -A
+----
+
+**2. Subscription created:**
+
+[source,bash]
+----
+oc get maassubscriptions -n models-as-a-service
+----
+
+**3. Authorization policy created:**
+
+[source,bash]
+----
+oc get maasauthpolicies -n models-as-a-service
+----
+
+**4. API key generated:**
+   * OpenShift AI Dashboard → **Gen AI Studio → API Keys**
+   * Create key, copy it (starts with `sk-oai-`)
+
+=== Test Gateway Connectivity
+
+[source,bash]
+----
+# Get Gateway URL
+CLUSTER_DOMAIN=$(oc get ingresses.config.openshift.io cluster -o jsonpath='{.spec.domain}')
+MAAS_URL="https://maas.apps.${CLUSTER_DOMAIN}"
+
+echo "Gateway URL: ${MAAS_URL}"
+
+# Test TLS handshake
+curl -I "${MAAS_URL}" -k
+----
+
+Expected: HTTP response code (even if 404), not connection errors.
+
+=== Test /v1/models Endpoint
+
+[source,bash]
+----
+# Export your API key
+export API_KEY="sk-oai-your-key-here"
+
+# List available models
+curl -X GET "${MAAS_URL}/v1/models" \
+  -H "Authorization: Bearer ${API_KEY}" \
+  -k
+----
+
+**Expected response** (success):
+
+[source,json]
+----
+{
+  "object": "list",
+  "data": [
+    {
+      "id": "your-model-name",
+      "ready": true
+    }
+  ]
+}
+----
+
+**Common errors:**
+
+* **401 Unauthorized** - API key invalid or expired
+* **403 Forbidden** - Authorization policy missing or user not in group
+* **Connection refused** - Gateway not running or listener not programmed
+* **No models returned** - Model not published to MaaS (check MaaSModelRef)
+
+=== Test Model Inference
+
+[source,bash]
+----
+# Get model name from previous command
+MODEL_NAME="your-model-deployment-name"
+
+# Test inference request
+curl -X POST "${MAAS_URL}/llm/${MODEL_NAME}/v1/completions" \
+  -H "Authorization: Bearer ${API_KEY}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "'${MODEL_NAME}'",
+    "prompt": "Test prompt",
+    "max_tokens": 10
+  }' \
+  -k
+----
+
+**Expected response** (success):
+
+[source,json]
+----
+{
+  "id": "cmpl-xxx",
+  "choices": [
+    {
+      "text": "generated completion text",
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "total_tokens": 10
+  }
+}
+----
+
+== Additional Troubleshooting
+
+=== Gateway Still Not Working After TLS Fix
+
+If the Gateway still shows errors after creating the TLS certificate:
+
+**1. Check Gateway conditions:**
+
+[source,bash]
+----
+oc get gateway maas-default-gateway -n openshift-ingress -o yaml
+----
+
+Look for error messages in `status.conditions` and `status.listeners.conditions`.
+
+**2. Check Gateway controller logs:**
+
+[source,bash]
+----
+oc logs -n openshift-ingress -l app=istio-ingressgateway --tail=100
+----
+
+**3. Verify GatewayClass exists:**
+
+[source,bash]
+----
+oc get gatewayclass data-science-gateway-class
+----
+
+=== Model Not Appearing in /v1/models Response
+
+**Check MaaSModelRef exists:**
+
+[source,bash]
+----
+oc get maasmodelref -n <your-model-namespace>
+----
+
+If missing, the model wasn't published to MaaS. Redeploy with "Publish as MaaS" enabled in Advanced Settings.
+
+=== Authentication Errors (401 Unauthorized)
+
+**Verify API key status:**
+   * Dashboard → **Gen AI Studio → API Keys**
+   * Check status is "Active" and not expired
+
+**Check Authorino logs:**
+
+[source,bash]
+----
+oc logs -n kuadrant-system deployment/authorino --tail=50 | grep -i error
+----
+
+=== Authorization Errors (403 Forbidden)
+
+**Verify authorization policy exists for your model:**
+
+[source,bash]
+----
+oc get maasauthpolicies -n models-as-a-service
+----
+
+**Verify you're in the authorized group:**
+
+[source,bash]
+----
+oc get groups | grep <your-username>
+----
+
+=== Playground Cannot Connect
+
+The Playground uses the same Gateway routing as API calls.
+
+**If curl works but Playground fails:**
+
+1. Check browser console for JavaScript errors
+2. Verify Playground is using correct subscription
+3. Clear browser cache and reload
+4. Try generating a fresh API key
+
+== Known Issues in RHOAI 3.4.0-EA.2
+
+[WARNING]
+====
+You are running **RHOAI 3.4.0-ea.2** (Early Access build). Some features may not work correctly:
+
+**Missing CRDs:**
+* `tenants.maas.opendatahub.io` - Not available in EA.2
+* `externalmodels.maas.opendatahub.io` - Not available in EA.2
+
+**Impact:**
+* Cannot configure API key expiration limits globally
+* Cannot enable external OIDC authentication
+* Cannot route to external LLM providers (OpenAI, Anthropic, etc.)
+* MaaS observability dashboard not available
+
+**Core MaaS features that DO work in EA.2:**
+* ✅ Model deployment and publishing
+* ✅ Subscriptions with token limits
+* ✅ Authorization policies
+* ✅ API key generation
+* ✅ Gateway routing (after TLS certificate fix)
+* ✅ Token rate limiting
+
+**Recommendation:** Upgrade to **RHOAI 3.4.0 GA** when available for full feature support.
+====
+
+== Summary
+
+**Problem:** Missing TLS certificate `maas-gateway-cert` prevents Gateway from routing traffic.
+
+**Solution:** Generate self-signed certificate and create TLS secret in `openshift-ingress` namespace.
+
+**Verification:** Gateway listener shows `ResolvedRefs: True` and `Programmed: True`.
+
+**Testing:** Use curl to test `/v1/models` endpoint and model inference.
+
+**Next Steps:** If issues persist, check HTTPRoute, AuthorizationPolicy, and model deployment status.

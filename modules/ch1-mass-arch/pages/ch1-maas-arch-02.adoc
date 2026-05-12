@@ -10,15 +10,16 @@ The current state of GPU allocations across ChocoTech's business units:
 * **Supply Chain**: 2x NVIDIA L40S GPUs for inventory prediction
 == The Solution: What is Models as a Service (MaaS)?
 
+
+== OpenShift Ai 3.4 - Models-as-a-Service (MaaS)
+
 Before we dive into the technical architecture, let's define exactly what we are building to solve this crisis. 
 
 The Models-as-a-Service (MaaS) platform acts as a governance layer between users and the model serving infrastructure. This architecture enables centralized policy enforcement without modifying the underlying model serving components.
 
 To achieve this, OpenShift AI 3.4 provides four core capabilities:
 
-* **Subscription-based access control:** Define multiple subscriptions that grant specific groups access to models with configurable token limits. Users can belong to multiple subscriptions, with priority levels determining which
-Note
-subscription is used when multiple options are available.
+* **Subscription-based access control:** Define multiple subscriptions that grant specific groups access to models with configurable token limits. Users can belong to multiple subscriptions, with priority levels determining which subscription is used when multiple options are available.
 * **Self-service API key management:** Users can create, list, and revoke their own API keys for model access. Administrators can also
 provision and manage API keys on behalf of users. API keys can be permanent or configured
 with custom expiration times, and individual keys can be revoked without affecting other keys
@@ -52,7 +53,7 @@ Hardware is centralized. MaaS allows dynamic accelerator slicing and multi-tenan
 | **Misallocated Expertise**
 Data scientists spend 40% of their time debugging CUDA drivers and Kubernetes manifests. 
 | **Simplified Consumption**
-Developers skip the infrastructure completely. They access powerful models instantly via secure, OpenAI-compatible API endpoints using native API keys.
+Developers skip the infrastructure completely. They access powerful models instantly via secure, OpenAI-compatible API endpoints using self-provisioned API keys.
 
 | **Redundant Deployments**
 Four teams independently deploy the same Llama-3 8B model, wasting 128GB of storage and duplicate compute.

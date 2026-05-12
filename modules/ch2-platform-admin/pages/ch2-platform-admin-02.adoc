@@ -49,8 +49,8 @@ To solve ChocoTech's GPU Silo Crisis, the CIO has mandated a custom subscription
 
 In the upcoming sections, you will build the following structure using `MaaSSubscription` resources:
 
-* **Gold Plan:** Mapped to the `chocotech-quality-control` group. This tier will have the highest priority and massive token limits to ensure the factory floor's defect detection models never experience throttling.
-* **Silver Plan:** Mapped to the `chocotech-rd` group. This tier will have moderate token limits for recipe optimization testing.
-* **Bronze Plan:** Mapped to the `chocotech-marketing` group. This tier will have strict token limits to prevent their exploratory sentiment analysis from wasting expensive GPU cycles. 
+* **Gold Plan:** Mapped to the `chocotech-quality-control` group. This subscription will have the highest priority and massive token limits to ensure the factory floor's defect detection models never experience throttling.
+* **Silver Plan:** Mapped to the `chocotech-rd` group. This subscription will have moderate token limits for recipe optimization testing.
+* **Bronze Plan:** Mapped to the `chocotech-marketing` group. This subscription will have strict token limits to prevent their exploratory sentiment analysis from wasting expensive GPU cycles. 
 
 Now that you understand the strategy and enforcement mechanics, proceed to the next section to begin building these OpenShift groups in the cluster.

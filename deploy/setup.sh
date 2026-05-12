@@ -12,7 +12,7 @@
 set -e # Exit immediately if a command exits with a non-zero status
 
 # Configuration Variables
-NAMESPACE="rhoai-model-registry-lab"
+NAMESPACE=rhoai-maas-lab"
 MYSQL_USER="admin"
 MYSQL_PASSWORD="mysql-admin"
 MYSQL_DATABASE="sampledb"

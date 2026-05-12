@@ -1,0 +1,1579 @@
+:time_estimate: 45
+
+= Hands-On Lab: Deploy and Configure Models-as-a-Service
+
+_Estimated completion time: *{time_estimate} minutes*._
+
+Objective::
+
+In this hands-on lab, you will deploy and configure the complete Models-as-a-Service (MaaS) platform for ChocoTech Industries. You will enable the MaaS backend component, configure TLS for secure authentication, create organizational groups, publish models to the MaaS gateway, establish subscription-based governance with token limits, configure authorization policies, and generate API keys for secure model access. By the end of this lab, you will have a production-ready MaaS platform that enforces the Gold, Silver, and Bronze subscription plans required by ChocoTech's CIO.
+
+== Lab Scenario
+
+Recall ChocoTech's business requirements from the CIO:
+
+[cols="1a,1a,2a",options="header",frame="all",grid="rows"]
+|===
+| Business Unit | Subscription Plan | Infrastructure Requirement
+
+| **Quality Control**
+| Gold Plan
+| Production-grade access with guaranteed availability and highest token limits for real-time defect detection.
+
+| **R&D**
+| Silver Plan
+| Development access with moderate token limits for recipe optimization testing.
+
+| **Marketing**
+| Bronze Plan
+| Exploratory access with strict token limits for sentiment analysis to prevent budget overruns.
+|===
+
+Your mission: Build the governance infrastructure to deliver these three distinct service levels using MaaS subscriptions, authorization policies, and API key authentication.
+
+== Part 1: Verify Prerequisites and Environment
+
+Before deploying MaaS, verify that your cluster meets all platform and operator requirements.
+
+=== Required Operators and Components
+
+MaaS requires the following operators and infrastructure components:
+
+[cols="2,1,2,1",options="header"]
+|===
+| Component | Version | Installation Namespace | Status
+
+| **Red Hat OpenShift**
+| 4.19.9+
+| N/A (Platform)
+| ✅ Required
+
+| **Red Hat OpenShift AI Operator**
+| 3.4+
+| `redhat-ods-applications`
+| ✅ Required
+
+| **Red Hat Connectivity Link Operator**
+| 1.2+
+| `openshift-operators`
+| ✅ Required
+
+| **Llama Stack Operator**
+| 3.4+
+| `redhat-ods-applications`
+| ⚠️ Required for dashboard UI
+
+| **User Workload Monitoring**
+| N/A
+| `openshift-monitoring`
+| ✅ Required
+
+| **PostgreSQL Database**
+| N/A
+| `redhat-ods-applications`
+| ✅ Required
+
+| **Gateway API**
+| Built-in
+| `openshift-ingress`
+| ✅ Required
+
+| **Cluster Observability Operator**
+| Latest
+| `openshift-operators`
+| ⭕ Optional (Tech Preview)
+|===
+
+[NOTE]
+====
+**Legend:**
+✅ Required for MaaS core functionality
+⚠️ Required for specific features
+⭕ Optional for enhanced capabilities
+====
+
+=== Step 1: Verify OpenShift Platform Version
+
+MaaS requires OpenShift 4.19.9 or later for Gateway API support.
+
+[source,bash]
+----
+oc version
+----
+
+Expected output:
+[source,text]
+----
+Client Version: 4.19.9
+Server Version: 4.19.9
+Kubernetes Version: v1.32.0+4fc5e18
+----
+
+Verify the server version is 4.19.9 or higher:
+
+[source,bash]
+----
+oc version -o json | jq -r '.openshiftVersion'
+----
+
+Expected output:
+[source,text]
+----
+4.19.9
+----
+
+[WARNING]
+====
+If your OpenShift version is below 4.19.9, upgrade your cluster before proceeding. Earlier versions lack the required Gateway API CRDs that MaaS depends on for API gateway functionality.
+====
+
+=== Step 2: Verify Red Hat OpenShift AI Operator
+
+Confirm that OpenShift AI 3.4 or later is installed.
+
+**Check operator installation:**
+
+[source,bash]
+----
+oc get csv -n redhat-ods-applications | grep rhods
+----
+
+Expected output:
+[source,text]
+----
+rhods-operator.v3.4.0   Red Hat OpenShift AI   3.4.0   Succeeded
+----
+
+Verify the operator version is 3.4.0 or higher:
+
+[source,bash]
+----
+oc get csv -n redhat-ods-applications -o json | \
+  jq -r '.items[] | select(.metadata.name | startswith("rhods-operator")) | .spec.version'
+----
+
+Expected output: `3.4.0` or higher
+
+**Check DataScienceCluster resource:**
+
+[source,bash]
+----
+oc get datasciencecluster -A
+----
+
+Expected output:
+[source,text]
+----
+NAME          READY   REASON
+default-dsc   True    
+----
+
+
+**Troubleshooting:**
+
+If the OpenShift AI operator is not installed:
+
+1. Open the OpenShift Console → **Operators → OperatorHub**
+2. Search for **"Red Hat OpenShift AI"**
+3. Click **Install**
+4. Select **fast** update channel
+5. Select **redhat-ods-applications** namespace
+6. Click **Install** and wait 3-5 minutes
+
+=== Step 3: Verify Red Hat Connectivity Link Operator
+
+MaaS requires Red Hat Connectivity Link v1.2 or later for Kuadrant (Authorino, Limitador, and Gateway API integration).
+
+**Check operator installation:**
+
+[source,bash]
+----
+oc get csv -n openshift-operators | grep connectivity-link
+----
+
+Expected output:
+[source,text]
+----
+connectivity-link.v1.2.0   Red Hat Connectivity Link   1.2.0   Succeeded
+----
+
+Verify the operator version is 1.2.0 or higher:
+
+[source,bash]
+----
+oc get csv -n openshift-operators -o json | \
+  jq -r '.items[] | select(.metadata.name | startswith("connectivity-link")) | .spec.version'
+----
+
+Expected output: `1.2.0` or higher
+
+**Check Kuadrant resource:**
+
+[source,bash]
+----
+oc get kuadrant -n kuadrant-system
+----
+
+Expected output:
+[source,text]
+----
+NAME       STATUS   AGE
+kuadrant   Ready    2d
+----
+
+Verify Kuadrant status is `Ready`:
+
+[source,bash]
+----
+oc get kuadrant kuadrant -n kuadrant-system -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}'
+----
+
+Expected output: `True`
+
+**Verify Kuadrant components are running:**
+
+[source,bash]
+----
+oc get pods -n kuadrant-system
+----
+
+Expected output (all pods Running):
+[source,text]
+----
+NAME                                                  READY   STATUS    AGE
+authorino-7d8c9f6b5c-x9k2m                           1/1     Running   2d
+authorino-operator-5f9d8c7b6d-p4j8l                  1/1     Running   2d
+kuadrant-operator-controller-manager-6c8d9f5-h7m3n   1/1     Running   2d
+limitador-6f8d9c7b6d-q5k8m                           1/1     Running   2d
+----
+
+[TIP]
+====
+**If Kuadrant shows a non-Ready status:**
+
+1. Check the Kuadrant operator logs:
++
+[source,bash]
+----
+oc logs -n kuadrant-system deployment/kuadrant-operator-controller-manager --tail=100
+----
+
+2. Check for missing CRDs:
++
+[source,bash]
+----
+oc get crd | grep kuadrant.io
+----
+
+3. Restart the operator:
+   * OpenShift Console → **Operators → Installed Operators**
+   * Select `kuadrant-system` namespace
+   * Click **Red Hat Connectivity Link**
+   * **Actions → Restart**
+====
+
+**Troubleshooting:**
+
+If Red Hat Connectivity Link is not installed:
+
+1. Open the OpenShift Console → **Operators → OperatorHub**
+2. Search for **"Red Hat Connectivity Link"**
+3. Click **Install**
+4. Select **stable** update channel
+5. Select **All namespaces** installation mode (installs to `openshift-operators`)
+6. Click **Install**
+7. Wait ~2 minutes for operator to install
+8. Create Kuadrant resource:
++
+[source,bash]
+----
+cat <<EOF | oc apply -f -
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: kuadrant-system
+---
+apiVersion: kuadrant.io/v1beta1
+kind: Kuadrant
+metadata:
+  name: kuadrant
+  namespace: kuadrant-system
+spec: {}
+EOF
+----
++
+Wait ~3 minutes for Kuadrant components to deploy.
+
+=== Step 4: Verify Llama Stack Operator
+
+The Llama Stack Operator is required for MaaS dashboard features including Gen AI Studio, API Keys page, and Playground.
+
+**Check operator enablement in DataScienceCluster:**
+
+[source,bash]
+----
+oc get datasciencecluster default -n redhat-ods-applications -o jsonpath='{.spec.components.llamastackoperator.managementState}'
+----
+
+Expected output: `Managed`
+
+**Verify Llama Stack Operator pods:**
+
+[source,bash]
+----
+oc get pods -n redhat-ods-applications -l app.kubernetes.io/name=llama-stack-operator
+----
+
+Expected output:
+[source,text]
+----
+NAME                                      READY   STATUS    AGE
+llama-stack-operator-5d8c9f6b5c-x4j2m     1/1     Running   2d
+----
+
+[IMPORTANT]
+====
+**If Llama Stack Operator is not enabled**, you will not be able to access:
+
+* **Gen AI Studio** menu in the dashboard
+* **API Keys** management page
+* **AI Asset Endpoints** page
+* **Playground** for model testing
+
+Enable the operator:
+
+[source,bash]
+----
+oc patch datasciencecluster default -n redhat-ods-applications \
+  --type merge \
+  -p '{"spec":{"components":{"llamastackoperator":{"managementState":"Managed"}}}}'
+----
+
+Wait ~60 seconds for the operator pod to start.
+====
+
+=== Step 5: Verify User Workload Monitoring
+
+User Workload Monitoring is **critical** for MaaS. Without it, the Tenant resource will show `Degraded` status and MaaS metrics will not be collected.
+
+**Check if User Workload Monitoring is enabled:**
+
+[source,bash]
+----
+oc get configmap cluster-monitoring-config -n openshift-monitoring -o jsonpath='{.data.config\.yaml}' | grep enableUserWorkload
+----
+
+Expected output:
+[source,yaml]
+----
+enableUserWorkload: true
+----
+
+**Verify User Workload Monitoring pods are running:**
+
+[source,bash]
+----
+oc get pods -n openshift-user-workload-monitoring
+----
+
+Expected output (pods Running):
+[source,text]
+----
+NAME                                   READY   STATUS    AGE
+prometheus-operator-5f8d9c7b6d-q5k8m   2/2     Running   5d
+prometheus-user-workload-0             6/6     Running   5d
+prometheus-user-workload-1             6/6     Running   5d
+thanos-ruler-user-workload-0           4/4     Running   5d
+thanos-ruler-user-workload-1           4/4     Running   5d
+----
+
+[WARNING]
+====
+**If User Workload Monitoring is not enabled**, the MaaS Tenant will show `Degraded` status with the error:
+
+```
+User Workload Monitoring is not enabled
+```
+
+**Enable User Workload Monitoring:**
+
+[source,bash]
+----
+cat <<EOF | oc apply -f -
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cluster-monitoring-config
+  namespace: openshift-monitoring
+data:
+  config.yaml: |
+    enableUserWorkload: true
+EOF
+----
+
+Wait 2-3 minutes for the `openshift-user-workload-monitoring` namespace to be created and pods to start.
+====
+
+=== Step 6: Verify PostgreSQL Database Secret
+
+MaaS requires a PostgreSQL database for API key storage and subscription metadata.
+
+**Check for database secret:**
+
+[source,bash]
+----
+oc get secret maas-db-config -n redhat-ods-applications
+----
+
+Expected output:
+[source,text]
+----
+NAME             TYPE     DATA   AGE
+maas-db-config   Opaque   1      5d
+----
+
+**Verify secret contains database connection string:**
+
+[source,bash]
+----
+oc get secret maas-db-config -n redhat-ods-applications -o jsonpath='{.data.connection-string}' | base64 -d | cut -c1-20
+----
+
+Expected output (first 20 characters):
+[source,text]
+----
+postgresql://maas_us
+----
+
+[NOTE]
+====
+The database secret should contain a connection string in the format:
+
+[source,text]
+----
+postgresql://<username>:<password>@<host>:<port>/<database>?sslmode=require
+----
+
+Your cluster administrator has provisioned this PostgreSQL database during the initial OpenShift AI setup. The database stores:
+
+* API keys and their metadata (owner, subscription, expiration)
+* Subscription configurations
+* Token consumption metrics (for observability)
+====
+
+**Troubleshooting:**
+
+If the secret is missing, contact your cluster administrator. The database and secret are prerequisites that must be configured before enabling MaaS.
+
+=== Step 7: Verify Gateway API Resources
+
+MaaS uses OpenShift's Gateway API for external model access routing.
+
+**Check GatewayClass:**
+
+[source,bash]
+----
+oc get gatewayclass openshift-gateway-api
+----
+
+Expected output:
+[source,text]
+----
+NAME                     CONTROLLER                        ACCEPTED   AGE
+openshift-gateway-api    openshift.io/gateway-controller   True       5d
+----
+
+**Check MaaS Gateway:**
+
+[source,bash]
+----
+oc get gateway maas-default-gateway -n openshift-ingress
+----
+
+Expected output:
+[source,text]
+----
+NAME                   CLASS                    ADDRESS   PROGRAMMED   AGE
+maas-default-gateway   openshift-gateway-api              True         5d
+----
+
+Verify Gateway is programmed:
+
+[source,bash]
+----
+oc get gateway maas-default-gateway -n openshift-ingress -o jsonpath='{.status.conditions[?(@.type=="Programmed")].status}'
+----
+
+Expected output: `True`
+
+[IMPORTANT]
+====
+**If the Gateway does not exist**, your cluster administrator must create it. The Gateway defines the external API endpoint for MaaS model access.
+
+Example Gateway configuration:
+
+[source,yaml]
+----
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: maas-default-gateway
+  namespace: openshift-ingress
+spec:
+  gatewayClassName: openshift-gateway-api
+  listeners:
+  - name: https
+    port: 443
+    protocol: HTTPS
+    hostname: "maas.apps.<cluster-domain>"
+    tls:
+      mode: Terminate
+      certificateRefs:
+      - kind: Secret
+        name: maas-tls-cert
+----
+
+Consult the OpenShift AI documentation for complete Gateway setup instructions.
+====
+
+=== Step 8: (Optional) Verify Cluster Observability Operator
+
+The Cluster Observability Operator enables the MaaS observability dashboard (Technology Preview) for token consumption tracking and usage analytics.
+
+[NOTE]
+====
+This operator is **optional**. MaaS core functionality works without it. The observability dashboard is a Tech Preview feature for usage monitoring and showback reporting.
+====
+
+**Check if Cluster Observability Operator is installed:**
+
+[source,bash]
+----
+oc get csv -n openshift-operators | grep cluster-observability-operator
+----
+
+Expected output (if installed):
+[source,text]
+----
+cluster-observability-operator.v0.3.0   Cluster Observability Operator   0.3.0   Succeeded
+----
+
+**If not installed and you want observability features:**
+
+1. Open OpenShift Console → **Operators → OperatorHub**
+2. Search for **"Cluster Observability Operator"**
+3. Click **Install**
+4. Select **stable** channel
+5. Install to **All namespaces**
+6. Click **Install**
+
+After installation, you'll need to enable observability in:
+
+* Kuadrant: `spec.observability.enable: true`
+* Tenant: `spec.telemetry.enabled: true`
+
+=== Step 9: Prerequisites Verification Summary
+
+Run this comprehensive verification script to confirm all components:
+
+[source,bash]
+----
+cat > verify-maas-prereqs.sh <<'EOF'
+#!/bin/bash
+
+echo "=== MaaS Prerequisites Verification ==="
+echo ""
+
+# 1. OpenShift Version
+echo "1. OpenShift Platform Version:"
+OCP_VERSION=$(oc version -o json 2>/dev/null | jq -r '.openshiftVersion' 2>/dev/null || echo "ERROR")
+echo "   Version: ${OCP_VERSION}"
+[[ "${OCP_VERSION}" == "ERROR" ]] && echo "   ❌ FAILED" || echo "   ✅ PASSED"
+echo ""
+
+# 2. OpenShift AI Operator
+echo "2. Red Hat OpenShift AI Operator:"
+RHOAI_CSV=$(oc get csv -n redhat-ods-applications 2>/dev/null | grep rhods-operator | awk '{print $1}')
+echo "   CSV: ${RHOAI_CSV:-NOT FOUND}"
+[[ -z "${RHOAI_CSV}" ]] && echo "   ❌ FAILED" || echo "   ✅ PASSED"
+echo ""
+
+# 3. Red Hat Connectivity Link
+echo "3. Red Hat Connectivity Link Operator:"
+RCL_CSV=$(oc get csv -n openshift-operators 2>/dev/null | grep connectivity-link | awk '{print $1}')
+echo "   CSV: ${RCL_CSV:-NOT FOUND}"
+KUADRANT_STATUS=$(oc get kuadrant kuadrant -n kuadrant-system -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}' 2>/dev/null || echo "ERROR")
+echo "   Kuadrant Ready: ${KUADRANT_STATUS}"
+[[ "${KUADRANT_STATUS}" == "True" ]] && echo "   ✅ PASSED" || echo "   ❌ FAILED"
+echo ""
+
+# 4. Llama Stack Operator
+echo "4. Llama Stack Operator:"
+LLAMA_STATE=$(oc get datasciencecluster default -n redhat-ods-applications -o jsonpath='{.spec.components.llamastackoperator.managementState}' 2>/dev/null || echo "ERROR")
+echo "   Management State: ${LLAMA_STATE}"
+[[ "${LLAMA_STATE}" == "Managed" ]] && echo "   ✅ PASSED" || echo "   ⚠️  WARNING: Required for dashboard features"
+echo ""
+
+# 5. User Workload Monitoring
+echo "5. User Workload Monitoring:"
+UWM_ENABLED=$(oc get configmap cluster-monitoring-config -n openshift-monitoring -o jsonpath='{.data.config\.yaml}' 2>/dev/null | grep -o "enableUserWorkload: true" || echo "NOT ENABLED")
+echo "   Status: ${UWM_ENABLED}"
+[[ "${UWM_ENABLED}" == "enableUserWorkload: true" ]] && echo "   ✅ PASSED" || echo "   ❌ FAILED"
+echo ""
+
+# 6. PostgreSQL Database Secret
+echo "6. PostgreSQL Database Secret:"
+DB_SECRET=$(oc get secret maas-db-config -n redhat-ods-applications -o jsonpath='{.metadata.name}' 2>/dev/null || echo "NOT FOUND")
+echo "   Secret: ${DB_SECRET}"
+[[ "${DB_SECRET}" == "maas-db-config" ]] && echo "   ✅ PASSED" || echo "   ❌ FAILED"
+echo ""
+
+# 7. Gateway API
+echo "7. Gateway API Resources:"
+GW_CLASS=$(oc get gatewayclass openshift-gateway-api -o jsonpath='{.metadata.name}' 2>/dev/null || echo "NOT FOUND")
+echo "   GatewayClass: ${GW_CLASS}"
+GW_STATUS=$(oc get gateway maas-default-gateway -n openshift-ingress -o jsonpath='{.status.conditions[?(@.type=="Programmed")].status}' 2>/dev/null || echo "NOT FOUND")
+echo "   Gateway Programmed: ${GW_STATUS}"
+[[ "${GW_STATUS}" == "True" ]] && echo "   ✅ PASSED" || echo "   ❌ FAILED"
+echo ""
+
+# 8. KServe Component
+echo "8. KServe Component (Required for MaaS):"
+KSERVE_STATE=$(oc get datasciencecluster default -n redhat-ods-applications -o jsonpath='{.spec.components.kserve.managementState}' 2>/dev/null || echo "ERROR")
+echo "   Management State: ${KSERVE_STATE}"
+[[ "${KSERVE_STATE}" == "Managed" ]] && echo "   ✅ PASSED" || echo "   ❌ FAILED"
+echo ""
+
+echo "=== Summary ==="
+echo "Review any ❌ FAILED items above before proceeding with MaaS deployment."
+echo ""
+echo "Optional Components:"
+echo "  • Cluster Observability Operator: For MaaS usage dashboard (Tech Preview)"
+echo "  • ExternalModel CRD: For routing to external LLM providers (Tech Preview)"
+EOF
+
+chmod +x verify-maas-prereqs.sh
+./verify-maas-prereqs.sh
+----
+
+Expected output shows ✅ PASSED for all required components.
+
+[TIP]
+====
+**Save this script** for future MaaS deployments. It provides a quick health check of all prerequisites before enabling MaaS.
+====
+
+== Part 2: Enable and Deploy MaaS
+
+Now that prerequisites are verified, enable the MaaS backend component.
+
+=== Step 1: Enable MaaS in DataScienceCluster
+
+Enable the MaaS backend by patching the DataScienceCluster custom resource:
+
+[source,bash]
+----
+oc patch datasciencecluster default -n redhat-ods-applications \
+  --type merge \
+  -p '{"spec":{"components":{"kserve":{"modelsAsService":{"managementState":"Managed"}}}}}'
+----
+
+Expected output:
+[source,text]
+----
+datasciencecluster.datasciencecluster.opendatahub.io/default patched
+----
+
+**What happens:**
+
+1. The OpenShift AI operator detects the configuration change (reconciliation occurs every 30 seconds)
+2. Controller creates the `maas-api` Deployment in the `redhat-ods-applications` namespace
+3. MaaS API service starts listening on port 8080 for subscription and API key management
+4. **Tenant custom resource `default-tenant` is automatically created** in `models-as-a-service` namespace
+5. **ModelsAsService custom resource `default-modelsasservice` is automatically created** cluster-wide
+
+[NOTE]
+====
+**Automatic Resource Creation:** The `default-tenant` and `default-modelsasservice` resources are **automatically created** by the MaaS operator when you enable MaaS. You do not need to create these manually.
+
+* **default-tenant** - Singleton tenant resource that configures API key expiration, telemetry, and external OIDC settings
+* **default-modelsasservice** - Cluster-wide resource that configures platform-wide MaaS settings
+
+While it's technically possible to create additional Tenant resources via YAML (since Tenant is a CRD), OpenShift AI 3.4 MaaS is designed for single-tenant operation. The documentation only references `default-tenant`.
+====
+
+=== Step 2: Verify MaaS Deployment
+
+Watch the MaaS API pod until it reaches Running state:
+
+[source,bash]
+----
+oc get pods -n redhat-ods-applications -l app.kubernetes.io/name=maas-api -w
+----
+
+Expected output (after ~60 seconds):
+[source,text]
+----
+NAME                        READY   STATUS    RESTARTS   AGE
+maas-api-7c8f9d5b6c-x4j2m   1/1     Running   0          62s
+----
+
+Press `Ctrl+C` to stop watching.
+
+Verify the MaaS custom resource definitions were installed:
+
+[source,bash]
+----
+oc get crd | grep maas.opendatahub.io
+maasauthpolicies.maas.opendatahub.io          2024-05-11T14:23:10Z
+maasmodelrefs.maas.opendatahub.io             2024-05-11T14:23:10Z
+maassubscriptions.maas.opendatahub.io         2024-05-11T14:23:10Z
+externalmodels.maas.opendatahub.io            2024-05-11T14:23:10Z
+tenants.maas.opendatahub.io                   2024-05-11T14:23:10Z
+----
+
+**MaaS Custom Resource Definitions Explained:**
+
+[cols="2,3",options="header"]
+|===
+| CRD | Purpose
+
+| **MaaSSubscription**
+| Defines subscription-based access control with token limits and group assignments
+
+| **MaaSAuthPolicy**
+| Authorizes groups to access model endpoints through the API gateway
+
+| **MaaSModelRef**
+| References models deployed in OpenShift AI and published to MaaS
+
+| **ExternalModel** (Tech Preview)
+| Routes requests to external cloud providers (OpenAI, Anthropic, AWS Bedrock, Azure OpenAI, Google Vertex AI) through MaaS governance
+
+| **Tenant**
+| Configures tenant-specific settings including API key expiration, external OIDC, and telemetry
+|===
+
+[NOTE]
+====
+**ExternalModel Support:** The `externalmodels.maas.opendatahub.io` CRD enables routing to external LLM providers without deploying additional containers. When you create an ExternalModel resource, the existing **maas-api pod** handles request routing:
+
+1. User authenticates with MaaS API key
+2. MaaS validates subscription and token limits
+3. MaaS injects the provider API key from a Kubernetes secret
+4. Request is routed through Istio ServiceMesh to the external provider (auto-generated ServiceEntry/DestinationRule)
+
+No additional pods are deployed for external models. This is a **Technology Preview feature** in OpenShift AI 3.4.
+====
+
+Check the Tenant resource status:
+
+[source,bash]
+----
+oc get tenant default-tenant -n models-as-a-service -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}'
+----
+
+Expected output: `True`
+
+If the status shows `False`, check the condition message:
+
+[source,bash]
+----
+oc get tenant default-tenant -n models-as-a-service -o jsonpath='{.status.conditions[?(@.type=="Ready")].message}'
+----
+
+[WARNING]
+====
+If the Tenant shows `Degraded` status, the most common cause is User Workload Monitoring not being enabled. Verify Step 4 in Part 1 and wait 2-3 minutes for the monitoring stack to stabilize.
+====
+
+=== Step 3: Configure TLS for Authorino
+
+MaaS uses Authorino (from Kuadrant) for authentication. Configure TLS for secure communication between Authorino and the MaaS API:
+
+[source,bash]
+----
+oc -n kuadrant-system set env deployment/authorino \
+  SSL_CERT_FILE=/etc/ssl/certs/openshift-service-ca/service-ca-bundle.crt \
+  REQUESTS_CA_BUNDLE=/etc/ssl/certs/openshift-service-ca/service-ca-bundle.crt
+----
+
+Expected output:
+[source,text]
+----
+deployment.apps/authorino updated
+----
+
+Annotate the Gateway to enable automatic TLS configuration:
+
+[source,bash]
+----
+oc annotate gateway maas-default-gateway \
+  -n openshift-ingress \
+  security.opendatahub.io/authorino-tls-bootstrap="true" \
+  --overwrite
+----
+
+Verify the TLS configuration:
+
+[source,bash]
+----
+oc get deployment/authorino -n kuadrant-system -o jsonpath='{.spec.template.spec.containers[0].env[?(@.name=="SSL_CERT_FILE")].value}'
+----
+
+Expected output:
+[source,text]
+----
+/etc/ssl/certs/openshift-service-ca/service-ca-bundle.crt
+----
+
+Wait ~15 seconds for the Authorino pod to restart with the new environment variables.
+
+=== Step 4: Enable MaaS Dashboard Features
+
+Enable the MaaS user interface in the OpenShift AI dashboard:
+
+[source,bash]
+----
+oc patch odhdashboardconfig odh-dashboard-config \
+  -n redhat-ods-applications \
+  --type merge \
+  -p '{
+    "spec": {
+      "dashboardConfig": {
+        "genAiStudio": true,
+        "modelAsService": true,
+        "maasAuthPolicies": true
+      }
+    }
+  }'
+----
+
+**What changed:**
+
+* `genAiStudio: true` enables the **Gen AI Studio** menu with API Keys and AI Asset Endpoints
+* `modelAsService: true` enables MaaS subscription and authorization policy management
+* `maasAuthPolicies: true` enables authorization policy UI in Settings
+
+Wait ~20 seconds for the dashboard pods to reload the configuration.
+
+== Part 3: Create Organizational Groups
+
+Create OpenShift groups for ChocoTech's three business units.
+
+=== Step 1: Create Quality Control Group (Gold Plan)
+
+[source,bash]
+----
+oc adm groups new quality-control
+----
+
+Add your username to the group for testing:
+
+[source,bash]
+----
+oc adm groups add-users quality-control $(oc whoami)
+----
+
+Verify the group:
+
+[source,bash]
+----
+oc get group quality-control
+NAME               USERS
+quality-control    <your-username>
+----
+
+=== Step 2: Create R&D Group (Silver Plan)
+
+[source,bash]
+----
+oc adm groups new research-development
+oc adm groups add-users research-development $(oc whoami)
+----
+
+=== Step 3: Create Marketing Group (Bronze Plan)
+
+[source,bash]
+----
+oc adm groups new marketing-analytics
+oc adm groups add-users marketing-analytics $(oc whoami)
+----
+
+Verify all three groups exist:
+
+[source,bash]
+----
+oc get groups | grep -E "quality-control|research-development|marketing-analytics"
+quality-control          <your-username>
+research-development     <your-username>
+marketing-analytics      <your-username>
+----
+
+[NOTE]
+====
+In production, you would add specific users to each group based on their business unit. For this lab, you're adding yourself to all three groups to test each subscription tier.
+====
+
+== Part 4: Deploy and Publish a Model to MaaS
+
+Deploy a demonstration model and publish it to the MaaS gateway.
+
+=== Step 1: Create a Model Deployment Project
+
+[source,bash]
+----
+oc new-project chocotech-models
+----
+
+=== Step 2: Deploy a Model via the Dashboard
+
+[TIP]
+====
+For this lab, you'll deploy the model using the OpenShift AI dashboard. In production, you can automate this using `LLMInferenceService` YAML manifests.
+====
+
+1. Open the OpenShift AI dashboard: `https://rhods-dashboard-redhat-ods-applications.apps.<your-cluster-domain>`
+2. Click **Projects** in the left navigation
+3. Click **chocotech-models**
+4. Click the **Deployments** tab
+5. Click **Deploy model**
+
+**Model details:**
+* Model storage: Select your model repository connection
+* Model path: `/models/facebook/opt-125m` (or your preferred model)
+* Model type: **Generative AI model (Example, LLM)**
+* ✅ Ensure **Use legacy deployment method** is **unchecked** (MaaS requires LLMInferenceService)
+
+**Model deployment:**
+* Model deployment name: `chocotech-defect-detection`
+* Serving runtime: **Distributed inference with llm-d**
+* Hardware profile: **Small** (2 CPU, 8Gi RAM)
+* Replicas: `1`
+
+**Advanced settings:**
+* ✅ **Publish as MaaS** - Enable this to make the model available via MaaS gateway
+* ✅ **Publish as AI asset endpoint** - Enable to test in Playground
+* ☐ Require token authentication - Leave unchecked (MaaS handles authentication)
+
+Click **Deploy model**.
+
+=== Step 3: Verify Model Deployment
+
+Wait 3-5 minutes for the model to download and initialize. Monitor the status:
+
+[source,bash]
+----
+oc get llminferenceservice -n chocotech-models -w
+----
+
+Expected output (when ready):
+[source,text]
+----
+NAME                           READY   AGE
+chocotech-defect-detection     True    4m32s
+----
+
+Press `Ctrl+C` to stop watching.
+
+=== Step 4: Verify MaaSModelRef Creation
+
+When you publish a model to MaaS, a `MaaSModelRef` custom resource is automatically created:
+
+[source,bash]
+----
+oc get maasmodelref -n chocotech-models
+NAME                           AGE
+chocotech-defect-detection     5m
+----
+
+Inspect the MaaSModelRef:
+
+[source,bash]
+----
+oc get maasmodelref chocotech-defect-detection -n chocotech-models -o yaml
+----
+
+Key fields to observe:
+
+[source,yaml]
+----
+apiVersion: maas.opendatahub.io/v1alpha1
+kind: MaaSModelRef
+metadata:
+  name: chocotech-defect-detection
+  namespace: chocotech-models
+spec:
+  modelId: facebook/opt-125m              # <1>
+  endpointName: chocotech-defect-detection # <2>
+  namespace: chocotech-models
+status:
+  ready: true                              # <3>
+----
+<1> The model ID from the model repository
+<2> The model deployment name (used in API requests)
+<3> Model is ready for MaaS subscription assignment
+
+== Part 5: Create MaaS Subscriptions
+
+Create three subscription tiers for ChocoTech's business units.
+
+=== Step 1: Create Gold Plan Subscription (Quality Control)
+
+Use the OpenShift AI dashboard to create the Gold subscription:
+
+1. Click **Settings → Subscriptions**
+2. Click **Create subscription**
+
+**Configuration:**
+
+* **Name:** `Gold Plan - Quality Control`
+* **Resource name:** `gold-quality-control` (auto-generated)
+* **Description:** `Production-grade access with highest token limits for real-time defect detection`
+* **Priority:** `100` (highest priority for production workloads)
+* **Groups:** Select `quality-control`
+
+**Add Models:**
+
+1. Click **Add models**
+2. Select **chocotech-defect-detection**
+3. Click **Add models**
+
+**Configure Token Limits:**
+
+1. Click **Add token limit** for the `chocotech-defect-detection` model
+2. Token limit configuration:
+   * Tokens: `10000`
+   * Time period: `1`
+   * Unit: `hour`
+3. Click **Add token rate limit** to add a second limit:
+   * Tokens: `200`
+   * Time period: `1`
+   * Unit: `minute`
+4. Click **Save**
+
+**Authorization:**
+
+* ✅ **Create a matching authorization policy** (enable this)
+
+Click **Create subscription**.
+
+**What happened:**
+
+1. MaaS created a `MaaSSubscription` custom resource in the `models-as-a-service` namespace
+2. Token limits were configured: 10,000 tokens/hour AND 200 tokens/minute (whichever is more restrictive)
+3. A matching `MaaSAuthPolicy` was automatically created to authorize the `quality-control` group
+4. The subscription entered `Active` phase after validation
+
+=== Step 2: Create Silver Plan Subscription (R&D)
+
+Create the Silver subscription following the same process:
+
+**Configuration:**
+
+* **Name:** `Silver Plan - Research & Development`
+* **Priority:** `50` (staging/pre-production priority)
+* **Groups:** Select `research-development`
+* **Models:** `chocotech-defect-detection`
+
+**Token Limits:**
+
+* Primary limit: `5000` tokens per `1` hour
+* Burst limit: `100` tokens per `1` minute
+
+✅ **Create a matching authorization policy**
+
+=== Step 3: Create Bronze Plan Subscription (Marketing)
+
+Create the Bronze subscription:
+
+**Configuration:**
+
+* **Name:** `Bronze Plan - Marketing Analytics`
+* **Priority:** `0` (development/experimental priority)
+* **Groups:** Select `marketing-analytics`
+* **Models:** `chocotech-defect-detection`
+
+**Token Limits:**
+
+* Primary limit: `1000` tokens per `1` hour
+* Burst limit: `25` tokens per `1` minute
+
+✅ **Create a matching authorization policy**
+
+=== Step 4: Verify All Subscriptions
+
+[source,bash]
+----
+oc get maassubscriptions -n models-as-a-service
+NAME                       PHASE    GROUPS   MODELS   PRIORITY   AGE
+gold-quality-control       Active   1        1        100        2m
+silver-research-dev        Active   1        1        50         1m
+bronze-marketing           Active   1        1        0          30s
+----
+
+Verify that matching authorization policies were created:
+
+[source,bash]
+----
+oc get maasauthpolicies -n models-as-a-service
+NAME                                PHASE    GROUPS   MODELS   AGE
+gold-quality-control-authpolicy     Active   1        1        2m
+silver-research-dev-authpolicy      Active   1        1        1m
+bronze-marketing-authpolicy         Active   1        1        30s
+----
+
+[TIP]
+====
+**Priority Level Strategy:** When a user belongs to multiple groups, MaaS uses the subscription with the highest priority. Since you added yourself to all three groups, requests will default to the Gold subscription (priority 100). To test the Silver or Bronze subscriptions, you'll need to explicitly select them when creating API keys.
+====
+
+== Part 6: Generate and Test API Keys
+
+Create API keys for each subscription tier and test model access.
+
+=== Step 1: Generate Gold Plan API Key
+
+1. Open the OpenShift AI dashboard
+2. Click **Gen AI Studio → API Keys**
+3. Click **Create API key**
+
+**Configuration:**
+
+* **Name:** `Gold QC Production Key`
+* **Description:** `Production key for Quality Control defect detection`
+* **Subscription:** Select `Gold Plan - Quality Control`
+* **Expiration:** `30 days` (or `Never` for permanent testing)
+
+Click **Create**.
+
+**Critical: Copy the API key immediately**
+
+[source,text]
+----
+sk-oai-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+----
+
+Store this in a secure location. This is the only time you'll see it.
+
+Export the key as an environment variable:
+
+[source,bash]
+----
+export GOLD_API_KEY="sk-oai-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+----
+
+=== Step 2: Get the MaaS Gateway URL
+
+Find the external API endpoint URL:
+
+1. In the dashboard, click **Gen AI Studio → AI Asset Endpoints**
+2. Click **View** for the `chocotech-defect-detection` model
+3. Copy the **External API endpoint** URL
+
+It will look like:
+[source,text]
+----
+https://maas.apps.<cluster-domain>/llm/chocotech-defect-detection
+----
+
+Export the base gateway URL (without the model path):
+
+[source,bash]
+----
+export MAAS_URL="https://maas.apps.<cluster-domain>"
+----
+
+=== Step 3: Test Gold Plan API Access
+
+List available models:
+
+[source,bash]
+----
+curl -X GET "${MAAS_URL}/v1/models" \
+  -H "Authorization: Bearer ${GOLD_API_KEY}" \
+  -s | jq
+----
+
+Expected response:
+
+[source,json]
+----
+{
+  "object": "list",
+  "data": [
+    {
+      "id": "chocotech-defect-detection",
+      "object": "model",
+      "created": 1234567890,
+      "owned_by": "llm",
+      "ready": true
+    }
+  ]
+}
+----
+
+Make a test inference request:
+
+[source,bash]
+----
+curl -X POST "${MAAS_URL}/llm/chocotech-defect-detection/v1/completions" \
+  -H "Authorization: Bearer ${GOLD_API_KEY}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "chocotech-defect-detection",
+    "prompt": "Analyze chocolate defect: surface bubbles detected",
+    "max_tokens": 50,
+    "temperature": 0.7
+  }' \
+  -s | jq
+----
+
+Expected response:
+
+[source,json]
+----
+{
+  "id": "chatcmpl-abc123",
+  "object": "text.completion",
+  "created": 1234567890,
+  "model": "chocotech-defect-detection",
+  "choices": [
+    {
+      "index": 0,
+      "text": "Surface bubbles in chocolate typically indicate...",
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 12,
+    "completion_tokens": 38,
+    "total_tokens": 50
+  }
+}
+----
+
+**Observe the rate limit headers:**
+
+[source,bash]
+----
+curl -X POST "${MAAS_URL}/llm/chocotech-defect-detection/v1/completions" \
+  -H "Authorization: Bearer ${GOLD_API_KEY}" \
+  -H "Content-Type: application/json" \
+  -d '{"model": "chocotech-defect-detection", "prompt": "Test", "max_tokens": 10}' \
+  -i -s | grep -i "x-ratelimit"
+----
+
+Expected headers:
+
+[source,text]
+----
+X-RateLimit-Limit: 200
+X-RateLimit-Remaining: 199
+X-RateLimit-Reset: 1715445660
+----
+
+=== Step 4: Test Token Limit Enforcement
+
+Create a script to exceed the per-minute token limit (200 tokens/minute for Gold):
+
+[source,bash]
+----
+cat > test-rate-limit.sh <<'EOF'
+#!/bin/bash
+for i in {1..25}; do
+  echo "Request $i:"
+  curl -X POST "${MAAS_URL}/llm/chocotech-defect-detection/v1/completions" \
+    -H "Authorization: Bearer ${GOLD_API_KEY}" \
+    -H "Content-Type: application/json" \
+    -d '{"model": "chocotech-defect-detection", "prompt": "Test prompt", "max_tokens": 15}' \
+    -w "\nHTTP Status: %{http_code}\n" \
+    -s -o /dev/null
+  sleep 1
+done
+EOF
+
+chmod +x test-rate-limit.sh
+./test-rate-limit.sh
+----
+
+**Expected behavior:**
+
+* First 10-12 requests: HTTP 200 (success)
+* After ~200 tokens consumed: HTTP 429 (rate limited)
+* Response body on 429:
+
+[source,json]
+----
+{
+  "error": {
+    "message": "Token limit exceeded. You have consumed the maximum number of tokens allowed for this model in your subscription.",
+    "type": "token_limit_error",
+    "code": 429
+  }
+}
+----
+
+[TIP]
+====
+This demonstrates the MaaS token governance in action. The Gold subscription allows 200 tokens/minute. Once you exceed this limit, MaaS returns HTTP 429 until the time window resets. In production applications, implement exponential backoff retry logic to handle these scenarios gracefully.
+====
+
+=== Step 5: Generate and Test Silver Plan API Key
+
+Repeat the API key creation process for the Silver subscription:
+
+* **Name:** `Silver R&D Development Key`
+* **Subscription:** `Silver Plan - Research & Development`
+* **Expiration:** `30 days`
+
+Export the Silver API key:
+
+[source,bash]
+----
+export SILVER_API_KEY="sk-oai-yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy"
+----
+
+Test the Silver subscription limits (100 tokens/minute):
+
+[source,bash]
+----
+curl -X POST "${MAAS_URL}/llm/chocotech-defect-detection/v1/completions" \
+  -H "Authorization: Bearer ${SILVER_API_KEY}" \
+  -H "Content-Type: application/json" \
+  -d '{"model": "chocotech-defect-detection", "prompt": "Test R&D access", "max_tokens": 10}' \
+  -i -s | grep -i "x-ratelimit-limit"
+----
+
+Expected:
+[source,text]
+----
+X-RateLimit-Limit: 100
+----
+
+Notice the Silver subscription has a lower token limit (100/minute) compared to Gold (200/minute).
+
+== Part 7: Verify MaaS Dashboard Features
+
+Explore the MaaS administrative and user interfaces.
+
+=== Step 1: View Subscriptions Dashboard
+
+1. Open OpenShift AI dashboard
+2. Click **Settings → Subscriptions**
+3. Observe the three subscriptions with their phase, groups, models, and priority levels
+
+Click on **Gold Plan - Quality Control** to view details:
+
+* Groups: `quality-control`
+* Models: `chocotech-defect-detection` with token limits
+* Priority: `100`
+* Phase: `Active`
+
+=== Step 2: View Authorization Policies
+
+1. Click **Settings → Authorization Policies**
+2. Observe the three auto-created authorization policies
+3. Click on `gold-quality-control-authpolicy` to view details
+
+Verify that the policy authorizes:
+
+* Groups: `quality-control`
+* Models: `chocotech-defect-detection`
+* Phase: `Active`
+
+=== Step 3: View API Keys
+
+1. Click **Gen AI Studio → API Keys**
+2. Observe your created API keys with status, subscription, creation date, and expiration
+
+Notice the **Last used** column updates as you make API requests.
+
+=== Step 4: Test Model in Playground
+
+1. Click **Gen AI Studio → AI Asset Endpoints**
+2. Click **Add to playground** for `chocotech-defect-detection`
+3. In the Playground:
+   * Select **Subscription:** `Gold Plan - Quality Control`
+   * Enter a test prompt: `"What are common chocolate manufacturing defects?"`
+   * Click **Send**
+
+The Playground uses your subscription's token quota to make the request.
+
+[NOTE]
+====
+The Playground is a user-facing feature that demonstrates how data scientists and developers can test models before integrating them into applications. Behind the scenes, it uses the same MaaS gateway and subscription system as programmatic API access.
+====
+
+== Part 8: Troubleshooting and Validation
+
+Validate the complete MaaS deployment and troubleshoot common issues.
+
+=== Validation Checklist
+
+Verify each component of your MaaS deployment:
+
+**Platform Components:**
+
+[source,bash]
+----
+oc get tenant default-tenant -n models-as-a-service -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}'
+----
+✅ Expected: `True`
+
+**Model Deployment:**
+
+[source,bash]
+----
+oc get llminferenceservice chocotech-defect-detection -n chocotech-models -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}'
+----
+✅ Expected: `True`
+
+**MaaSModelRef:**
+
+[source,bash]
+----
+oc get maasmodelref chocotech-defect-detection -n chocotech-models -o jsonpath='{.status.ready}'
+----
+✅ Expected: `true`
+
+**Subscriptions:**
+
+[source,bash]
+----
+oc get maassubscriptions -n models-as-a-service --no-headers | wc -l
+----
+✅ Expected: `3` (Gold, Silver, Bronze)
+
+**Authorization Policies:**
+
+[source,bash]
+----
+oc get maasauthpolicies -n models-as-a-service --no-headers | wc -l
+----
+✅ Expected: `3` (matching policies for each subscription)
+
+**API Access:**
+
+[source,bash]
+----
+curl -X GET "${MAAS_URL}/v1/models" \
+  -H "Authorization: Bearer ${GOLD_API_KEY}" \
+  -w "\nHTTP Status: %{http_code}\n" \
+  -s -o /dev/null
+----
+✅ Expected: `HTTP Status: 200`
+
+=== Common Issues and Solutions
+
+**Issue: 403 Forbidden when accessing model**
+
+*Cause:* Missing authorization policy or user not in authorized group.
+
+*Solution:*
+
+[source,bash]
+----
+# Verify authorization policy exists
+oc get maasauthpolicy -n models-as-a-service | grep gold
+
+# Verify your group membership
+oc get group quality-control -o jsonpath='{.users}' | grep $(oc whoami)
+----
+
+If the authorization policy is missing, create it from the Subscriptions page by editing the subscription and ensuring the matching authorization policy option is enabled.
+
+**Issue: 401 Unauthorized**
+
+*Cause:* Invalid or expired API key.
+
+*Solution:*
+
+* Verify the API key is prefixed with `sk-oai-`
+* Check expiration date in **Gen AI Studio → API Keys**
+* Regenerate a new API key if expired
+
+**Issue: Model not appearing in subscription model list**
+
+*Cause:* Model was not published to MaaS.
+
+*Solution:*
+
+[source,bash]
+----
+# Check if MaaSModelRef exists
+oc get maasmodelref -n chocotech-models
+
+# If missing, edit the LLMInferenceService and ensure publishAsMaaS: true
+oc edit llminferenceservice chocotech-defect-detection -n chocotech-models
+----
+
+**Issue: Subscription shows Failed phase**
+
+*Cause:* Invalid model reference or group name.
+
+*Solution:*
+
+[source,bash]
+----
+# Check subscription status conditions
+oc describe maassubscription gold-quality-control -n models-as-a-service
+
+# Review the status.conditions for error messages
+----
+
+Common failures include referencing a model that doesn't exist or a group that isn't a valid OpenShift group.
+
+== Summary and Next Steps
+
+**What You Accomplished:**
+
+In this lab, you built a complete production-ready MaaS governance platform for ChocoTech Industries. You:
+
+✅ Verified and configured all MaaS prerequisites (Kuadrant, User Workload Monitoring, Gateway API)
+
+✅ Enabled the MaaS backend component and verified Tenant readiness
+
+✅ Configured TLS authentication between Authorino and the MaaS API
+
+✅ Created three OpenShift groups representing ChocoTech's business units
+
+✅ Deployed a generative AI model and published it to the MaaS gateway
+
+✅ Established three subscription tiers with distinct token limits (Gold: 10,000/hr, Silver: 5,000/hr, Bronze: 1,000/hr)
+
+✅ Configured authorization policies to enable API gateway access
+
+✅ Generated API keys and validated subscription-based token enforcement
+
+✅ Tested the complete end-to-end model access workflow
+
+**Business Impact:**
+
+ChocoTech now has a centralized AI governance platform that:
+
+* Prevents resource exhaustion through enforced token quotas
+* Enables accurate cost allocation by tracking consumption per business unit
+* Provides secure, auditable access via API key authentication
+* Delivers differentiated service levels aligned with business priorities (Gold/Silver/Bronze)
+* Eliminates the GPU silo crisis by enabling dynamic multi-tenancy
+
+**Next Steps:**
+
+* **Production Deployment:** Deploy additional models for R&D recipe optimization and Marketing sentiment analysis
+* **User Onboarding:** Add real users to the appropriate OpenShift groups and provision API keys
+* **Monitoring:** Configure MaaS observability dashboard to track token consumption and costs
+* **External Models:** Integrate external LLM providers (OpenAI, Anthropic) through MaaS for unified governance
+* **Automation:** Implement GitOps workflows for subscription and authorization policy management
+
+[TIP]
+====
+**Production Best Practice:** In production, separate the model deployment namespace (`chocotech-models`) from the subscription management namespace (`models-as-a-service`). This follows the principle of separation of concerns: platform administrators manage subscriptions, while data science teams manage model deployments.
+====
+
+== Additional Resources
+
+* Red Hat OpenShift AI Documentation: https://docs.redhat.com/en/documentation/red_hat_openshift_ai/
+* Models-as-a-Service Administration Guide
+* Kuadrant Rate Limiting Configuration
+* OpenShift Gateway API Documentation

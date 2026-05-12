@@ -39,7 +39,7 @@ If your verification checks failed in the previous step, locate your issue below
 * **Check for Errors:** Run `oc describe gateway maas-default-gateway -n openshift-ingress`.
 * *Root Cause:* The Service Mesh operator is not installed, or the Istio control plane is not deployed. Ensure the `openshift-ingress` namespace exists and contains running `istiod-*` and `istio-ingressgateway-*` pods.
 ====
-
+////
 ---
 
 == The ChocoTech impact
@@ -49,7 +49,7 @@ By completing this module, you have laid the groundwork to solve ChocoTech's GPU
 * **Infrastructure Ready:** The platform can now logically route and enforce policies across Quality Control, R&D, Marketing, and Supply Chain.
 * **Self-Service Enabled:** Business unit leads will soon be able to generate API tokens for their developers securely, bypassing traditional IT ticket bottlenecks.
 * **API Gateway Operational:** A single, robust endpoint has replaced the four separate, insecure model-serving endpoints that teams were managing independently.
-
+////
 ---
 
 == Your journey progress
