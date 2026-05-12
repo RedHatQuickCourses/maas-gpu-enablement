@@ -67,6 +67,12 @@
   </li>
 </ul>
   </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="maas-lab.html">LAB: Deploy MaaS End-to-End</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="maas-troubleshooting-routing.html">TROUBLESHOOTING: Gateway Routing Issues</a>
+  </li>
 </ul>
   </li>
   <li class="nav-item" data-depth="0">
@@ -82,7 +88,7 @@
     <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-03.html">2.2: Creating OpenShift groups</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-04.html">2.3: ServiceAccounts &amp; RBAC</a>
+    <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-04.html">2.3: Subscriptions and quotas</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-05.html">2.4: Authorizing Gateway Access (MaaSAuthPolicy)</a>
@@ -189,6 +195,11 @@
 </li>
 </ul>
 </div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_openshift_ai_3_4_models_as_a_service_maas"><a class="anchor" href="#_openshift_ai_3_4_models_as_a_service_maas"></a>OpenShift Ai 3.4 - Models-as-a-Service (MaaS)</h2>
+<div class="sectionbody">
 <div class="paragraph">
 <p>Before we dive into the technical architecture, let&#8217;s define exactly what we are building to solve this crisis.</p>
 </div>
@@ -201,9 +212,7 @@
 <div class="ulist">
 <ul>
 <li>
-<p><strong>Subscription-based access control:</strong> Define multiple subscriptions that grant specific groups access to models with configurable token limits. Users can belong to multiple subscriptions, with priority levels determining which
-Note
-subscription is used when multiple options are available.</p>
+<p><strong>Subscription-based access control:</strong> Define multiple subscriptions that grant specific groups access to models with configurable token limits. Users can belong to multiple subscriptions, with priority levels determining which subscription is used when multiple options are available.</p>
 </li>
 <li>
 <p><strong>Self-service API key management:</strong> Users can create, list, and revoke their own API keys for model access. Administrators can also
@@ -271,7 +280,7 @@ Data scientists spend 40% of their time debugging CUDA drivers and Kubernetes ma
 </div></div></td>
 <td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
 <p><strong>Simplified Consumption</strong>
-Developers skip the infrastructure completely. They access powerful models instantly via secure, OpenAI-compatible API endpoints using native API keys.</p>
+Developers skip the infrastructure completely. They access powerful models instantly via secure, OpenAI-compatible API endpoints using self-provisioned API keys.</p>
 </div></div></td>
 </tr>
 <tr>

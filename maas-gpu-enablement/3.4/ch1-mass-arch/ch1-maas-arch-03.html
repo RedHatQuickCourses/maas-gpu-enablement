@@ -67,6 +67,12 @@
   </li>
 </ul>
   </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="maas-lab.html">LAB: Deploy MaaS End-to-End</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="maas-troubleshooting-routing.html">TROUBLESHOOTING: Gateway Routing Issues</a>
+  </li>
 </ul>
   </li>
   <li class="nav-item" data-depth="0">
@@ -82,7 +88,7 @@
     <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-03.html">2.2: Creating OpenShift groups</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-04.html">2.3: ServiceAccounts &amp; RBAC</a>
+    <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-04.html">2.3: Subscriptions and quotas</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-05.html">2.4: Authorizing Gateway Access (MaaSAuthPolicy)</a>
@@ -234,7 +240,7 @@
 </ul>
 </div></div></td>
 <td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
-<p><strong>Ironclad Security &amp; Chargebacks:</strong> This layer mathematically guarantees that a team cannot exhaust GPU resources. It provides the exact token-usage telemetry required for Finance to bill departments accurately.</p>
+<p><strong>Security &amp; Chargebacks:</strong> This layer mathematically guarantees that a team cannot exhaust GPU resources. It provides the exact token-usage telemetry required for Finance to bill departments accurately.</p>
 </div></div></td>
 </tr>
 <tr>
@@ -281,16 +287,17 @@
 <p><strong>The Request Arrives (Gateway API):</strong> The Marketing application sends a POST request to <code>/v1/chat/completions</code> containing their Bearer token and the prompt data. The Gateway API catches this at the network edge.</p>
 </li>
 <li>
-<p><strong>Identity Verification (Kuadrant - Authorino):</strong> The Gateway pauses the request and asks Authorino, "Is this token valid, and what subscription level does this user have?" Authorino confirms the user is in the "Bronze" subscription group. (If the token was invalid, it would immediately return a <code>401 Unauthorized</code> without touching the GPU).</p>
+<p><strong>Identity Verification (Kuadrant - Authorino):</strong> The Gateway pauses the request and asks Authorino, "Is this token valid, and what subscription level does this user have?" Authorino confirms the user is in the "Bronze" subscription group. Next it checks the Authorization policy which (TobeAdded)
+(If the token was invalid, it would immediately return a <code>401 Unauthorized</code> without touching the GPU).</p>
 </li>
 <li>
-<p><strong>Policy Enforcement (Kuadrant - Limitador):</strong> Limitador checks the Bronze subscription quota. "Has the Marketing team exceeded their 10,000 tokens-per-hour limit?" If they are within limits, the request is permitted. (If exceeded, it returns a <code>429 Too Many Requests</code>).</p>
+<p><strong>Policy Enforcement (Kuadrant - Limitador):</strong> Policies (MaaSAuthPolicy) and subscriptions (MaaSSubscription) work together. Both use RBAC references (subjects or owners). A user must have both a matching policy (access) and a matching subscription (quota) to use a model. Limitador checks the Bronze subscription quota. "Has the Marketing team exceeded their 10,000 tokens-per-hour limit?" If they are within limits, the request is permitted. (If exceeded, it returns a <code>429 Too Many Requests</code>).</p>
 </li>
 <li>
 <p><strong>Execution (KServe):</strong> The validated, governed request is handed off to KServe. The vLLM runtime processes the prompt against the <code>llama-3-8b</code> weights and generates the response.</p>
 </li>
 <li>
-<p><strong>The Audit Log:</strong> The response flows back to the user, and Kuadrant meticulously logs the exact number of <code>prompt_tokens</code> and <code>completion_tokens</code> consumed by the Marketing user for the chargeback report.</p>
+<p><strong>The Audit Log:</strong> The response flows back to the user, and Kuadrant meticulously logs the exact number of <code>prompt_tokens</code> and <code>completion_tokens</code> consumed by the Marketing application for the chargeback report.</p>
 </li>
 </ol>
 </div>

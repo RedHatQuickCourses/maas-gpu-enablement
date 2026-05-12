@@ -67,6 +67,12 @@
   </li>
 </ul>
   </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="maas-lab.html">LAB: Deploy MaaS End-to-End</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="maas-troubleshooting-routing.html">TROUBLESHOOTING: Gateway Routing Issues</a>
+  </li>
 </ul>
   </li>
   <li class="nav-item" data-depth="0">
@@ -82,7 +88,7 @@
     <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-03.html">2.2: Creating OpenShift groups</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-04.html">2.3: ServiceAccounts &amp; RBAC</a>
+    <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-04.html">2.3: Subscriptions and quotas</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-05.html">2.4: Authorizing Gateway Access (MaaSAuthPolicy)</a>
@@ -421,49 +427,8 @@ EOF</code></pre>
 <div class="paragraph">
 <p>ChocoTech&#8217;s underlying infrastructure is now primed for centralized governance. Proceed to the Summary and troubleshooting page to close out this module.</p>
 </div>
-<div class="paragraph">
-<p>///</p>
 </div>
 </div>
-</div>
-</div>
-<h1 id="_set_ssl_environment_variables_for_outbound_communication" class="sect0"><a class="anchor" href="#_set_ssl_environment_variables_for_outbound_communication"></a>Set SSL environment variables for outbound communication</h1>
-<div class="paragraph">
-<p>oc -n kuadrant-system set env deployment/authorino \
-SSL_CERT_FILE=/etc/ssl/certs/openshift-service-ca/service-ca-bundle.crt \
-REQUESTS_CA_BUNDLE=/etc/ssl/certs/openshift-service-ca/service-ca-bundle.crt</p>
-</div>
-<h1 id="_annotate_the_existing_gateway_to_enable_tls_bootstrap" class="sect0"><a class="anchor" href="#_annotate_the_existing_gateway_to_enable_tls_bootstrap"></a>Annotate the existing gateway to enable TLS bootstrap</h1>
-<div class="paragraph">
-<p>oc annotate gateway maas-default-gateway \
--n openshift-ingress \
-security.opendatahub.io/authorino-tls-bootstrap="true" \
---overwrite</p>
-</div>
-<div class="paragraph">
-<p>cat &lt;&lt;EOF | oc apply -f -
-apiVersion: gateway.networking.k8s.io/v1
-kind: Gateway
-metadata:
-  name: maas-default-gateway
-  namespace: openshift-ingress
-  annotations:
-    # Mandatory for MaaS to bootstrap TLS and Authorino integration
-    security.opendatahub.io/authorino-tls-bootstrap: "true"
-spec:
-  gatewayClassName: data-science-gateway-class
-  listeners:
-  - name: https # MaaS requires secure communication
-    port: 443
-    protocol: HTTPS
-    tls:
-      mode: Terminate
-      certificateRefs:
-      - name: maas-gateway-cert # Ensure this certificate exists
-    allowedRoutes:
-      namespaces:
-        from: All
-EOF</p>
 </div>
 <nav class="pagination">
   <span class="prev"><a href="ch1-maas-arch-03.html">1.2: MaaS architecture stack</a></span>

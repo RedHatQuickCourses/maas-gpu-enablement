@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>1.4: Summary &amp; troubleshooting :: Models as a Service Breaking the GPU Silos on OpenShift AI 3.4</title>
     <link rel="prev" href="ch1-maas-arch-04.html">
-    <link rel="next" href="../ch2-platform-admin/ch2-platform-admin-01.html">
+    <link rel="next" href="maas-lab.html">
     <meta name="generator" content="Antora 3.1.3">
     <link rel="stylesheet" href="../../../_/css/site.css">
     <script>var uiRootPath = '../../../_'</script>
@@ -67,6 +67,12 @@
   </li>
 </ul>
   </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="maas-lab.html">LAB: Deploy MaaS End-to-End</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="maas-troubleshooting-routing.html">TROUBLESHOOTING: Gateway Routing Issues</a>
+  </li>
 </ul>
   </li>
   <li class="nav-item" data-depth="0">
@@ -82,7 +88,7 @@
     <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-03.html">2.2: Creating OpenShift groups</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-04.html">2.3: ServiceAccounts &amp; RBAC</a>
+    <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-04.html">2.3: Subscriptions and quotas</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-05.html">2.4: Authorizing Gateway Access (MaaSAuthPolicy)</a>
@@ -258,28 +264,6 @@ In OpenShift AI 3.4, MaaS uses a subscription-based model for access control. If
 </div>
 </div>
 <div class="sect1">
-<h2 id="_the_chocotech_impact"><a class="anchor" href="#_the_chocotech_impact"></a>The ChocoTech impact</h2>
-<div class="sectionbody">
-<div class="paragraph">
-<p>By completing this module, you have laid the groundwork to solve ChocoTech&#8217;s GPU Silo Crisis. <strong>What you accomplished:</strong></p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><strong>Infrastructure Ready:</strong> The platform can now logically route and enforce policies across Quality Control, R&amp;D, Marketing, and Supply Chain.</p>
-</li>
-<li>
-<p><strong>Self-Service Enabled:</strong> Business unit leads will soon be able to generate API tokens for their developers securely, bypassing traditional IT ticket bottlenecks.</p>
-</li>
-<li>
-<p><strong>API Gateway Operational:</strong> A single, robust endpoint has replaced the four separate, insecure model-serving endpoints that teams were managing independently.</p>
-</li>
-</ul>
-</div>
-<hr>
-</div>
-</div>
-<div class="sect1">
 <h2 id="_your_journey_progress"><a class="anchor" href="#_your_journey_progress"></a>Your journey progress</h2>
 <div class="sectionbody">
 <table class="tableblock frame-none grid-none stretch">
@@ -319,7 +303,7 @@ In OpenShift AI 3.4, MaaS uses a subscription-based model for access control. If
 </div>
 <nav class="pagination">
   <span class="prev"><a href="ch1-maas-arch-04.html">1.3: Enabling MaaS on RHOAI</a></span>
-  <span class="next"><a href="../ch2-platform-admin/ch2-platform-admin-01.html">2: Access Control &amp; Governance</a></span>
+  <span class="next"><a href="maas-lab.html">LAB: Deploy MaaS End-to-End</a></span>
 </nav>
 </article>
   </div>

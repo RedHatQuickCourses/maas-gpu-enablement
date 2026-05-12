@@ -67,6 +67,12 @@
   </li>
 </ul>
   </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="maas-lab.html">LAB: Deploy MaaS End-to-End</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="maas-troubleshooting-routing.html">TROUBLESHOOTING: Gateway Routing Issues</a>
+  </li>
 </ul>
   </li>
   <li class="nav-item" data-depth="0">
@@ -82,7 +88,7 @@
     <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-03.html">2.2: Creating OpenShift groups</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-04.html">2.3: ServiceAccounts &amp; RBAC</a>
+    <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-04.html">2.3: Subscriptions and quotas</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-05.html">2.4: Authorizing Gateway Access (MaaSAuthPolicy)</a>
@@ -167,16 +173,16 @@
 <h2 id="_your_role_and_mission"><a class="anchor" href="#_your_role_and_mission"></a>Your Role and Mission</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>In this course, you will take on the role of a <strong>Platform Engineer at ChocoTech Industries</strong>, a modern chocolate manufacturing company. You have been assigned to solve a critical infrastructure challenge that is actively hindering multiple business units.</p>
+<p>Take on the role of a <strong>Platform Engineer at ChocoTech Industries</strong>, a modern chocolate manufacturing company. You have been assigned to solve a critical infrastructure challenge that is actively hindering multiple business units.</p>
 </div>
 <div class="paragraph">
 <p>ChocoTech has teams across Quality Control, R&amp;D, Marketing, and Supply Chain, all trying to leverage AI for their operations. However, each team has purchased and siloed their own GPU infrastructure, leading to a company-wide <strong>"GPU Silo Crisis."</strong></p>
 </div>
-<div class="admonitionblock important">
+<div class="admonitionblock note">
 <table>
 <tr>
 <td class="icon">
-<i class="fa icon-important" title="Important"></i>
+<i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
 <div class="ulist">
@@ -193,14 +199,7 @@
 </tr>
 </table>
 </div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_the_problem_chocotechs_gpu_silo_crisis"><a class="anchor" href="#_the_problem_chocotechs_gpu_silo_crisis"></a>The Problem: ChocoTech&#8217;s GPU Silo Crisis</h2>
-<div class="sectionbody">
-<div class="paragraph">
-<p>ChocoTech has invested heavily in AI, but their decentralized approach has created serious operational and financial bottlenecks.</p>
-</div>
+<hr>
 <div class="sect2">
 <h3 id="_the_current_state"><a class="anchor" href="#_the_current_state"></a>The Current State</h3>
 <div class="paragraph">
@@ -244,11 +243,11 @@
 </li>
 </ul>
 </div>
-<div class="admonitionblock note">
+<div class="admonitionblock tip">
 <table>
 <tr>
 <td class="icon">
-<i class="fa icon-note" title="Note"></i>
+<i class="fa icon-tip" title="Tip"></i>
 </td>
 <td class="content">
 <div class="paragraph">
@@ -309,36 +308,6 @@ We need to transition from hardware management to token delivery. MaaS transform
 </div>
 </div>
 <div class="sect1">
-<h2 id="_mission_success_criteria"><a class="anchor" href="#_mission_success_criteria"></a>Mission Success Criteria</h2>
-<div class="sectionbody">
-<div class="paragraph">
-<p>By the end of this QuickCourse, you will have practical MaaS implementation skills to address ChocoTech&#8217;s challenges. You will be able to:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><strong>Prevent "Shadow AI"</strong>: Understand the business impact of the GPU silo crisis and eliminate redundant deployments.</p>
-</li>
-<li>
-<p><strong>Establish Centralized Serving</strong>: Configure the MaaS platform through OpenShift AI operator Custom Resource Definitions (CRDs).</p>
-</li>
-<li>
-<p><strong>Enable Efficient Utilization</strong>: Deploy models using distributed inference with llm-d and vLLM across multiple accelerators.</p>
-</li>
-<li>
-<p><strong>Ensure Fair Allocation</strong>: Implement governance tiers with rate limiting and quotas using Kuadrant.</p>
-</li>
-<li>
-<p><strong>Provide Visibility</strong>: Generate usage metrics and chargeback reports to justify infrastructure costs.</p>
-</li>
-<li>
-<p><strong>Simplify Consumption</strong>: Integrate models into applications via OpenAI-compatible APIs so developers can skip infrastructure complexity.</p>
-</li>
-</ul>
-</div>
-</div>
-</div>
-<div class="sect1">
 <h2 id="_common_questions"><a class="anchor" href="#_common_questions"></a>Common Questions</h2>
 <div class="sectionbody">
 <div class="dlist">
@@ -349,12 +318,12 @@ We need to transition from hardware management to token delivery. MaaS transform
 </dd>
 <dt class="hdlist1"><strong>"What about security and compliance considerations?"</strong></dt>
 <dd>
-<p>Module 4 covers governance policies, including rate limiting, tier-based access control, and audit logging through the Kuadrant policy layer.</p>
+<p>Module 4 covers governance policies, including rate limiting, subscription and authorization policy based access control, and audit logging through the Kuadrant policy layer.</p>
 </dd>
-<dt class="hdlist1"><strong>"How does this integrate with our current application development workflows?"</strong></dt>
-<dd>
-<p>Module 5 shows OpenAI-compatible API integration that works natively with existing LangChain, LlamaIndex, and custom application frameworks.</p>
-</dd>
+</dl>
+</div>
+<div class="dlist">
+<dl>
 <dt class="hdlist1"><strong>"Is MaaS adoption sustainable for our team with limited Kubernetes expertise?"</strong></dt>
 <dd>
 <p>Absolutely. This QuickCourse demonstrates operator-based configuration through OpenShift AI CRDs, minimizing low-level Kubernetes knowledge requirements while providing self-service capabilities via the dashboard.</p>
