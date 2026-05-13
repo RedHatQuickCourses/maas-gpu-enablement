@@ -1,5 +1,11 @@
 = 3.3: Verifying the MaaS catalog and gateway publication
 
+
+[IMPORTANT]
+====
+WARNING: This section is under development
+====
+
 If ChocoTech had deployed this model using standard open-source tools, the Platform Engineering team's job would not be finished. They would still need to manually write documentation, email the endpoint URL to the developers, and coordinate API keys. 
 
 With Models as a Service, the OpenShift AI operator handles all of this automatically. Because we set `publishToGenAIStudio: true` in our deployment manifest, the platform instantly registers the model, applies our governance tiers, and publishes it to a centralized self-service catalog.

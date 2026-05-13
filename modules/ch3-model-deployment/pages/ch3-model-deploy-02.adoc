@@ -1,5 +1,10 @@
 = 3.1: Model selection, hardware sizing, and serving strategy
 
+[IMPORTANT]
+====
+WARNING: This section is under development
+====
+
 Before writing a single line of YAML to deploy a model, a Platform Engineer must answer three critical questions: *What model architecture does the business actually need?* *Will this model physically fit on our GPUs?* and *How do we ensure the deployment inherits our governance rules?*
 
 ChocoTech's Platform Engineering team has received competing requests from four departments. To prevent wasting expensive GPU resources, we must evaluate models based on their architecture and capabilities before deploying them.

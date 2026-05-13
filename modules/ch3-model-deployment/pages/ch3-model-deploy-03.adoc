@@ -1,5 +1,10 @@
 = 3.2: Deploying the governed model via GitOps
 
+[IMPORTANT]
+====
+WARNING: This section is under development
+====
+
 With the hardware math verified, it is time to deliver the AI capabilities to ChocoTech's R&D team. 
 
 In a production environment, pulling massive 16GB model weights directly from the public internet every time a pod scales up is highly inefficient and a security risk. Instead, ChocoTech uses a "Vault" strategy: we download the model once to a local, high-speed S3-compatible storage array (MinIO) inside the cluster, and all inference pods pull their weights from there.

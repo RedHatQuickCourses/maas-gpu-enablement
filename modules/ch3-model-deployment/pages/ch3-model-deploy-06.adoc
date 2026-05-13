@@ -1,5 +1,10 @@
 = 3.5: Day-2 operations and lifecycle management
 
+[IMPORTANT]
+====
+WARNING: This section is under development
+====
+
 ChocoTech's Quality Control team has been successfully using the `llama-3-8b` model for several weeks. Now, they want to upgrade to a new version that has been fine-tuned specifically on ChocoTech manufacturing defects.
 
 "We cannot risk downtime," explains the QC Director. "Our production line depends on real-time defect detection. How do we update the model without causing an outage?"

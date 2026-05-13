@@ -1,5 +1,10 @@
 = 3.4: Expanding the catalog with selective tier access
 
+[IMPORTANT]
+====
+WARNING: This section is under development
+====
+
 ChocoTech's Marketing team requests access to a smaller, faster model for sentiment analysis. To accommodate this, we will deploy a second model to demonstrate multi-model catalog management. 
 
 This exercise shows how easily you can expand the model catalog as new business requirements emerge. More importantly, it demonstrates how to apply strict, selective access controls so that expensive or restricted models do not appear for unauthorized users.
