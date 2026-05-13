@@ -1,6 +1,5 @@
 = 3.5: Day-2 operations and lifecycle management
 
-[IMPORTANT]
 ====
 WARNING: This section is under development
 ====

@@ -1,6 +1,6 @@
 = 3.1: Model selection, hardware sizing, and serving strategy
 
-[IMPORTANT]
+
 ====
 WARNING: This section is under development
 ====

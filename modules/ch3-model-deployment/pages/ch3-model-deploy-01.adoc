@@ -4,7 +4,6 @@
 :toc: macro
 :toclevels: 1
 
-[IMPORTANT]
 ====
 WARNING: This section is under development
 ====

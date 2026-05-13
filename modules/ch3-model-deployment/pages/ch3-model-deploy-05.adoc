@@ -1,6 +1,5 @@
 = 3.4: Expanding the catalog with selective tier access
 
-[IMPORTANT]
 ====
 WARNING: This section is under development
 ====

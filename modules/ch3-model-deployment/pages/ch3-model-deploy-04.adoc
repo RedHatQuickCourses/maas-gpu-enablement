@@ -1,7 +1,6 @@
 = 3.3: Verifying the MaaS catalog and gateway publication
 
 
-[IMPORTANT]
 ====
 WARNING: This section is under development
 ====

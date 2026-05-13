@@ -1,6 +1,5 @@
 = 3.2: Deploying the governed model via GitOps
 
-[IMPORTANT]
 ====
 WARNING: This section is under development
 ====
