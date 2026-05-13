@@ -174,10 +174,7 @@
 <div id="preamble">
 <div class="sectionbody">
 <div class="paragraph">
-<p>You have explored the business problem and understand the three-layer architecture. Now it is time to activate MaaS on ChocoTech&#8217;s OpenShift cluster.</p>
-</div>
-<div class="paragraph">
-<p>ChocoTech&#8217;s GPU infrastructure is already operational from prior AI/ML experiments. Rather than starting from scratch, you will transform this fragmented hardware into a centralized MaaS platform by enabling the components that provide governance, routing, and multi-tenant model serving.</p>
+<p>You have explored the business problem and understand the three-layer architecture. Now it is time to activate MaaS on ChocoTech&#8217;s OpenShift cluster. ChocoTech&#8217;s GPU infrastructure is already operational from prior AI/ML experiments. Rather than starting from scratch, you will transform this fragmented hardware into a centralized MaaS platform by enabling the components that provide governance, routing, and multi-tenant model serving.</p>
 </div>
 <div class="paragraph">
 <p>This module guides you through the exact activation sequence: verifying required operators, creating the infrastructure foundation, deploying the required database, and patching the OpenShift AI platform to expose the MaaS features.</p>
@@ -189,16 +186,16 @@
 <h2 id="_step_1_configuration_check_operator_verification"><a class="anchor" href="#_step_1_configuration_check_operator_verification"></a>Step 1: Configuration check &amp; operator verification</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Before applying any configurations, ensure your cluster meets the baseline requirements. You must be running OpenShift version 4.20.0 (officially 4.19.9) or later. Furthermore, specific operators must be installed from the Ecosystem - Software Catalog (previously OperatorHub).</p>
+<p>Before applying any configurations, ensure your cluster meets the baseline requirements. You must be running OpenShift version 4.20.0 (officially 4.19.9) or later. Furthermore, specific operators and monitoring stacks must be installed. If any of these are missing, the deployment will silently fail.</p>
 </div>
 <div class="paragraph">
-<p>If any of these are missing, the deployment will silently fail—your commands will appear to succeed, but the expected pods and resources will never materialize.</p>
-</div>
-<div class="paragraph">
-<p>Ensure the following operators are installed and healthy:</p>
+<p>Ensure the following operators and settings are active:</p>
 </div>
 <div class="ulist">
 <ul>
+<li>
+<p><strong>User Workload Monitoring:</strong> This is absolutely critical for MaaS. Without it, the MaaS Tenant resource will show a <code>Degraded</code> status, and the platform will fail to collect token consumption metrics.</p>
+</li>
 <li>
 <p><strong>Red Hat OpenShift Service Mesh 3</strong>: Provides the underlying Istio networking that powers the Gateway API implementation.</p>
 </li>
@@ -211,16 +208,21 @@
 <li>
 <p><strong>Leader Worker Set (LWS) Operator</strong>: Mandatory for <code>llm-d</code> orchestration to manage models that exceed single-node VRAM capacity.</p>
 </li>
+<li>
+<p><strong>Cluster Observability Operator (Optional but Recommended):</strong> While MaaS core routing works without it, ChocoTech&#8217;s Finance team needs this to view the MaaS observability dashboard (Tech Preview) for token consumption tracking and showback reporting.</p>
+</li>
 </ul>
 </div>
-<div class="paragraph">
-<p>Verify the installations:</p>
-</div>
+<details>
+<summary class="title">Verify the installations:</summary>
+<div class="content">
 <div class="listingblock execute">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-none hljs">oc get csv -n openshift-lws-operator | grep -E "(servicemesh|rhcl|rhods|limitador|authorino|leader)"</code></pre>
 </div>
 </div>
+</div>
+</details>
 <div class="paragraph">
 <p>If any operators are missing, install them from the OpenShift console (<strong>Ecosystem → Software Catalog</strong>) and wait for their status to reach <code>Succeeded</code> before continuing.</p>
 </div>
@@ -291,6 +293,45 @@ spec:
         from: All
 EOF</code></pre>
 </div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p><strong>Understanding the Gateway API architecture</strong></p>
+</div>
+<div class="paragraph">
+<p>Unlike traditional Kubernetes <code>Ingress</code>, the modern <strong>Kubernetes Gateway API</strong> can feel a bit abstract. It separates network routing into three distinct responsibilities. Understanding these pieces clarifies why the <code>gatewayClassName</code> and exact Gateway name are so important for Models-as-a-Service:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>GatewayClass (The Blueprint):</strong> This tells the cluster <em>who</em> is responsible for building the load balancer and <em>what kind</em> of underlying technology to use. By specifying <code>gatewayClassName: openshift-default</code>, you instruct the native OpenShift Gateway Controller to deploy the physical proxy infrastructure. If this is misconfigured or missing, your cluster won&#8217;t know how to build the gateway, and it will sit in an unprogrammed state forever.</p>
+</li>
+<li>
+<p><strong>Gateway (The Entry Endpoint):</strong> The <code>Gateway</code> resource (which we named <code>maas-default-gateway</code>) is the instantiated infrastructure that listens for traffic. It defines the physical or virtual IP address, the open ports (like 80 or 443), and the TLS certificates. It essentially says, "I am built according to the <code>openshift-default</code> blueprint, and I am actively listening for connections."</p>
+</li>
+<li>
+<p><strong>HTTPRoute (The Router):</strong> This is where the actual routing logic lives. An <code>HTTPRoute</code> attaches to a Gateway and contains the specific URL rules (e.g., "If a request path is <code>/llm/llama-3b/v1/chat/completions</code>, forward it to the model pod in the <code>chocotech-models</code> namespace").</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>How it all ties together in MaaS</strong></p>
+</div>
+<div class="paragraph">
+<p>The benefit of this architecture is the separation of infrastructure from application logic. As a platform engineer, you only build the gateway.</p>
+</div>
+<div class="paragraph">
+<p>ChocoTech deploys a model and checks the "Publish as MaaS" box, they do not need to write any networking rules. The MaaS controller automatically generates the <code>HTTPRoute</code> behind the scenes. That route dynamically attaches itself to the <code>maas-default-gateway</code>, securely linking the public endpoint through the Kuadrant governance layer directly to the internal KServe model pod.</p>
+</div>
+</td>
+</tr>
+</table>
 </div>
 </div>
 <div class="sect2">
@@ -368,7 +409,7 @@ EOF</code></pre>
 <div class="sect2">
 <h3 id="_enable_the_maas_backend_and_llama_stack"><a class="anchor" href="#_enable_the_maas_backend_and_llama_stack"></a>Enable the MaaS Backend and Llama Stack</h3>
 <div class="paragraph">
-<p>You must edit the <code>default-dsc</code> CR to enable two critical components:</p>
+<p>You must edit the <code>default-dsc</code> CR to enable two critical components.</p>
 </div>
 <div class="olist arabic">
 <ol class="arabic">
@@ -376,7 +417,7 @@ EOF</code></pre>
 <p><strong>Models As a Service:</strong> Provisions the core governance and routing controllers.</p>
 </li>
 <li>
-<p><strong>Llama Stack Operator:</strong> Provides the required API layer for the Gen AI Studio UI to function.</p>
+<p><strong>Llama Stack Operator:</strong> Activating this operator is strictly required for the MaaS dashboard features to function. If you do not enable the Llama Stack Operator, developers will be entirely unable to access the Gen AI Studio menu, the API Keys management page, or the Playground for model testing.</p>
 </li>
 </ol>
 </div>
@@ -401,19 +442,11 @@ EOF</code></pre>
 }'</code></pre>
 </div>
 </div>
-<div class="paragraph">
-<p>Verify that both the <code>maas-api</code> and <code>maas-controller-manager</code> pods are running:</p>
-</div>
-<div class="listingblock execute">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-none hljs">oc get pods -n redhat-ods-applications | grep maas</code></pre>
-</div>
-</div>
 </div>
 <div class="sect2">
 <h3 id="_enable_the_dashboard_gen_ai_studio"><a class="anchor" href="#_enable_the_dashboard_gen_ai_studio"></a>Enable the Dashboard (Gen AI Studio)</h3>
 <div class="paragraph">
-<p>Even when deploying models via GitOps, administrators require the dashboard UI to manage user access tokens and monitor model usage. You have enabled Gen AI Studio: <code>spec.dashboardConfig.genAiStudio: true</code> in the OdhDashboardConfig custom resource.</p>
+<p>Even when deploying models via GitOps, administrators require the dashboard UI to manage user access tokens and monitor model usage. You must enable Gen AI Studio by patching the <code>OdhDashboardConfig</code> custom resource.</p>
 </div>
 <div class="paragraph">
 <p>Apply the dashboard configuration patch:</p>
@@ -434,9 +467,93 @@ EOF</code></pre>
 <div class="paragraph">
 <p>Refresh your OpenShift AI browser window. The <strong>Gen AI Studio</strong> menu option will now appear in your left-hand navigation pane.</p>
 </div>
-<div class="paragraph">
-<p>ChocoTech&#8217;s underlying infrastructure is now primed for centralized governance. Proceed to the Summary and troubleshooting page to close out this module.</p>
+<hr>
 </div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_step_4_verification_summary"><a class="anchor" href="#_step_4_verification_summary"></a>Step 4: Verification Summary</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Before moving on to building ChocoTech&#8217;s subscription plans in Module 2, run this comprehensive verification script to confirm all components deployed successfully.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">cat &gt; verify-maas-prereqs.sh &lt;&lt;'EOF'
+#!/bin/bash
+
+echo "=== MaaS Prerequisites Verification ==="
+echo ""
+
+# 1. OpenShift Version
+echo "1. OpenShift Platform Version:"
+OCP_VERSION=$(oc version -o json 2&gt;/dev/null | jq -r '.openshiftVersion' 2&gt;/dev/null || echo "ERROR")
+echo "   Version: ${OCP_VERSION}"
+[[ "${OCP_VERSION}" == "ERROR" ]] &amp;&amp; echo "   ❌ FAILED" || echo "   ✅ PASSED"
+echo ""
+
+# 2. OpenShift AI Operator
+echo "2. Red Hat OpenShift AI Operator:"
+RHOAI_CSV=$(oc get csv -n redhat-ods-applications 2&gt;/dev/null | grep rhods-operator | awk '{print $1}')
+echo "   CSV: ${RHOAI_CSV:-NOT FOUND}"
+[[ -z "${RHOAI_CSV}" ]] &amp;&amp; echo "   ❌ FAILED" || echo "   ✅ PASSED"
+echo ""
+
+# 3. Red Hat Connectivity Link
+echo "3. Red Hat Connectivity Link Operator:"
+RCL_CSV=$(oc get csv -n openshift-operators 2&gt;/dev/null | grep connectivity-link | awk '{print $1}')
+echo "   CSV: ${RCL_CSV:-NOT FOUND}"
+KUADRANT_STATUS=$(oc get kuadrant kuadrant -n kuadrant-system -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}' 2&gt;/dev/null || echo "ERROR")
+echo "   Kuadrant Ready: ${KUADRANT_STATUS}"
+[[ "${KUADRANT_STATUS}" == "True" ]] &amp;&amp; echo "   ✅ PASSED" || echo "   ❌ FAILED"
+echo ""
+
+# 4. Llama Stack Operator
+echo "4. Llama Stack Operator:"
+LLAMA_STATE=$(oc get datasciencecluster default-dsc -o jsonpath='{.spec.components.llamastackoperator.managementState}' 2&gt;/dev/null || echo "ERROR")
+echo "   Management State: ${LLAMA_STATE}"
+[[ "${LLAMA_STATE}" == "Managed" ]] &amp;&amp; echo "   ✅ PASSED" || echo "   ⚠️  WARNING: Required for dashboard features"
+echo ""
+
+# 5. User Workload Monitoring
+echo "5. User Workload Monitoring:"
+UWM_ENABLED=$(oc get configmap cluster-monitoring-config -n openshift-monitoring -o jsonpath='{.data.config\.yaml}' 2&gt;/dev/null | grep -o "enableUserWorkload: true" || echo "NOT ENABLED")
+echo "   Status: ${UWM_ENABLED}"
+[[ "${UWM_ENABLED}" == "enableUserWorkload: true" ]] &amp;&amp; echo "   ✅ PASSED" || echo "   ❌ FAILED"
+echo ""
+
+# 6. PostgreSQL Database Secret
+echo "6. PostgreSQL Database Secret:"
+DB_SECRET=$(oc get secret maas-db-config -n redhat-ods-applications -o jsonpath='{.metadata.name}' 2&gt;/dev/null || echo "NOT FOUND")
+echo "   Secret: ${DB_SECRET}"
+[[ "${DB_SECRET}" == "maas-db-config" ]] &amp;&amp; echo "   ✅ PASSED" || echo "   ❌ FAILED"
+echo ""
+
+# 7. Gateway API
+echo "7. Gateway API Resources:"
+GW_STATUS=$(oc get gateway maas-default-gateway -n openshift-ingress -o jsonpath='{.status.conditions[?(@.type=="Programmed")].status}' 2&gt;/dev/null || echo "NOT FOUND")
+echo "   Gateway Programmed: ${GW_STATUS}"
+[[ "${GW_STATUS}" == "True" ]] &amp;&amp; echo "   ✅ PASSED" || echo "   ❌ FAILED"
+echo ""
+
+# 8. KServe Component
+echo "8. KServe Component (Required for MaaS):"
+KSERVE_STATE=$(oc get datasciencecluster default-dsc -o jsonpath='{.spec.components.kserve.managementState}' 2&gt;/dev/null || echo "ERROR")
+echo "   Management State: ${KSERVE_STATE}"
+[[ "${KSERVE_STATE}" == "Managed" ]] &amp;&amp; echo "   ✅ PASSED" || echo "   ❌ FAILED"
+echo ""
+
+echo "=== Summary ==="
+echo "Review any ❌ FAILED items above before proceeding with MaaS deployment."
+echo ""
+EOF
+
+chmod +x verify-maas-prereqs.sh
+./verify-maas-prereqs.sh</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>If the output shows ✅ PASSED for the required components, ChocoTech&#8217;s underlying infrastructure is officially primed for centralized governance. Proceed to the Summary and troubleshooting page to close out this module.</p>
 </div>
 </div>
 </div>
