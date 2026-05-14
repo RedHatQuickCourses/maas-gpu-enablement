@@ -34,7 +34,8 @@ Based on the CIO's requirements, we will implement the following structure:
 
 We will use GitOps (Infrastructure-as-Code) to define the business logic for these three plans. 
 
-Notice the `modelRefs` section in the YAML below. Even though we will not deploy the `llama-3-8b` model until Module 3, MaaS allows us to "pre-wire" our governance. We are explicitly telling the subscription: _"When a model reference named `llama-3-8b-ref` appears in the `chocotech-models` namespace, apply these limits."_
+[IMPORTANT]
+Notice the `modelRefs` section in the YAML below. Even though we will not deploy the `llama-3-8b` model until Module 3, MaaS allows us to "pre-wire" our governance. Expect this deployment to be in the failed state, until the model is deployed. We are explicitly telling the subscription: _"When a model reference named `llama-3-8b-ref` appears in the `chocotech-models` namespace, apply these limits."_
 
 Execute the following block to deploy all three `MaaSSubscription` policies into the centralized `models-as-a-service` namespace:
 
