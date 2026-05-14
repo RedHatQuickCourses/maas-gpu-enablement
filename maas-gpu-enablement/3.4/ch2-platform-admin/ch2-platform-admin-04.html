@@ -316,8 +316,17 @@
 <div class="paragraph">
 <p>We will use GitOps (Infrastructure-as-Code) to define the business logic for these three plans.</p>
 </div>
-<div class="paragraph">
-<p>Notice the <code>modelRefs</code> section in the YAML below. Even though we will not deploy the <code>llama-3-8b</code> model until Module 3, MaaS allows us to "pre-wire" our governance. We are explicitly telling the subscription: <em>"When a model reference named <code>llama-3-8b-ref</code> appears in the <code>chocotech-models</code> namespace, apply these limits."</em></p>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+Notice the <code>modelRefs</code> section in the YAML below. Even though we will not deploy the <code>llama-3-8b</code> model until Module 3, MaaS allows us to "pre-wire" our governance. Expect this deployment to be in the failed state, until the model is deployed. We are explicitly telling the subscription: <em>"When a model reference named <code>llama-3-8b-ref</code> appears in the <code>chocotech-models</code> namespace, apply these limits."</em>
+</td>
+</tr>
+</table>
 </div>
 <div class="paragraph">
 <p>Execute the following block to deploy all three <code>MaaSSubscription</code> policies into the centralized <code>models-as-a-service</code> namespace:</p>
