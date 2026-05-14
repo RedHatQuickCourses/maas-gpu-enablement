@@ -38,7 +38,7 @@ highest priority level.
 
 In OpenShift AI 3.4, granting a team access to the AI platform requires exactly two custom resources working together. Think of it like joining a gym:
 
-1. **The `MaaSSubscription` (The Membership Contract):** This defines the terms. It states that the "Marketing Group" belongs to the "Bronze Plan," which grants them access to the `nemotron-8b` model with a limit of 1,000 tokens per minute. 
+1. **The `MaaSSubscription` (The Membership Contract):** This defines the terms. It states that the "Marketing Group" belongs to the "Bronze Plan," which grants them access to the `nemotron-8b` model with a limit of 1,000 tokens per minute.  You can be broad at this level because you can limit access to specific models per user or application at the Authorization Policy level. 
 2. **The `MaaSAuthPolicy` (The Keycard Reader):** This is the physical enforcement mechanism. It attaches to the OpenShift API Gateway and says, "If someone presents a valid API key belonging to the Marketing Group, let them through the door."
 
 *If you deploy a Subscription without an Auth Policy, the user's API key will be rejected at the network edge with a `403 Forbidden` error.*

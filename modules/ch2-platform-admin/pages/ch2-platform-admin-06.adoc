@@ -1,38 +1,99 @@
-= 2.5: Generating API Keys
+= 2.3: Configuring programmatic access (The Service Account Pattern)
 
-In legacy OpenShift AI environments, Platform Engineers had to create complex Kubernetes ServiceAccounts, assign RoleBindings, and extract raw JWTs via the CLI to give developers access to a model. 
+With the organizational subscriptions defined, we must enable programmatic access for ChocoTech's applications. The Marketing team's sentiment analysis application runs in an automated container; it cannot perform an interactive human login via OIDC. 
 
-OpenShift AI 3.4 eliminates this friction by introducing **Native API Key Management**. 
+In legacy environments, you would have to manually construct complex Kubernetes ServiceAccounts, RoleBindings, and extract raw JWTs. In OpenShift AI 3.4, Models-as-a-Service (MaaS) introduces **Native API Key Management**. Administrators can centrally provision and manage secure API keys on behalf of users or automated applications (the "Service Account Pattern").
 
-Developers no longer need Kubernetes CLI access. They simply log into the OpenShift AI dashboard, and the system automatically evaluates their OpenShift Group memberships (e.g., `chocotech-quality-control`) to determine their subscription priority. When they generate an API key, that key is permanently bound to their subscription limits.
 
-== Exercise 1: Minting an API Key (The Developer Persona)
+== The Enterprise Advantage: Governed API Keys
 
-Let's switch hats. You are now a Developer on the ChocoTech Quality Control team, and you need an API key to integrate the upcoming Llama-3 model into the factory's defect-detection software.
+Unlike public APIs where developers use ungoverned static keys, MaaS API Keys provide enterprise-grade security:
 
-1. Open the OpenShift AI dashboard in your web browser.
-2. Ensure you are logged in with the user account that you previously added to the `chocotech-quality-control` OpenShift group.
-3. In the left-hand navigation menu, expand the **Gen AI Studio** section.
-4. Click on **API Keys**.
-5. Click the **Create API Key** button.
-6. Provide a descriptive name for your application (e.g., `QC-Defect-Scanner-App`).
-7. Click **Create**.
-
-[IMPORTANT]
-====
-**Secure your key immediately!** The platform will display the API key string only once. Copy this key and save it to a secure location (like a password manager or your local terminal's environment variables). You will not be able to view it again after closing the window.
-====
-
-=== Understanding Key Binding
-When you clicked "Create," the MaaS controller silently queried your user identity. Because you belong to the `chocotech-quality-control` group, the MaaS controller permanently bound this specific API key to the `gold-plan` Subscription (100 priority, 50,000 tokens/min). 
-
-If a user belongs to multiple groups (e.g., the CIO is in both Silver and Gold), the API key automatically inherits the limits of the Subscription with the highest priority number.
+* **Subscription-Bound:** Keys are strictly bound to a specific subscription (e.g., the Bronze Plan), guaranteeing the application cannot exceed its token quotas.
+* **Instantly Revocable:** If a key is compromised, administrators can revoke it with a single click, immediately invalidating all requests using that key.
+* **Centrally Auditable:** Use descriptive names for API keys (e.g., `production-chatbot` or `marketing-sentiment-app`) to track usage and simplify revocation.
 
 ---
 
-### Module 2 Progress Check
-Congratulations! You have transformed ChocoTech's OpenShift AI platform from a raw, ungoverned infrastructure into a highly secure, multi-tenant enterprise AI factory. 
+== Exercise 1: Enforce Global Security Guardrails
 
-You have built the OpenShift groups, defined the Subscription token limits, authorized the Gateway access, and learned how to distribute secure API keys. 
+While users and admins can select expiration dates when creating keys, we want to ensure no one accidentally creates a "Permanent" (`Never` expiring) key for a temporary script. 
 
-Your security perimeter is fully established. The only thing missing is the actual AI. In **Module 3**, we will deploy the Llama-3 model and connect it to these exact governance rules.
+You can set a maximum expiration period for API keys across the entire platform to enforce security policies.
+
+Execute the following command to patch the centralized `Tenant` custom resource and enforce a strict 90-day maximum lifetime for all new API keys:
+
+[source,role="execute"]
+----
+oc patch tenant default-tenant -n models-as-a-service \
+  --type merge \
+  -p '{"spec":{"apiKeys":{"maxExpirationDays":90}}}'
+----
+*Expected behavior:* Anyone attempting to create an API key with an expiration longer than 90 days will now receive an error.
+
+---
+
+== Exercise 2: Provisioning the Application Key (Service Account Pattern)
+
+We need to generate a key for the Marketing team's sentiment analysis container. As a Platform Administrator, you will provision this key on their behalf.
+
+1. In the OpenShift AI dashboard, navigate to **Gen AI studio** -> **API keys**.
+2. Click **Create API key**.
+3. Fill out the creation form:
+* **Name:** `marketing-sentiment-app` (Using a descriptive name is a best practice for tracking).
+* **Subscription:** Select the **Bronze Plan** (This scopes the key's access to the models and token limits defined for Marketing ).
+* **Expiration:** Select `90 days`.
+4. Click **Create**.
+
+[IMPORTANT]
+====
+**Secure your key immediately!** The platform will display the API key string (which begins with `sk-oai-`) only once. Copy this key and save it to a secure location (like a password manager or your local terminal's environment variables). You will not be able to view it again. If you lose the key, you must revoke it and create a new one.
+====
+
+=== ⚠️ The Group Membership "Gotcha"
+
+When an API key is created, the system permanently binds it to the user's current group memberships for performance reasons (group information is not re-validated on every inference request). 
+
+**What this means for Administrators:** If a developer transfers from the Quality Control team to the Marketing team, their existing API keys will **continue to work with the original Quality Control (Gold Plan) permissions** until those keys expire or are revoked. When removing a user from an OpenShift group, you **must manually revoke all associated API keys** to immediately revoke access.
+
+---
+
+== Exercise 3: Test the Gateway
+
+Now that the identity and permissions are established, let's test the authorization chain against the MaaS Gateway using our new key.
+
+[source,role="execute"]
+----
+# 1. Export your newly created API key
+export MAAS_API_KEY="sk-oai-your-copied-key-here"
+
+# 2. Retrieve the MaaS Gateway URL
+export CLUSTER_DOMAIN=$(oc get ingresses.config.openshift.io cluster -o jsonpath='{.spec.domain}')
+export MAAS_URL="https://maas.${CLUSTER_DOMAIN}"
+
+# 3. Test authentication against the models endpoint
+curl -s -w "\nHTTP Status: %{http_code}\n" \
+  $MAAS_URL/v1/models \
+  -H "Authorization: Bearer $MAAS_API_KEY" \
+  -k
+----
+
+=== Decoding the Results
+
+If your configuration is correct, you will receive the following output:
+
+[source,json]
+----
+{
+  "object": "list",
+  "data": []
+}
+HTTP Status: 200
+----
+
+* **HTTP 200 OK:** This is the critical success indicator. It proves that the Kuadrant gateway successfully validated your `sk-oai-` API key and mapped it to the correct Subscription and AuthPolicy.
+* **Empty `data` array:** This is completely expected. We have successfully authenticated, but we have not published any models to MaaS yet.
+
+If you receive an `HTTP 401 Unauthorized`, verify your API key is correct and not expired. If you receive an `HTTP 403 Forbidden`, ensure that your **MaaSAuthPolicy** was deployed correctly in the previous step and includes the appropriate group.
+
+ChocoTech's programmatic authentication is now secure and strictly governed. In the next section, we will explore the MaaS Observability Dashboard to see how Finance can use these configurations for precise chargebacks.
