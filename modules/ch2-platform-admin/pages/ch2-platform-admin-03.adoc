@@ -54,7 +54,7 @@ Before moving on to the subscriptions, run this combined verification script to 
 echo "=== Groups ===" && \
 oc get groups | grep chocotech && \
 echo "=== Gold Plan Membership ===" && \
-oc get group chocotech-quality-control -o jsonpath='{.users[*]}' && echo && \
+oc get group chocotech-quality-control -o jsonpath='{.users[*]}'
 
 ----
 

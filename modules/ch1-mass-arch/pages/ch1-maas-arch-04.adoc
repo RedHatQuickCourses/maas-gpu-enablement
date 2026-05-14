@@ -125,7 +125,7 @@ metadata:
     # Mandatory for MaaS to bootstrap TLS and Authorino integration
     security.opendatahub.io/authorino-tls-bootstrap: "true"
     # Mandatory to allow maas-controller to manage policies and prevent overwriting
-    opendatahub.io/managed: "false". // <3>
+    opendatahub.io/managed: "false" // <3>
 spec:
   gatewayClassName: data-science-gateway-class  # Alternatively, use 'openshift-default' // <1>
   listeners:
@@ -198,14 +198,20 @@ Expected output:
 
  /etc/ssl/certs/openshift-service-ca/service-ca-bundle.crt   
 
-Verify Gateway Annotation:oc get gateway maas-default-gateway -n openshift-ingress -o jsonpath='{.metadata.annotations.security\.opendatahub\.io/authorino-tls-bootstrap}'   
+Verify Gateway Annotation:
+
+[source,role="execute"]
+----
+oc get gateway maas-default-gateway -n openshift-ingress -o jsonpath='{.metadata.annotations.security\.opendatahub\.io/authorino-tls-bootstrap}'
+----  
 
 Expected output: true   
 
 Check Tenant Readiness:
-
+[source,role="execute"]
+----
 oc get tenant default-tenant -n models-as-a-service -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}'   
-
+----
 
 Expected output: True   
 
