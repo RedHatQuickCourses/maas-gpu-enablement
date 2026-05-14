@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>3.2: Deploying the governed model via GitOps :: Models as a Service Breaking the GPU Silos on OpenShift AI 3.4</title>
+    <title>3.6: Summary &amp; troubleshooting :: Models as a Service Breaking the GPU Silos on OpenShift AI 3.4</title>
     <link rel="prev" href="ch3-model-deploy-06.html">
     <meta name="generator" content="Antora 3.1.3">
 <link rel="stylesheet" href="../../../_/css/site.css">
@@ -229,7 +229,7 @@
   <div class="toc-menu"></div>
 </aside>
 <article class="doc">
-<h1 class="page">3.2: Deploying the governed model via GitOps</h1>
+<h1 class="page">3.6: Summary &amp; troubleshooting</h1>
 <div id="preamble">
 <div class="sectionbody">
 <div class="exampleblock">
@@ -249,163 +249,162 @@ This section is under development
 </div>
 </div>
 <div class="paragraph">
-<p>With the hardware math verified and the <code>llm-d</code> runtime selected, it is time to deliver the AI capabilities to ChocoTech&#8217;s R&amp;D team.</p>
+<p>You have successfully brought the ChocoTech AI Factory online. By deploying these models into the Models as a Service (MaaS) architecture, you have transformed a raw, ungoverned infrastructure into a highly secure, multi-tenant enterprise platform.</p>
 </div>
 <div class="paragraph">
-<p>In a production environment, pulling massive 16GB model weights directly from the public internet every time a pod scales up is highly inefficient and a security risk. Instead, ChocoTech uses a "Vault" strategy: we download the model once to a local, high-speed S3-compatible storage array (MinIO) inside the cluster, and all inference pods pull their weights from there.</p>
+<p>If ChocoTech had allowed teams to deploy standard standalone models, they would currently have zero internal cost control and no way to prioritize mission-critical workloads over experimental scripts. By utilizing the <code>LLMInferenceService</code> architecture and explicit <code>MaaSModelRef</code> registration, you have secured the company&#8217;s hardware ROI and established absolute Quality of Service (QoS).</p>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_exercise_1_stage_the_local_vault"><a class="anchor" href="#_exercise_1_stage_the_local_vault"></a>Exercise 1: Stage the local vault</h2>
+<h2 id="_what_you_accomplished"><a class="anchor" href="#_what_you_accomplished"></a>What you accomplished</h2>
 <div class="sectionbody">
-<div class="paragraph">
-<p>We have packaged the setup for the local S3 vault and the model download into an automation script.</p>
-</div>
-<div class="olist arabic">
-<ol class="arabic">
-<li>
-<p>Open your OpenShift Terminal.</p>
-</li>
-<li>
-<p>Clone the deployment repository:</p>
-<div class="listingblock execute">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-none hljs">git clone https://github.com/RedHatQuickCourses/rhoai3-maas-lab.git
-cd rhoai3-maas-lab</code></pre>
-</div>
-</div>
-</li>
-<li>
-<p>Execute the setup script to provision the MinIO vault and download the <code>Llama-3-8B</code> model weights:</p>
-<div class="listingblock execute">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-none hljs">chmod u+x setup-vault.sh
-./setup-vault.sh --model meta-llama/Meta-Llama-3-8B-Instruct</code></pre>
-</div>
-</div>
-</li>
-</ol>
-</div>
-<div class="paragraph">
-<p><strong>Expected Output:</strong> Wait for the script to output <code>✅ SUCCESS: MinIO Vault configured and Llama-3-8B staged in s3://models/llama3</code>.</p>
-</div>
-<div class="paragraph">
-<p>This script automatically creates the OpenShift AI "Data Connection" (a Connection Secret) required for KServe to securely authenticate against your new local vault.</p>
-</div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_exercise_2_the_infrastructure_as_code_the_workload"><a class="anchor" href="#_exercise_2_the_infrastructure_as_code_the_workload"></a>Exercise 2: The Infrastructure-as-Code (The Workload)</h2>
-<div class="sectionbody">
-<div class="paragraph">
-<p>To deploy distributed inference, we do not use the standard <code>InferenceService</code> CRD. Instead, we use the <code>LLMInferenceService</code> CRD. This single file tells the OpenShift AI operator to spin up the vLLM engine, pull the weights from our vault, and attach the Kuadrant MaaS policies.</p>
-</div>
-<div class="paragraph">
-<p>Review the <code>llama3-deployment.yaml</code> file in your repository:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">apiVersion: serving.kserve.io/v1alpha1
-kind: LLMInferenceService
-metadata:
-  name: llama-3-8b
-  namespace: chocotech-models
-  annotations:
-    # THE BOUNCER LIST: Defines exactly which UI subscriptions are allowed to access this model
-    alpha.maas.opendatahub.io/subscriptions: '["gold-tier", "silver-tier", "bronze-tier"]'
-spec:
-  # THE CATALOG PUBLISHER: Pushes this model to the Gen AI Studio UI for developers
-  publishToGenAIStudio: true
-
-  # THE VAULT: Pointing to our secure local S3 storage connection
-  model:
-    uri: s3://models/llama3
-    name: meta-llama/Meta-Llama-3-8B-Instruct
-
-  # THE ENGINE: Utilizing vLLM to decouple request handling from tensor operations
-  servingRuntime: "vllm-runtime"
-
-  # ENGINE TUNING: Injecting native vLLM parameters for maximum throughput
-  template:
-    containers:
-      - name: main
-        env:
-          - name: VLLM_ADDITIONAL_ARGS
-            value: "--max-model-len=8192 --gpu-memory-utilization=0.90"
-
-  # THE HARDWARE: Requesting exact VRAM and GPU requirements
-  placement:
-    accelerator:
-      name: "nvidia.com/gpu"
-      count: 1</code></pre>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_breaking_down_the_vllm_tuning_variables"><a class="anchor" href="#_breaking_down_the_vllm_tuning_variables"></a>Breaking down the vLLM Tuning Variables</h3>
 <div class="ulist">
 <ul>
 <li>
-<p><code>--max-model-len=8192</code>: Prevents Out-Of-Memory (OOM) errors by capping the maximum context window. Generative AI requests involve varying prompt lengths; limiting this ensures predictable memory allocation.</p>
+<p><strong>Hardware &amp; Architecture Selection:</strong> Assessed Dense vs. Sparse models and calculated VRAM requirements to ensure ChocoTech&#8217;s workloads fit efficiently onto their NVIDIA hardware.</p>
 </li>
 <li>
-<p><code>--gpu-memory-utilization=0.90</code>: Reserves 90% of the VRAM for the KV Cache and model weights, leaving 10% for PyTorch overhead.</p>
+<p><strong>Secure GitOps Deployment:</strong> Staged the <code>llama-3-8b</code> and <code>nemotron-8b</code> model weights in a local MinIO vault to prevent inefficient public internet downloads, and deployed them using the governed <code>LLMInferenceService</code> architecture.</p>
+</li>
+<li>
+<p><strong>MaaS Registration:</strong> Successfully registered the inference engines with the API Gateway by automatically generating <code>MaaSModelRef</code> custom resources.</p>
+</li>
+<li>
+<p><strong>Selective Access Control:</strong> Manually appended the new models to your existing <code>MaaSSubscription</code> and <code>MaaSAuthPolicy</code> resources to explicitly restrict the Nemotron model to Silver and Bronze users, while keeping Gold production workloads isolated.</p>
+</li>
+<li>
+<p><strong>Day-2 Operations:</strong> Mastered the zero-downtime rolling update workflow, allowing you to hot-swap model versions by simply updating the storage URI in your Git repository.</p>
 </li>
 </ul>
-</div>
-<div class="paragraph">
-<p>Apply the deployment:</p>
-</div>
-<div class="listingblock execute">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-none hljs">oc apply -f llama3-deployment.yaml</code></pre>
-</div>
-</div>
-</div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_exercise_3_monitor_the_deployment"><a class="anchor" href="#_exercise_3_monitor_the_deployment"></a>Exercise 3: Monitor the deployment</h2>
-<div class="sectionbody">
-<div class="paragraph">
-<p>Because the weights are stored locally in your MinIO vault, the deployment will be significantly faster than pulling from the public internet.</p>
-</div>
-<div class="paragraph">
-<p>Check the KServe status condition to verify the model is healthy:</p>
-</div>
-<div class="listingblock execute">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-none hljs">oc get llminferenceservice llama-3-8b -n chocotech-models -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}'</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p><strong>Expected output:</strong> <code>True</code>.</p>
 </div>
 <hr>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_alternative_the_ui_deployment_walkthrough"><a class="anchor" href="#_alternative_the_ui_deployment_walkthrough"></a>Alternative: The UI Deployment Walkthrough</h2>
+<h2 id="_knowledge_check"><a class="anchor" href="#_knowledge_check"></a>Knowledge check</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>While GitOps (Infrastructure-as-Code) is the standard for Platform Engineers, OpenShift AI administrators can also deploy and publish governed models directly through the dashboard UI.</p>
+<p>Test your understanding of the MaaS deployment architecture before moving on:</p>
 </div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>Why must governed models be deployed using <code>LLMInferenceService</code> rather than the legacy deployment method?</strong></p>
 <div class="paragraph">
-<p>In the OpenShift AI dashboard, the process has been updated to use a streamlined deployment wizard. When deploying, administrators simply navigate to the "Advanced settings" and check the <strong>"Publish as MaaS endpoint"</strong> box. They can then use multi-select checkboxes to restrict the model to "Specific subscriptions" (e.g., hiding a massive model from the Free tier).</p>
+<p>Legacy KServe <code>InferenceService</code> deployments bypass the MaaS gateway completely. They lack subscription-based access control, native API key authentication, and token rate limits. Only <code>LLMInferenceService</code> integrations route directly through the Kuadrant policy layer.</p>
 </div>
+</li>
+<li>
+<p><strong>What happens if a model is deployed and registered as a <code>MaaSModelRef</code>, but is not added to a <code>MaaSAuthPolicy</code>?</strong></p>
+<div class="paragraph">
+<p>The model will exist on the cluster and its API endpoint will be created, but no user will be able to route traffic to it. The gateway will reject the requests with a <code>403 Forbidden</code> error because physical network access has not been explicitly granted to any OpenShift groups.</p>
+</div>
+</li>
+<li>
+<p><strong>How does the Gateway API discovery endpoint (<code>/v1/models</code>) handle model visibility when a developer authenticates with an <code>sk-oai-</code> API key?</strong></p>
+<div class="paragraph">
+<p>The API gateway intercepts the request and validates the provided API key. Because the key is permanently bound to a specific subscription, the endpoint dynamically filters the response array to show <strong>only</strong> the models allowed by that exact subscription.</p>
+</div>
+</li>
+</ol>
+</div>
+<hr>
 <details>
-<summary class="title">📺 Video Walkthrough: UI Model Deployment</summary>
+<summary class="title">🛠️ Troubleshooting: Model Deployment &amp; Catalog (Click to expand)</summary>
 <div class="content">
 <div class="paragraph">
-<p><em>Click play below to watch a 2-minute demonstration of an AI Administrator deploying the Nemotron 8B model via the Gen AI Studio deployment wizard and applying the MaaS tier restrictions.</em></p>
+<p>If you encountered any issues verifying your deployments or catalog, check the following common resolutions:</p>
 </div>
 <div class="paragraph">
-<p><code>[Video Embed: Deploying a MaaS Model via the OpenShift AI Dashboard]</code></p>
+<p><strong>Issue: Model deployment is stuck in "Pending" or not reaching "Ready" status</strong></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Check the Pod Events:</strong> Run <code>oc describe pod -l serving.kserve.io/inferenceservice=llama-3-8b -n chocotech-models</code>.</p>
+</li>
+<li>
+<p><strong>Common Causes:</strong> This is typically caused by insufficient GPU resources on the node (the cluster cannot satisfy the <code>nvidia.com/gpu</code> request) or the storage puller pod failing to authenticate with the MinIO S3 vault.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>Issue: The model does not appear in the Gen AI Studio catalog</strong></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Verify the Publisher Flag:</strong> Ensure your <code>LLMInferenceService</code> spec included <code>publishToGenAIStudio: true</code>.</p>
+</li>
+<li>
+<p><strong>Verify Registration:</strong> Run <code>oc get maasmodelref -n chocotech-models</code>. If the object does not exist, the operator did not register the model.</p>
+</li>
+<li>
+<p><strong>Check the AuthPolicy:</strong> If you are logged into the UI but cannot see the model, ensure your OpenShift user group has been added to a <code>MaaSAuthPolicy</code> that explicitly lists the model&#8217;s reference name.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>Issue: You deployed a model via the UI, but it isn&#8217;t enforcing rate limits</strong></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Legacy Mode Check:</strong> You likely left the "Use legacy deployment method" box checked during the UI wizard. Delete the model and redeploy it, ensuring this box is cleared so it uses the governed architecture.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>Issue: Custom Grafana dashboards are not showing model-specific rate limiting data</strong></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Telemetry Limitations:</strong> Due to Kuadrant wasm-shim limitations, the <code>model</code> label only appears on the <code>authorized_hits</code> metric. It does not append to the <code>authorized_calls</code> or <code>limited_calls</code> HTTP 429 rejection metrics.</p>
+</li>
+</ul>
 </div>
 </div>
 </details>
-<div class="paragraph">
-<p>In the next section, we will verify our GitOps deployment succeeded by checking the MaaS Catalog and actively testing the Kuadrant rate limits!</p>
+<hr>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_your_journey_progress"><a class="anchor" href="#_your_journey_progress"></a>Your journey progress</h2>
+<div class="sectionbody">
+<table class="tableblock frame-none grid-none stretch">
+<colgroup>
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 25%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><strong>✅ Module 1</strong><br>
+<em>Architecture &amp; Foundation</em></p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><strong>✅ Module 2</strong><br>
+<em>Policies &amp; Governance</em></p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><strong>✅ Module 3</strong><br>
+<em>Model Deployment</em></p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><strong>⏳ Module 4</strong><br>
+<em>Application Integration</em></p>
+</div></div></td>
+</tr>
+</tbody>
+</table>
+<div class="quoteblock">
+<blockquote>
+<strong>Next steps:</strong> The AI Factory is fully operational. In Module 4, you will switch hats from Platform Engineer to Application Developer. You will use Python, LangChain, and your new API keys to connect ChocoTech&#8217;s applications directly to the MaaS Gateway, and write the exponential backoff logic required to handle Kuadrant&#8217;s rate limits!
+</blockquote>
 </div>
 </div>
 </div>

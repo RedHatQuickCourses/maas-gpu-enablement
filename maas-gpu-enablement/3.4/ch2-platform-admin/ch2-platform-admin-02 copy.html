@@ -3,9 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>2.2: Establishing the organizational foundation :: Models as a Service Breaking the GPU Silos on OpenShift AI 3.4</title>
-    <link rel="prev" href="ch2-platform-admin-02.html">
-    <link rel="next" href="ch2-platform-admin-04.html">
+    <title>2.1: Understanding subscriptions and authorization policies :: Models as a Service Breaking the GPU Silos on OpenShift AI 3.4</title>
     <meta name="generator" content="Antora 3.1.3">
 <link rel="stylesheet" href="../../../_/css/site.css">
 <link rel="stylesheet" href="../../../_/css/vendor/tabs.css">
@@ -108,7 +106,7 @@
       2.1: Subscription-based governance
     </a>
   </li>
-  <li class="nav-item is-current-page" data-depth="2">
+  <li class="nav-item" data-depth="2">
     <a class="nav-link" href="ch2-platform-admin-03.html" data-progress-path="/maas-gpu-enablement/3.4/ch2-platform-admin/ch2-platform-admin-03.html">
       <span class="nav-progress-mark" aria-hidden="true">✓</span>
       2.2: Creating OpenShift groups
@@ -220,8 +218,7 @@
 <nav class="breadcrumbs" aria-label="breadcrumbs">
   <ul>
     <li><a href="../index.html">Models as a Service Breaking the GPU Silos on OpenShift AI 3.4</a></li>
-    <li><a href="ch2-platform-admin-01.html">2: MaaS Access Control &amp; Governance</a></li>
-    <li><a href="ch2-platform-admin-03.html">2.2: Creating OpenShift groups</a></li>
+    <li><a href="ch2-platform-admin-02%20copy.html">2.1: Understanding subscriptions and authorization policies</a></li>
   </ul>
 </nav>
 </div>
@@ -230,95 +227,133 @@
   <div class="toc-menu"></div>
 </aside>
 <article class="doc">
-<h1 class="page">2.2: Establishing the organizational foundation</h1>
+<h1 class="page">2.1: Understanding subscriptions and authorization policies</h1>
 <div id="preamble">
 <div class="sectionbody">
 <div class="paragraph">
-<p>To enforce the CIO&#8217;s subscription strategy, the MaaS platform needs a mathematical way to identify which request belongs to which team. We achieve this by utilizing native OpenShift Groups.</p>
+<p>Before we configure OpenShift groups or write any YAML, we must define the core mechanisms that make OpenShift AI 3.4 governance possible.</p>
 </div>
 <div class="paragraph">
-<p>By mapping OpenShift groups to our MaaS Subscriptions, we gain massive enterprise advantages over standard public APIs:</p>
+<p>In a traditional, decentralized AI setup, any user with access to an API endpoint can theoretically send massive, computationally expensive prompts to an LLM. This leads to immediate resource exhaustion and makes cross-departmental chargebacks impossible.</p>
+</div>
+<div class="paragraph">
+<p>Models as a Service solves this by placing a strict, two-part governance layer between the user and the underlying KServe infrastructure.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_the_strategic_separation_of_access_and_quota"><a class="anchor" href="#_the_strategic_separation_of_access_and_quota"></a>The Strategic Separation of Access and Quota</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>In OpenShift AI 3.4, granting a team access to the AI platform requires exactly two custom resources working together. Think of it like joining a corporate gym:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>The <code>MaaSAuthPolicy</code> (The Keycard Reader / Access):</strong> This is the physical enforcement mechanism at the door. It authorizes specific groups to access model endpoints through the API gateway.</p>
+</li>
+<li>
+<p><strong>The <code>MaaSSubscription</code> (The Membership Contract / Quota):</strong> This defines the terms once you are inside. It defines which models groups can access and configures the token rate limits for those models.</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>This intentional separation provides maximum flexibility. For example, administrators can create a generic "Premium" subscription that provides a massive token quota across 20 models, but use specific Authorization Policies to restrict a specialized team to only 5 of those models.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_design_recommendations_best_practices"><a class="anchor" href="#_design_recommendations_best_practices"></a>Design Recommendations &amp; Best Practices</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>To properly govern the platform, ChocoTech&#8217;s Platform Engineering team must adhere to the following architectural rules.</p>
+</div>
+<div class="sect2">
+<h3 id="_1_recommendations_for_maassubscription_quota"><a class="anchor" href="#_1_recommendations_for_maassubscription_quota"></a>1. Recommendations for MaaSSubscription (Quota)</h3>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Centralized Deployment:</strong> All subscriptions must be deployed into the central <code>models-as-a-service</code> namespace, rather than individual model namespaces, to allow platform-wide billing and quota management.</p>
+</li>
+<li>
+<p><strong>Deploy Before Models:</strong> You can "pre-wire" your platform&#8217;s governance. Because subscriptions reference models by name (e.g., <code>llama-3-8b-ref</code>), you should deploy these policies before the model actually exists. This ensures the MaaS operator enforces token limits on the very first inference request.</p>
+</li>
+<li>
+<p><strong>The Priority Numbering Scheme:</strong> When a user belongs to multiple groups with different subscriptions, the system automatically selects the subscription with the highest priority level.</p>
+</li>
+<li>
+<p><strong>Use incremental gaps:</strong> Number priorities with gaps (e.g., 10, 20, 30) rather than sequential numbers so you can easily insert intermediate priorities later.</p>
+</li>
+<li>
+<p><strong>Avoid identical priorities:</strong> Do not set all subscriptions to the same priority, as this creates unpredictable behavior.</p>
+</li>
+<li>
+<p><strong>Use priority for defaults, not security:</strong> Rely on priority levels for convenience, but use <code>MaaSAuthPolicy</code> to strictly enforce access control.</p>
+</li>
+<li>
+<p><strong>Handling Quota Exhaustion:</strong> When developers hit the token limits defined in the subscription, they will receive an HTTP <code>429 Too Many Requests</code> error. Developers should implement exponential backoff retry logic that reads the <code>Retry-After</code> response header to automatically pause and re-attempt the request.</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_2_recommendations_for_maasauthpolicy_access"><a class="anchor" href="#_2_recommendations_for_maasauthpolicy_access"></a>2. Recommendations for MaaSAuthPolicy (Access)</h3>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>The 403 Forbidden Rule:</strong> Without an authorization policy, users will receive <code>403 Forbidden</code> errors even if they have a valid subscription.</p>
+</li>
+<li>
+<p><strong>Aggregating Policies:</strong> You can create multiple <code>MaaSAuthPolicies</code> that reference the same model. The controller aggregates them, meaning a user matching <strong>any</strong> of the policies will be granted access.</p>
+</li>
+<li>
+<p><strong>The UI Synchronization Caveat:</strong> If administrators create a subscription via the OpenShift AI Dashboard UI, an initial authorization policy is created automatically with the same groups and models as the subscription. However, changes made to the subscription later (such as adding or removing groups or models) do not automatically update the authorization policy. You must manually update the corresponding policy to keep them synchronized.</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_3_recommendations_for_maasmodelref_registration"><a class="anchor" href="#_3_recommendations_for_maasmodelref_registration"></a>3. Recommendations for MaaSModelRef (Registration)</h3>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Automatic Generation:</strong> You generally do not need to create <code>MaaSModelRef</code> objects manually for internal models. Publishing as MaaS creates a <code>MaaSModelRef</code> object that notifies the MaaS system of the model&#8217;s existence.</p>
+</li>
+<li>
+<p><strong>External Model Limits:</strong> When routing inference requests to external cloud providers (like OpenAI or AWS Bedrock), token limits apply at two levels: the MaaS subscription level and the external provider level. Because all users share the same provider API key, the provider-level limit is shared across the entire group of users. Administrators must ensure the provider API key&#8217;s limit is high enough to handle the aggregate consumption.</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_the_chocotech_governance_strategy"><a class="anchor" href="#_the_chocotech_governance_strategy"></a>The ChocoTech Governance Strategy</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>To solve ChocoTech&#8217;s GPU Silo Crisis, the CIO has mandated a custom governance mapping tailored to the company&#8217;s business units.</p>
+</div>
+<div class="paragraph">
+<p>In the upcoming sections, you will build the following structure using both <code>MaaSSubscription</code> and <code>MaaSAuthPolicy</code> resources:</p>
 </div>
 <div class="ulist">
 <ul>
 <li>
-<p><strong>Scalable Onboarding:</strong> You add a new data scientist to a group, and they automatically inherit the correct API token limits and model access. No manual policy tweaking required.</p>
+<p><strong>Gold Plan (Priority 100):</strong> Mapped to the <code>chocotech-quality-control</code> group. This tier will have massive token limits to ensure the factory floor&#8217;s defect detection models never experience throttling.</p>
 </li>
 <li>
-<p><strong>Auditable Transparency:</strong> Every API request is logged against the business unit (e.g., <code>chocotech-quality-control</code>), providing Finance with the exact metrics needed for departmental chargebacks.</p>
+<p><strong>Silver Plan (Priority 50):</strong> Mapped to the <code>chocotech-rd</code> group. This tier will have moderate token limits for recipe optimization testing.</p>
+</li>
+<li>
+<p><strong>Bronze Plan (Priority 10):</strong> Mapped to the <code>chocotech-marketing</code> group. This tier will have strict token limits to prevent their exploratory sentiment analysis from wasting expensive GPU cycles.</p>
 </li>
 </ul>
 </div>
-<hr>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_exercise_1_create_the_business_unit_groups"><a class="anchor" href="#_exercise_1_create_the_business_unit_groups"></a>Exercise 1: Create the business unit groups</h2>
-<div class="sectionbody">
 <div class="paragraph">
-<p>Instead of creating individual users, let&#8217;s create the three organizational groups that will soon be mapped to our Gold, Silver, and Bronze subscription plans.</p>
-</div>
-<div class="paragraph">
-<p>Execute the following commands to create the ChocoTech groups:</p>
-</div>
-<div class="listingblock execute">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-none hljs">oc adm groups new chocotech-quality-control
-oc adm groups new chocotech-rd
-oc adm groups new chocotech-marketing</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p><strong>Expected output:</strong> The terminal will confirm creation with three lines reading <code>group.user.openshift.io/&lt;group-name&gt; created</code>.</p>
-</div>
-<div class="paragraph">
-<p>Next, to successfully complete the upcoming labs, you need to simulate being a member of the Quality Control team (our Gold Plan). Add your current user account to the QC group:</p>
-</div>
-<div class="listingblock execute">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-none hljs">oc adm groups add-users chocotech-quality-control $(oc whoami)</code></pre>
-</div>
-</div>
-<hr>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_exercise_2_prepare_the_models_namespace"><a class="anchor" href="#_exercise_2_prepare_the_models_namespace"></a>Exercise 2: Prepare the models namespace</h2>
-<div class="sectionbody">
-<div class="paragraph">
-<p>Create the new project for ChocoTech&#8217;s centralized model hub:</p>
-</div>
-<div class="listingblock execute">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-none hljs">oc new-project chocotech-models</code></pre>
-</div>
-</div>
-<hr>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_verify_your_foundation"><a class="anchor" href="#_verify_your_foundation"></a>Verify your foundation</h2>
-<div class="sectionbody">
-<div class="paragraph">
-<p>Before moving on to the subscriptions, run this combined verification script to ensure your groups and labeled namespace are perfectly staged:</p>
-</div>
-<div class="listingblock execute">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-none hljs">echo "=== Groups ===" &amp;&amp; \
-oc get groups | grep chocotech &amp;&amp; \
-echo "=== Gold Plan Membership ===" &amp;&amp; \
-oc get group chocotech-quality-control -o jsonpath='{.users[*]}' &amp;&amp; echo &amp;&amp; \</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>If the output confirms your groups exist, your username is listed under the Quality Control group, and the <code>chocotech-models</code> namespace exist. Proceed to define the subscription limits.</p>
+<p>Now that you understand the strategy and enforcement mechanics, proceed to the next section to begin building these OpenShift groups in the cluster.</p>
 </div>
 </div>
 </div>
-<nav class="pagination">
-  <span class="prev"><a href="ch2-platform-admin-02.html">2.1: Subscription-based governance</a></span>
-  <span class="next"><a href="ch2-platform-admin-04.html">2.3: Subscriptions and quotas</a></span>
-</nav>
 </article>
   </div>
 </main>

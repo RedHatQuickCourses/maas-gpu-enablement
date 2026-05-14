@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>2.3: Configuring programmatic access (The Service Account Pattern) :: Models as a Service Breaking the GPU Silos on OpenShift AI 3.4</title>
+    <title>2.3: Native API Key Management and programmatic access :: Models as a Service Breaking the GPU Silos on OpenShift AI 3.4</title>
     <link rel="prev" href="ch2-platform-admin-05.html">
     <link rel="next" href="ch2-platform-admin-summary.html">
     <meta name="generator" content="Antora 3.1.3">
@@ -230,35 +230,53 @@
   <div class="toc-menu"></div>
 </aside>
 <article class="doc">
-<h1 class="page">2.3: Configuring programmatic access (The Service Account Pattern)</h1>
+<h1 class="page">2.3: Native API Key Management and programmatic access</h1>
 <div id="preamble">
 <div class="sectionbody">
 <div class="paragraph">
-<p>With the organizational subscriptions defined, we must enable programmatic access for ChocoTech&#8217;s applications. The Marketing team&#8217;s sentiment analysis application runs in an automated container; it cannot perform an interactive human login via OIDC.</p>
+<p>With the organizational subscriptions defined, we must enable programmatic access for ChocoTech&#8217;s applications. The Marketing team&#8217;s sentiment analysis application runs in an automated container; it cannot perform an interactive human login.</p>
 </div>
 <div class="paragraph">
-<p>In legacy environments, you would have to manually construct complex Kubernetes ServiceAccounts, RoleBindings, and extract raw JWTs. In OpenShift AI 3.4, Models-as-a-Service (MaaS) introduces <strong>Native API Key Management</strong>. Administrators can centrally provision and manage secure API keys on behalf of users or automated applications (the "Service Account Pattern").</p>
+<p>OpenShift AI 3.4 introduces Native API Key Management, which completely replaces the legacy requirement of manually constructing complex Kubernetes ServiceAccounts, RoleBindings, and raw JWTs. This new capability allows you to transition from short-lived Kubernetes tokens to secure, long-lived credentials.</p>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_the_enterprise_advantage_governed_api_keys"><a class="anchor" href="#_the_enterprise_advantage_governed_api_keys"></a>The Enterprise Advantage: Governed API Keys</h2>
+<h2 id="_how_api_keys_work_in_openshift_ai_3_4"><a class="anchor" href="#_how_api_keys_work_in_openshift_ai_3_4"></a>How API Keys Work in OpenShift AI 3.4</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Unlike public APIs where developers use ungoverned static keys, MaaS API Keys provide enterprise-grade security:</p>
+<p>Before generating keys, it is crucial to understand how the MaaS controller handles identity and security at the network edge:</p>
 </div>
 <div class="ulist">
 <ul>
 <li>
-<p><strong>Subscription-Bound:</strong> Keys are strictly bound to a specific subscription (e.g., the Bronze Plan), guaranteeing the application cannot exceed its token quotas.</p>
+<p><strong>Show-Once Security:</strong> API keys are cryptographically secure strings starting with <code>sk-oai-</code>. The plaintext key is only displayed once during creation. The platform only stores a SHA-256 hash of the key in the PostgreSQL database.</p>
 </li>
 <li>
-<p><strong>Instantly Revocable:</strong> If a key is compromised, administrators can revoke it with a single click, immediately invalidating all requests using that key.</p>
+<p><strong>Immutable Subscription Binding:</strong> Every API key is strictly bound to a single subscription at the time it is minted. If a user or script creates a key without explicitly requesting a specific subscription, the MaaS API automatically selects the highest-priority accessible subscription the user qualifies for.</p>
 </li>
 <li>
-<p><strong>Centrally Auditable:</strong> Use descriptive names for API keys (e.g., <code>production-chatbot</code> or <code>marketing-sentiment-app</code>) to track usage and simplify revocation.</p>
+<p><strong>Group Snapshotting:</strong> The user&#8217;s group membership is captured at API key creation time. API keys retain their group associations for performance reasons, meaning group information is not re-validated on every inference request.</p>
 </li>
 </ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_self_service_vs_programmatic_access"><a class="anchor" href="#_self_service_vs_programmatic_access"></a>Self-Service vs. Programmatic Access</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The platform supports two distinct workflows for generating keys:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>Creating API Keys by Users (Self-Service):</strong> The platform empowers developers to manage their own access. For permanent keys, users navigate to <strong>Gen AI studio → API keys</strong>.</p>
+</li>
+<li>
+<p><strong>Creating API Keys as Service Accounts (Programmatic Access):</strong> For automated applications, platform administrators centrally provision API keys on behalf of users or applications.</p>
+</li>
+</ol>
 </div>
 <hr>
 </div>
@@ -267,13 +285,10 @@
 <h2 id="_exercise_1_enforce_global_security_guardrails"><a class="anchor" href="#_exercise_1_enforce_global_security_guardrails"></a>Exercise 1: Enforce Global Security Guardrails</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>While users and admins can select expiration dates when creating keys, we want to ensure no one accidentally creates a "Permanent" (<code>Never</code> expiring) key for a temporary script.</p>
+<p>By default, users can create "Permanent" keys. To enforce security policies, you can set a maximum expiration period for API keys across the entire platform.</p>
 </div>
 <div class="paragraph">
-<p>You can set a maximum expiration period for API keys across the entire platform to enforce security policies.</p>
-</div>
-<div class="paragraph">
-<p>Execute the following command to patch the centralized <code>Tenant</code> custom resource and enforce a strict 90-day maximum lifetime for all new API keys:</p>
+<p>Execute the following command to patch the centralized <code>Tenant</code> custom resource and enforce a strict 90-day maximum lifetime (<code>maxExpirationDays</code>) for all new API keys:</p>
 </div>
 <div class="listingblock execute">
 <div class="content">
@@ -292,12 +307,12 @@
 <h2 id="_exercise_2_provisioning_the_application_key_service_account_pattern"><a class="anchor" href="#_exercise_2_provisioning_the_application_key_service_account_pattern"></a>Exercise 2: Provisioning the Application Key (Service Account Pattern)</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>We need to generate a key for the Marketing team&#8217;s sentiment analysis container. As a Platform Administrator, you will provision this key on their behalf.</p>
+<p>We need to generate a key for the Marketing team&#8217;s automated sentiment analysis container. As a Platform Administrator, you will provision this key on their behalf.</p>
 </div>
 <div class="olist arabic">
 <ol class="arabic">
 <li>
-<p>In the OpenShift AI dashboard, navigate to <strong>Gen AI studio</strong> &#8594; <strong>API keys</strong>.</p>
+<p>In the OpenShift AI dashboard, navigate to <strong>Gen AI studio → API keys</strong>.</p>
 </li>
 <li>
 <p>Click <strong>Create API key</strong>.</p>
@@ -307,10 +322,10 @@
 <div class="ulist">
 <ul>
 <li>
-<p><strong>Name:</strong> <code>marketing-sentiment-app</code> (Using a descriptive name is a best practice for tracking).</p>
+<p><strong>Name:</strong> <code>marketing-sentiment-app</code> (Using a descriptive name is a best practice for tracking and simplifies revocation.</p>
 </li>
 <li>
-<p><strong>Subscription:</strong> Select the <strong>Bronze Plan</strong> (This scopes the key&#8217;s access to the models and token limits defined for Marketing ).</p>
+<p><strong>Subscription:</strong> Select the <strong>Bronze Plan</strong> (This scopes the key&#8217;s access to the models and token limits defined for Marketing).</p>
 </li>
 <li>
 <p><strong>Expiration:</strong> Select <code>90 days</code>.</p>
@@ -331,7 +346,7 @@
 </td>
 <td class="content">
 <div class="paragraph">
-<p><strong>Secure your key immediately!</strong> The platform will display the API key string (which begins with <code>sk-oai-</code>) only once. Copy this key and save it to a secure location (like a password manager or your local terminal&#8217;s environment variables). You will not be able to view it again. If you lose the key, you must revoke it and create a new one.</p>
+<p><strong>Secure your key immediately!</strong> Save the API key in a secure location. Never commit API keys to version control. Store API keys in environment variables, Kubernetes secrets, or secret management systems such as HashiCorp Vault.</p>
 </div>
 </td>
 </tr>
@@ -340,10 +355,10 @@
 <div class="sect2">
 <h3 id="_the_group_membership_gotcha"><a class="anchor" href="#_the_group_membership_gotcha"></a>⚠️ The Group Membership "Gotcha"</h3>
 <div class="paragraph">
-<p>When an API key is created, the system permanently binds it to the user&#8217;s current group memberships for performance reasons (group information is not re-validated on every inference request).</p>
+<p>Because API keys snapshot group membership, they do not automatically update if a user changes roles. If a user is removed from a group in the external OIDC provider, their existing API keys continue to work until they expire or are revoked by an administrator.</p>
 </div>
 <div class="paragraph">
-<p><strong>What this means for Administrators:</strong> If a developer transfers from the Quality Control team to the Marketing team, their existing API keys will <strong>continue to work with the original Quality Control (Gold Plan) permissions</strong> until those keys expire or are revoked. When removing a user from an OpenShift group, you <strong>must manually revoke all associated API keys</strong> to immediately revoke access.</p>
+<p>When removing a user from a group, you must manually revoke all associated API keys to immediately revoke access. Administrators must utilize the <strong>Revoke all keys for a single user</strong> administrative action in the dashboard to immediately cut off access when an employee leaves or changes departments.</p>
 </div>
 <hr>
 </div>
@@ -396,10 +411,7 @@ HTTP Status: 200</code></pre>
 </ul>
 </div>
 <div class="paragraph">
-<p>If you receive an <code>HTTP 401 Unauthorized</code>, verify your API key is correct and not expired. If you receive an <code>HTTP 403 Forbidden</code>, ensure that your <strong>MaaSAuthPolicy</strong> was deployed correctly in the previous step and includes the appropriate group.</p>
-</div>
-<div class="paragraph">
-<p>ChocoTech&#8217;s programmatic authentication is now secure and strictly governed. In the next section, we will explore the MaaS Observability Dashboard to see how Finance can use these configurations for precise chargebacks.</p>
+<p>ChocoTech&#8217;s programmatic authentication is now secure and strictly governed. In <strong>Module 3</strong>, we will finally deploy the models and watch the MaaS catalog populate automatically!</p>
 </div>
 </div>
 </div>
