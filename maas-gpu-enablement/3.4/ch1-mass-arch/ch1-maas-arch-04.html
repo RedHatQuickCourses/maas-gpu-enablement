@@ -273,8 +273,11 @@
 </li>
 </ul>
 </div>
+<div class="paragraph">
+<p><br></p>
+</div>
 <details>
-<summary class="title">Verify the installations:</summary>
+<summary class="title">Need a quick sanity check, click &amp; run this:</summary>
 <div class="content">
 <div class="listingblock execute">
 <div class="content">
@@ -298,7 +301,17 @@
 <div class="sect2">
 <h3 id="_initialize_the_governance_engine_kuadrant"><a class="anchor" href="#_initialize_the_governance_engine_kuadrant"></a>Initialize the Governance Engine (Kuadrant)</h3>
 <div class="paragraph">
-<p>The Connectivity Link operator manages Kuadrant, but Kuadrant itself must be explicitly initialized. A Kuadrant custom resource (CR) must be created and ready in the <code>kuadrant-system</code> namespace.</p>
+<p>The Connectivity Link operator manages Kuadrant (Authorino &amp; Limitador), but Kuadrant itself must be explicitly initialized. A Kuadrant custom resource (CR) must be created and ready in the <code>kuadrant-system</code> namespace.</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Authorino: Validates tokens and enforces zero-trust authentication.</p>
+</li>
+<li>
+<p>Limitador: Tracks token consumption and enforces subscription-based token limits.</p>
+</li>
+</ul>
 </div>
 <div class="paragraph">
 <p>Create the namespace and Kuadrant instance:</p>
@@ -323,8 +336,72 @@ EOF</code></pre>
 </div>
 </div>
 </div>
-<div class="sect2">
-<h3 id="_create_the_maas_gateway"><a class="anchor" href="#_create_the_maas_gateway"></a>Create the MaaS Gateway</h3>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_step_3_enable_user_workload_monitoring"><a class="anchor" href="#_step_3_enable_user_workload_monitoring"></a>Step 3: Enable User Workload Monitoring:</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>User Workload Monitoring is an OpenShift cluster setting that enables the Models as a Service (MaaS) platform to collect and expose usage data</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>It is required for the following reasons:</p>
+<div class="ulist">
+<ul>
+<li>
+<p>Tracking Consumption: It is the underlying mechanism that tracks token consumption, request counts, and rate limiting across the platform.</p>
+</li>
+<li>
+<p>Without it, the platform cannot collect the token metrics necessary for enforcing subscription quotas or providing Finance teams with accurate chargeback data.</p>
+</li>
+<li>
+<p>Platform Health: If User Workload Monitoring is not enabled, the core MaaS installation and the centralized Tenant custom resource will fail to function properly and will display a Degraded status.</p>
+</li>
+</ul>
+</div>
+</li>
+</ul>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">cat &lt;&lt;EOF | oc apply -f -
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cluster-monitoring-config
+  namespace: openshift-monitoring
+data:
+  config.yaml: |
+    enableUserWorkload: true
+EOF</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>Verify User Workload Monitoring pods are running:</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ oc get pods -n openshift-user-workload-monitoring</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Expected output (pods Running):</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-text hljs" data-lang="text">NAME                                   READY   STATUS    AGE
+prometheus-operator-6bd7f9ddfc-vn49s   2/2     Running    0
+prometheus-user-workload-0             6/6     Running    0
+thanos-ruler-user-workload-0           4/4     Running    0</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_step_4_create_the_maas_gateway"><a class="anchor" href="#_step_4_create_the_maas_gateway"></a>Step 4: Create the MaaS Gateway</h2>
+<div class="sectionbody">
 <div class="paragraph">
 <p>Next, we establish the Front Door. A Gateway named <code>maas-default-gateway</code> must exist in the <code>openshift-ingress</code> namespace. <strong>This becomes the single API endpoint for all of ChocoTech&#8217;s model inference traffic.</strong></p>
 </div>
@@ -337,17 +414,23 @@ EOF</code></pre>
 apiVersion: gateway.networking.k8s.io/v1
 kind: Gateway
 metadata:
-  name: maas-default-gateway <i class="conum" data-value="2"></i><b>(2)</b>
+  name: maas-default-gateway  <i class="conum" data-value="2"></i><b>(2)</b>
   namespace: openshift-ingress
   annotations:
-    opendatahub.io/managed: "false"
+    # Mandatory for MaaS to bootstrap TLS and Authorino integration
     security.opendatahub.io/authorino-tls-bootstrap: "true"
+    # Mandatory to allow maas-controller to manage policies and prevent overwriting
+    opendatahub.io/managed: "false". <i class="conum" data-value="3"></i><b>(3)</b>
 spec:
-  gatewayClassName: openshift-default <i class="conum" data-value="1"></i><b>(1)</b>
+  gatewayClassName: data-science-gateway-class  # Alternatively, use 'openshift-default' <i class="conum" data-value="1"></i><b>(1)</b>
   listeners:
-  - name: http
-    port: 80
-    protocol: HTTP
+  - name: https
+    port: 443
+    protocol: HTTPS
+    tls:
+      mode: Terminate
+      certificateRefs:
+      - name: router-certs-default # This Secret MUST exist in the openshift-ingress namespace. Change to 'router-certs-default' to use the cluster default.
     allowedRoutes:
       namespaces:
         from: All
@@ -358,11 +441,15 @@ EOF</code></pre>
 <table>
 <tr>
 <td><i class="conum" data-value="1"></i><b>1</b></td>
-<td><strong>GatewayClass (The Blueprint):</strong> This tells the cluster <em>who</em> is responsible for building the load balancer and <em>what kind</em> of underlying technology to use. By specifying <code>gatewayClassName: openshift-default</code>, you instruct the native OpenShift Gateway Controller to deploy the physical proxy infrastructure. If this is misconfigured or missing, your cluster won&#8217;t know how to build the gateway, and it will sit in an unprogrammed state forever.</td>
+<td><strong>GatewayClass (The Blueprint):</strong> This tells the cluster <em>who</em> is responsible for building the load balancer and <em>what kind</em> of underlying technology to use. By specifying <code>gatewayClassName: data-science-gateway-class</code>, you instruct the native OpenShift Gateway Controller to deploy the physical proxy infrastructure. If this is misconfigured or missing, your cluster won&#8217;t know how to build the gateway, and it will sit in an unprogrammed state forever.</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="2"></i><b>2</b></td>
-<td><strong>Gateway (The Entry Endpoint):</strong> The <code>Gateway</code> resource (which we named <code>maas-default-gateway</code>) is the instantiated infrastructure that listens for traffic. It defines the physical or virtual IP address, the open ports (like 80 or 443), and the TLS certificates. It essentially says, "I am built according to the <code>openshift-default</code> blueprint, and I am actively listening for connections."</td>
+<td><strong>Gateway (The Entry Endpoint):</strong> The <code>Gateway</code> resource (which we named <code>maas-default-gateway</code>) is the instantiated infrastructure that listens for traffic. It defines the physical or virtual IP address, the open ports (like 80 or 443), and the TLS certificates. It essentially says, "I am built according to the <code>data-science-gateway-class</code> blueprint, and I am actively listening for connections."</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>This (opendatahub.io/managed: "false") annotation allows the maas-controller to manage the AuthPolicies and prevents the Open Data Hub (ODH) Model Controller from overwriting your gateway configurations.</td>
 </tr>
 </table>
 </div>
@@ -397,8 +484,87 @@ EOF</code></pre>
 </table>
 </div>
 </div>
-<div class="sect2">
-<h3 id="_deploy_the_maas_api_database"><a class="anchor" href="#_deploy_the_maas_api_database"></a>Deploy the MaaS API Database</h3>
+</div>
+<div class="sect1">
+<h2 id="_step_5_configure_authorino_environment"><a class="anchor" href="#_step_5_configure_authorino_environment"></a>Step 5: Configure Authorino Environment</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The OpenShift service-ca-operator automatically handles the population of the cluster CA bundle. However, you are responsible for annotating the Gateway to trigger the automatic creation of the required EnvoyFilter for TLS.  To get Models-as-a-Service (MaaS) running, you must complete two main configuration steps: setting the Authorino environment and annotating the Gateway.</p>
+</div>
+<div class="paragraph">
+<p>First, you must configure the Authorino deployment with SSL environment variables so it can communicate securely with the MaaS API.</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs"># Set SSL environment variables for outbound communication
+oc -n kuadrant-system set env deployment/authorino \
+SSL_CERT_FILE=/etc/ssl/certs/openshift-service-ca/service-ca-bundle.crt \
+REQUESTS_CA_BUNDLE=/etc/ssl/certs/openshift-service-ca/service-ca-bundle.crt</code></pre>
+</div>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Annotate the Gateway
+Instead of manually generating a new certificate within the Gateway YAML, you apply an annotation that enables the platform to bootstrap the TLS connection automatically</p>
+</li>
+</ol>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs"># Annotate the existing gateway to enable TLS bootstrap
+oc annotate gateway maas-default-gateway \
+-n openshift-ingress \
+security.opendatahub.io/authorino-tls-bootstrap="true" \
+--overwrite</code></pre>
+</div>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Verification Commands After running the code above, verify that the configuration was applied correctly to ensure the MaaS deployment doesn&#8217;t show a "Degraded" status.</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>Verify Authorino SSL Variables:</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">oc get deployment/authorino -n kuadrant-system -o jsonpath='{.spec.template.spec.containers[0].env[?(@.name=="SSL_CERT_FILE")].value}'</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Expected output:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>/etc/ssl/certs/openshift-service-ca/service-ca-bundle.crt</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Verify Gateway Annotation:oc get gateway maas-default-gateway -n openshift-ingress -o jsonpath='{.metadata.annotations.security\.opendatahub\.io/authorino-tls-bootstrap}'</p>
+</div>
+<div class="paragraph">
+<p>Expected output: true</p>
+</div>
+<div class="paragraph">
+<p>Check Tenant Readiness:</p>
+</div>
+<div class="paragraph">
+<p>oc get tenant default-tenant -n models-as-a-service -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}'</p>
+</div>
+<div class="paragraph">
+<p>Expected output: True</p>
+</div>
+<div class="paragraph">
+<p>Note on Certificates: You must ensure your cluster already has a functional ingress controller with valid TLS certificates for external access before starting this procedure. If you are missing the maas-db-config secret or User Workload Monitoring, the Tenant resource will likely remain in a False or Degraded state.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_step_6_deploy_the_maas_api_database"><a class="anchor" href="#_step_6_deploy_the_maas_api_database"></a>Step 6: Deploy the MaaS API Database</h2>
+<div class="sectionbody">
 <div class="paragraph">
 <p>In OpenShift AI 3.4, the platform features native API key management. To store these keys securely, you must have a PostgreSQL database and create a Secret named <code>maas-db-config</code> in the <code>redhat-ods-applications</code> namespace.</p>
 </div>
@@ -462,9 +628,8 @@ EOF</code></pre>
 <hr>
 </div>
 </div>
-</div>
 <div class="sect1">
-<h2 id="_step_3_platform_activation"><a class="anchor" href="#_step_3_platform_activation"></a>Step 3: Platform activation</h2>
+<h2 id="_step_7_platform_activation"><a class="anchor" href="#_step_7_platform_activation"></a>Step 7: Platform activation</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>With the operators verified, Kuadrant running, the Gateway established, and the database online, you can now instruct the OpenShift AI operator to build the MaaS API layer.</p>
@@ -535,7 +700,7 @@ EOF</code></pre>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_step_4_verification_summary"><a class="anchor" href="#_step_4_verification_summary"></a>Step 4: Verification Summary</h2>
+<h2 id="_step_8_verification_summary"><a class="anchor" href="#_step_8_verification_summary"></a>Step 8: Verification Summary</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>Before moving on to building ChocoTech&#8217;s subscription plans in Module 2, run this comprehensive verification script to confirm all components deployed successfully.</p>
