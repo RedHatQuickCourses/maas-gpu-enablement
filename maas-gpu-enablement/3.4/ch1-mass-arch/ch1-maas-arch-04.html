@@ -420,7 +420,7 @@ metadata:
     # Mandatory for MaaS to bootstrap TLS and Authorino integration
     security.opendatahub.io/authorino-tls-bootstrap: "true"
     # Mandatory to allow maas-controller to manage policies and prevent overwriting
-    opendatahub.io/managed: "false". <i class="conum" data-value="3"></i><b>(3)</b>
+    opendatahub.io/managed: "false" <i class="conum" data-value="3"></i><b>(3)</b>
 spec:
   gatewayClassName: data-science-gateway-class  # Alternatively, use 'openshift-default' <i class="conum" data-value="1"></i><b>(1)</b>
   listeners:
@@ -543,7 +543,12 @@ security.opendatahub.io/authorino-tls-bootstrap="true" \
 </div>
 </div>
 <div class="paragraph">
-<p>Verify Gateway Annotation:oc get gateway maas-default-gateway -n openshift-ingress -o jsonpath='{.metadata.annotations.security\.opendatahub\.io/authorino-tls-bootstrap}'</p>
+<p>Verify Gateway Annotation:</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">oc get gateway maas-default-gateway -n openshift-ingress -o jsonpath='{.metadata.annotations.security\.opendatahub\.io/authorino-tls-bootstrap}'</code></pre>
+</div>
 </div>
 <div class="paragraph">
 <p>Expected output: true</p>
@@ -551,8 +556,10 @@ security.opendatahub.io/authorino-tls-bootstrap="true" \
 <div class="paragraph">
 <p>Check Tenant Readiness:</p>
 </div>
-<div class="paragraph">
-<p>oc get tenant default-tenant -n models-as-a-service -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}'</p>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">oc get tenant default-tenant -n models-as-a-service -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}'</code></pre>
+</div>
 </div>
 <div class="paragraph">
 <p>Expected output: True</p>

@@ -307,7 +307,7 @@ oc adm groups new chocotech-marketing</code></pre>
 <pre class="highlightjs highlight"><code class="language-none hljs">echo "=== Groups ===" &amp;&amp; \
 oc get groups | grep chocotech &amp;&amp; \
 echo "=== Gold Plan Membership ===" &amp;&amp; \
-oc get group chocotech-quality-control -o jsonpath='{.users[*]}' &amp;&amp; echo &amp;&amp; \</code></pre>
+oc get group chocotech-quality-control -o jsonpath='{.users[*]}'</code></pre>
 </div>
 </div>
 <div class="paragraph">
