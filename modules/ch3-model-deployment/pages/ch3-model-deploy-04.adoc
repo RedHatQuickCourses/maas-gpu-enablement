@@ -5,38 +5,29 @@
 WARNING: This section is under development
 ====
 
-If ChocoTech had deployed this model using standard open-source tools, the Platform Engineering team's job would not be finished. They would still need to manually write documentation, email the endpoint URL to the developers, and coordinate API keys. 
 
-With Models as a Service, the OpenShift AI operator handles all of this automatically. Because we set `publishToGenAIStudio: true` in our deployment manifest, the platform instantly registers the model, applies our governance tiers, and publishes it to a centralized self-service catalog.
+If ChocoTech had deployed this model using standard open-source tools, the Platform Engineering team's job would not be finished. They would still need to manually write documentation, email the endpoint URL to the developers, and coordinate static API keys. 
+
+With Models as a Service, the OpenShift AI operator handles all of this automatically. Because we set `publishToGenAIStudio: true` in our deployment manifest, the platform instantly generates a `MaaSModelRef` resource and publishes it to a centralized self-service catalog. 
 
 == Exercise 1: Verify the backend MaaS registration
 
-When the KServe `LLMInferenceService` becomes ready, the MaaS operator detects the publish flag and automatically generates a companion `MaaSModel` custom resource. This resource acts as the bridge between the running container and the Gen AI Studio UI.
+When the `LLMInferenceService` becomes ready, the MaaS operator detects the publish flag and automatically generates a companion `MaaSModelRef` custom resource. This resource acts as the bridge between the running inference container and the Gateway API.
 
 Verify the model was successfully registered with the MaaS API:
 
 [source,role="execute"]
 ----
-oc get maasmodel -n chocotech-models
+oc get maasmodelref -n chocotech-models
 ----
 
 *Expected output:*
 ----
-NAME          MODEL                                  STATUS      AGE
-llama-3-8b    meta-llama/Meta-Llama-3-8B-Instruct    Published   5m
+NAME             MODELREF_KIND         MODELREF_NAME    READY   AGE
+llama-3-8b-ref   LLMInferenceService   llama-3-8b       True    5m
 ----
 
-Next, describe the resource to see how it mapped our governance rules:
-
-[source,role="execute"]
-----
-oc describe maasmodel llama-3-8b -n chocotech-models
-----
-
-*What to look for in the output:*
-* **Status:** Must say `Published`.
-* **Tier Access:** You should see `bronze-tier`, `silver-tier`, and `gold-tier` explicitly listed. This confirms the "Bouncer List" we created in our YAML was successfully read.
-* **Gateway Endpoint:** The external URL that client applications will use to reach the model.
+By itself, this `MaaSModelRef` does not grant anyone access. However, because you "pre-wired" your governance in Module 2 by explicitly adding `llama-3-8b-ref` to your Gold, Silver, and Bronze `MaaSSubscription` and `MaaSAuthPolicy` manifests, the model is now instantly accessible and fully governed by Kuadrant rate limits.
 
 ---
 
@@ -45,55 +36,49 @@ oc describe maasmodel llama-3-8b -n chocotech-models
 Let's switch hats. You are now a developer on the Marketing team logging in to find a model for your sentiment analysis application. You do not need to know anything about `vLLM` or OpenShift routes; you simply use the self-service catalog.
 
 1. Open the OpenShift AI dashboard in your browser.
-2. Navigate to **Gen AI Studio** in the left-hand menu.
+2. Navigate to **Gen AI Studio** -> **AI asset endpoints** in the left-hand menu.
 3. Click on the **Models** tab.
 
-You should immediately see the `meta-llama/Meta-Llama-3-8B-Instruct` model populated in the catalog grid. 
+You should immediately see the `meta-llama/Meta-Llama-3-8B-ref` model populated in the catalog grid. 
 
-Clicking on the model card will reveal:
-* **Status:** Available
-* **Tier Access:** Gold, Silver, Bronze
-* **Endpoint:** `https://maas-default-gateway.../v1/chat/completions`
+Clicking the **View** button under the Endpoints column will reveal a dialog with a "Model as a Service" badge. This dialog provides:
 
-This completely eliminates developer friction. They can discover models, view their tier eligibility, and copy the exact endpoint URL without ever submitting an IT ticket.
+* **The external API endpoint URL:** The exact gateway routing URL developers need.
+* **Subscription Selector:** If you belong to multiple groups with access, you can choose which subscription's token quota to draw from.
+* **API Key Generation:** A button to instantly generate a temporary API key scoped directly to that model and subscription.
+* **Playground Testing:** A direct link to launch the Gen AI Playground to test prompts interactively.
 
 ---
 
 == Exercise 3: Test the Gateway API discovery
 
-Finally, let's verify that the Kuadrant Gateway is correctly broadcasting the model's availability over the network. The MaaS Gateway is fully compliant with the OpenAI API specification, meaning client libraries can dynamically query the `/v1/models` endpoint to see what is available.
+The MaaS Gateway is fully compliant with the OpenAI API specification, meaning client applications can dynamically query the `/v1/models` endpoint to see what is available. 
 
-*(Note: The `/v1/models` endpoint is used for discovery and does not require a Bearer token).*
+In OpenShift AI 3.4, API discovery is intelligent and strictly scoped. When an application queries the `/v1/models` endpoint using a generated `sk-oai-` API key, the Gateway automatically filters the response to show *only* the models allowed by the subscription bound to that key. 
 
-Retrieve your Gateway hostname and query the models list:
+Retrieve your Gateway hostname and query the models list using the API key you generated in Module 2:
 
 [source,role="execute"]
 ----
 GATEWAY_HOST=$(oc get gateway maas-default-gateway -n openshift-ingress -o jsonpath='{.status.addresses[0].value}')
 
-curl -s http://$GATEWAY_HOST/v1/models | jq
+curl -s -k https://$GATEWAY_HOST/v1/models \
+  -H "Authorization: Bearer $MAAS_API_KEY" | jq
 ----
 
-=== Decoding the Results
+=== Advanced Discovery: The `X-MaaS-Subscription` Header
+If a developer authenticates to the `/v1/models` endpoint using an OpenShift identity token (OIDC) instead of a dedicated MaaS API key, the Gateway will list all models across *all* subscriptions they qualify for. To assist developers writing automation scripts, they can optionally pass an `X-MaaS-Subscription` header to explicitly filter the available models list for one exact subscription plan.
 
-If MaaS integration is successful, the Gateway will return a JSON array containing your model:
+---
 
-[source,json]
-----
-{
-  "object": "list",
-  "data": [
-    {
-      "id": "meta-llama/Meta-Llama-3-8B-Instruct",
-      "object": "model",
-      "created": 1714345678,
-      "owned_by": "chocotech-models"
-    }
-  ]
-}
-----
+== Important Note for Administrators: Telemetry Limitations
 
-### Module 3 Progress Check
-You have successfully deployed a governed, hardware-optimized LLM and published it to a centralized enterprise catalog. 
+Because Kuadrant tracks every token that passes through the gateway, OpenShift AI provides an out-of-the-box observability dashboard. As you prepare to build chargeback reports for ChocoTech's Finance team, you must be aware of a specific telemetry limitation.
 
-Your infrastructure is live. The only thing left to discuss in Module 3 is how to safely manage this model on "Day 2."
+When inspecting the underlying Prometheus metrics, you will find that the `model` label (which identifies whether traffic hit `llama-3` vs `nemotron`) only appears on the `authorized_hits` metric. This metric tracks actual token usage for successful requests. 
+
+Due to limitations in the Kuadrant wasm-shim, the `model` label **does not** appear on the `authorized_calls` (total API requests) or `limited_calls` (rate-limited HTTP 429 rejections) metrics. Keep this in mind when troubleshooting or building custom Grafana dashboards for specific models.
+
+---
+
+In the next section, we will deploy a second model. The nvidia/nemotron-4-8b-instruct, which will only be availbale to the silver and bronze subcriptions. 

@@ -33,9 +33,7 @@ oc adm groups add-users chocotech-quality-control $(oc whoami)
 
 ---
 
-== Exercise 2: Prepare the governed namespace
-
-Models must be deployed into a dedicated namespace (project). However, simply creating a namespace is not enough. You must explicitly label it so the MaaS operator knows to enforce governance rules on the traffic entering it.
+== Exercise 2: Prepare the models namespace
 
 Create the new project for ChocoTech's centralized model hub:
 
@@ -44,17 +42,6 @@ Create the new project for ChocoTech's centralized model hub:
 oc new-project chocotech-models
 ----
 
-Now, apply the critical MaaS routing and governance labels:
-
-[source,role="execute"]
-----
-oc label namespace chocotech-models maas.opendatahub.io/managed=true
-oc label namespace chocotech-models modelmesh-enabled=false
-----
-
-=== Why are these labels required?
-* `maas.opendatahub.io/managed=true`: This is the activation switch. It instructs the OpenShift AI operator to attach the API Gateway and governance policies to any model deployed within this namespace. 
-* `modelmesh-enabled=false`: MaaS utilizes the KServe engine (specifically the `llm-d` distributed runtime) to serve massive generative AI models. This label explicitly prevents the older ModelMesh architecture from attempting to manage models in this namespace.
 
 ---
 
@@ -68,12 +55,14 @@ echo "=== Groups ===" && \
 oc get groups | grep chocotech && \
 echo "=== Gold Plan Membership ===" && \
 oc get group chocotech-quality-control -o jsonpath='{.users[*]}' && echo && \
-echo "=== Governed Namespace ===" && \
-oc get namespace chocotech-models --show-labels | grep maas
+
 ----
 
-If the output confirms your groups exist, your username is listed under the Quality Control group, and the `chocotech-models` namespace displays the managed label, your organizational foundation is secure. Proceed to define the subscription limits.
+If the output confirms your groups exist, your username is listed under the Quality Control group, and the `chocotech-models` namespace exist. Proceed to define the subscription limits.
 
+
+
+////
 .Remove for the final version.
 [NOTE]
 You have enabled User Workload Monitoring on your OpenShift cluster. User Workload
@@ -81,3 +70,5 @@ Monitoring is required for MaaS to collect and expose usage metrics for token co
 request counts, and rate limiting. Without User Workload Monitoring enabled, the MaaS
 installation will show a Degraded status. For information about enabling User Workload
 Monitoring, see Enabling monitoring for user-defined projects.
+
+////

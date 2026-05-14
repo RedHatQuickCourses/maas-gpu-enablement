@@ -13,7 +13,6 @@ In OpenShift AI 3.4, granting a team access to the AI platform requires exactly 
 1. **The `MaaSAuthPolicy` (The Keycard Reader / Access):** This is the physical enforcement mechanism at the door. It authorizes specific groups to access model endpoints through the API gateway.
 2. **The `MaaSSubscription` (The Membership Contract / Quota):** This defines the terms once you are inside. It defines which models groups can access and configures the token rate limits for those models. 
 
-[NOTE]
 This intentional separation provides maximum flexibility. For example, administrators can create a generic "Premium" subscription that provides a massive token quota across 20 models, but use specific Authorization Policies to restrict a specialized team to only 5 of those models. 
 
 == Design Recommendations & Best Practices

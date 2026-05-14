@@ -5,7 +5,7 @@ You have successfully transformed ChocoTech's OpenShift AI platform from a raw, 
 == What you accomplished
 
 * **Organizational Identity:** Created OpenShift groups to represent specific business units (`chocotech-quality-control`, `chocotech-rd`, `chocotech-marketing`), ensuring audit trails are mapped to departments, not just individuals.
-* **Programmatic Security:** Replaced legacy ServiceAccounts with Native API Key Management. You established a workflow where developers can self-serve secure, revocable `sk-oai-` API keys directly from the Gen AI Studio dashboard.
+* **Programmatic Security:** You established a workflow where developers can self-serve secure, revocable `sk-oai-` API keys directly from the Gen AI Studio dashboard.
 * **Subscription Definition:** Deployed `MaaSSubscription` custom resources into the `models-as-a-service` namespace, instructing the platform on exactly how to categorize ChocoTech's business units and enforce token quotas.
 * **Edge-Level Governance:** Deployed `MaaSAuthPolicy` resources to physically authorize Gateway access for your groups. You successfully decoupled the inference request from the underlying GPU, ensuring that traffic limits are enforced mathematically at the network edge.
 

@@ -4,11 +4,12 @@
 WARNING: This section is under development
 ====
 
-With the hardware math verified, it is time to deliver the AI capabilities to ChocoTech's R&D team. 
+
+With the hardware math verified and the `LLMInferenceService` architecture selected, it is time to deliver the AI capabilities to ChocoTech's R&D team. 
 
 In a production environment, pulling massive 16GB model weights directly from the public internet every time a pod scales up is highly inefficient and a security risk. Instead, ChocoTech uses a "Vault" strategy: we download the model once to a local, high-speed S3-compatible storage array (MinIO) inside the cluster, and all inference pods pull their weights from there.
 
-== Exercise 1: Stage the local vault
+== Stage the local vault
 
 We have packaged the infrastructure setup into an automation script. This script will provision the MinIO vault, create the necessary Data Connection secrets, and use a Kubernetes Job to download the `Llama-3-8B` model weights from Hugging Face into your local storage.
 
@@ -17,11 +18,11 @@ We have packaged the infrastructure setup into an automation script. This script
 +
 [source,role="execute"]
 ----
-git clone https://github.com/RedHatQuickCourses/rhoai3-maas-lab.git
-cd rhoai3-maas-lab
+git clone https://github.com/RedHatQuickCourses/mass-gpu-enablment.git
+cd mass-gpu-enablment
 ----
 
-3. Execute the setup script:
+3. Execute the setup script from the deploy folder:
 +
 [source,role="execute"]
 ----
@@ -31,7 +32,8 @@ chmod u+x deploy/setup-vault.sh
 
 *Expected Output:* The script will output its progress. Wait for the final `✅ SUCCESS: Model is now available in MinIO at s3://models/llama3` message. This may take 5-15 minutes depending on the cluster's network speed.
 
-== Exercise 2: Extract the Serving Runtime (The Engine)
+---
+== Extract the Serving Runtime (The Engine)
 
 OpenShift AI includes certified runtime templates. Instead of writing a complex vLLM container definition from scratch, we will extract the official template from the central RHOAI namespace and install it into our `chocotech-models` project.
 
@@ -45,30 +47,23 @@ oc apply -f - -n chocotech-models
 
 *Expected Output:* `servingruntime.serving.kserve.io/vllm-cuda-runtime created`.
 
-== Exercise 3: Wire the Data Connection
 
-The setup script in Exercise 1 created a ServiceAccount (`fast-track-sa`) and a Secret containing the MinIO S3 credentials (`storage-config`). However, for the KServe storage puller to actually use those credentials to mount the model weights into the pod, we must explicitly link them.
+== Deploy the LLMInferenceService and MaaSModelRef
 
-Link the data connection secret to the service account:
+Because ChocoTech uses GitOps, we will deploy the model using declarative YAML. In OpenShift AI 3.4, a governed deployment requires two distinct resources:
+
+1. **`LLMInferenceService`:** This provisions the actual inference engine, requests the GPU, and loads the weights into VRAM.
+2. **`MaaSModelRef`:** This is the critical registration resource. It notifies the MaaS system that the model exists, mapping the inference endpoint to the API Gateway. 
+
+Execute the following block to deploy both resources into the `chocotech-models` namespace:
 
 [source,role="execute"]
-----
-oc secret link fast-track-sa storage-config -n chocotech-models
-----
-
-== Exercise 4: The Infrastructure-as-Code (The Workload)
-
-To deploy distributed inference and integrate with MaaS, we must use the `LLMInferenceService` custom resource. This manifest binds our extracted Runtime (the engine) to our MinIO Storage (the fuel), and attaches the Kuadrant MaaS policies (the governance).
-
-Review and apply the `llama3-deployment.yaml` file:
-
-[source,yaml]
 ----
 cat <<EOF | oc apply -f -
 apiVersion: serving.kserve.io/v1alpha1
 kind: LLMInferenceService
 metadata:
-  name: llama-3-8b
+  name: llama-3-8b-ref
   namespace: chocotech-models
   annotations:
     # THE BOUNCER LIST: Defines exactly which UI subscriptions are allowed to access this model
@@ -105,48 +100,66 @@ spec:
         - name: main
           env:
             - name: VLLM_ADDITIONAL_ARGS
-              value: "--max-model-len=8192 --gpu-memory-utilization=0.90"
+              value: "--max-model-len=8192 --gpu-memory-utilization=0.90" // <1> <2>
               
   # THE HARDWARE: Requesting exact VRAM and GPU requirements
   placement:
     accelerator:
       name: "nvidia.com/gpu"
       count: 1
+---
+apiVersion: maas.opendatahub.io/v1alpha1
+kind: MaaSModelRef
+metadata:
+  name: llama-3-8b-ref
+  namespace: chocotech-models
+spec:
+  modelRef:
+    kind: LLMInferenceService
+    name: llama-3-8b
 EOF
 ----
 
-=== Breaking down the vLLM Tuning Variables
-* `--max-model-len=8192`: Prevents Out-Of-Memory (OOM) errors by capping the maximum context window. Limiting this ensures predictable memory allocation on ChocoTech's 24GB GPUs.
-* `--gpu-memory-utilization=0.90`: Reserves 90% of the VRAM strictly for the KV Cache and model weights, leaving 10% for PyTorch and system overhead. 
-
-== Exercise 5: Monitor the deployment
-
-Because the weights are stored locally in your MinIO vault, the pod startup will be significantly faster than pulling from the public internet. 
-
-Check the KServe status condition to verify the model is healthy and ready to serve traffic:
+Check the status condition to verify the model is healthy and ready to serve traffic:
 
 [source,role="execute"]
 ----
 oc wait --for=condition=Ready llminferenceservice/llama-3-8b -n chocotech-models --timeout=300s
 ----
 
-*Expected output:* `llminferenceservice.serving.kserve.io/llama-3-8b condition met`.
+---
+
+== The Post-Deployment Governance Step
+
+
+A critical deployment consideration in OpenShift AI 3.4 is that publishing a model to MaaS does not immediately grant anyone access to it. After publishing, a cluster administrator must create a subscription and add this model to make it accessible to user groups.
+
+If you had deployed this model without our previous work in Module 2, the model would sit isolated. A cluster administrator would have to manually add the new `MaaSModelRef` to a `MaaSSubscription`, configure its token limits, and update the matching `MaaSAuthPolicy`.
+
+We **pre-wired ChocoTech's governance strategy** in Module 2! You already explicitly listed `- name: llama-3-8b-ref` in your Gold, Silver, and Bronze subscriptions. As soon as the `LLMInferenceService` reports `Ready`, the MaaS controllers immediately enforce your exact token limits.
 
 ---
 
 == Alternative: The UI Deployment Walkthrough
 
-While GitOps (Infrastructure-as-Code) is the standard for Platform Engineers, OpenShift AI administrators can also deploy and publish governed models directly through the dashboard UI. 
 
-In the OpenShift AI dashboard, administrators simply navigate to the deployment wizard, select their data connection, and check the **"Publish as MaaS endpoint"** box. They can then use checkboxes to restrict the model to specific subscriptions.
+While GitOps is the standard for Platform Engineers, administrators can also deploy models directly through the OpenShift AI dashboard UI. 
+
+When deploying a model via the Gen AI Studio UI, selecting **"Publish as MaaS endpoint"** under the advanced settings creates the required `MaaSModelRef` object automatically. Publishing as MaaS creates a MaaSModelRef object that notifies the MaaS system of the model's existence.
+
+[WARNING]
+====
+**Explicit Warning: The "Legacy Deployment Method" Checkbox** +
+Models deployed for MaaS use the LLMInferenceService architecture, which is designed for large language models and integrates with the MaaS gateway for subscription-based access control. If you deploy models via the UI, you must ensure the **"Use legacy deployment method"** checkbox is left cleared. The legacy deployment method uses traditional KServe InferenceService resources with serving runtimes, which do not support MaaS governance features.
+====
 
 .📺 Video Walkthrough: UI Model Deployment
 [%collapsible]
 ====
-_Click play below to watch a 2-minute demonstration of an AI Administrator deploying a model via the Gen AI Studio deployment wizard and applying the MaaS tier restrictions._
+_Click play below to watch a 2-minute demonstration of an AI Administrator safely deploying a model via the Gen AI Studio deployment wizard._
 
 // NOTE FOR AUTHOR: Insert your video embed code here.
 `[Video Embed: Deploying a MaaS Model via the OpenShift AI Dashboard]`
 ====
 
-In the next section, we will verify our GitOps deployment succeeded by checking the MaaS Catalog and actively testing the Kuadrant rate limits!
+In the next section, we will step into the developer's shoes and verify our GitOps deployment succeeded by checking the MaaS Catalog and actively testing the Kuadrant rate limits!
