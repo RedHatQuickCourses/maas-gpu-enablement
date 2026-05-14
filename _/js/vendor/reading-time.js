@@ -1,7 +1,7 @@
 ;(function () {
   'use strict'
 
-  var WPM = 200
+  var WPM = 100
   var SELECTORS_TO_STRIP =
     '.listingblock, .literalblock, table, script, style, .tabs, nav.pagination, .source-toolbox'
 

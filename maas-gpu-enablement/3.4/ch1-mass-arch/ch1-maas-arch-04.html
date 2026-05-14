@@ -337,13 +337,13 @@ EOF</code></pre>
 apiVersion: gateway.networking.k8s.io/v1
 kind: Gateway
 metadata:
-  name: maas-default-gateway
+  name: maas-default-gateway <i class="conum" data-value="2"></i><b>(2)</b>
   namespace: openshift-ingress
   annotations:
     opendatahub.io/managed: "false"
     security.opendatahub.io/authorino-tls-bootstrap: "true"
 spec:
-  gatewayClassName: openshift-default
+  gatewayClassName: openshift-default <i class="conum" data-value="1"></i><b>(1)</b>
   listeners:
   - name: http
     port: 80
@@ -353,6 +353,18 @@ spec:
         from: All
 EOF</code></pre>
 </div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td><strong>GatewayClass (The Blueprint):</strong> This tells the cluster <em>who</em> is responsible for building the load balancer and <em>what kind</em> of underlying technology to use. By specifying <code>gatewayClassName: openshift-default</code>, you instruct the native OpenShift Gateway Controller to deploy the physical proxy infrastructure. If this is misconfigured or missing, your cluster won&#8217;t know how to build the gateway, and it will sit in an unprogrammed state forever.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td><strong>Gateway (The Entry Endpoint):</strong> The <code>Gateway</code> resource (which we named <code>maas-default-gateway</code>) is the instantiated infrastructure that listens for traffic. It defines the physical or virtual IP address, the open ports (like 80 or 443), and the TLS certificates. It essentially says, "I am built according to the <code>openshift-default</code> blueprint, and I am actively listening for connections."</td>
+</tr>
+</table>
 </div>
 <div class="admonitionblock note">
 <table>
@@ -364,17 +376,8 @@ EOF</code></pre>
 <div class="paragraph">
 <p><strong>Understanding the Gateway API architecture</strong></p>
 </div>
-<div class="paragraph">
-<p>Unlike traditional Kubernetes <code>Ingress</code>, the modern <strong>Kubernetes Gateway API</strong> can feel a bit abstract. It separates network routing into three distinct responsibilities. Understanding these pieces clarifies why the <code>gatewayClassName</code> and exact Gateway name are so important for Models-as-a-Service:</p>
-</div>
 <div class="ulist">
 <ul>
-<li>
-<p><strong>GatewayClass (The Blueprint):</strong> This tells the cluster <em>who</em> is responsible for building the load balancer and <em>what kind</em> of underlying technology to use. By specifying <code>gatewayClassName: openshift-default</code>, you instruct the native OpenShift Gateway Controller to deploy the physical proxy infrastructure. If this is misconfigured or missing, your cluster won&#8217;t know how to build the gateway, and it will sit in an unprogrammed state forever.</p>
-</li>
-<li>
-<p><strong>Gateway (The Entry Endpoint):</strong> The <code>Gateway</code> resource (which we named <code>maas-default-gateway</code>) is the instantiated infrastructure that listens for traffic. It defines the physical or virtual IP address, the open ports (like 80 or 443), and the TLS certificates. It essentially says, "I am built according to the <code>openshift-default</code> blueprint, and I am actively listening for connections."</p>
-</li>
 <li>
 <p><strong>HTTPRoute (The Router):</strong> This is where the actual routing logic lives. An <code>HTTPRoute</code> attaches to a Gateway and contains the specific URL rules (e.g., "If a request path is <code>/llm/llama-3b/v1/chat/completions</code>, forward it to the model pod in the <code>chocotech-models</code> namespace").</p>
 </li>
