@@ -330,6 +330,18 @@ EOF</code></pre>
 </div>
 </div>
 <div class="paragraph">
+<p>Check Tenant Readiness:</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">oc get tenant default-tenant -n models-as-a-service -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}'</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Expected output: True</p>
+</div>
+<hr>
+<div class="paragraph">
 <p>You have now successfully locked down the platform!</p>
 </div>
 <div class="olist arabic">

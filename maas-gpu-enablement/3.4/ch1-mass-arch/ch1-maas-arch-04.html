@@ -553,17 +553,7 @@ security.opendatahub.io/authorino-tls-bootstrap="true" \
 <div class="paragraph">
 <p>Expected output: true</p>
 </div>
-<div class="paragraph">
-<p>Check Tenant Readiness:</p>
-</div>
-<div class="listingblock execute">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-none hljs">oc get tenant default-tenant -n models-as-a-service -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}'</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>Expected output: True</p>
-</div>
+<hr>
 <div class="paragraph">
 <p>Note on Certificates: You must ensure your cluster already has a functional ingress controller with valid TLS certificates for external access before starting this procedure. If you are missing the maas-db-config secret or User Workload Monitoring, the Tenant resource will likely remain in a False or Degraded state.</p>
 </div>
