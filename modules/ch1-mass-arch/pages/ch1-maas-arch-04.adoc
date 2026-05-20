@@ -207,13 +207,7 @@ oc get gateway maas-default-gateway -n openshift-ingress -o jsonpath='{.metadata
 
 Expected output: true   
 
-Check Tenant Readiness:
-[source,role="execute"]
-----
-oc get tenant default-tenant -n models-as-a-service -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}'   
-----
-
-Expected output: True   
+--- 
 
 Note on Certificates: You must ensure your cluster already has a functional ingress controller with valid TLS certificates for external access before starting this procedure. If you are missing the maas-db-config secret or User Workload Monitoring, the Tenant resource will likely remain in a False or Degraded state.  
 

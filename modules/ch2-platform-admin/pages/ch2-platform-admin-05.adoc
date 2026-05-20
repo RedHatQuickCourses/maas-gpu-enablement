@@ -74,6 +74,16 @@ Verify that the MaaS operator successfully registered the authorization policies
 oc get maasauthpolicy -n models-as-a-service
 ----
 
+Check Tenant Readiness:
+[source,role="execute"]
+----
+oc get tenant default-tenant -n models-as-a-service -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}'   
+----
+
+Expected output: True  
+
+---
+
 You have now successfully locked down the platform! 
 
 1. Only users in the QC, R&D, and Marketing groups can access the Gateway.
