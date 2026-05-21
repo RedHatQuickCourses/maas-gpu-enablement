@@ -331,18 +331,6 @@ Notice the <code>modelRefs</code> section in the YAML below. Even though we will
 <div class="paragraph">
 <p>Execute the following block to deploy all three <code>MaaSSubscription</code> policies into the centralized <code>models-as-a-service</code> namespace:</p>
 </div>
-<div class="ulist">
-<ul>
-<li>
-<p>First create the namespace:</p>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc create namespace models-as-a-service</code></pre>
-</div>
-</div>
-</li>
-</ul>
-</div>
 <div class="listingblock execute">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-none hljs">cat &lt;&lt;EOF | oc apply -f -
