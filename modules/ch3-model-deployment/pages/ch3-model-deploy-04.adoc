@@ -1,18 +1,16 @@
 = 3.3: Verifying the MaaS catalog and gateway publication
 
-
 ====
 WARNING: This section is under development
 ====
 
+If ChocoTech had deployed this model using standard open-source tools, the Platform Engineering team's job would not be finished. They would still need to manually write documentation, securely email the endpoint URL to the developers, and coordinate static API keys. 
 
-If ChocoTech had deployed this model using standard open-source tools, the Platform Engineering team's job would not be finished. They would still need to manually write documentation, email the endpoint URL to the developers, and coordinate static API keys. 
-
-With Models as a Service, the OpenShift AI operator handles all of this automatically. Because we set `publishToGenAIStudio: true` in our deployment manifest, the platform instantly generates a `MaaSModelRef` resource and publishes it to a centralized self-service catalog. 
+With Models-as-a-Service, OpenShift AI handles all of this automatically through a self-service catalog. 
 
 == Exercise 1: Verify the backend MaaS registration
 
-When the `LLMInferenceService` becomes ready, the MaaS operator detects the publish flag and automatically generates a companion `MaaSModelRef` custom resource. This resource acts as the bridge between the running inference container and the Gateway API.
+In the previous section, we explicitly deployed a `MaaSModelRef` custom resource alongside our model. This resource references inference servers served through OpenShift AI and registers them with the MaaS Gateway. 
 
 Verify the model was successfully registered with the MaaS API:
 
@@ -24,61 +22,74 @@ oc get maasmodelref -n chocotech-models
 *Expected output:*
 ----
 NAME             MODELREF_KIND         MODELREF_NAME    READY   AGE
-llama-3-8b-ref   LLMInferenceService   llama-3-8b       True    5m
+llama-3-8b       LLMInferenceService   llama-3-8b       True    5m
 ----
 
-By itself, this `MaaSModelRef` does not grant anyone access. However, because you "pre-wired" your governance in Module 2 by explicitly adding `llama-3-8b-ref` to your Gold, Silver, and Bronze `MaaSSubscription` and `MaaSAuthPolicy` manifests, the model is now instantly accessible and fully governed by Kuadrant rate limits.
+By itself, this `MaaSModelRef` does not grant anyone access. However, because you "pre-wired" your governance in Module 2 by explicitly adding `llama-3-8b` to your Gold, Silver, and Bronze Subscriptions and AuthPolicies, the model is now instantly accessible and fully governed by Kuadrant rate limits.
 
----
-
-== Exercise 2: The Developer Payoff (Gen AI Studio UI)
+== Exercise 2: The Developer Payoff (Generating API Keys)
 
 Let's switch hats. You are now a developer on the Marketing team logging in to find a model for your sentiment analysis application. You do not need to know anything about `vLLM` or OpenShift routes; you simply use the self-service catalog.
 
-1. Open the OpenShift AI dashboard in your browser.
-2. Navigate to **Gen AI Studio** -> **AI asset endpoints** in the left-hand menu.
-3. Click on the **Models** tab.
+*Prerequisite:* Ensure you are logged into the OpenShift AI dashboard as a user who belongs to the OpenShift group mapped to the Bronze or Silver subscription (e.g., `chocotech-marketing`). 
 
-You should immediately see the `meta-llama/Meta-Llama-3-8B-ref` model populated in the catalog grid. 
+1. Navigate to **Gen AI studio** -> **AI asset endpoints** in the left-hand menu.
+2. Click on the **Models** tab.
 
-Clicking the **View** button under the Endpoints column will reveal a dialog with a "Model as a Service" badge. This dialog provides:
+You should immediately see the `llama-3-8b` model populated in the catalog grid. Clicking the **View** button under the Endpoints column reveals a dialog with a **Model as a Service** badge. 
+
+This dialog provides critical connection details:
 
 * **The external API endpoint URL:** The exact gateway routing URL developers need.
-* **Subscription Selector:** If you belong to multiple groups with access, you can choose which subscription's token quota to draw from.
-* **API Key Generation:** A button to instantly generate a temporary API key scoped directly to that model and subscription.
-* **Playground Testing:** A direct link to launch the Gen AI Playground to test prompts interactively.
+* **Subscription Selector:** A dropdown for choosing which subscription's token quota to draw from.
+* **Temporary API Key:** A button to generate a 1-hour temporary API key for quick testing.
 
----
+### Creating a Persistent API Key
 
-== Exercise 3: Test the Gateway API discovery
+For a real application, developers need a persistent API key rather than a 1-hour temporary key. 
 
-The MaaS Gateway is fully compliant with the OpenAI API specification, meaning client applications can dynamically query the `/v1/models` endpoint to see what is available. 
+1. In the OpenShift AI dashboard, click **Gen AI studio** -> **API keys**.
+2. Click **Create API key**.
+3. Give the key a descriptive name (e.g., `marketing-sentiment-app`).
+4. From the **Subscription** dropdown, select the subscription that determines your token limits. 
+5. Leave the Expiration at the default (30 days) and click **Create**.
 
-In OpenShift AI 3.4, API discovery is intelligent and strictly scoped. When an application queries the `/v1/models` endpoint using a generated `sk-oai-` API key, the Gateway automatically filters the response to show *only* the models allowed by the subscription bound to that key. 
+*Copy the generated key immediately (it starts with `sk-oai-`). The plaintext key is displayed only during creation and cannot be retrieved later.*
 
-Retrieve your Gateway hostname and query the models list using the API key you generated in Module 2:
+[IMPORTANT]
+====
+**API Key Snapshots:** API keys capture the user's group memberships at the exact time of creation. If a user is removed from an OpenShift group later, their existing API keys retain the original group associations and continue to work until they are explicitly revoked or expired.
+====
+
+== Exercise 3: Test API discovery (Listing Models)
+
+
+The MaaS Gateway is fully compliant with the OpenAI API specification. However, in OpenShift AI 3.4, API discovery is highly secure and strictly scoped. When an application queries the `/maas-api/v1/models` endpoint using a generated `sk-oai-` API key, the Gateway automatically filters the response to show *only* the models allowed by the subscription bound to that specific key.
+
+Retrieve your Gateway URL and query the models list using the persistent API key you just generated:
 
 [source,role="execute"]
 ----
-GATEWAY_HOST=$(oc get gateway maas-default-gateway -n openshift-ingress -o jsonpath='{.status.addresses[0].value}')
+# Ensure your variables are set
+export MAAS_API_KEY="sk-oai-..." # Paste your actual key here
+export ROUTE_HOST=$(oc get route openshift-ai-inference -n openshift-ingress -o jsonpath='{.spec.host}')
 
-curl -s -k https://$GATEWAY_HOST/v1/models \
-  -H "Authorization: Bearer $MAAS_API_KEY" | jq
+# Query the MaaS API for available models
+curl -H "Authorization: Bearer $MAAS_API_KEY" \
+  https://${ROUTE_HOST}/maas-api/v1/models | jq
 ----
 
-=== Advanced Discovery: The `X-MaaS-Subscription` Header
-If a developer authenticates to the `/v1/models` endpoint using an OpenShift identity token (OIDC) instead of a dedicated MaaS API key, the Gateway will list all models across *all* subscriptions they qualify for. To assist developers writing automation scripts, they can optionally pass an `X-MaaS-Subscription` header to explicitly filter the available models list for one exact subscription plan.
-
----
+You should receive a JSON response listing `llama-3-8b`, confirming that Kuadrant validated your API key, verified your subscription, and successfully authorized the request.
 
 == Important Note for Administrators: Telemetry Limitations
 
-Because Kuadrant tracks every token that passes through the gateway, OpenShift AI provides an out-of-the-box observability dashboard. As you prepare to build chargeback reports for ChocoTech's Finance team, you must be aware of a specific telemetry limitation.
+Because Kuadrant tracks every token that passes through the gateway, OpenShift AI provides an out-of-the-box observability dashboard for administrators. As you prepare to build chargeback reports for ChocoTech's Finance team, you must be aware of two specific telemetry configurations:
 
-When inspecting the underlying Prometheus metrics, you will find that the `model` label (which identifies whether traffic hit `llama-3` vs `nemotron`) only appears on the `authorized_hits` metric. This metric tracks actual token usage for successful requests. 
+1. **User Tracking is Disabled by Default:** To reduce metric cardinality and protect privacy, the `captureUser` setting in the telemetry configuration is set to `false` by default. 
+2. **Model Label Limitations:** When inspecting the underlying Prometheus metrics, you will find that the `model` label (which identifies whether traffic hit `llama-3` or another model) only appears on the `authorized_hits` metric. 
 
 Due to limitations in the Kuadrant wasm-shim, the `model` label **does not** appear on the `authorized_calls` (total API requests) or `limited_calls` (rate-limited HTTP 429 rejections) metrics. Keep this in mind when troubleshooting or building custom Grafana dashboards for specific models.
 
 ---
 
-In the next section, we will deploy a second model. The nvidia/nemotron-4-8b-instruct, which will only be availbale to the silver and bronze subcriptions. 
+In the next section, we will deploy a second model (Nemotron-4-8B-Instruct), which will only be available to the Silver and Bronze subscriptions.

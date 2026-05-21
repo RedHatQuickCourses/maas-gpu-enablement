@@ -4,31 +4,23 @@
 WARNING: This section is under development
 ====
 
+ChocoTech's Marketing and R&D teams have returned with a new request. While Llama-3 is excellent for general reasoning, they need a dedicated, highly proficient coding assistant model to help generate Python scripts and automate their data pipelines.
 
-ChocoTech's Marketing team requests access to a smaller, faster model for sentiment analysis. To accommodate this, we will deploy a second model to demonstrate multi-model catalog management.
+As a platform engineer, you ran the hardware math (Section 3.1) and realized that deploying a massive model like Nemotron would require an A100 GPU cluster due to its VRAM footprint. Since those nodes are currently unavailable, you have pivoted to deploying `qwen3-4b`—a highly capable coding model that fits comfortably alongside your existing workloads on standard GPUs.
 
-This exercise shows how easily you can expand the model catalog as new business requirements emerge. More importantly, it demonstrates how to apply strict, selective access controls so that expensive or restricted models do not appear for unauthorized users.
+This exercise demonstrates how easily you can expand the model catalog as new business requirements emerge. More importantly, it demonstrates how to apply strict, selective access controls so that restricted models do not appear for unauthorized users.
 
-== Exercise 1: Stage the second model vault
+[NOTE]
+====
+**Single-GPU Lab Clusters** +
+If your lab environment only has a single GPU with limited VRAM (e.g., 24GB), you cannot run both Llama-3 and Qwen simultaneously. You can either scale down the previous Llama-3 deployment to 0 replicas before continuing, or simply read through this section to understand the governance mechanics without executing the YAML.
+====
 
-Just like we did for Llama-3, we need to stage the weights for the `nvidia/nemotron-4-8b-instruct` model in our local MinIO vault (`s3://models/nemotron`). 
+== Exercise 1: The deployment manifest
 
-Run the provided setup script to execute the Kubernetes Job that pulls the model from Hugging Face into your cluster storage:
+We will use the exact same `LLMInferenceService` structure as before to deploy the Qwen model via OCI Modelcar and automatically generate its `MaaSModelRef`. 
 
-[source,role="execute"]
-----
-./deploy/setup-vault-nemotron.sh
-----
-
-*Expected Output:* The script will output its progress. Wait for the final `✅ SUCCESS: Model is now available in MinIO at s3://models/nemotron` message.
-
----
-
-== Exercise 2: The deployment manifest
-
-We will use the exact same `LLMInferenceService` structure as before to deploy the model and automatically generate its `MaaSModelRef`.
-
-Review and apply the `nemotron-deployment.yaml` manifest:
+Review and apply the `qwen-deployment.yaml` manifest:
 
 [source,role="execute"]
 ----
@@ -36,14 +28,30 @@ cat <<EOF | oc apply -f -
 apiVersion: serving.kserve.io/v1alpha1
 kind: LLMInferenceService
 metadata:
-  name: nemotron-8b
+  name: qwen3-4b
   namespace: chocotech-models
 spec:
-  publishToGenAIStudio: true
+  # THE VAULT: Pointing to the Modelcar OCI image
   model:
-    uri: s3://models/nemotron
-    name: nvidia/nemotron-4-8b-instruct
+    uri: oci://quay.io/redhat-ai-services/modelcar-catalog:qwen3-4b
   servingRuntime: "vllm-cuda-runtime"
+  router:
+    scheduler:
+      template:
+        containers:
+          - name: main
+            args:
+              - '--pool-group'
+              - 'inference.networking.x-k8s.io'
+              - '--pool-name'
+              - '{{ .ObjectMeta.Name }}-inference-pool'
+  template:
+    spec:
+      containers:
+        - name: main
+          env:
+            - name: VLLM_ADDITIONAL_ARGS
+              value: "--max-model-len=4096 --gpu-memory-utilization=0.85"
   placement:
     accelerator:
       name: "nvidia.com/gpu"
@@ -52,34 +60,33 @@ spec:
 apiVersion: maas.opendatahub.io/v1alpha1
 kind: MaaSModelRef
 metadata:
-  name: nemotron-8b-ref
+  name: qwen3-4b
   namespace: chocotech-models
 spec:
   modelRef:
     kind: LLMInferenceService
-    name: nemotron-8b
+    name: qwen3-4b
 EOF
 ----
 
-Wait for the deployment to become ready:
+Check the status condition to verify the model is healthy and ready to serve traffic *(This may take several minutes to pull the OCI image)*:
 
 [source,role="execute"]
 ----
-oc wait --for=condition=ready llminferenceservice/nemotron-8b -n chocotech-models --timeout=600s
+oc wait --for=condition=ready llminferenceservice/qwen3-4b -n chocotech-models --timeout=600s
 ----
-
-*Expected output:* `llminferenceservice.serving.kserve.io/nemotron-8b condition met`.
 
 ---
 
-== Exercise 3: Post-Deployment Governance (Selective Access)
+== Exercise 2: Post-Deployment Governance (Selective Access)
 
+Currently, the Qwen model is successfully deployed and registered as a `MaaSModelRef`, but **no one has access to it**. 
 
-Currently, the Nemotron model is deployed and registered as a `MaaSModelRef`, but **no one has access to it**. We want to restrict this model strictly to the **Silver (R&D)** and **Bronze (Marketing)** subscriptions. The Gold (Quality Control) team should not have access to it, as it is not validated for factory floor workloads.
+We want to restrict this specialized coding model strictly to the **Silver (R&D)** and **Bronze (Marketing)** subscriptions. The Gold (Quality Control) team should not have access to it, as it is strictly designed for coding, not factory floor defect analysis.
 
-In OpenShift AI 3.4, access is enforced entirely by `MaaSSubscription` and `MaaSAuthPolicy` resources. To grant access, we must append the new model reference to our existing governance manifests.
+In OpenShift AI 3.4, access is enforced entirely by `MaaSSubscription` and `MaaSAuthPolicy` resources. To grant access, we must append the new model reference to our existing governance manifests. 
 
-1. First, append the model to the Silver and Bronze `MaaSSubscription` resources to grant a token quota:
+1. **Append the model to the Silver and Bronze `MaaSSubscription` resources** to grant a token quota:
 +
 [source,role="execute"]
 ----
@@ -97,13 +104,13 @@ spec:
       - name: chocotech-rd
     users: []
   modelRefs:
-    - name: llama-3-8b-ref
+    - name: llama-3-8b
       namespace: chocotech-models
       tokenRateLimits:
         - limit: 10000
           window: 1m
     # NEWLY ADDED MODEL QUOTA
-    - name: nemotron-8b-ref
+    - name: qwen3-4b
       namespace: chocotech-models
       tokenRateLimits:
         - limit: 20000
@@ -121,13 +128,13 @@ spec:
       - name: chocotech-marketing
     users: []
   modelRefs:
-    - name: llama-3-8b-ref
+    - name: llama-3-8b
       namespace: chocotech-models
       tokenRateLimits:
         - limit: 2000
           window: 1m
     # NEWLY ADDED MODEL QUOTA
-    - name: nemotron-8b-ref
+    - name: qwen3-4b
       namespace: chocotech-models
       tokenRateLimits:
         - limit: 8000
@@ -135,7 +142,7 @@ spec:
 EOF
 ----
 
-2. Next, append the model to the Silver and Bronze `MaaSAuthPolicy` resources to explicitly open the API Gateway:
+2. **Append the model to the Silver and Bronze `MaaSAuthPolicy` resources** to explicitly authorize traffic through the API Gateway:
 +
 [source,role="execute"]
 ----
@@ -148,10 +155,10 @@ metadata:
   namespace: models-as-a-service
 spec:
   modelRefs:
-    - name: llama-3-8b-ref
+    - name: llama-3-8b
       namespace: chocotech-models
     # NEWLY ADDED MODEL ACCESS
-    - name: nemotron-8b-ref
+    - name: qwen3-4b
       namespace: chocotech-models
   subjects:
     groups:
@@ -165,10 +172,10 @@ metadata:
   namespace: models-as-a-service
 spec:
   modelRefs:
-    - name: llama-3-8b-ref
+    - name: llama-3-8b
       namespace: chocotech-models
     # NEWLY ADDED MODEL ACCESS
-    - name: nemotron-8b-ref
+    - name: qwen3-4b
       namespace: chocotech-models
   subjects:
     groups:
@@ -177,25 +184,36 @@ spec:
 EOF
 ----
 
-The Gold Plan (Quality Control) remains completely untouched, meaning they are mathematically prohibited from routing traffic to Nemotron.
+The Gold Plan (Quality Control) remains completely untouched. Kuadrant will physically block any attempts from the Gold group to route traffic to the Qwen model.
 
 ---
 
-== Exercise 4: Verify the multi-model catalog
+== Exercise 3: Verify the multi-model catalog
 
-**1. The UI Payoff**
-Refresh the Gen AI Studio Models tab in the dashboard. 
+**1. Generate a Test API Key** +
+To accurately test selective access, you must generate an API key tied specifically to the Bronze Plan (Marketing).
+* In the OpenShift AI dashboard, click **Gen AI studio** -> **API keys**.
+* Click **Create API key**.
+* Name it `marketing-qwen-test`.
+* Select **Bronze** from the Subscription dropdown.
+* Click **Create** and immediately copy the `sk-oai-...` key.
 
-* If you are logged in as a member of the **Marketing** or **R&D** OpenShift group, you should now see both models listed with their respective subscription access controls. 
-* If you switch to a user in the **Quality Control** group, the Nemotron model will vanish from the catalog entirely.
+**2. The UI Payoff** +
+Refresh the Gen AI Studio Models tab in the OpenShift AI dashboard.
+* Since you are testing with Bronze/Silver access, you will now see both `llama-3-8b` and `qwen3-4b` listed with their respective subscription access controls. 
+* If you switch to a user in the **Quality Control (Gold)** group, the Qwen model is entirely hidden from the catalog.
 
-**2. API Discovery (The Developer View)**
-Retrieve your Gateway hostname and query the `/v1/models` endpoint using your **Bronze Plan** API Key:
+**3. API Discovery (The Developer View)** +
+Retrieve your Gateway hostname and query the `/maas-api/v1/models` endpoint using the Bronze API Key you just generated:
 
 [source,role="execute"]
 ----
-curl -s -k https://$GATEWAY_HOST/v1/models \
-  -H "Authorization: Bearer $MAAS_API_KEY" | jq
+# Ensure variables are set
+export MAAS_API_KEY="sk-oai-..." # Paste your Bronze key here
+export ROUTE_HOST=$(oc get route openshift-ai-inference -n openshift-ingress -o jsonpath='{.spec.host}')
+
+curl -s -k -H "Authorization: Bearer $MAAS_API_KEY" \
+  https://${ROUTE_HOST}/maas-api/v1/models | jq
 ----
 
 *Expected output showing both models*:
@@ -205,18 +223,19 @@ curl -s -k https://$GATEWAY_HOST/v1/models \
   "object": "list",
   "data": [
     {
-      "id": "meta-llama/Meta-Llama-3-8B-Instruct",
+      "id": "llama-3-8b",
       "object": "model",
       "owned_by": "chocotech-models"
     },
     {
-      "id": "nvidia/nemotron-4-8b-instruct",
+      "id": "qwen3-4b",
       "object": "model",
       "owned_by": "chocotech-models"
     }
   ]
 }
 ----
-*(Note: If you run this exact same API call using a Gold Plan API Key, the JSON array will only return `Llama-3`).*
 
-ChocoTech now operates a fully governed, multi-model AI factory. Quality Control relies on the universally available Llama-3, while Marketing and R&D can utilize the Nemotron model without risking exposure to the Gold tier production workloads.
+*(Note: If you run this exact same API call using a Gold Plan API Key, the Gateway will dynamically filter the JSON response to only return `llama-3-8b`).*
+
+ChocoTech now operates a fully governed, multi-model AI factory. Quality Control relies on the universally available Llama-3 for factory logic, while Marketing and R&D can utilize the specialized Qwen coder model without risking exposure to the Gold tier production environment.

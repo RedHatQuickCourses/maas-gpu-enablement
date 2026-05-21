@@ -1,0 +1,65 @@
+= 4.3: The Observability Dashboard and Chargeback
+
+====
+WARNING: This section is under development
+====
+
+The simulated developer traffic has concluded, and the telemetry pipeline is actively scraping Kuadrant's rate-limiting logs and the MaaS Gateway's token counters. 
+
+It is time to answer the final business request from ChocoTech's Finance team: *"How much of the monthly cloud budget did the Marketing department consume this week?"*
+
+As a platform engineer, you do not need to manually parse logs or write complex PromQL queries to answer this. OpenShift AI 3.4 provides a built-in observability dashboard specifically designed for this exact Models-as-a-Service (MaaS) showback reporting.
+
+== Exercise 1: Exploring the MaaS Dashboard
+
+Let's navigate to the dashboard and visualize the chaos our load-generator script created.
+
+
+
+1. In the OpenShift AI dashboard, click **Observe & monitor** -> **Dashboard** in the left navigation menu.
+2. The Observability dashboard page displays three tabs; click the **Usage** tab to view the Models-as-a-Service metrics.
+3. From the **Time period** dropdown, ensure the time range captures the last few minutes when you ran the Python script.
+4. From the **Subscription** dropdown, select the **Bronze Plan** to filter the metrics exclusively to the Marketing department's workload.
+
+== Exercise 2: Analyzing the Metrics
+
+Review the **Overview** section at the top of the dashboard. This section aggregates the Prometheus data into clear, actionable business metrics:
+
+* **Total Tokens:** The total number of tokens (input prompts + model responses) consumed by the Marketing team.
+* **Total Requests:** The total number of API calls made to the `llama-3-8b` model.
+* **Total Errors:** This metric validates your governance policies! It reflects the exact number of failed requests, directly correlating to the `429 Too Many Requests` rate-limit violations generated when the script breached the Bronze token quota.
+* **Success Rate:** The percentage of successful requests compared to total requests.
+
+Scroll down to the **Token Consumption by User** table. This provides a granular breakdown, showing exactly which user (identified by their API key ownership) consumed which tokens, against which specific model.
+
+== Exercise 3: Exporting the Chargeback Report
+
+Finance requires structured data to process inter-departmental billing. OpenShift AI allows you to export these filtered metrics directly to a CSV file.
+
+[IMPORTANT]
+====
+**Showback vs. Billing-Grade Metering** +
+The MaaS observability dashboard is designed for internal usage tracking and "showback" reporting. The exported CSV data is suitable for allocating costs across ChocoTech's departments, but it is not intended for external, billing-grade invoicing. For strict external billing, you would configure external metering tools to consume the Limitador metrics directly.
+====
+
+To generate the report:
+1. Ensure your filters are still set to the **Bronze Plan** and the desired time period.
+2. Hover over the **Token Consumption by User** table.
+3. Click the **Export as CSV** button.
+4. Save the generated CSV file to your local system.
+
+You can now email this file to the Finance team, providing them with the exact mathematical proof they need to attribute GPU costs to the Marketing department!
+
+---
+
+== 🎉 Course Conclusion: The AI Factory is Complete
+
+Congratulations! You have successfully completed the ChocoTech platform engineering journey. 
+
+Let's review what you have accomplished:
+* **Module 1:** You deployed a secure, edge-routed API Gateway using Authorino and Kuadrant, creating the foundational infrastructure for Models-as-a-Service.
+* **Module 2:** You established strict governance by defining Token Limits via Subscriptions and explicitly authorizing access for different business units.
+* **Module 3:** You deployed large language models using the highly scalable `LLMInferenceService` architecture, securely publishing them to a multi-tenant self-service catalog.
+* **Module 4:** You empowered developers to securely query those models while simultaneously instrumenting the platform to track every token for financial accountability.
+
+ChocoTech no longer operates a raw, ungoverned AI cluster. You have built a highly secure, financially accountable, and multi-tenant Enterprise AI Factory!

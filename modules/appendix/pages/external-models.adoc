@@ -1,0 +1,127 @@
+= Integrating External Cloud Models (Technology Preview)
+
+====
+WARNING: This section is under development
+====
+
+ChocoTech's R&D team has a new requirement: they need access to OpenAI's `gpt-4o` to parse highly complex, unstructured chemical supply chain documents. 
+
+Historically, developers would bypass the platform team, use a corporate credit card to generate an OpenAI API key, and embed it directly into their application code. This creates a "Shadow AI" problem: Finance cannot track who is spending the money, Security cannot rotate the compromised keys, and a single runaway script can rack up thousands of dollars in a weekend.
+
+In OpenShift AI 3.4, you can solve this by routing inference requests to external cloud providers (like OpenAI, Anthropic, AWS Bedrock, or Google Vertex AI) through the exact same Models-as-a-Service (MaaS) gateway you use for locally deployed models.
+
+[IMPORTANT]
+====
+**Technology Preview** +
+External models for Models-as-a-Service is currently available in Red Hat OpenShift AI as a Technology Preview feature. It provides early access to upcoming features but is not supported with Red Hat production service level agreements (SLAs).
+====
+
+== 1. The Two-Tier Authentication Architecture
+
+External model access in MaaS uses a secure, two-tier authentication pattern:
+
+1. **User Authentication (The Developer):** The developer authenticates to the MaaS gateway using their standard ChocoTech `sk-oai-` API key. MaaS validates their subscription limits just like an internal model.
+2. **Provider Authentication (The Platform):** MaaS intercepts the request, strips the user's API key, and automatically injects a master provider API key (stored securely in a Kubernetes secret) before forwarding the request to OpenAI. 
+
+Because all users share the same master provider API key behind the scenes, you must ensure the token limits you configure in your MaaS Subscriptions prevent your users from collectively breaching the aggregate token limit imposed by the external provider.
+
+== Exercise 1: Storing the Master Credentials
+
+First, you must store the external provider's API key in a secure Kubernetes secret. MaaS will use this secret to authenticate requests to the external model.
+
+Execute the following command, replacing `<your-openai-api-key>` with a test key (or a dummy string if you are just testing the configuration):
+
+[source,role="execute"]
+----
+oc create secret generic openai-master-key \
+  --from-literal api-key="<your-openai-api-key>" \
+  -n redhat-ods-applications
+----
+
+== Exercise 2: Deploy the ExternalModel Resource
+
+Next, you will create the `ExternalModel` custom resource. This tells the MaaS controller how to route the traffic and which secret to use for authentication. 
+
+*(Note: When you create this resource, the MaaS controller automatically provisions the underlying networking resources, including the Service, HTTPRoute, ServiceEntry, and DestinationRule)*
+
+Apply the following manifest to your cluster:
+
+[source,role="execute"]
+----
+cat <<EOF | oc apply -f -
+apiVersion: maas.opendatahub.io/v1alpha1
+kind: ExternalModel
+metadata:
+  name: gpt-4o-external
+  namespace: redhat-ods-applications
+spec:
+  provider: openai
+  endpoint: api.openai.com
+  targetModel: gpt-4o
+  credentialRef:
+    name: openai-master-key
+EOF
+----
+
+== Exercise 3: Governing the External Model
+
+Just like our internal `llama-3-8b` and `qwen3-4b` models, creating the reference object does not automatically grant anyone access. We must append this external model to our existing **Silver Plan** (R&D) governance manifests.
+
+1. **Update the Silver Subscription** to grant a token quota:
++
+[source,role="execute"]
+----
+oc patch maassubscription silver-plan -n models-as-a-service --type=json -p='[
+  {"op": "add", "path": "/spec/modelRefs/-", "value": {
+    "name": "gpt-4o-external",
+    "namespace": "redhat-ods-applications",
+    "tokenRateLimits": [
+      {"limit": 5000, "window": "1m"}
+    ]
+  }}
+]'
+----
+
+2. **Update the Silver AuthPolicy** to grant physical gateway access:
++
+[source,role="execute"]
+----
+oc patch maasauthpolicy silver-access -n models-as-a-service --type=json -p='[
+  {"op": "add", "path": "/spec/modelRefs/-", "value": {
+    "name": "gpt-4o-external",
+    "namespace": "redhat-ods-applications"
+  }}
+]'
+----
+
+== Exercise 4: The Developer Experience
+
+Let's test the integration. Log in as a developer on the R&D team using a **Silver Plan** API key. 
+
+Retrieve your Gateway hostname and query the available models:
+
+[source,role="execute"]
+----
+export MAAS_API_KEY="sk-oai-..." # Paste your Silver key here
+export ROUTE_HOST=$(oc get route openshift-ai-inference -n openshift-ingress -o jsonpath='{.spec.host}')
+
+curl -s -k -H "Authorization: Bearer $MAAS_API_KEY" \
+  https://${ROUTE_HOST}/maas-api/v1/models | jq
+----
+
+You will now see `gpt-4o-external` listed right alongside your internal models! The developer can immediately execute a chat completion request against the MaaS gateway:
+
+[source,role="execute"]
+----
+curl -s -k -X POST https://${ROUTE_HOST}/maas-api/v1/chat/completions \
+  -H "Authorization: Bearer $MAAS_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "gpt-4o-external",
+    "messages": [{"role": "user", "content": "Hello, external world!"}]
+  }'
+----
+
+If the request is successful, the response confirms that MaaS seamlessly routed your request to the external provider, injected the master credentials, and returned the completion. 
+
+ChocoTech has successfully eliminated Shadow AI. Finance can now track OpenAI spending on the exact same CSV chargeback report used for internal GPU consumption!

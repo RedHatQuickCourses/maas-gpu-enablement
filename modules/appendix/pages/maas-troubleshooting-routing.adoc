@@ -1,0 +1,110 @@
+= Appendix A: Deep Dive - MaaS Gateway Architecture and Troubleshooting
+
+====
+WARNING: This section is under development
+====
+
+For platform engineers, the most complex aspect of deploying Models-as-a-Service (MaaS) is establishing the Gateway API routing. When developers report that their inference scripts are failing, or the dashboard Playground is spinning endlessly, the issue almost always lies in the network routing.
+
+This appendix provides a deep dive into how traffic physically flows through the OpenShift AI architecture and provides the exact troubleshooting steps required to resolve the most common networking failures.
+
+== Part 1: The MaaS Traffic Flow Architecture
+
+To successfully troubleshoot MaaS, you must understand the journey of an API request. When a developer executes a `curl` command against a model endpoint, the request traverses multiple layers of Kubernetes infrastructure.
+
+
+1. **The OpenShift Router (`openshift-ingress`):** The request first hits the cluster's external edge. The OpenShift Router intercepts the HTTPS request based on the `.spec.host` defined in the `openshift-ai-inference` Route. 
+2. **The Gateway API (`maas-default-gateway`):** The router forwards the traffic to the Gateway API. This is not a legacy OpenShift Route; it is the modern Kubernetes Gateway API (`gateway.networking.k8s.io`). 
+3. **The Policy Enforcement Point (Kuadrant):**
+   Before the Gateway allows the traffic to proceed, it pauses the request and consults Kuadrant.
+   * **Authentication (Authorino):** Validates the `sk-oai-` Bearer token and confirms the user's OpenShift group membership.
+   * **Rate Limiting (Limitador):** Checks the Redis cache to ensure the user has not exceeded their `MaaSSubscription` token limits.
+4. **The Inference Engine (`KServe`):**
+   If Kuadrant approves the request, the Gateway forwards the payload to the `LLMInferenceService` pod running `vLLM` or `llm-d`, which finally executes the matrix multiplication on the GPU and returns the response.
+
+If any link in this chain breaks, the user receives an error.
+
+== Part 2: Common Gateway Failures and Resolutions
+
+Based on real-world deployments, here are the three most common MaaS Gateway failures and exactly how to fix them.
+
+=== Issue 1: The "503 Service Unavailable" Dead End
+
+**Symptom:** Developers execute a `curl` command against what they believe is the Gateway URL (e.g., `https://maas.apps.example.com`), but they receive a massive block of HTML from OpenShift stating **"Application is not available: The host doesn't exist."**
+
+**The Root Cause:** Platform engineers often manually guess or hardcode the Gateway URL. However, if the `openshift-ai-inference` Route in the `openshift-ingress` namespace was created without a hardcoded `host:` parameter, the OpenShift Router auto-generates a unique hostname (e.g., `openshift-ai-inference-openshift-ingress.apps...`). The router physically does not know what `maas.apps...` is.
+
+**The Fix:**
+You must dynamically query OpenShift for the exact Auto-Generated Route Host, and instruct developers to use that specific URL.
+
+[source,role="execute"]
+----
+# Retrieve the ACTUAL Gateway Route host
+export ROUTE_HOST=$(oc get route openshift-ai-inference -n openshift-ingress -o jsonpath='{.spec.host}')
+
+# Use this dynamic host for all API calls
+curl -k https://${ROUTE_HOST}/maas-api/v1/models \
+  -H "Authorization: Bearer $MAAS_API_KEY"
+----
+
+=== Issue 2: Dashboard Proxy "Error Loading Components"
+
+**Symptom:** You deploy the MaaS infrastructure, but when you navigate to **Gen AI Studio -> API Keys** in the dashboard, the UI crashes with a red "Error loading components" banner.
+
+**The Root Cause:** The OpenShift AI dashboard uses a Backend-For-Frontend (BFF) proxy. Even if the external OpenShift Router is working perfectly, the dashboard pod itself does not inherently know where the Gateway API is located on the internal network. It loops back on itself and crashes.
+
+**The Fix:**
+You must explicitly inject the `MAAS_API_URL` environment variable directly into the dashboard deployment.
+
+[source,role="execute"]
+----
+# Capture the external Route URL
+export ROUTE_HOST=$(oc get route openshift-ai-inference -n openshift-ingress -o jsonpath='{.spec.host}')
+
+# Inject the URL into the Dashboard proxy
+oc set env deployment/rhods-dashboard -n redhat-ods-applications MAAS_API_URL=https://${ROUTE_HOST}/maas-api
+
+# Force a restart of the dashboard pods
+oc rollout status deployment/rhods-dashboard -n redhat-ods-applications
+----
+
+=== Issue 3: Gateway TLS Certificate Missing (`ResolvedRefs: False`)
+
+**Symptom:** The Gateway is deployed, but no traffic routes successfully. When checking the Gateway status, you see a `ResolvedRefs: False` condition complaining about an `InvalidCertificateRef`.
+
+**The Root Cause:**
+The MaaS Gateway requires a valid TLS certificate to terminate HTTPS connections. If the secret `maas-gateway-cert` is missing from the `openshift-ingress` namespace, the HTTPS listener fails to initialize.
+
+**The Fix:**
+You must generate a self-signed TLS certificate and attach it to the Gateway.
+
+[source,role="execute"]
+----
+# 1. Get the cluster domain
+export CLUSTER_DOMAIN=$(oc get ingresses.config.openshift.io cluster -o jsonpath='{.spec.domain}')
+
+# 2. Generate a self-signed certificate
+openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+  -keyout /tmp/maas-gateway.key \
+  -out /tmp/maas-gateway.crt \
+  -subj "/CN=maas.apps.${CLUSTER_DOMAIN}" \
+  -addext "subjectAltName=DNS:maas.apps.${CLUSTER_DOMAIN}"
+
+# 3. Create the TLS Secret
+oc create secret tls maas-gateway-cert \
+  --cert=/tmp/maas-gateway.crt \
+  --key=/tmp/maas-gateway.key \
+  -n openshift-ingress
+
+# 4. Wait for the Gateway controller to reconcile (approx 30 seconds)
+----
+
+Verify the fix by checking the listener status. It should now report `"status": "True"`.
+
+[source,role="execute"]
+----
+oc get gateway maas-default-gateway -n openshift-ingress \
+  -o jsonpath='{.status.listeners[0].conditions[?(@.type=="ResolvedRefs")]}'
+----
+
+By understanding the traffic flow and keeping these three troubleshooting strategies nearby, you can resolve the vast majority of network routing issues encountered in Models-as-a-Service deployments.

@@ -8,16 +8,11 @@
 WARNING: This section is under development
 ====
 
+With the governance fences securely built at the network edge, it is time to bring ChocoTech's AI factory online. The R&D and Quality Control teams have submitted an urgent request: "We need access to Llama-3 8B for recipe optimization and defect analysis." 
 
-With the governance fences securely built, it is time to bring the AI factory online. 
+However, they do not want to manage GPU drivers, Kubernetes manifests, or API routing. They just want an endpoint.
 
-ChocoTech's R&D team has submitted an urgent request. "We need to deploy the Llama-3 8B model for recipe optimization," the lead data scientist explains. "But we don't want to manage GPU drivers, Kubernetes manifests, or serving runtimes. Can this new MaaS platform handle the infrastructure for us?"
-
-If ChocoTech used a cheap public API for this, the R&D team would be forced to send highly proprietary recipe formulations outside the corporate firewall. Furthermore, renting intelligence externally means their existing, expensive GPU hardware continues to sit idle. 
-
-By deploying models directly onto Red Hat OpenShift AI 3.4, ChocoTech keeps 100% of its intellectual property secure. Even better, OpenShift AI 3.4 utilizes a centralized governance architecture using Kubernetes custom resources, which means the entire model serving architecture supports declarative configuration management via GitOps. 
-
-Your task is to deploy these generative AI models, ensure they integrate with the MaaS Gateway, and properly link them to the Gold/Silver/Bronze subscriptions you built in Module 2.
+Your task is to deploy these generative AI models onto your GPU nodes, ensure they integrate with the MaaS Gateway you built in Module 1, and properly link them to the Gold, Silver, and Bronze subscriptions you defined in Module 2.
 
 toc::[]
 
@@ -25,33 +20,33 @@ toc::[]
 
 By the end of this module, you will be able to:
 
-* Evaluate models based on architecture (dense vs. sparse) and match ChocoTech department requirements to the appropriate model types.
-* Explain the architectural difference between a governed `LLMInferenceService` deployment and an ungoverned Legacy deployment.
-* Understand how `MaaSModelRef` custom resources identify inference servers on the cluster.
-* Explain the two-tier authentication and token limit risks associated with routing requests to External Models.
-* Execute the critical post-deployment governance steps to link new models to existing `MaaSSubscription` and `MaaSAuthPolicy` resources.
+* Explain the architectural difference between a governed `LLMInferenceService` deployment and an ungoverned legacy deployment.
+* Provision model serving runtimes using `llm-d` (for distributed inference) or `vLLM`.
+* Understand how the "Publish as MaaS" function automatically generates `MaaSModelRef` custom resources to register models with the gateway.
+* Execute the critical post-deployment governance steps to link newly deployed models to existing `MaaSSubscription` and `MaaSAuthPolicy` resources.
+* Understand the two-tier authentication architecture required for routing requests to External Models (Technology Preview).
 
 ---
 
 == The deployment strategy
 
-Deploying a model and making it accessible through MaaS is a multi-step process. In this module, you will execute the following strategy to ensure complete governance:
+Deploying a model and making it accessible through MaaS is a strict, multi-step process. In this module, you will execute the following strategy to ensure complete governance:
 
 [cols="1a,2a",options="header",frame="all",grid="rows"]
 |===
 | Phase | Action
 
-| **1. Model Selection & Sizing**
-| Analyze the hardware requirements for Llama-3 8B and Nemotron 8B, determining whether single-GPU deployment or multi-node tensor parallelism is required.
+| **1. Hardware & Runtime Sizing**
+| Analyze the hardware requirements for your target models and select the appropriate serving runtime (`llm-d` or `vLLM`). 
 
 | **2. The Deployment**
-| Provision the `LLMInferenceService` custom resources to utilize supported runtimes. You will ensure the legacy deployment method is strictly avoided to prevent bypassing the MaaS gateway.
+| Provision the model using the `LLMInferenceService` architecture. You will explicitly avoid the legacy deployment method to ensure the model does not bypass the MaaS gateway.
 
 | **3. Registration (`MaaSModelRef`)**
-| Understand how the `MaaSModelRef` resource is automatically generated to notify the MaaS system of the model's existence.
+| Use the "Publish as MaaS" feature to automatically generate a `MaaSModelRef` custom resource, notifying the MaaS platform that the model is ready for governance.
 
 | **4. Post-Deployment Governance**
-| A model published to MaaS is not immediately accessible. You will manually update your existing Silver and Bronze `MaaSSubscription` and `MaaSAuthPolicy` resources to append the newly generated model reference.
+| A model published to MaaS is not immediately accessible. You will manually update your existing ChocoTech Subscriptions and AuthPolicies to append the newly generated model reference, officially closing the governance loop.
 |===
 
-By the end of this module, ChocoTech's business units will finally have self-service, heavily governed access to state-of-the-art open-source models.
+By the end of this module, ChocoTech's business units will finally have self-service, heavily governed access to state-of-the-art AI models.

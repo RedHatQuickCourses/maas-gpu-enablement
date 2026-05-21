@@ -1,24 +1,21 @@
 = 3.1: Model selection, hardware sizing, and serving strategy
 
-
 ====
 WARNING: This section is under development
 ====
 
+ChocoTech's Platform Engineering team has received competing generative AI requests from four different departments. As a platform engineer, you cannot simply provision GPUs and deploy models blindly. To prevent wasting expensive GPU resources, you must evaluate models based on their architecture and capabilities before deploying them. 
 
-Before writing a single line of YAML to deploy a model, a Platform Engineer must answer three critical questions: 
+Before you write a single line of YAML, you must answer three critical questions:
 
- 
- * *What model architecture does the business actually need?*, 
- * *Will this model physically fit on our GPUs?*, 
- * *How do we ensure the deployment inherits our governance rules?* 
-
-ChocoTech's Platform Engineering team has received competing requests from four departments. To prevent wasting expensive GPU resources, we must evaluate models based on their architecture and capabilities before deploying them.
+* *What model architecture does the business actually need?* 
+* *Will this model physically fit on our GPUs?* 
+* *How do we ensure the deployment inherits our Models-as-a-Service (MaaS) governance rules?* 
 
 == 1. Evaluating model architecture: Dense vs. Sparse
 
+Model architecture is not just a data science concern; it fundamentally impacts your GPU memory consumption, inference speed, and deployment complexity.
 
-Model architecture fundamentally impacts GPU memory consumption, inference speed, and deployment complexity. 
 
 [cols="1a,2a",options="header",frame="all",grid="rows"]
 |===
@@ -26,25 +23,25 @@ Model architecture fundamentally impacts GPU memory consumption, inference speed
 
 | **Dense Models**
 | 
-* Every parameter is active for every token.
-* Provides a predictable memory footprint and consistent inference latency.
-* Offers a simpler deployment architecture.
+* Every single parameter in the neural network is active for every token generated.
+* This provides a highly predictable memory footprint and consistent inference latency, making capacity planning easier.
+* It offers a much simpler deployment architecture for platform teams.
 * **Examples:** Llama 2, Llama 3, Mistral 7B, Granite 3.0.
 
 | **Sparse Models (Mixture of Experts)**
-| 
-* Activates only a subset of parameters per token using a routing mechanism.
-* Features more total parameters with less compute required per token.
-* Results in variable latency depending on routing decisions.
-* Requires complex deployment with expert-parallelism.
+|
+* Activates only a specific subset of parameters per token using a complex routing mechanism.
+* Features a massively higher total parameter count, but requires less compute power per token.
+* Results in variable latency depending on which "expert" pathways the routing mechanism chooses.
+* Requires a highly complex deployment strategy involving expert-parallelism.
 * **Examples:** Mixtral 8x7B, DBRX, Grok-1.
 |===
 
-**The ChocoTech Decision:** For the initial MaaS deployment, ChocoTech is standardizing on **dense models** (like Llama-3 8B) to minimize deployment complexity and ensure predictable performance across all four departments.
+**The ChocoTech Decision:** For the initial MaaS deployment, ChocoTech is standardizing on **dense models** (specifically Llama-3 8B). This minimizes deployment complexity and ensures predictable performance guarantees across all four departments.
 
 == 2. Evaluating capabilities: Reasoning vs. Non-Reasoning
 
-Beyond architecture, capabilities determine suitability for specific workloads and impact computational costs.
+Beyond the underlying architecture, a model's capabilities determine its suitability for specific workloads and directly impact your computational costs. 
 
 [cols="1a,2a",options="header",frame="all",grid="rows"]
 |===
@@ -52,80 +49,86 @@ Beyond architecture, capabilities determine suitability for specific workloads a
 
 | **Reasoning Models**
 | 
-* Generates intermediate reasoning steps before providing a final answer.
-* Results in higher token output per query (reasoning tokens + answer).
-* Exhibits a slower time-to-first-token (TTFT).
-* Ideal for complex problem-solving, scientific analysis, and logic puzzles.
+* Generates "invisible" intermediate reasoning steps before providing a final answer to the user.
+* Results in a significantly higher token output per query (reasoning tokens + final answer tokens).
+* Exhibits a slower time-to-first-token (TTFT) because the model "thinks" before it types.
+* Ideal for complex problem-solving, scientific analysis, and logic puzzles where accuracy outweighs speed.
 
 | **Non-Reasoning Models**
-| 
+|
 * Generates direct answers without explicit intermediate steps.
-* Results in lower token output per query and faster time-to-first-token.
-* More cost-effective at scale for straightforward tasks.
+* Results in lower token output per query and a much faster time-to-first-token (TTFT).
+* Highly cost-effective at scale for straightforward, conversational tasks.
 |===
 
 === The ChocoTech Department Mapping
 
-Based on these assessments, here is the model strategy for ChocoTech's business units:
+Based on these technical assessments, you map the following model strategy for ChocoTech's business units:
 
 [cols="1,1,1,2",options="header",frame="all",grid="rows"]
 |===
 | Department | Architecture | Reasoning? | Rationale
 
 | **Quality Control**
-| Dense
+| Dense 
 | Yes 
-| Defect analysis requires multi-step reasoning and detailed explanations. Accuracy justifies the higher token cost.
+| Defect analysis requires multi-step reasoning and detailed explanations. The high demand for accuracy justifies the higher token cost.
 
 | **R&D**
-| Dense 
-| Conditional 
-| Recipe optimization benefits from reasoning, but can fallback to standard generation for simpler tasks.
+| Dense
+| Conditional
+| Recipe optimization heavily benefits from reasoning, but the team can fallback to standard generation for simpler tasks.
 
 | **Marketing**
 | Dense 
 | No 
-| Content generation is straightforward. Speed and cost-effectiveness matter more than deep reasoning.
+| Content generation is straightforward. Speed and cost-effectiveness matter significantly more to this team than deep reasoning.
 
 | **Supply Chain**
 | Dense 
 | No 
-| Vendor chatbot needs fast responses for basic inquiries. Non-reasoning is sufficient for FAQs.
+| Their vendor chatbot requires ultra-fast responses for basic inquiries. Non-reasoning models are perfectly sufficient for FAQs.
 |===
 
 == 3. The Hardware Math: Sizing the Model
 
+Once a model is selected, you must ensure it physically fits on your infrastructure. A common mistake is assuming that a model's size correlates to standard disk storage, rather than Video RAM (VRAM). 
 
-Once a model is selected, you must ensure it fits your infrastructure. A common mistake is assuming model size correlates to disk storage rather than Video RAM (VRAM). 
 
-As a rule of thumb, when running a dense Large Language Model at standard 16-bit precision (FP16 or BF16), **each parameter requires approximately 2 bytes of VRAM**.
+As a rule of thumb, when running a dense Large Language Model at standard 16-bit precision (FP16 or BF16), **each parameter requires approximately 2 bytes of VRAM**. Let's calculate the footprint for Llama-3 8B:
 
-* **Model Weights (Llama-3 8B):** 8 Billion Parameters × 2 bytes = **~16 GB VRAM**.
-* **KV Cache:** Generative AI requires memory to store conversational context. Allocate an additional **2-4 GB VRAM**.
+* **Model Weights:** 8 Billion Parameters × 2 bytes = **~16 GB VRAM**.
+* **KV Cache:** Generative AI requires active memory to store conversational context during inference; you must allocate an additional **2-4 GB VRAM** for this cache.
 * **Total Required:** **~20-24 GB VRAM**.
 
-This model fits comfortably on a single NVIDIA A10 (24GB) or A100 GPU.  This assumes that that context lengeth will be reduced from the maximum limit to fit the model on the 24GB GPU. 
+This math proves that the Llama-3 8B model fits comfortably on a single NVIDIA A10 (24GB) or A100 GPU. However, this assumes that the context length will be reduced from its maximum limit to ensure it fits safely on the 24GB GPU.
 
+====
+**Dealing with Massive Models (Quantization)**
 
-If ChocoTech wanted to deploy a massive 70B parameter model, it would require ~140GB of VRAM. To mitigate this, we can use **Quantization**:
+If ChocoTech wanted to deploy a massive 70B parameter model, it would require ~140GB of VRAM. To mitigate this without buying massive GPU clusters, platform engineers use **Quantization** (compressing the model's precision):
 
-* **INT8 quantization:** Reduces memory by approximately 50% with minimal quality degradation.
-* **INT4 quantization:** Reduces memory by approximately 75%, but with noticeable quality degradation for reasoning tasks.
+* **INT8 quantization:** Reduces memory consumption by approximately 50% with minimal quality degradation.
+* **INT4 quantization:** Reduces memory consumption by approximately 75%, but comes with noticeable quality degradation, particularly for complex reasoning tasks.
+====
 
 == 4. The Serving Strategy: Why `llm-d`?
 
-To successfully govern a model in OpenShift AI 3.4, it must be deployed using the `LLMInferenceService` architecture. This architecture is specifically designed for large language models and integrates directly with the MaaS gateway for subscription-based access control. 
+To successfully govern a model in OpenShift AI 3.4, it **must** be deployed using the `LLMInferenceService` architecture. This architecture is specifically designed for large language models and integrates directly with the MaaS gateway you built in Module 1 to enforce subscription-based access control. 
 
-The legacy deployment method uses traditional KServe `InferenceService` resources with serving runtimes, which do not support MaaS governance features. 
+If you use the legacy deployment method (traditional KServe `InferenceService` resources with standard serving runtimes), you will completely bypass the MaaS governance features.
 
 === What is `llm-d`?
 
-`llm-d` (Large Language Model Distributed) is a specialized Kubernetes operator designed to orchestrate inference across multiple accelerators. It uses the Leader Worker Set (LWS) Operator, which is mandatory for orchestrating models that exceed single-node VRAM capacity. 
+`llm-d` (Large Language Model Distributed) is a specialized Kubernetes operator designed to orchestrate inference across multiple accelerators. 
 
-Even if you are only deploying Llama-3 8B onto a single GPU today, using `llm-d` future-proofs your architecture. When ChocoTech eventually deploys a 70B parameter model, `llm-d` seamlessly handles the tensor parallelism required to split that model across multiple GPUs using the LeaderWorkerSet architecture.
+
+It utilizes the Leader Worker Set (LWS) Operator, which is absolutely mandatory for orchestrating models that exceed single-node VRAM capacity. Even if you are only deploying Llama-3 8B onto a single GPU today, using `llm-d` future-proofs your architecture. When ChocoTech eventually deploys that 70B parameter model, `llm-d` seamlessly handles the tensor parallelism required to split that model across multiple GPUs using the LeaderWorkerSet architecture.
 
 [NOTE]
-.vLLM Runtime (Technology Preview)
-MaaS supports models served with `llm-d` distributed inference or `vLLM` runtimes. However, `vLLM` runtime support for Models-as-a-Service is a Technology Preview feature. If you plan to use it, you must explicitly enable the `spec.dashboardConfig.vLLMDeploymentOnMaaS: true` feature flag in the `OdhDashboardConfig` custom resource.
+====
+**vLLM Runtime (Technology Preview)** +
+MaaS supports models served with either `llm-d` distributed inference or `vLLM` runtimes. However, `vLLM` runtime support for Models-as-a-Service is currently a Technology Preview feature. If you plan to use it in your environment, you must explicitly enable the `spec.dashboardConfig.vLLMDeploymentOnMaaS: true` feature flag in the `OdhDashboardConfig` custom resource.
+====
 
 Now that we have verified the business requirements, calculated the hardware limits, and selected the appropriate runtime to guarantee governance, proceed to the next section to write the deployment manifest.
