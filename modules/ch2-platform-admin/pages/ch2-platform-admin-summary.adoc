@@ -15,9 +15,9 @@ You have successfully transformed ChocoTech's OpenShift AI platform from a raw, 
 
 Test your understanding of the subscription governance architecture before moving on:
 
-1. **Why are MaaS Subscription policies created before model deployment, rather than after?**
+1. **Why is there no risk of "ungoverned access" if you deploy a model before creating its MaaS Subscription?**
 +
-MaaS Subscription policies must exist before deployment so the MaaS operator and Kuadrant can enforce token limits and quotas from the very first inference request. Creating policies after deployment would leave a window of uncontrolled, ungoverned access.
+OpenShift AI operates on a default-deny security posture at the network edge. When you deploy a model and check "Publish as MaaS", the platform creates a `MaaSModelRef` object, but it does not grant any access. Users are strictly required to have both a subscription (to define token quotas) and an authorization policy (to grant API gateway access). Until an administrator explicitly links the model to a group via these policies, all incoming requests will be automatically rejected by Authorino with a `403 Forbidden` error.
 
 2. **What happens if a Bronze subscription user (Marketing) tries to exceed 2,000 tokens per minute?**
 +
