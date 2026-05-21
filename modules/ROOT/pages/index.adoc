@@ -1,20 +1,18 @@
 = Models as a Service: Breaking the GPU Silos on OpenShift AI 3.4
 
-Welcome to this *Red Hat OpenShift AI 3.4 - Models as a Service* QuickCourse! 
+Welcome to this *Red Hat OpenShift AI 3.4 - Models as a Service* QuickCourse!
 
 ---
 
-The CIO at ChocoTech Industries just called an emergency meeting.
-
-"We’ve invested over $500,000 in GPU infrastructure across four teams," she says, reviewing the quarterly report. "Yet our R&D team is waiting three weeks for capacity while Quality Control’s GPUs sit idle 60% of the time. This doesn’t make sense."
+The CIO at ChocoTech Industries just called an emergency meeting. "We’ve invested over $500,000 in GPU infrastructure across four teams," she says, reviewing the quarterly report. "Yet our R&D team is waiting three weeks for capacity while Quality Control’s GPUs sit idle 60% of the time. This doesn’t make sense."
 
 ChocoTech needs to align their AI Strategy to optimize for GPU utilization across business units, moving to a centralized, governed platform where all teams can access AI models efficiently.
 
 == The MaaS Mandate
 
-Designed for Platform Engineers and Developers, this course provides the steps to build a governed Models as a Service (MaaS) ecosystem on OpenShift AI 3.4. We skip the trial-and-error of figuring out which operators and registries to install. Instead - you will learn how to immediately transform fragmented, isolated hardware into a fairly scheduled, multi-tenant shared service, empowering your business units to deploy agentic AI smoothly, securely, and at scale.
+Designed for Platform Engineers and Developers, this course provides the steps to build a governed Models-as-a-Service (MaaS) ecosystem on OpenShift AI 3.4. We skip the trial-and-error of figuring out which operators and registries to install. 
 
-By the end of this course, you will be equipped to empower your lines of business with self-service models to build agentic AI applications smoothly and securely.
+Instead, you will learn how to immediately transform fragmented, isolated hardware into a fairly scheduled, multi-tenant shared service, empowering your business units to deploy agentic AI smoothly, securely, and at scale.
 
 [NOTE]
 ====
@@ -25,25 +23,24 @@ By the end of this course, you will be equipped to empower your lines of busines
 
 To get the most out of this QuickCourse, you should come to the table with:
 
-* Red Hat OpenShift administration experience (version 4.20 or later)
+* Red Hat OpenShift administration experience (version 4.19.9 or later) 
 * Basic Kubernetes operator management knowledge
 * Familiarity with core GPU concepts and generic GPU enablement
 * An understanding of API concepts and REST principles
-* Basic command-line experience
-* Networking - Routing traffic via Gateway API to the Mass Endpoint. 
+* Basic command-line and Python experience
+* Networking fundamentals (Routing traffic via Gateway API)
 
 == What You'll Learn
 
 In this hands-on QuickCourse, you will:
 
-* **MaaS Strategy**: Understand how Models as a Service solves complex GPU resource allocation challenges.
-* **Architect a Hub**: Design and implement a centralized model hub featuring governed, token-based consumption.
-* **Configure and Deploy**: Set up MaaS on OpenShift AI using operators and CRDs, and deploy generative AI models (using llm-d, vLLM, and KServe) for distributed inference.
-* **Publish for Self-Service**: Publish models to the OpenShift AI `ModelsAsService` catalog, complete with subscription-based access permissions.
-* **Enforce Governance**: Implement subscription service limits and rate limiting using Kuadrant.
-* **Monitor and Report**: Generate chargeback reports and track GPU utilization metrics using Grafana.
-* **Integrate Seamlessly**: Connect AI models into applications using OpenAI-compatible APIs with robust retry logic.
-
+* **MaaS Strategy**: Understand how Models-as-a-Service solves complex GPU resource allocation and "Shadow AI" challenges.
+* **Architect a Hub**: Design and implement a centralized model hub featuring governed, token-based consumption via Kuadrant and Authorino.
+* **Configure and Deploy**: Set up MaaS using operators and deploy generative AI models leveraging the highly scalable `LLMInferenceService` architecture.
+* **Integrate External Models**: Safely route traffic to external cloud providers (like OpenAI) using a two-tier authentication architecture.
+* **Enforce Governance**: Implement strict token quotas and rate limits using `MaaSSubscription` and `MaaSAuthPolicy` custom resources.
+* **Monitor and Report**: Enable telemetry, visualize API consumption, and export automated chargeback reports for financial accountability.
+* **Integrate Seamlessly**: Connect AI models into downstream applications using OpenAI-compatible APIs with robust exponential backoff retry logic.
 
 == Required Operators and Components
 [IMPORTANT]
@@ -80,7 +77,7 @@ MaaS requires the following operators and infrastructure components:
 | ✅ Required
 
 | **PostgreSQL Database**
-| N/A
+| 14+
 | `redhat-ods-applications`
 | ✅ Required
 
@@ -104,20 +101,19 @@ MaaS requires the following operators and infrastructure components:
 ⭕ Optional for enhanced capabilities
 ====
 
-
 == Estimated Time & Agenda
 
-Plan for approximately **3 to 4 hours** to complete the full journey. 
+Plan for approximately **3 to 4 hours** to complete the full journey.
 
-. **MaaS Architecture** (30 mins)
-. **MaaS Access Control & Governance** (40 mins)
-. **Model Deployment** (55 mins)
-. (coming soon)**MaaS Governance, Observability, and Chargeback** (50 mins)
-. (coming soon)**API Integration and Consumer Experience** (40 mins)
+. **Module 1: Architecture & Foundation** (45 mins)
+. **Module 2: Policies & Governance** (45 mins)
+. **Module 3: Model Deployment & Catalog** (60 mins)
+. **Module 4: Observability, Chargeback, and Application Integration** (50 mins)
+. **Appendix A: Deep Dive - Gateway Routing & Troubleshooting** (Reference)
 
 [TIP]
 ====
-**Pacing Yourself:** You can work through the modules at your own pace. We highly recommend to **shut down the expensive GPU lab environment** between active sessions!
+**Pacing Yourself:** You can work through the modules at your own pace. We highly recommend **shutting down the expensive GPU lab environment** between active sessions!
 ====
 
 == Follow-up Resources
@@ -143,10 +139,15 @@ Content Services Architect
 * **Content updates**: Submit GitHub issues via the https://github.com/RedHatQuickCourses/maas-gpu-enablement.git[QuickCourse repository., window=_blank].
 
 **Acknowledgments**: 
-This QuickCourse incorporates expert guidance from the Red Hat OpenShift AI business unit and product engineering architects working with enterprise AI deployments. Special thanks to **Taylor Jordan Smith**, **James Harmison**, and  **Shumaila Yaseen**.
+This QuickCourse incorporates expert guidance from the Red Hat OpenShift AI business unit and product engineering architects working with enterprise AI deployments. 
+
+Special thanks to: +
+**Taylor Jordan Smith**, +
+**James Harmison**, +
+**Anna Swicegood**, +
+**Caitlyn Rymarchyk**, +
+**Shumaila Yaseen**.
 
 == Let's Get Started!
 
-Ready to dive in? Click on **QuickCourse Overview** in the navigation to begin your learning journey. 
-
-You'll start by meeting **ChocoTech Industries**—a rapidly growing chocolate manufacturer looking for a solution to their GPU silo crisis. Let's help them build a better AI infrastructure!
+Ready to dive in? You'll start by meeting **ChocoTech Industries**—a rapidly growing chocolate manufacturer looking for a solution to their GPU silo crisis. Let's help them build a better AI infrastructure!

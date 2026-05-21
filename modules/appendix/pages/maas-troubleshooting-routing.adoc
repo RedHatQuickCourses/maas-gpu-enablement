@@ -1,4 +1,4 @@
-= Appendix A: Deep Dive - MaaS Gateway Architecture and Troubleshooting
+= MaaS Gateway Architecture and Troubleshooting
 
 ====
 WARNING: This section is under development
