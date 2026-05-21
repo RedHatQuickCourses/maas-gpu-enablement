@@ -3,9 +3,9 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>2.2: Establishing the organizational foundation :: Models as a Service Breaking the GPU Silos on OpenShift AI 3.4</title>
-    <link rel="prev" href="ch2-platform-admin-02.html">
-    <link rel="next" href="ch2-platform-admin-04.html">
+    <title>Integrating External Cloud Models (Technology Preview) :: Models as a Service Breaking the GPU Silos on OpenShift AI 3.4</title>
+    <link rel="prev" href="#index.adoc">
+    <link rel="next" href="maas-troubleshooting-routing.html">
     <meta name="generator" content="Antora 3.1.3">
 <link rel="stylesheet" href="../../../_/css/site.css">
 <link rel="stylesheet" href="../../../_/css/vendor/tabs.css">
@@ -97,43 +97,43 @@
 <ul class="nav-list">
   <li class="nav-item" data-depth="1">
     <button class="nav-item-toggle"></button>
-    <a class="nav-link" href="ch2-platform-admin-01.html" data-progress-path="/maas-gpu-enablement/3.4/ch2-platform-admin/ch2-platform-admin-01.html">
+    <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-01.html" data-progress-path="/maas-gpu-enablement/3.4/ch2-platform-admin/ch2-platform-admin-01.html">
       <span class="nav-progress-mark" aria-hidden="true">✓</span>
       2: MaaS Access Control &amp; Governance
     </a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="ch2-platform-admin-02.html" data-progress-path="/maas-gpu-enablement/3.4/ch2-platform-admin/ch2-platform-admin-02.html">
+    <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-02.html" data-progress-path="/maas-gpu-enablement/3.4/ch2-platform-admin/ch2-platform-admin-02.html">
       <span class="nav-progress-mark" aria-hidden="true">✓</span>
       2.1: Subscription-based governance
     </a>
   </li>
-  <li class="nav-item is-current-page" data-depth="2">
-    <a class="nav-link" href="ch2-platform-admin-03.html" data-progress-path="/maas-gpu-enablement/3.4/ch2-platform-admin/ch2-platform-admin-03.html">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-03.html" data-progress-path="/maas-gpu-enablement/3.4/ch2-platform-admin/ch2-platform-admin-03.html">
       <span class="nav-progress-mark" aria-hidden="true">✓</span>
       2.2: Creating OpenShift groups
     </a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="ch2-platform-admin-04.html" data-progress-path="/maas-gpu-enablement/3.4/ch2-platform-admin/ch2-platform-admin-04.html">
+    <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-04.html" data-progress-path="/maas-gpu-enablement/3.4/ch2-platform-admin/ch2-platform-admin-04.html">
       <span class="nav-progress-mark" aria-hidden="true">✓</span>
       2.3: Subscriptions and quotas
     </a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="ch2-platform-admin-05.html" data-progress-path="/maas-gpu-enablement/3.4/ch2-platform-admin/ch2-platform-admin-05.html">
+    <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-05.html" data-progress-path="/maas-gpu-enablement/3.4/ch2-platform-admin/ch2-platform-admin-05.html">
       <span class="nav-progress-mark" aria-hidden="true">✓</span>
       2.4: Authorizing Gateway Access (MaaSAuthPolicy)
     </a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="ch2-platform-admin-06.html" data-progress-path="/maas-gpu-enablement/3.4/ch2-platform-admin/ch2-platform-admin-06.html">
+    <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-06.html" data-progress-path="/maas-gpu-enablement/3.4/ch2-platform-admin/ch2-platform-admin-06.html">
       <span class="nav-progress-mark" aria-hidden="true">✓</span>
       2.5: Generating API Keys
     </a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="ch2-platform-admin-summary.html" data-progress-path="/maas-gpu-enablement/3.4/ch2-platform-admin/ch2-platform-admin-summary.html">
+    <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-summary.html" data-progress-path="/maas-gpu-enablement/3.4/ch2-platform-admin/ch2-platform-admin-summary.html">
       <span class="nav-progress-mark" aria-hidden="true">✓</span>
       2.6: Summary and troubleshooting
     </a>
@@ -237,14 +237,14 @@
       Appendix
     </a>
 <ul class="nav-list">
-  <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../appendix/external-models.html" data-progress-path="/maas-gpu-enablement/3.4/appendix/external-models.html">
+  <li class="nav-item is-current-page" data-depth="2">
+    <a class="nav-link" href="external-models.html" data-progress-path="/maas-gpu-enablement/3.4/appendix/external-models.html">
       <span class="nav-progress-mark" aria-hidden="true">✓</span>
       Integrating External Cloud Models (Technology Preview)
     </a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../appendix/maas-troubleshooting-routing.html" data-progress-path="/maas-gpu-enablement/3.4/appendix/maas-troubleshooting-routing.html">
+    <a class="nav-link" href="maas-troubleshooting-routing.html" data-progress-path="/maas-gpu-enablement/3.4/appendix/maas-troubleshooting-routing.html">
       <span class="nav-progress-mark" aria-hidden="true">✓</span>
       Appendix A: Deep Dive - MaaS Gateway Architecture and Troubleshooting
     </a>
@@ -282,8 +282,8 @@
 <nav class="breadcrumbs" aria-label="breadcrumbs">
   <ul>
     <li><a href="../index.html">Models as a Service Breaking the GPU Silos on OpenShift AI 3.4</a></li>
-    <li><a href="ch2-platform-admin-01.html">2: MaaS Access Control &amp; Governance</a></li>
-    <li><a href="ch2-platform-admin-03.html">2.2: Creating OpenShift groups</a></li>
+    <li><a href="#index.adoc">Appendix</a></li>
+    <li><a href="external-models.html">Integrating External Cloud Models (Technology Preview)</a></li>
   </ul>
 </nav>
 </div>
@@ -292,94 +292,205 @@
   <div class="toc-menu"></div>
 </aside>
 <article class="doc">
-<h1 class="page">2.2: Establishing the organizational foundation</h1>
+<h1 class="page">Integrating External Cloud Models (Technology Preview)</h1>
 <div id="preamble">
 <div class="sectionbody">
-<div class="paragraph">
-<p>To enforce the CIO&#8217;s subscription strategy, the MaaS platform needs a mathematical way to identify which request belongs to which team. We achieve this by utilizing native OpenShift Groups.</p>
+<div class="exampleblock">
+<div class="content">
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-warning" title="Warning"></i>
+</td>
+<td class="content">
+This section is under development
+</td>
+</tr>
+</table>
+</div>
+</div>
 </div>
 <div class="paragraph">
-<p>By mapping OpenShift groups to our MaaS Subscriptions, we gain massive enterprise advantages over standard public APIs:</p>
+<p>ChocoTech&#8217;s R&amp;D team has a new requirement: they need access to OpenAI&#8217;s <code>gpt-4o</code> to parse highly complex, unstructured chemical supply chain documents.</p>
 </div>
-<div class="ulist">
-<ul>
+<div class="paragraph">
+<p>Historically, developers would bypass the platform team, use a corporate credit card to generate an OpenAI API key, and embed it directly into their application code. This creates a "Shadow AI" problem: Finance cannot track who is spending the money, Security cannot rotate the compromised keys, and a single runaway script can rack up thousands of dollars in a weekend.</p>
+</div>
+<div class="paragraph">
+<p>In OpenShift AI 3.4, you can solve this by routing inference requests to external cloud providers (like OpenAI, Anthropic, AWS Bedrock, or Google Vertex AI) through the exact same Models-as-a-Service (MaaS) gateway you use for locally deployed models.</p>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p><strong>Technology Preview</strong><br>
+External models for Models-as-a-Service is currently available in Red Hat OpenShift AI as a Technology Preview feature. It provides early access to upcoming features but is not supported with Red Hat production service level agreements (SLAs).</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_1_the_two_tier_authentication_architecture"><a class="anchor" href="#_1_the_two_tier_authentication_architecture"></a>1. The Two-Tier Authentication Architecture</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>External model access in MaaS uses a secure, two-tier authentication pattern:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
 <li>
-<p><strong>Scalable Onboarding:</strong> You add a new data scientist to a group, and they automatically inherit the correct API token limits and model access. No manual policy tweaking required.</p>
+<p><strong>User Authentication (The Developer):</strong> The developer authenticates to the MaaS gateway using their standard ChocoTech <code>sk-oai-</code> API key. MaaS validates their subscription limits just like an internal model.</p>
 </li>
 <li>
-<p><strong>Auditable Transparency:</strong> Every API request is logged against the business unit (e.g., <code>chocotech-quality-control</code>), providing Finance with the exact metrics needed for departmental chargebacks.</p>
+<p><strong>Provider Authentication (The Platform):</strong> MaaS intercepts the request, strips the user&#8217;s API key, and automatically injects a master provider API key (stored securely in a Kubernetes secret) before forwarding the request to OpenAI.</p>
 </li>
-</ul>
+</ol>
 </div>
-<hr>
+<div class="paragraph">
+<p>Because all users share the same master provider API key behind the scenes, you must ensure the token limits you configure in your MaaS Subscriptions prevent your users from collectively breaching the aggregate token limit imposed by the external provider.</p>
+</div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_exercise_1_create_the_business_unit_groups"><a class="anchor" href="#_exercise_1_create_the_business_unit_groups"></a>Exercise 1: Create the business unit groups</h2>
+<h2 id="_exercise_1_storing_the_master_credentials"><a class="anchor" href="#_exercise_1_storing_the_master_credentials"></a>Exercise 1: Storing the Master Credentials</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Instead of creating individual users, let&#8217;s create the three organizational groups that will soon be mapped to our Gold, Silver, and Bronze subscription plans.</p>
+<p>First, you must store the external provider&#8217;s API key in a secure Kubernetes secret. MaaS will use this secret to authenticate requests to the external model.</p>
 </div>
 <div class="paragraph">
-<p>Execute the following commands to create the ChocoTech groups:</p>
+<p>Execute the following command, replacing <code>&lt;your-openai-api-key&gt;</code> with a test key (or a dummy string if you are just testing the configuration):</p>
 </div>
 <div class="listingblock execute">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-none hljs">oc adm groups new chocotech-quality-control
-oc adm groups new chocotech-rd
-oc adm groups new chocotech-marketing</code></pre>
+<pre class="highlightjs highlight"><code class="language-none hljs">oc create secret generic openai-master-key \
+  --from-literal api-key="&lt;your-openai-api-key&gt;" \
+  -n redhat-ods-applications</code></pre>
 </div>
 </div>
-<div class="paragraph">
-<p><strong>Expected output:</strong> The terminal will confirm creation with three lines reading <code>group.user.openshift.io/&lt;group-name&gt; created</code>.</p>
-</div>
-<div class="paragraph">
-<p>Next, to successfully complete the upcoming labs, you need to simulate being a member of the Quality Control team (our Gold Plan). Add your current user account to the QC group:</p>
-</div>
-<div class="listingblock execute">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-none hljs">oc adm groups add-users chocotech-quality-control $(oc whoami)</code></pre>
-</div>
-</div>
-<hr>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_exercise_2_prepare_the_models_namespace"><a class="anchor" href="#_exercise_2_prepare_the_models_namespace"></a>Exercise 2: Prepare the models namespace</h2>
+<h2 id="_exercise_2_deploy_the_externalmodel_resource"><a class="anchor" href="#_exercise_2_deploy_the_externalmodel_resource"></a>Exercise 2: Deploy the ExternalModel Resource</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Create the new project for ChocoTech&#8217;s centralized model hub:</p>
+<p>Next, you will create the <code>ExternalModel</code> custom resource. This tells the MaaS controller how to route the traffic and which secret to use for authentication.</p>
+</div>
+<div class="paragraph">
+<p><strong>(Note: When you create this resource, the MaaS controller automatically provisions the underlying networking resources, including the Service, HTTPRoute, ServiceEntry, and DestinationRule)</strong></p>
+</div>
+<div class="paragraph">
+<p>Apply the following manifest to your cluster:</p>
 </div>
 <div class="listingblock execute">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-none hljs">oc new-project chocotech-models</code></pre>
+<pre class="highlightjs highlight"><code class="language-none hljs">cat &lt;&lt;EOF | oc apply -f -
+apiVersion: maas.opendatahub.io/v1alpha1
+kind: ExternalModel
+metadata:
+  name: gpt-4o-external
+  namespace: redhat-ods-applications
+spec:
+  provider: openai
+  endpoint: api.openai.com
+  targetModel: gpt-4o
+  credentialRef:
+    name: openai-master-key
+EOF</code></pre>
 </div>
 </div>
-<hr>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_verify_your_foundation"><a class="anchor" href="#_verify_your_foundation"></a>Verify your foundation</h2>
+<h2 id="_exercise_3_governing_the_external_model"><a class="anchor" href="#_exercise_3_governing_the_external_model"></a>Exercise 3: Governing the External Model</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Before moving on to the subscriptions, run this combined verification script to ensure your groups and labeled namespace are perfectly staged:</p>
+<p>Just like our internal <code>llama-3-8b</code> and <code>qwen3-4b</code> models, creating the reference object does not automatically grant anyone access. We must append this external model to our existing <strong>Silver Plan</strong> (R&amp;D) governance manifests.</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>Update the Silver Subscription</strong> to grant a token quota:</p>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">oc patch maassubscription silver-plan -n models-as-a-service --type=json -p='[
+  {"op": "add", "path": "/spec/modelRefs/-", "value": {
+    "name": "gpt-4o-external",
+    "namespace": "redhat-ods-applications",
+    "tokenRateLimits": [
+      {"limit": 5000, "window": "1m"}
+    ]
+  }}
+]'</code></pre>
+</div>
+</div>
+</li>
+<li>
+<p><strong>Update the Silver AuthPolicy</strong> to grant physical gateway access:</p>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">oc patch maasauthpolicy silver-access -n models-as-a-service --type=json -p='[
+  {"op": "add", "path": "/spec/modelRefs/-", "value": {
+    "name": "gpt-4o-external",
+    "namespace": "redhat-ods-applications"
+  }}
+]'</code></pre>
+</div>
+</div>
+</li>
+</ol>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_exercise_4_the_developer_experience"><a class="anchor" href="#_exercise_4_the_developer_experience"></a>Exercise 4: The Developer Experience</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Let&#8217;s test the integration. Log in as a developer on the R&amp;D team using a <strong>Silver Plan</strong> API key.</p>
+</div>
+<div class="paragraph">
+<p>Retrieve your Gateway hostname and query the available models:</p>
 </div>
 <div class="listingblock execute">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-none hljs">echo "=== Groups ===" &amp;&amp; \
-oc get groups | grep chocotech &amp;&amp; \
-echo "=== Gold Plan Membership ===" &amp;&amp; \
-oc get group chocotech-quality-control -o jsonpath='{.users[*]}'</code></pre>
+<pre class="highlightjs highlight"><code class="language-none hljs">export MAAS_API_KEY="sk-oai-..." # Paste your Silver key here
+export ROUTE_HOST=$(oc get route openshift-ai-inference -n openshift-ingress -o jsonpath='{.spec.host}')
+
+curl -s -k -H "Authorization: Bearer $MAAS_API_KEY" \
+  https://${ROUTE_HOST}/maas-api/v1/models | jq</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>If the output confirms your groups exist, your username is listed under the Quality Control group, and the <code>chocotech-models</code> namespace exist. Proceed to define the subscription limits.</p>
+<p>You will now see <code>gpt-4o-external</code> listed right alongside your internal models! The developer can immediately execute a chat completion request against the MaaS gateway:</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">curl -s -k -X POST https://${ROUTE_HOST}/maas-api/v1/chat/completions \
+  -H "Authorization: Bearer $MAAS_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "gpt-4o-external",
+    "messages": [{"role": "user", "content": "Hello, external world!"}]
+  }'</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>If the request is successful, the response confirms that MaaS seamlessly routed your request to the external provider, injected the master credentials, and returned the completion.</p>
+</div>
+<div class="paragraph">
+<p>ChocoTech has successfully eliminated Shadow AI. Finance can now track OpenAI spending on the exact same CSV chargeback report used for internal GPU consumption!</p>
 </div>
 </div>
 </div>
 <nav class="pagination">
-  <span class="prev"><a href="ch2-platform-admin-02.html">2.1: Subscription-based governance</a></span>
-  <span class="next"><a href="ch2-platform-admin-04.html">2.3: Subscriptions and quotas</a></span>
+  <span class="prev"><a href="#index.adoc">Appendix</a></span>
+  <span class="next"><a href="maas-troubleshooting-routing.html">Appendix A: Deep Dive - MaaS Gateway Architecture and Troubleshooting</a></span>
 </nav>
 </article>
   </div>

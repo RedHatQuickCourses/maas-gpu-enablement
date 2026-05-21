@@ -3,9 +3,8 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>2.2: Establishing the organizational foundation :: Models as a Service Breaking the GPU Silos on OpenShift AI 3.4</title>
-    <link rel="prev" href="ch2-platform-admin-02.html">
-    <link rel="next" href="ch2-platform-admin-04.html">
+    <title>Appendix A: Deep Dive - MaaS Gateway Architecture and Troubleshooting :: Models as a Service Breaking the GPU Silos on OpenShift AI 3.4</title>
+    <link rel="prev" href="external-models.html">
     <meta name="generator" content="Antora 3.1.3">
 <link rel="stylesheet" href="../../../_/css/site.css">
 <link rel="stylesheet" href="../../../_/css/vendor/tabs.css">
@@ -97,43 +96,43 @@
 <ul class="nav-list">
   <li class="nav-item" data-depth="1">
     <button class="nav-item-toggle"></button>
-    <a class="nav-link" href="ch2-platform-admin-01.html" data-progress-path="/maas-gpu-enablement/3.4/ch2-platform-admin/ch2-platform-admin-01.html">
+    <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-01.html" data-progress-path="/maas-gpu-enablement/3.4/ch2-platform-admin/ch2-platform-admin-01.html">
       <span class="nav-progress-mark" aria-hidden="true">✓</span>
       2: MaaS Access Control &amp; Governance
     </a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="ch2-platform-admin-02.html" data-progress-path="/maas-gpu-enablement/3.4/ch2-platform-admin/ch2-platform-admin-02.html">
+    <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-02.html" data-progress-path="/maas-gpu-enablement/3.4/ch2-platform-admin/ch2-platform-admin-02.html">
       <span class="nav-progress-mark" aria-hidden="true">✓</span>
       2.1: Subscription-based governance
     </a>
   </li>
-  <li class="nav-item is-current-page" data-depth="2">
-    <a class="nav-link" href="ch2-platform-admin-03.html" data-progress-path="/maas-gpu-enablement/3.4/ch2-platform-admin/ch2-platform-admin-03.html">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-03.html" data-progress-path="/maas-gpu-enablement/3.4/ch2-platform-admin/ch2-platform-admin-03.html">
       <span class="nav-progress-mark" aria-hidden="true">✓</span>
       2.2: Creating OpenShift groups
     </a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="ch2-platform-admin-04.html" data-progress-path="/maas-gpu-enablement/3.4/ch2-platform-admin/ch2-platform-admin-04.html">
+    <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-04.html" data-progress-path="/maas-gpu-enablement/3.4/ch2-platform-admin/ch2-platform-admin-04.html">
       <span class="nav-progress-mark" aria-hidden="true">✓</span>
       2.3: Subscriptions and quotas
     </a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="ch2-platform-admin-05.html" data-progress-path="/maas-gpu-enablement/3.4/ch2-platform-admin/ch2-platform-admin-05.html">
+    <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-05.html" data-progress-path="/maas-gpu-enablement/3.4/ch2-platform-admin/ch2-platform-admin-05.html">
       <span class="nav-progress-mark" aria-hidden="true">✓</span>
       2.4: Authorizing Gateway Access (MaaSAuthPolicy)
     </a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="ch2-platform-admin-06.html" data-progress-path="/maas-gpu-enablement/3.4/ch2-platform-admin/ch2-platform-admin-06.html">
+    <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-06.html" data-progress-path="/maas-gpu-enablement/3.4/ch2-platform-admin/ch2-platform-admin-06.html">
       <span class="nav-progress-mark" aria-hidden="true">✓</span>
       2.5: Generating API Keys
     </a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="ch2-platform-admin-summary.html" data-progress-path="/maas-gpu-enablement/3.4/ch2-platform-admin/ch2-platform-admin-summary.html">
+    <a class="nav-link" href="../ch2-platform-admin/ch2-platform-admin-summary.html" data-progress-path="/maas-gpu-enablement/3.4/ch2-platform-admin/ch2-platform-admin-summary.html">
       <span class="nav-progress-mark" aria-hidden="true">✓</span>
       2.6: Summary and troubleshooting
     </a>
@@ -238,13 +237,13 @@
     </a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../appendix/external-models.html" data-progress-path="/maas-gpu-enablement/3.4/appendix/external-models.html">
+    <a class="nav-link" href="external-models.html" data-progress-path="/maas-gpu-enablement/3.4/appendix/external-models.html">
       <span class="nav-progress-mark" aria-hidden="true">✓</span>
       Integrating External Cloud Models (Technology Preview)
     </a>
   </li>
-  <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../appendix/maas-troubleshooting-routing.html" data-progress-path="/maas-gpu-enablement/3.4/appendix/maas-troubleshooting-routing.html">
+  <li class="nav-item is-current-page" data-depth="2">
+    <a class="nav-link" href="maas-troubleshooting-routing.html" data-progress-path="/maas-gpu-enablement/3.4/appendix/maas-troubleshooting-routing.html">
       <span class="nav-progress-mark" aria-hidden="true">✓</span>
       Appendix A: Deep Dive - MaaS Gateway Architecture and Troubleshooting
     </a>
@@ -282,8 +281,8 @@
 <nav class="breadcrumbs" aria-label="breadcrumbs">
   <ul>
     <li><a href="../index.html">Models as a Service Breaking the GPU Silos on OpenShift AI 3.4</a></li>
-    <li><a href="ch2-platform-admin-01.html">2: MaaS Access Control &amp; Governance</a></li>
-    <li><a href="ch2-platform-admin-03.html">2.2: Creating OpenShift groups</a></li>
+    <li><a href="#index.adoc">Appendix</a></li>
+    <li><a href="maas-troubleshooting-routing.html">Appendix A: Deep Dive - MaaS Gateway Architecture and Troubleshooting</a></li>
   </ul>
 </nav>
 </div>
@@ -292,94 +291,177 @@
   <div class="toc-menu"></div>
 </aside>
 <article class="doc">
-<h1 class="page">2.2: Establishing the organizational foundation</h1>
+<h1 class="page">Appendix A: Deep Dive - MaaS Gateway Architecture and Troubleshooting</h1>
 <div id="preamble">
 <div class="sectionbody">
-<div class="paragraph">
-<p>To enforce the CIO&#8217;s subscription strategy, the MaaS platform needs a mathematical way to identify which request belongs to which team. We achieve this by utilizing native OpenShift Groups.</p>
+<div class="exampleblock">
+<div class="content">
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-warning" title="Warning"></i>
+</td>
+<td class="content">
+This section is under development
+</td>
+</tr>
+</table>
+</div>
+</div>
 </div>
 <div class="paragraph">
-<p>By mapping OpenShift groups to our MaaS Subscriptions, we gain massive enterprise advantages over standard public APIs:</p>
+<p>For platform engineers, the most complex aspect of deploying Models-as-a-Service (MaaS) is establishing the Gateway API routing. When developers report that their inference scripts are failing, or the dashboard Playground is spinning endlessly, the issue almost always lies in the network routing.</p>
 </div>
+<div class="paragraph">
+<p>This appendix provides a deep dive into how traffic physically flows through the OpenShift AI architecture and provides the exact troubleshooting steps required to resolve the most common networking failures.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_part_1_the_maas_traffic_flow_architecture"><a class="anchor" href="#_part_1_the_maas_traffic_flow_architecture"></a>Part 1: The MaaS Traffic Flow Architecture</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>To successfully troubleshoot MaaS, you must understand the journey of an API request. When a developer executes a <code>curl</code> command against a model endpoint, the request traverses multiple layers of Kubernetes infrastructure.</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>The OpenShift Router (<code>openshift-ingress</code>):</strong> The request first hits the cluster&#8217;s external edge. The OpenShift Router intercepts the HTTPS request based on the <code>.spec.host</code> defined in the <code>openshift-ai-inference</code> Route.</p>
+</li>
+<li>
+<p><strong>The Gateway API (<code>maas-default-gateway</code>):</strong> The router forwards the traffic to the Gateway API. This is not a legacy OpenShift Route; it is the modern Kubernetes Gateway API (<code>gateway.networking.k8s.io</code>).</p>
+</li>
+<li>
+<p><strong>The Policy Enforcement Point (Kuadrant):</strong>
+Before the Gateway allows the traffic to proceed, it pauses the request and consults Kuadrant.</p>
 <div class="ulist">
 <ul>
 <li>
-<p><strong>Scalable Onboarding:</strong> You add a new data scientist to a group, and they automatically inherit the correct API token limits and model access. No manual policy tweaking required.</p>
+<p><strong>Authentication (Authorino):</strong> Validates the <code>sk-oai-</code> Bearer token and confirms the user&#8217;s OpenShift group membership.</p>
 </li>
 <li>
-<p><strong>Auditable Transparency:</strong> Every API request is logged against the business unit (e.g., <code>chocotech-quality-control</code>), providing Finance with the exact metrics needed for departmental chargebacks.</p>
+<p><strong>Rate Limiting (Limitador):</strong> Checks the Redis cache to ensure the user has not exceeded their <code>MaaSSubscription</code> token limits.</p>
 </li>
 </ul>
 </div>
-<hr>
+</li>
+<li>
+<p><strong>The Inference Engine (<code>KServe</code>):</strong>
+If Kuadrant approves the request, the Gateway forwards the payload to the <code>LLMInferenceService</code> pod running <code>vLLM</code> or <code>llm-d</code>, which finally executes the matrix multiplication on the GPU and returns the response.</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>If any link in this chain breaks, the user receives an error.</p>
+</div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_exercise_1_create_the_business_unit_groups"><a class="anchor" href="#_exercise_1_create_the_business_unit_groups"></a>Exercise 1: Create the business unit groups</h2>
+<h2 id="_part_2_common_gateway_failures_and_resolutions"><a class="anchor" href="#_part_2_common_gateway_failures_and_resolutions"></a>Part 2: Common Gateway Failures and Resolutions</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Instead of creating individual users, let&#8217;s create the three organizational groups that will soon be mapped to our Gold, Silver, and Bronze subscription plans.</p>
+<p>Based on real-world deployments, here are the three most common MaaS Gateway failures and exactly how to fix them.</p>
+</div>
+<div class="sect2">
+<h3 id="_issue_1_the_503_service_unavailable_dead_end"><a class="anchor" href="#_issue_1_the_503_service_unavailable_dead_end"></a>Issue 1: The "503 Service Unavailable" Dead End</h3>
+<div class="paragraph">
+<p><strong>Symptom:</strong> Developers execute a <code>curl</code> command against what they believe is the Gateway URL (e.g., <code><a href="https://maas.apps.example.com" class="bare">https://maas.apps.example.com</a></code>), but they receive a massive block of HTML from OpenShift stating <strong>"Application is not available: The host doesn&#8217;t exist."</strong></p>
 </div>
 <div class="paragraph">
-<p>Execute the following commands to create the ChocoTech groups:</p>
+<p><strong>The Root Cause:</strong> Platform engineers often manually guess or hardcode the Gateway URL. However, if the <code>openshift-ai-inference</code> Route in the <code>openshift-ingress</code> namespace was created without a hardcoded <code>host:</code> parameter, the OpenShift Router auto-generates a unique hostname (e.g., <code>openshift-ai-inference-openshift-ingress.apps&#8230;&#8203;</code>). The router physically does not know what <code>maas.apps&#8230;&#8203;</code> is.</p>
+</div>
+<div class="paragraph">
+<p><strong>The Fix:</strong>
+You must dynamically query OpenShift for the exact Auto-Generated Route Host, and instruct developers to use that specific URL.</p>
 </div>
 <div class="listingblock execute">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-none hljs">oc adm groups new chocotech-quality-control
-oc adm groups new chocotech-rd
-oc adm groups new chocotech-marketing</code></pre>
+<pre class="highlightjs highlight"><code class="language-none hljs"># Retrieve the ACTUAL Gateway Route host
+export ROUTE_HOST=$(oc get route openshift-ai-inference -n openshift-ingress -o jsonpath='{.spec.host}')
+
+# Use this dynamic host for all API calls
+curl -k https://${ROUTE_HOST}/maas-api/v1/models \
+  -H "Authorization: Bearer $MAAS_API_KEY"</code></pre>
 </div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_issue_2_dashboard_proxy_error_loading_components"><a class="anchor" href="#_issue_2_dashboard_proxy_error_loading_components"></a>Issue 2: Dashboard Proxy "Error Loading Components"</h3>
+<div class="paragraph">
+<p><strong>Symptom:</strong> You deploy the MaaS infrastructure, but when you navigate to <strong>Gen AI Studio &#8594; API Keys</strong> in the dashboard, the UI crashes with a red "Error loading components" banner.</p>
 </div>
 <div class="paragraph">
-<p><strong>Expected output:</strong> The terminal will confirm creation with three lines reading <code>group.user.openshift.io/&lt;group-name&gt; created</code>.</p>
+<p><strong>The Root Cause:</strong> The OpenShift AI dashboard uses a Backend-For-Frontend (BFF) proxy. Even if the external OpenShift Router is working perfectly, the dashboard pod itself does not inherently know where the Gateway API is located on the internal network. It loops back on itself and crashes.</p>
 </div>
 <div class="paragraph">
-<p>Next, to successfully complete the upcoming labs, you need to simulate being a member of the Quality Control team (our Gold Plan). Add your current user account to the QC group:</p>
+<p><strong>The Fix:</strong>
+You must explicitly inject the <code>MAAS_API_URL</code> environment variable directly into the dashboard deployment.</p>
 </div>
 <div class="listingblock execute">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-none hljs">oc adm groups add-users chocotech-quality-control $(oc whoami)</code></pre>
+<pre class="highlightjs highlight"><code class="language-none hljs"># Capture the external Route URL
+export ROUTE_HOST=$(oc get route openshift-ai-inference -n openshift-ingress -o jsonpath='{.spec.host}')
+
+# Inject the URL into the Dashboard proxy
+oc set env deployment/rhods-dashboard -n redhat-ods-applications MAAS_API_URL=https://${ROUTE_HOST}/maas-api
+
+# Force a restart of the dashboard pods
+oc rollout status deployment/rhods-dashboard -n redhat-ods-applications</code></pre>
 </div>
 </div>
-<hr>
 </div>
-</div>
-<div class="sect1">
-<h2 id="_exercise_2_prepare_the_models_namespace"><a class="anchor" href="#_exercise_2_prepare_the_models_namespace"></a>Exercise 2: Prepare the models namespace</h2>
-<div class="sectionbody">
+<div class="sect2">
+<h3 id="_issue_3_gateway_tls_certificate_missing_resolvedrefs_false"><a class="anchor" href="#_issue_3_gateway_tls_certificate_missing_resolvedrefs_false"></a>Issue 3: Gateway TLS Certificate Missing (<code>ResolvedRefs: False</code>)</h3>
 <div class="paragraph">
-<p>Create the new project for ChocoTech&#8217;s centralized model hub:</p>
+<p><strong>Symptom:</strong> The Gateway is deployed, but no traffic routes successfully. When checking the Gateway status, you see a <code>ResolvedRefs: False</code> condition complaining about an <code>InvalidCertificateRef</code>.</p>
+</div>
+<div class="paragraph">
+<p><strong>The Root Cause:</strong>
+The MaaS Gateway requires a valid TLS certificate to terminate HTTPS connections. If the secret <code>maas-gateway-cert</code> is missing from the <code>openshift-ingress</code> namespace, the HTTPS listener fails to initialize.</p>
+</div>
+<div class="paragraph">
+<p><strong>The Fix:</strong>
+You must generate a self-signed TLS certificate and attach it to the Gateway.</p>
 </div>
 <div class="listingblock execute">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-none hljs">oc new-project chocotech-models</code></pre>
+<pre class="highlightjs highlight"><code class="language-none hljs"># 1. Get the cluster domain
+export CLUSTER_DOMAIN=$(oc get ingresses.config.openshift.io cluster -o jsonpath='{.spec.domain}')
+
+# 2. Generate a self-signed certificate
+openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+  -keyout /tmp/maas-gateway.key \
+  -out /tmp/maas-gateway.crt \
+  -subj "/CN=maas.apps.${CLUSTER_DOMAIN}" \
+  -addext "subjectAltName=DNS:maas.apps.${CLUSTER_DOMAIN}"
+
+# 3. Create the TLS Secret
+oc create secret tls maas-gateway-cert \
+  --cert=/tmp/maas-gateway.crt \
+  --key=/tmp/maas-gateway.key \
+  -n openshift-ingress
+
+# 4. Wait for the Gateway controller to reconcile (approx 30 seconds)</code></pre>
 </div>
 </div>
-<hr>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_verify_your_foundation"><a class="anchor" href="#_verify_your_foundation"></a>Verify your foundation</h2>
-<div class="sectionbody">
 <div class="paragraph">
-<p>Before moving on to the subscriptions, run this combined verification script to ensure your groups and labeled namespace are perfectly staged:</p>
+<p>Verify the fix by checking the listener status. It should now report <code>"status": "True"</code>.</p>
 </div>
 <div class="listingblock execute">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-none hljs">echo "=== Groups ===" &amp;&amp; \
-oc get groups | grep chocotech &amp;&amp; \
-echo "=== Gold Plan Membership ===" &amp;&amp; \
-oc get group chocotech-quality-control -o jsonpath='{.users[*]}'</code></pre>
+<pre class="highlightjs highlight"><code class="language-none hljs">oc get gateway maas-default-gateway -n openshift-ingress \
+  -o jsonpath='{.status.listeners[0].conditions[?(@.type=="ResolvedRefs")]}'</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>If the output confirms your groups exist, your username is listed under the Quality Control group, and the <code>chocotech-models</code> namespace exist. Proceed to define the subscription limits.</p>
+<p>By understanding the traffic flow and keeping these three troubleshooting strategies nearby, you can resolve the vast majority of network routing issues encountered in Models-as-a-Service deployments.</p>
+</div>
 </div>
 </div>
 </div>
 <nav class="pagination">
-  <span class="prev"><a href="ch2-platform-admin-02.html">2.1: Subscription-based governance</a></span>
-  <span class="next"><a href="ch2-platform-admin-04.html">2.3: Subscriptions and quotas</a></span>
+  <span class="prev"><a href="external-models.html">Integrating External Cloud Models (Technology Preview)</a></span>
 </nav>
 </article>
   </div>

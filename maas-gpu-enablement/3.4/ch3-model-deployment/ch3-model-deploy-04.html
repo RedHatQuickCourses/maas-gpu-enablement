@@ -191,6 +191,68 @@
   </li>
 </ul>
   </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../ch4-observability/ch4-observability-intro.html" data-progress-path="/maas-gpu-enablement/3.4/ch4-observability/ch4-observability-intro.html">
+      <span class="nav-progress-mark" aria-hidden="true">✓</span>
+      4: Observability
+    </a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch4-observability/ch4-observability-01.html" data-progress-path="/maas-gpu-enablement/3.4/ch4-observability/ch4-observability-01.html">
+      <span class="nav-progress-mark" aria-hidden="true">✓</span>
+      4.1: Module Overview
+    </a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch4-observability/ch4-observability-02.html" data-progress-path="/maas-gpu-enablement/3.4/ch4-observability/ch4-observability-02.html">
+      <span class="nav-progress-mark" aria-hidden="true">✓</span>
+      4.2: Defining Governance Tiers
+    </a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch4-observability/ch4-observability-03.html" data-progress-path="/maas-gpu-enablement/3.4/ch4-observability/ch4-observability-03.html">
+      <span class="nav-progress-mark" aria-hidden="true">✓</span>
+      4.3: Rate Limits and Quotas
+    </a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch4-observability/ch4-observability-04.html" data-progress-path="/maas-gpu-enablement/3.4/ch4-observability/ch4-observability-04.html">
+      <span class="nav-progress-mark" aria-hidden="true">✓</span>
+      4.4: Lab - Observability &amp; Automated Chargeback
+    </a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="#index.adoc" data-progress-path="#index.adoc">
+      <span class="nav-progress-mark" aria-hidden="true">✓</span>
+      Appendix
+    </a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../appendix/external-models.html" data-progress-path="/maas-gpu-enablement/3.4/appendix/external-models.html">
+      <span class="nav-progress-mark" aria-hidden="true">✓</span>
+      Integrating External Cloud Models (Technology Preview)
+    </a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../appendix/maas-troubleshooting-routing.html" data-progress-path="/maas-gpu-enablement/3.4/appendix/maas-troubleshooting-routing.html">
+      <span class="nav-progress-mark" aria-hidden="true">✓</span>
+      Appendix A: Deep Dive - MaaS Gateway Architecture and Troubleshooting
+    </a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
 </ul>
   </nav>
 </div>
@@ -250,10 +312,10 @@ This section is under development
 </div>
 </div>
 <div class="paragraph">
-<p>If ChocoTech had deployed this model using standard open-source tools, the Platform Engineering team&#8217;s job would not be finished. They would still need to manually write documentation, email the endpoint URL to the developers, and coordinate static API keys.</p>
+<p>If ChocoTech had deployed this model using standard open-source tools, the Platform Engineering team&#8217;s job would not be finished. They would still need to manually write documentation, securely email the endpoint URL to the developers, and coordinate static API keys.</p>
 </div>
 <div class="paragraph">
-<p>With Models as a Service, the OpenShift AI operator handles all of this automatically. Because we set <code>publishToGenAIStudio: true</code> in our deployment manifest, the platform instantly generates a <code>MaaSModelRef</code> resource and publishes it to a centralized self-service catalog.</p>
+<p>With Models-as-a-Service, OpenShift AI handles all of this automatically through a self-service catalog.</p>
 </div>
 </div>
 </div>
@@ -261,7 +323,7 @@ This section is under development
 <h2 id="_exercise_1_verify_the_backend_maas_registration"><a class="anchor" href="#_exercise_1_verify_the_backend_maas_registration"></a>Exercise 1: Verify the backend MaaS registration</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>When the <code>LLMInferenceService</code> becomes ready, the MaaS operator detects the publish flag and automatically generates a companion <code>MaaSModelRef</code> custom resource. This resource acts as the bridge between the running inference container and the Gateway API.</p>
+<p>In the previous section, we explicitly deployed a <code>MaaSModelRef</code> custom resource alongside our model. This resource references inference servers served through OpenShift AI and registers them with the MaaS Gateway.</p>
 </div>
 <div class="paragraph">
 <p>Verify the model was successfully registered with the MaaS API:</p>
@@ -277,28 +339,27 @@ This section is under development
 <div class="listingblock">
 <div class="content">
 <pre>NAME             MODELREF_KIND         MODELREF_NAME    READY   AGE
-llama-3-8b-ref   LLMInferenceService   llama-3-8b       True    5m</pre>
+llama-3-8b       LLMInferenceService   llama-3-8b       True    5m</pre>
 </div>
 </div>
 <div class="paragraph">
-<p>By itself, this <code>MaaSModelRef</code> does not grant anyone access. However, because you "pre-wired" your governance in Module 2 by explicitly adding <code>llama-3-8b-ref</code> to your Gold, Silver, and Bronze <code>MaaSSubscription</code> and <code>MaaSAuthPolicy</code> manifests, the model is now instantly accessible and fully governed by Kuadrant rate limits.</p>
+<p>By itself, this <code>MaaSModelRef</code> does not grant anyone access. However, because you "pre-wired" your governance in Module 2 by explicitly adding <code>llama-3-8b</code> to your Gold, Silver, and Bronze Subscriptions and AuthPolicies, the model is now instantly accessible and fully governed by Kuadrant rate limits.</p>
 </div>
-<hr>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_exercise_2_the_developer_payoff_gen_ai_studio_ui"><a class="anchor" href="#_exercise_2_the_developer_payoff_gen_ai_studio_ui"></a>Exercise 2: The Developer Payoff (Gen AI Studio UI)</h2>
+<h2 id="_exercise_2_the_developer_payoff_generating_api_keys"><a class="anchor" href="#_exercise_2_the_developer_payoff_generating_api_keys"></a>Exercise 2: The Developer Payoff (Generating API Keys)</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>Let&#8217;s switch hats. You are now a developer on the Marketing team logging in to find a model for your sentiment analysis application. You do not need to know anything about <code>vLLM</code> or OpenShift routes; you simply use the self-service catalog.</p>
 </div>
+<div class="paragraph">
+<p><strong>Prerequisite:</strong> Ensure you are logged into the OpenShift AI dashboard as a user who belongs to the OpenShift group mapped to the Bronze or Silver subscription (e.g., <code>chocotech-marketing</code>).</p>
+</div>
 <div class="olist arabic">
 <ol class="arabic">
 <li>
-<p>Open the OpenShift AI dashboard in your browser.</p>
-</li>
-<li>
-<p>Navigate to <strong>Gen AI Studio</strong> &#8594; <strong>AI asset endpoints</strong> in the left-hand menu.</p>
+<p>Navigate to <strong>Gen AI studio</strong> &#8594; <strong>AI asset endpoints</strong> in the left-hand menu.</p>
 </li>
 <li>
 <p>Click on the <strong>Models</strong> tab.</p>
@@ -306,10 +367,10 @@ llama-3-8b-ref   LLMInferenceService   llama-3-8b       True    5m</pre>
 </ol>
 </div>
 <div class="paragraph">
-<p>You should immediately see the <code>meta-llama/Meta-Llama-3-8B-ref</code> model populated in the catalog grid.</p>
+<p>You should immediately see the <code>llama-3-8b</code> model populated in the catalog grid. Clicking the <strong>View</strong> button under the Endpoints column reveals a dialog with a <strong>Model as a Service</strong> badge.</p>
 </div>
 <div class="paragraph">
-<p>Clicking the <strong>View</strong> button under the Endpoints column will reveal a dialog with a "Model as a Service" badge. This dialog provides:</p>
+<p>This dialog provides critical connection details:</p>
 </div>
 <div class="ulist">
 <ul>
@@ -317,45 +378,79 @@ llama-3-8b-ref   LLMInferenceService   llama-3-8b       True    5m</pre>
 <p><strong>The external API endpoint URL:</strong> The exact gateway routing URL developers need.</p>
 </li>
 <li>
-<p><strong>Subscription Selector:</strong> If you belong to multiple groups with access, you can choose which subscription&#8217;s token quota to draw from.</p>
+<p><strong>Subscription Selector:</strong> A dropdown for choosing which subscription&#8217;s token quota to draw from.</p>
 </li>
 <li>
-<p><strong>API Key Generation:</strong> A button to instantly generate a temporary API key scoped directly to that model and subscription.</p>
-</li>
-<li>
-<p><strong>Playground Testing:</strong> A direct link to launch the Gen AI Playground to test prompts interactively.</p>
+<p><strong>Temporary API Key:</strong> A button to generate a 1-hour temporary API key for quick testing.</p>
 </li>
 </ul>
 </div>
-<hr>
+<div class="sect2">
+<h3 id="_creating_a_persistent_api_key"><a class="anchor" href="#_creating_a_persistent_api_key"></a>Creating a Persistent API Key</h3>
+<div class="paragraph">
+<p>For a real application, developers need a persistent API key rather than a 1-hour temporary key.</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>In the OpenShift AI dashboard, click <strong>Gen AI studio</strong> &#8594; <strong>API keys</strong>.</p>
+</li>
+<li>
+<p>Click <strong>Create API key</strong>.</p>
+</li>
+<li>
+<p>Give the key a descriptive name (e.g., <code>marketing-sentiment-app</code>).</p>
+</li>
+<li>
+<p>From the <strong>Subscription</strong> dropdown, select the subscription that determines your token limits.</p>
+</li>
+<li>
+<p>Leave the Expiration at the default (30 days) and click <strong>Create</strong>.</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p><strong>Copy the generated key immediately (it starts with <code>sk-oai-</code>). The plaintext key is displayed only during creation and cannot be retrieved later.</strong></p>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p><strong>API Key Snapshots:</strong> API keys capture the user&#8217;s group memberships at the exact time of creation. If a user is removed from an OpenShift group later, their existing API keys retain the original group associations and continue to work until they are explicitly revoked or expired.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_exercise_3_test_the_gateway_api_discovery"><a class="anchor" href="#_exercise_3_test_the_gateway_api_discovery"></a>Exercise 3: Test the Gateway API discovery</h2>
+<h2 id="_exercise_3_test_api_discovery_listing_models"><a class="anchor" href="#_exercise_3_test_api_discovery_listing_models"></a>Exercise 3: Test API discovery (Listing Models)</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>The MaaS Gateway is fully compliant with the OpenAI API specification, meaning client applications can dynamically query the <code>/v1/models</code> endpoint to see what is available.</p>
+<p>The MaaS Gateway is fully compliant with the OpenAI API specification. However, in OpenShift AI 3.4, API discovery is highly secure and strictly scoped. When an application queries the <code>/maas-api/v1/models</code> endpoint using a generated <code>sk-oai-</code> API key, the Gateway automatically filters the response to show <strong>only</strong> the models allowed by the subscription bound to that specific key.</p>
 </div>
 <div class="paragraph">
-<p>In OpenShift AI 3.4, API discovery is intelligent and strictly scoped. When an application queries the <code>/v1/models</code> endpoint using a generated <code>sk-oai-</code> API key, the Gateway automatically filters the response to show <strong>only</strong> the models allowed by the subscription bound to that key.</p>
-</div>
-<div class="paragraph">
-<p>Retrieve your Gateway hostname and query the models list using the API key you generated in Module 2:</p>
+<p>Retrieve your Gateway URL and query the models list using the persistent API key you just generated:</p>
 </div>
 <div class="listingblock execute">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-none hljs">GATEWAY_HOST=$(oc get gateway maas-default-gateway -n openshift-ingress -o jsonpath='{.status.addresses[0].value}')
+<pre class="highlightjs highlight"><code class="language-none hljs"># Ensure your variables are set
+export MAAS_API_KEY="sk-oai-..." # Paste your actual key here
+export ROUTE_HOST=$(oc get route openshift-ai-inference -n openshift-ingress -o jsonpath='{.spec.host}')
 
-curl -s -k https://$GATEWAY_HOST/v1/models \
-  -H "Authorization: Bearer $MAAS_API_KEY" | jq</code></pre>
+# Query the MaaS API for available models
+curl -H "Authorization: Bearer $MAAS_API_KEY" \
+  https://${ROUTE_HOST}/maas-api/v1/models | jq</code></pre>
 </div>
 </div>
-<div class="sect2">
-<h3 id="_advanced_discovery_the_x_maas_subscription_header"><a class="anchor" href="#_advanced_discovery_the_x_maas_subscription_header"></a>Advanced Discovery: The <code>X-MaaS-Subscription</code> Header</h3>
 <div class="paragraph">
-<p>If a developer authenticates to the <code>/v1/models</code> endpoint using an OpenShift identity token (OIDC) instead of a dedicated MaaS API key, the Gateway will list all models across <strong>all</strong> subscriptions they qualify for. To assist developers writing automation scripts, they can optionally pass an <code>X-MaaS-Subscription</code> header to explicitly filter the available models list for one exact subscription plan.</p>
-</div>
-<hr>
+<p>You should receive a JSON response listing <code>llama-3-8b</code>, confirming that Kuadrant validated your API key, verified your subscription, and successfully authorized the request.</p>
 </div>
 </div>
 </div>
@@ -363,17 +458,24 @@ curl -s -k https://$GATEWAY_HOST/v1/models \
 <h2 id="_important_note_for_administrators_telemetry_limitations"><a class="anchor" href="#_important_note_for_administrators_telemetry_limitations"></a>Important Note for Administrators: Telemetry Limitations</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Because Kuadrant tracks every token that passes through the gateway, OpenShift AI provides an out-of-the-box observability dashboard. As you prepare to build chargeback reports for ChocoTech&#8217;s Finance team, you must be aware of a specific telemetry limitation.</p>
+<p>Because Kuadrant tracks every token that passes through the gateway, OpenShift AI provides an out-of-the-box observability dashboard for administrators. As you prepare to build chargeback reports for ChocoTech&#8217;s Finance team, you must be aware of two specific telemetry configurations:</p>
 </div>
-<div class="paragraph">
-<p>When inspecting the underlying Prometheus metrics, you will find that the <code>model</code> label (which identifies whether traffic hit <code>llama-3</code> vs <code>nemotron</code>) only appears on the <code>authorized_hits</code> metric. This metric tracks actual token usage for successful requests.</p>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>User Tracking is Disabled by Default:</strong> To reduce metric cardinality and protect privacy, the <code>captureUser</code> setting in the telemetry configuration is set to <code>false</code> by default.</p>
+</li>
+<li>
+<p><strong>Model Label Limitations:</strong> When inspecting the underlying Prometheus metrics, you will find that the <code>model</code> label (which identifies whether traffic hit <code>llama-3</code> or another model) only appears on the <code>authorized_hits</code> metric.</p>
+</li>
+</ol>
 </div>
 <div class="paragraph">
 <p>Due to limitations in the Kuadrant wasm-shim, the <code>model</code> label <strong>does not</strong> appear on the <code>authorized_calls</code> (total API requests) or <code>limited_calls</code> (rate-limited HTTP 429 rejections) metrics. Keep this in mind when troubleshooting or building custom Grafana dashboards for specific models.</p>
 </div>
 <hr>
 <div class="paragraph">
-<p>In the next section, we will deploy a second model. The nvidia/nemotron-4-8b-instruct, which will only be availbale to the silver and bronze subcriptions.</p>
+<p>In the next section, we will deploy a second model (Nemotron-4-8B-Instruct), which will only be available to the Silver and Bronze subscriptions.</p>
 </div>
 </div>
 </div>

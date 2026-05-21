@@ -191,6 +191,68 @@
   </li>
 </ul>
   </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../ch4-observability/ch4-observability-intro.html" data-progress-path="/maas-gpu-enablement/3.4/ch4-observability/ch4-observability-intro.html">
+      <span class="nav-progress-mark" aria-hidden="true">✓</span>
+      4: Observability
+    </a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch4-observability/ch4-observability-01.html" data-progress-path="/maas-gpu-enablement/3.4/ch4-observability/ch4-observability-01.html">
+      <span class="nav-progress-mark" aria-hidden="true">✓</span>
+      4.1: Module Overview
+    </a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch4-observability/ch4-observability-02.html" data-progress-path="/maas-gpu-enablement/3.4/ch4-observability/ch4-observability-02.html">
+      <span class="nav-progress-mark" aria-hidden="true">✓</span>
+      4.2: Defining Governance Tiers
+    </a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch4-observability/ch4-observability-03.html" data-progress-path="/maas-gpu-enablement/3.4/ch4-observability/ch4-observability-03.html">
+      <span class="nav-progress-mark" aria-hidden="true">✓</span>
+      4.3: Rate Limits and Quotas
+    </a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch4-observability/ch4-observability-04.html" data-progress-path="/maas-gpu-enablement/3.4/ch4-observability/ch4-observability-04.html">
+      <span class="nav-progress-mark" aria-hidden="true">✓</span>
+      4.4: Lab - Observability &amp; Automated Chargeback
+    </a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="#index.adoc" data-progress-path="#index.adoc">
+      <span class="nav-progress-mark" aria-hidden="true">✓</span>
+      Appendix
+    </a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../appendix/external-models.html" data-progress-path="/maas-gpu-enablement/3.4/appendix/external-models.html">
+      <span class="nav-progress-mark" aria-hidden="true">✓</span>
+      Integrating External Cloud Models (Technology Preview)
+    </a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../appendix/maas-troubleshooting-routing.html" data-progress-path="/maas-gpu-enablement/3.4/appendix/maas-troubleshooting-routing.html">
+      <span class="nav-progress-mark" aria-hidden="true">✓</span>
+      Appendix A: Deep Dive - MaaS Gateway Architecture and Troubleshooting
+    </a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
 </ul>
   </nav>
 </div>
@@ -253,55 +315,24 @@ This section is under development
 <p>With the hardware math verified and the <code>LLMInferenceService</code> architecture selected, it is time to deliver the AI capabilities to ChocoTech&#8217;s R&amp;D team.</p>
 </div>
 <div class="paragraph">
-<p>In a production environment, pulling massive 16GB model weights directly from the public internet every time a pod scales up is highly inefficient and a security risk. Instead, ChocoTech uses a "Vault" strategy: we download the model once to a local, high-speed S3-compatible storage array (MinIO) inside the cluster, and all inference pods pull their weights from there.</p>
+<p>In a production environment, pulling massive 16GB model weights directly from the public internet every time a pod scales up is highly inefficient and poses a security risk. Instead, ChocoTech uses a "Vault" strategy: downloading the model once to a high-speed S3-compatible storage array inside the cluster, where all inference pods pull their weights locally.</p>
+</div>
+<div class="paragraph">
+<p>To simplify the deployment for this lab exercise, we will bypass the S3 setup and deploy our model using the <strong>Modelcar</strong> packaged format. We will pull the model directly from a public Red Hat OCI repository (<code>oci://quay.io/redhat-ai-services/modelcar-catalog:llama-3.1-8b-instruct</code>). While pulling the model upon each restart is not optimal for production, the OCI format offers a clean, streamlined solution for this lab exercise.</p>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_stage_the_local_vault"><a class="anchor" href="#_stage_the_local_vault"></a>Stage the local vault</h2>
+<h2 id="_1_extract_the_serving_runtime_the_engine"><a class="anchor" href="#_1_extract_the_serving_runtime_the_engine"></a>1. Extract the Serving Runtime (The Engine)</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>We have packaged the infrastructure setup into an automation script. This script will provision the MinIO vault, create the necessary Data Connection secrets, and use a Kubernetes Job to download the <code>Llama-3-8B</code> model weights from Hugging Face into your local storage.</p>
-</div>
-<div class="olist arabic">
-<ol class="arabic">
-<li>
-<p>Open your OpenShift Terminal.</p>
-</li>
-<li>
-<p>Clone the deployment repository:</p>
-<div class="listingblock execute">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-none hljs">git clone https://github.com/RedHatQuickCourses/mass-gpu-enablment.git
-cd mass-gpu-enablment</code></pre>
-</div>
-</div>
-</li>
-<li>
-<p>Execute the setup script from the deploy folder:</p>
-<div class="listingblock execute">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-none hljs">chmod u+x deploy/setup-vault.sh
-./deploy/setup-vault.sh</code></pre>
-</div>
-</div>
-</li>
-</ol>
+<p>OpenShift AI includes certified, cluster-wide runtime templates. However, platform engineers often extract these templates into local project namespaces.</p>
 </div>
 <div class="paragraph">
-<p><strong>Expected Output:</strong> The script will output its progress. Wait for the final <code>✅ SUCCESS: Model is now available in MinIO at s3://models/llama3</code> message. This may take 5-15 minutes depending on the cluster&#8217;s network speed.</p>
-</div>
-<hr>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_extract_the_serving_runtime_the_engine"><a class="anchor" href="#_extract_the_serving_runtime_the_engine"></a>Extract the Serving Runtime (The Engine)</h2>
-<div class="sectionbody">
-<div class="paragraph">
-<p>OpenShift AI includes certified runtime templates. Instead of writing a complex vLLM container definition from scratch, we will extract the official template from the central RHOAI namespace and install it into our <code>chocotech-models</code> project.</p>
+<p><strong>Why do we do this?</strong> Localizing the serving runtime gives you absolute control over the compute engine. It allows you to inject custom environment variables, lock specific version tags, and apply unique accelerator configurations for ChocoTech&#8217;s models without inadvertently impacting workloads in other departments.</p>
 </div>
 <div class="paragraph">
-<p>Execute the following command to process and apply the template:</p>
+<p>Execute the following command to extract the official vLLM template from the central OpenShift AI namespace and install it locally into your <code>chocotech-models</code> project:</p>
 </div>
 <div class="listingblock execute">
 <div class="content">
@@ -315,10 +346,13 @@ oc apply -f - -n chocotech-models</code></pre>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_deploy_the_llminferenceservice_and_maasmodelref"><a class="anchor" href="#_deploy_the_llminferenceservice_and_maasmodelref"></a>Deploy the LLMInferenceService and MaaSModelRef</h2>
+<h2 id="_2_deploy_the_llminferenceservice_and_maasmodelref"><a class="anchor" href="#_2_deploy_the_llminferenceservice_and_maasmodelref"></a>2. Deploy the LLMInferenceService and MaaSModelRef</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Because ChocoTech uses GitOps, we will deploy the model using declarative YAML. In OpenShift AI 3.4, a governed deployment requires two distinct resources:</p>
+<p>Because ChocoTech uses GitOps, we will deploy the model using declarative YAML rather than clicking through the dashboard UI.</p>
+</div>
+<div class="paragraph">
+<p>In OpenShift AI 3.4, a governed deployment requires two distinct resources working together:</p>
 </div>
 <div class="olist arabic">
 <ol class="arabic">
@@ -326,7 +360,7 @@ oc apply -f - -n chocotech-models</code></pre>
 <p><strong><code>LLMInferenceService</code>:</strong> This provisions the actual inference engine, requests the GPU, and loads the weights into VRAM.</p>
 </li>
 <li>
-<p><strong><code>MaaSModelRef</code>:</strong> This is the critical registration resource. It notifies the MaaS system that the model exists, mapping the inference endpoint to the API Gateway.</p>
+<p><strong><code>MaaSModelRef</code>:</strong> This is the critical registration resource. It is the programmatic equivalent of checking "Publish as MaaS" in the dashboard. It explicitly notifies the MaaS platform that the model exists so it can be exposed through the API Gateway.</p>
 </li>
 </ol>
 </div>
@@ -339,21 +373,14 @@ oc apply -f - -n chocotech-models</code></pre>
 apiVersion: serving.kserve.io/v1alpha1
 kind: LLMInferenceService
 metadata:
-  name: llama-3-8b-ref
+  name: llama-3-8b
   namespace: chocotech-models
-  annotations:
-    # THE BOUNCER LIST: Defines exactly which UI subscriptions are allowed to access this model
-    alpha.maas.opendatahub.io/subscriptions: '["gold-tier", "silver-tier", "bronze-tier"]'
 spec:
-  # THE CATALOG PUBLISHER: Pushes this model to the Gen AI Studio UI
-  publishToGenAIStudio: true
-
-  # THE VAULT: Pointing to our secure local S3 storage connection
+  # THE VAULT: Pointing to our Modelcar OCI image
   model:
-    uri: s3://models/llama3
-    name: meta-llama/Meta-Llama-3-8B-Instruct
+    uri: oci://quay.io/redhat-ai-services/modelcar-catalog:llama-3.1-8b-instruct
 
-  # THE ENGINE: Utilizing the certified runtime we extracted in Exercise 2
+  # THE ENGINE: Utilizing the localized runtime we extracted in step 1
   servingRuntime: "vllm-cuda-runtime"
 
   # THE SCHEDULER: Bypassing standard round-robin for intelligent llm-d dispatching
@@ -371,12 +398,11 @@ spec:
   # ENGINE TUNING: Injecting native vLLM parameters for maximum throughput
   template:
     spec:
-      serviceAccountName: fast-track-sa
       containers:
         - name: main
           env:
             - name: VLLM_ADDITIONAL_ARGS
-              value: "--max-model-len=8192 --gpu-memory-utilization=0.90" <i class="conum" data-value="1"></i><b>(1)</b> <i class="conum" data-value="2"></i><b>(2)</b>
+              value: "--max-model-len=8192 --gpu-memory-utilization=0.90"
 
   # THE HARDWARE: Requesting exact VRAM and GPU requirements
   placement:
@@ -387,7 +413,7 @@ spec:
 apiVersion: maas.opendatahub.io/v1alpha1
 kind: MaaSModelRef
 metadata:
-  name: llama-3-8b-ref
+  name: llama-3-8b
   namespace: chocotech-models
 spec:
   modelRef:
@@ -397,27 +423,30 @@ EOF</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>Check the status condition to verify the model is healthy and ready to serve traffic:</p>
+<p>Check the status condition to verify the model is healthy and ready to serve traffic. <strong>(Note: This may take several minutes as the node pulls the 16GB OCI image).</strong></p>
 </div>
 <div class="listingblock execute">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-none hljs">oc wait --for=condition=Ready llminferenceservice/llama-3-8b -n chocotech-models --timeout=300s</code></pre>
+<pre class="highlightjs highlight"><code class="language-none hljs">oc wait --for=condition=Ready llminferenceservice/llama-3-8b -n chocotech-models --timeout=600s</code></pre>
 </div>
 </div>
 <hr>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_the_post_deployment_governance_step"><a class="anchor" href="#_the_post_deployment_governance_step"></a>The Post-Deployment Governance Step</h2>
+<h2 id="_3_the_post_deployment_governance_step"><a class="anchor" href="#_3_the_post_deployment_governance_step"></a>3. The Post-Deployment Governance Step</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>A critical deployment consideration in OpenShift AI 3.4 is that publishing a model to MaaS does not immediately grant anyone access to it. After publishing, a cluster administrator must create a subscription and add this model to make it accessible to user groups.</p>
+<p>A critical architectural concept in OpenShift AI 3.4 is that publishing a model to MaaS (via the <code>MaaSModelRef</code>) does not immediately grant anyone access to it.</p>
 </div>
 <div class="paragraph">
-<p>If you had deployed this model without our previous work in Module 2, the model would sit isolated. A cluster administrator would have to manually add the new <code>MaaSModelRef</code> to a <code>MaaSSubscription</code>, configure its token limits, and update the matching <code>MaaSAuthPolicy</code>.</p>
+<p>If you had deployed this model in a vacuum, the model would sit completely isolated. After publishing, a cluster administrator must create a subscription and add this model to make it accessible to user groups.</p>
 </div>
 <div class="paragraph">
-<p>We <strong>pre-wired ChocoTech&#8217;s governance strategy</strong> in Module 2! You already explicitly listed <code>- name: llama-3-8b-ref</code> in your Gold, Silver, and Bronze subscriptions. As soon as the <code>LLMInferenceService</code> reports <code>Ready</code>, the MaaS controllers immediately enforce your exact token limits.</p>
+<p>However, we <strong>pre-wired ChocoTech&#8217;s governance strategy</strong> in Module 2! You already explicitly listed the <code>llama-3-8b</code> model in your Gold, Silver, and Bronze subscriptions.</p>
+</div>
+<div class="paragraph">
+<p>Because the architecture operates dynamically, as soon as the <code>LLMInferenceService</code> reports <code>Ready</code>, the MaaS controllers instantly map the model to your existing subscriptions and begin enforcing your exact token limits at the Kuadrant Gateway.</p>
 </div>
 <hr>
 </div>
@@ -429,7 +458,7 @@ EOF</code></pre>
 <p>While GitOps is the standard for Platform Engineers, administrators can also deploy models directly through the OpenShift AI dashboard UI.</p>
 </div>
 <div class="paragraph">
-<p>When deploying a model via the Gen AI Studio UI, selecting <strong>"Publish as MaaS endpoint"</strong> under the advanced settings creates the required <code>MaaSModelRef</code> object automatically. Publishing as MaaS creates a MaaSModelRef object that notifies the MaaS system of the model&#8217;s existence.</p>
+<p>When deploying a generative AI model via the dashboard wizard, selecting <strong>Publish as MaaS</strong> under Model availability makes the model accessible to users through the MaaS gateway by automatically generating the <code>MaaSModelRef</code> object.</p>
 </div>
 <div class="admonitionblock warning">
 <table>
@@ -440,7 +469,7 @@ EOF</code></pre>
 <td class="content">
 <div class="paragraph">
 <p><strong>Explicit Warning: The "Legacy Deployment Method" Checkbox</strong><br>
-Models deployed for MaaS use the LLMInferenceService architecture, which is designed for large language models and integrates with the MaaS gateway for subscription-based access control. If you deploy models via the UI, you must ensure the <strong>"Use legacy deployment method"</strong> checkbox is left cleared. The legacy deployment method uses traditional KServe InferenceService resources with serving runtimes, which do not support MaaS governance features.</p>
+Models deployed for MaaS use the <code>LLMInferenceService</code> architecture, which integrates with the MaaS gateway for subscription-based quota enforcement. If you deploy models via the UI, you must ensure the <strong>Use legacy deployment method</strong> checkbox is cleared. The legacy deployment method uses traditional KServe InferenceService resources with serving runtimes, bypassing MaaS architecture entirely.</p>
 </div>
 </td>
 </tr>

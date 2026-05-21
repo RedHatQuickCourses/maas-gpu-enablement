@@ -191,6 +191,68 @@
   </li>
 </ul>
   </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../ch4-observability/ch4-observability-intro.html" data-progress-path="/maas-gpu-enablement/3.4/ch4-observability/ch4-observability-intro.html">
+      <span class="nav-progress-mark" aria-hidden="true">✓</span>
+      4: Observability
+    </a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch4-observability/ch4-observability-01.html" data-progress-path="/maas-gpu-enablement/3.4/ch4-observability/ch4-observability-01.html">
+      <span class="nav-progress-mark" aria-hidden="true">✓</span>
+      4.1: Module Overview
+    </a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch4-observability/ch4-observability-02.html" data-progress-path="/maas-gpu-enablement/3.4/ch4-observability/ch4-observability-02.html">
+      <span class="nav-progress-mark" aria-hidden="true">✓</span>
+      4.2: Defining Governance Tiers
+    </a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch4-observability/ch4-observability-03.html" data-progress-path="/maas-gpu-enablement/3.4/ch4-observability/ch4-observability-03.html">
+      <span class="nav-progress-mark" aria-hidden="true">✓</span>
+      4.3: Rate Limits and Quotas
+    </a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch4-observability/ch4-observability-04.html" data-progress-path="/maas-gpu-enablement/3.4/ch4-observability/ch4-observability-04.html">
+      <span class="nav-progress-mark" aria-hidden="true">✓</span>
+      4.4: Lab - Observability &amp; Automated Chargeback
+    </a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="#index.adoc" data-progress-path="#index.adoc">
+      <span class="nav-progress-mark" aria-hidden="true">✓</span>
+      Appendix
+    </a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../appendix/external-models.html" data-progress-path="/maas-gpu-enablement/3.4/appendix/external-models.html">
+      <span class="nav-progress-mark" aria-hidden="true">✓</span>
+      Integrating External Cloud Models (Technology Preview)
+    </a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../appendix/maas-troubleshooting-routing.html" data-progress-path="/maas-gpu-enablement/3.4/appendix/maas-troubleshooting-routing.html">
+      <span class="nav-progress-mark" aria-hidden="true">✓</span>
+      Appendix A: Deep Dive - MaaS Gateway Architecture and Troubleshooting
+    </a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
 </ul>
   </nav>
 </div>
@@ -256,15 +318,15 @@ This section is under development
 <p>"We cannot risk downtime," explains the QC Director. "Our production line depends on real-time defect detection. How do we update the model without causing an outage?"</p>
 </div>
 <div class="paragraph">
-<p>This is a classic "Day 2" production challenge. Because we deployed the model using MaaS and GitOps, updating it is safe, auditable, and completely seamless for the end users.</p>
+<p>This is a classic "Day 2" production challenge. Because you deployed the model using Models-as-a-Service (MaaS) and GitOps, updating it is safe, auditable, and completely seamless for the end users. Furthermore, Day-2 operations in MaaS go beyond just updating model weights—they encompass security lifecycles and cost monitoring.</p>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_version_management_strategy"><a class="anchor" href="#_version_management_strategy"></a>Version Management Strategy</h2>
+<h2 id="_1_version_management_strategy"><a class="anchor" href="#_1_version_management_strategy"></a>1. Version Management Strategy</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Production AI systems require disciplined version management, just like application code. ChocoTech should use semantic versioning for its model weights stored in the MinIO vault:</p>
+<p>Production AI systems require disciplined version management, just like application code. ChocoTech uses semantic versioning for its model weights stored in the OCI registry or local vault:</p>
 </div>
 <div class="ulist">
 <ul>
@@ -280,18 +342,18 @@ This section is under development
 </ul>
 </div>
 <div class="paragraph">
-<p>By keeping the model weights in distinct folders within the S3 vault (e.g., <code>s3://models/llama3/v1.1.0</code>), you ensure that the previous version is always preserved and ready for an instant rollback.</p>
+<p>By keeping the model weights in distinct versioned paths, you ensure that the previous version is always preserved and ready for an instant rollback.</p>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_the_maas_architectural_advantage"><a class="anchor" href="#_the_maas_architectural_advantage"></a>The MaaS Architectural Advantage</h2>
+<h2 id="_2_the_maas_architectural_advantage"><a class="anchor" href="#_2_the_maas_architectural_advantage"></a>2. The MaaS Architectural Advantage</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>In a legacy, ungoverned AI environment, changing a model often meant changing the endpoint URL, issuing new credentials, and forcing developers to update their application code.</p>
 </div>
 <div class="paragraph">
-<p><strong>OpenShift AI 3.4 eliminates this friction.</strong> Because the architecture separates the engine (<code>LLMInferenceService</code>) from the registration (<code>MaaSModelRef</code>) and the governance (<code>MaaSSubscription</code> / <code>MaaSAuthPolicy</code>), updating a model is completely decoupled from access control.</p>
+<p><strong>OpenShift AI 3.4 eliminates this friction.</strong> The Models-as-a-Service platform acts as a governance layer between users and the underlying model serving infrastructure.  Because the architecture separates the engine (<code>LLMInferenceService</code>) from the registration (<code>MaaSModelRef</code>), updating a model&#8217;s weights is completely decoupled from its access control.</p>
 </div>
 <div class="paragraph">
 <p>When you update the model weights, the Gold Plan token limits remain perfectly intact, the API keys generated by the developers remain valid, and the Gateway URL does not change.</p>
@@ -299,13 +361,10 @@ This section is under development
 </div>
 </div>
 <div class="sect1">
-<h2 id="_the_gitops_update_workflow"><a class="anchor" href="#_the_gitops_update_workflow"></a>The GitOps Update Workflow</h2>
+<h2 id="_3_the_gitops_update_workflow"><a class="anchor" href="#_3_the_gitops_update_workflow"></a>3. The GitOps Update Workflow</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>To update the model, a Platform Engineer does <strong>not</strong> delete the running pod, nor do they click around the OpenShift UI. Instead, they update the declarative YAML file in their Git repository.</p>
-</div>
-<div class="paragraph">
-<p>When updating the <code>LLMInferenceService</code>, the only line that needs to change is the <code>uri</code> pointing to the new vault location:</p>
+<p>To update the model, a Platform Engineer does <strong>not</strong> delete the running pod. Instead, they update the declarative YAML file in their Git repository. When updating the <code>LLMInferenceService</code>, the only line that needs to change is the <code>uri</code> pointing to the new vault location:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -317,19 +376,32 @@ metadata:
 # ... [truncating for brevity] ...
 spec:
   model:
-    uri: s3://models/llama3/v1.1.0  # &lt;--- Update the path to the new version
-    name: meta-llama/Meta-Llama-3-8B-Instruct</code></pre>
+    uri: oci://quay.io/redhat-ai-services/modelcar-catalog:llama-3-8b-v1.1.0  # &lt;--- Update the path</code></pre>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_graceful_rollouts_zero_downtime"><a class="anchor" href="#_graceful_rollouts_zero_downtime"></a>Graceful Rollouts (Zero-Downtime)</h3>
+<h3 id="_graceful_rollouts_and_the_gpu_requirement"><a class="anchor" href="#_graceful_rollouts_and_the_gpu_requirement"></a>Graceful Rollouts and the GPU Requirement</h3>
 <div class="paragraph">
-<p>When you commit this change and apply it to the cluster, OpenShift AI and KServe perform a <strong>Rolling Update</strong>:</p>
+<p>When you commit this change and apply it to the cluster, OpenShift AI and KServe perform a <strong>Rolling Update</strong>.</p>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p><strong>Hardware Prerequisite for Zero-Downtime:</strong> To execute a graceful rollout, your OpenShift cluster <strong>must have an additional equivalent GPU available</strong>.</p>
+</div>
+</td>
+</tr>
+</table>
 </div>
 <div class="olist arabic">
 <ol class="arabic">
 <li>
-<p>The system spins up a completely new inference pod and begins downloading the <code>v1.1.0</code> weights from the MinIO vault into the new GPU&#8217;s VRAM.</p>
+<p>The system spins up a completely new inference pod and begins downloading the <code>v1.1.0</code> weights into the new GPU&#8217;s VRAM.</p>
 </li>
 <li>
 <p>During this time, the <code>v1.0.0</code> pod continues serving live traffic from the Gateway. No user requests are dropped.</p>
@@ -338,7 +410,7 @@ spec:
 <p>Once the <code>v1.1.0</code> pod reports a <code>Ready</code> status, KServe automatically flips the network route.</p>
 </li>
 <li>
-<p>All new traffic seamlessly flows to <code>v1.1.0</code>. The old <code>v1.0.0</code> pod is then gracefully terminated.</p>
+<p>All new traffic seamlessly flows to <code>v1.1.0</code>. The old <code>v1.0.0</code> pod is then gracefully terminated, freeing up its GPU.</p>
 </li>
 </ol>
 </div>
@@ -346,13 +418,32 @@ spec:
 <div class="sect2">
 <h3 id="_the_rollback"><a class="anchor" href="#_the_rollback"></a>The Rollback</h3>
 <div class="paragraph">
-<p>If the Quality Control team reports that the <code>v1.1.0</code> model is hallucinating or underperforming, the rollback process takes seconds. You simply revert the Git commit back to <code>uri: s3://models/llama3/v1.0.0</code> and KServe repeats the rolling update process to restore the known-good state.</p>
+<p>If the Quality Control team reports that the <code>v1.1.0</code> model is hallucinating or underperforming, the rollback process takes seconds. You simply revert the Git commit, and KServe repeats the rolling update process to restore the known-good state.</p>
 </div>
 </div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_4_day_2_governance_and_observability"><a class="anchor" href="#_4_day_2_governance_and_observability"></a>4. Day-2 Governance and Observability</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>As ChocoTech&#8217;s AI usage matures, platform engineers must also manage the lifecycle of user access and platform costs.</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>API Key Lifecycle Management:</strong> You should mandate that teams rotate API keys periodically and revoke compromised keys immediately. It is critical to remember that API keys capture a user&#8217;s group memberships at the exact time of creation. If a user leaves the Quality Control team, their existing API keys will continue to work until they expire or are manually revoked by an administrator.</p>
+</li>
+<li>
+<p><strong>Cost Attribution (Showback):</strong> As usage scales, Finance will want to know which departments are consuming the most GPU compute. You can use the MaaS observability dashboard to monitor subscription-level usage metrics—such as token consumption and rate-limit violations—and export this usage data in CSV format for cost attribution and showback reporting.</p>
+</li>
+</ul>
+</div>
+<hr>
 <div class="sect2">
 <h3 id="_module_3_progress_check"><a class="anchor" href="#_module_3_progress_check"></a>Module 3 Progress Check</h3>
 <div class="paragraph">
-<p>You have successfully deployed a multi-model AI factory, secured it with subscription-based governance, and learned how to safely manage the lifecycle of those models in production.</p>
+<p>You have successfully deployed a multi-model AI factory, secured it with subscription-based governance, and learned how to safely manage the lifecycle of those models and keys in production.</p>
 </div>
 <div class="paragraph">
 <p>You have completed the Platform Engineering infrastructure build! Proceed to the Module 3 Summary to review your architecture before we switch roles and become application developers in Module 4.</p>

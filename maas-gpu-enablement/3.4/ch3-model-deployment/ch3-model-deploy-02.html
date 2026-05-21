@@ -191,6 +191,68 @@
   </li>
 </ul>
   </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../ch4-observability/ch4-observability-intro.html" data-progress-path="/maas-gpu-enablement/3.4/ch4-observability/ch4-observability-intro.html">
+      <span class="nav-progress-mark" aria-hidden="true">✓</span>
+      4: Observability
+    </a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch4-observability/ch4-observability-01.html" data-progress-path="/maas-gpu-enablement/3.4/ch4-observability/ch4-observability-01.html">
+      <span class="nav-progress-mark" aria-hidden="true">✓</span>
+      4.1: Module Overview
+    </a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch4-observability/ch4-observability-02.html" data-progress-path="/maas-gpu-enablement/3.4/ch4-observability/ch4-observability-02.html">
+      <span class="nav-progress-mark" aria-hidden="true">✓</span>
+      4.2: Defining Governance Tiers
+    </a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch4-observability/ch4-observability-03.html" data-progress-path="/maas-gpu-enablement/3.4/ch4-observability/ch4-observability-03.html">
+      <span class="nav-progress-mark" aria-hidden="true">✓</span>
+      4.3: Rate Limits and Quotas
+    </a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../ch4-observability/ch4-observability-04.html" data-progress-path="/maas-gpu-enablement/3.4/ch4-observability/ch4-observability-04.html">
+      <span class="nav-progress-mark" aria-hidden="true">✓</span>
+      4.4: Lab - Observability &amp; Automated Chargeback
+    </a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="#index.adoc" data-progress-path="#index.adoc">
+      <span class="nav-progress-mark" aria-hidden="true">✓</span>
+      Appendix
+    </a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../appendix/external-models.html" data-progress-path="/maas-gpu-enablement/3.4/appendix/external-models.html">
+      <span class="nav-progress-mark" aria-hidden="true">✓</span>
+      Integrating External Cloud Models (Technology Preview)
+    </a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../appendix/maas-troubleshooting-routing.html" data-progress-path="/maas-gpu-enablement/3.4/appendix/maas-troubleshooting-routing.html">
+      <span class="nav-progress-mark" aria-hidden="true">✓</span>
+      Appendix A: Deep Dive - MaaS Gateway Architecture and Troubleshooting
+    </a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
 </ul>
   </nav>
 </div>
@@ -250,23 +312,23 @@ This section is under development
 </div>
 </div>
 <div class="paragraph">
-<p>Before writing a single line of YAML to deploy a model, a Platform Engineer must answer three critical questions:</p>
+<p>ChocoTech&#8217;s Platform Engineering team has received competing generative AI requests from four different departments. As a platform engineer, you cannot simply provision GPUs and deploy models blindly. To prevent wasting expensive GPU resources, you must evaluate models based on their architecture and capabilities before deploying them.</p>
+</div>
+<div class="paragraph">
+<p>Before you write a single line of YAML, you must answer three critical questions:</p>
 </div>
 <div class="ulist">
 <ul>
 <li>
-<p><strong>What model architecture does the business actually need?</strong>,</p>
+<p><strong>What model architecture does the business actually need?</strong></p>
 </li>
 <li>
-<p><strong>Will this model physically fit on our GPUs?</strong>,</p>
+<p><strong>Will this model physically fit on our GPUs?</strong></p>
 </li>
 <li>
-<p><strong>How do we ensure the deployment inherits our governance rules?</strong></p>
+<p><strong>How do we ensure the deployment inherits our Models-as-a-Service (MaaS) governance rules?</strong></p>
 </li>
 </ul>
-</div>
-<div class="paragraph">
-<p>ChocoTech&#8217;s Platform Engineering team has received competing requests from four departments. To prevent wasting expensive GPU resources, we must evaluate models based on their architecture and capabilities before deploying them.</p>
 </div>
 </div>
 </div>
@@ -274,7 +336,7 @@ This section is under development
 <h2 id="_1_evaluating_model_architecture_dense_vs_sparse"><a class="anchor" href="#_1_evaluating_model_architecture_dense_vs_sparse"></a>1. Evaluating model architecture: Dense vs. Sparse</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Model architecture fundamentally impacts GPU memory consumption, inference speed, and deployment complexity.</p>
+<p>Model architecture is not just a data science concern; it fundamentally impacts your GPU memory consumption, inference speed, and deployment complexity.</p>
 </div>
 <table class="tableblock frame-all grid-rows stretch">
 <colgroup>
@@ -295,13 +357,13 @@ This section is under development
 <td class="tableblock halign-left valign-top"><div class="content"><div class="ulist">
 <ul>
 <li>
-<p>Every parameter is active for every token.</p>
+<p>Every single parameter in the neural network is active for every token generated.</p>
 </li>
 <li>
-<p>Provides a predictable memory footprint and consistent inference latency.</p>
+<p>This provides a highly predictable memory footprint and consistent inference latency, making capacity planning easier.</p>
 </li>
 <li>
-<p>Offers a simpler deployment architecture.</p>
+<p>It offers a much simpler deployment architecture for platform teams.</p>
 </li>
 <li>
 <p><strong>Examples:</strong> Llama 2, Llama 3, Mistral 7B, Granite 3.0.</p>
@@ -316,16 +378,16 @@ This section is under development
 <td class="tableblock halign-left valign-top"><div class="content"><div class="ulist">
 <ul>
 <li>
-<p>Activates only a subset of parameters per token using a routing mechanism.</p>
+<p>Activates only a specific subset of parameters per token using a complex routing mechanism.</p>
 </li>
 <li>
-<p>Features more total parameters with less compute required per token.</p>
+<p>Features a massively higher total parameter count, but requires less compute power per token.</p>
 </li>
 <li>
-<p>Results in variable latency depending on routing decisions.</p>
+<p>Results in variable latency depending on which "expert" pathways the routing mechanism chooses.</p>
 </li>
 <li>
-<p>Requires complex deployment with expert-parallelism.</p>
+<p>Requires a highly complex deployment strategy involving expert-parallelism.</p>
 </li>
 <li>
 <p><strong>Examples:</strong> Mixtral 8x7B, DBRX, Grok-1.</p>
@@ -336,7 +398,7 @@ This section is under development
 </tbody>
 </table>
 <div class="paragraph">
-<p><strong>The ChocoTech Decision:</strong> For the initial MaaS deployment, ChocoTech is standardizing on <strong>dense models</strong> (like Llama-3 8B) to minimize deployment complexity and ensure predictable performance across all four departments.</p>
+<p><strong>The ChocoTech Decision:</strong> For the initial MaaS deployment, ChocoTech is standardizing on <strong>dense models</strong> (specifically Llama-3 8B). This minimizes deployment complexity and ensures predictable performance guarantees across all four departments.</p>
 </div>
 </div>
 </div>
@@ -344,7 +406,7 @@ This section is under development
 <h2 id="_2_evaluating_capabilities_reasoning_vs_non_reasoning"><a class="anchor" href="#_2_evaluating_capabilities_reasoning_vs_non_reasoning"></a>2. Evaluating capabilities: Reasoning vs. Non-Reasoning</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Beyond architecture, capabilities determine suitability for specific workloads and impact computational costs.</p>
+<p>Beyond the underlying architecture, a model&#8217;s capabilities determine its suitability for specific workloads and directly impact your computational costs.</p>
 </div>
 <table class="tableblock frame-all grid-rows stretch">
 <colgroup>
@@ -365,16 +427,16 @@ This section is under development
 <td class="tableblock halign-left valign-top"><div class="content"><div class="ulist">
 <ul>
 <li>
-<p>Generates intermediate reasoning steps before providing a final answer.</p>
+<p>Generates "invisible" intermediate reasoning steps before providing a final answer to the user.</p>
 </li>
 <li>
-<p>Results in higher token output per query (reasoning tokens + answer).</p>
+<p>Results in a significantly higher token output per query (reasoning tokens + final answer tokens).</p>
 </li>
 <li>
-<p>Exhibits a slower time-to-first-token (TTFT).</p>
+<p>Exhibits a slower time-to-first-token (TTFT) because the model "thinks" before it types.</p>
 </li>
 <li>
-<p>Ideal for complex problem-solving, scientific analysis, and logic puzzles.</p>
+<p>Ideal for complex problem-solving, scientific analysis, and logic puzzles where accuracy outweighs speed.</p>
 </li>
 </ul>
 </div></div></td>
@@ -389,10 +451,10 @@ This section is under development
 <p>Generates direct answers without explicit intermediate steps.</p>
 </li>
 <li>
-<p>Results in lower token output per query and faster time-to-first-token.</p>
+<p>Results in lower token output per query and a much faster time-to-first-token (TTFT).</p>
 </li>
 <li>
-<p>More cost-effective at scale for straightforward tasks.</p>
+<p>Highly cost-effective at scale for straightforward, conversational tasks.</p>
 </li>
 </ul>
 </div></div></td>
@@ -402,7 +464,7 @@ This section is under development
 <div class="sect2">
 <h3 id="_the_chocotech_department_mapping"><a class="anchor" href="#_the_chocotech_department_mapping"></a>The ChocoTech Department Mapping</h3>
 <div class="paragraph">
-<p>Based on these assessments, here is the model strategy for ChocoTech&#8217;s business units:</p>
+<p>Based on these technical assessments, you map the following model strategy for ChocoTech&#8217;s business units:</p>
 </div>
 <table class="tableblock frame-all grid-rows stretch">
 <colgroup>
@@ -424,25 +486,25 @@ This section is under development
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Quality Control</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Dense</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Yes</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Defect analysis requires multi-step reasoning and detailed explanations. Accuracy justifies the higher token cost.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Defect analysis requires multi-step reasoning and detailed explanations. The high demand for accuracy justifies the higher token cost.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>R&amp;D</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Dense</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Conditional</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Recipe optimization benefits from reasoning, but can fallback to standard generation for simpler tasks.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Recipe optimization heavily benefits from reasoning, but the team can fallback to standard generation for simpler tasks.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Marketing</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Dense</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">No</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Content generation is straightforward. Speed and cost-effectiveness matter more than deep reasoning.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Content generation is straightforward. Speed and cost-effectiveness matter significantly more to this team than deep reasoning.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Supply Chain</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Dense</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">No</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Vendor chatbot needs fast responses for basic inquiries. Non-reasoning is sufficient for FAQs.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Their vendor chatbot requires ultra-fast responses for basic inquiries. Non-reasoning models are perfectly sufficient for FAQs.</p></td>
 </tr>
 </tbody>
 </table>
@@ -453,18 +515,18 @@ This section is under development
 <h2 id="_3_the_hardware_math_sizing_the_model"><a class="anchor" href="#_3_the_hardware_math_sizing_the_model"></a>3. The Hardware Math: Sizing the Model</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Once a model is selected, you must ensure it fits your infrastructure. A common mistake is assuming model size correlates to disk storage rather than Video RAM (VRAM).</p>
+<p>Once a model is selected, you must ensure it physically fits on your infrastructure. A common mistake is assuming that a model&#8217;s size correlates to standard disk storage, rather than Video RAM (VRAM).</p>
 </div>
 <div class="paragraph">
-<p>As a rule of thumb, when running a dense Large Language Model at standard 16-bit precision (FP16 or BF16), <strong>each parameter requires approximately 2 bytes of VRAM</strong>.</p>
+<p>As a rule of thumb, when running a dense Large Language Model at standard 16-bit precision (FP16 or BF16), <strong>each parameter requires approximately 2 bytes of VRAM</strong>. Let&#8217;s calculate the footprint for Llama-3 8B:</p>
 </div>
 <div class="ulist">
 <ul>
 <li>
-<p><strong>Model Weights (Llama-3 8B):</strong> 8 Billion Parameters × 2 bytes = <strong>~16 GB VRAM</strong>.</p>
+<p><strong>Model Weights:</strong> 8 Billion Parameters × 2 bytes = <strong>~16 GB VRAM</strong>.</p>
 </li>
 <li>
-<p><strong>KV Cache:</strong> Generative AI requires memory to store conversational context. Allocate an additional <strong>2-4 GB VRAM</strong>.</p>
+<p><strong>KV Cache:</strong> Generative AI requires active memory to store conversational context during inference; you must allocate an additional <strong>2-4 GB VRAM</strong> for this cache.</p>
 </li>
 <li>
 <p><strong>Total Required:</strong> <strong>~20-24 GB VRAM</strong>.</p>
@@ -472,20 +534,27 @@ This section is under development
 </ul>
 </div>
 <div class="paragraph">
-<p>This model fits comfortably on a single NVIDIA A10 (24GB) or A100 GPU.  This assumes that that context lengeth will be reduced from the maximum limit to fit the model on the 24GB GPU.</p>
+<p>This math proves that the Llama-3 8B model fits comfortably on a single NVIDIA A10 (24GB) or A100 GPU. However, this assumes that the context length will be reduced from its maximum limit to ensure it fits safely on the 24GB GPU.</p>
+</div>
+<div class="exampleblock">
+<div class="content">
+<div class="paragraph">
+<p><strong>Dealing with Massive Models (Quantization)</strong></p>
 </div>
 <div class="paragraph">
-<p>If ChocoTech wanted to deploy a massive 70B parameter model, it would require ~140GB of VRAM. To mitigate this, we can use <strong>Quantization</strong>:</p>
+<p>If ChocoTech wanted to deploy a massive 70B parameter model, it would require ~140GB of VRAM. To mitigate this without buying massive GPU clusters, platform engineers use <strong>Quantization</strong> (compressing the model&#8217;s precision):</p>
 </div>
 <div class="ulist">
 <ul>
 <li>
-<p><strong>INT8 quantization:</strong> Reduces memory by approximately 50% with minimal quality degradation.</p>
+<p><strong>INT8 quantization:</strong> Reduces memory consumption by approximately 50% with minimal quality degradation.</p>
 </li>
 <li>
-<p><strong>INT4 quantization:</strong> Reduces memory by approximately 75%, but with noticeable quality degradation for reasoning tasks.</p>
+<p><strong>INT4 quantization:</strong> Reduces memory consumption by approximately 75%, but comes with noticeable quality degradation, particularly for complex reasoning tasks.</p>
 </li>
 </ul>
+</div>
+</div>
 </div>
 </div>
 </div>
@@ -493,18 +562,18 @@ This section is under development
 <h2 id="_4_the_serving_strategy_why_llm_d"><a class="anchor" href="#_4_the_serving_strategy_why_llm_d"></a>4. The Serving Strategy: Why <code>llm-d</code>?</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>To successfully govern a model in OpenShift AI 3.4, it must be deployed using the <code>LLMInferenceService</code> architecture. This architecture is specifically designed for large language models and integrates directly with the MaaS gateway for subscription-based access control.</p>
+<p>To successfully govern a model in OpenShift AI 3.4, it <strong>must</strong> be deployed using the <code>LLMInferenceService</code> architecture. This architecture is specifically designed for large language models and integrates directly with the MaaS gateway you built in Module 1 to enforce subscription-based access control.</p>
 </div>
 <div class="paragraph">
-<p>The legacy deployment method uses traditional KServe <code>InferenceService</code> resources with serving runtimes, which do not support MaaS governance features.</p>
+<p>If you use the legacy deployment method (traditional KServe <code>InferenceService</code> resources with standard serving runtimes), you will completely bypass the MaaS governance features.</p>
 </div>
 <div class="sect2">
 <h3 id="_what_is_llm_d"><a class="anchor" href="#_what_is_llm_d"></a>What is <code>llm-d</code>?</h3>
 <div class="paragraph">
-<p><code>llm-d</code> (Large Language Model Distributed) is a specialized Kubernetes operator designed to orchestrate inference across multiple accelerators. It uses the Leader Worker Set (LWS) Operator, which is mandatory for orchestrating models that exceed single-node VRAM capacity.</p>
+<p><code>llm-d</code> (Large Language Model Distributed) is a specialized Kubernetes operator designed to orchestrate inference across multiple accelerators.</p>
 </div>
 <div class="paragraph">
-<p>Even if you are only deploying Llama-3 8B onto a single GPU today, using <code>llm-d</code> future-proofs your architecture. When ChocoTech eventually deploys a 70B parameter model, <code>llm-d</code> seamlessly handles the tensor parallelism required to split that model across multiple GPUs using the LeaderWorkerSet architecture.</p>
+<p>It utilizes the Leader Worker Set (LWS) Operator, which is absolutely mandatory for orchestrating models that exceed single-node VRAM capacity. Even if you are only deploying Llama-3 8B onto a single GPU today, using <code>llm-d</code> future-proofs your architecture. When ChocoTech eventually deploys that 70B parameter model, <code>llm-d</code> seamlessly handles the tensor parallelism required to split that model across multiple GPUs using the LeaderWorkerSet architecture.</p>
 </div>
 <div class="admonitionblock note">
 <table>
@@ -513,8 +582,10 @@ This section is under development
 <i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
-<div class="title">vLLM Runtime (Technology Preview)</div>
-MaaS supports models served with <code>llm-d</code> distributed inference or <code>vLLM</code> runtimes. However, <code>vLLM</code> runtime support for Models-as-a-Service is a Technology Preview feature. If you plan to use it, you must explicitly enable the <code>spec.dashboardConfig.vLLMDeploymentOnMaaS: true</code> feature flag in the <code>OdhDashboardConfig</code> custom resource.
+<div class="paragraph">
+<p><strong>vLLM Runtime (Technology Preview)</strong><br>
+MaaS supports models served with either <code>llm-d</code> distributed inference or <code>vLLM</code> runtimes. However, <code>vLLM</code> runtime support for Models-as-a-Service is currently a Technology Preview feature. If you plan to use it in your environment, you must explicitly enable the <code>spec.dashboardConfig.vLLMDeploymentOnMaaS: true</code> feature flag in the <code>OdhDashboardConfig</code> custom resource.</p>
+</div>
 </td>
 </tr>
 </table>
