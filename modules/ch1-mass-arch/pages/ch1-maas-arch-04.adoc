@@ -417,6 +417,7 @@ oc patch datasciencecluster default-dsc --type=merge -p '{
 
 Even when deploying models via GitOps, administrators require the dashboard UI to manage user access tokens and monitor model usage. You must enable Gen AI Studio by patching the `OdhDashboardConfig` custom resource.
 
+
 Apply the dashboard configuration patch:
 [source,role="execute"]
 ----
@@ -430,6 +431,17 @@ oc patch odhdashboardconfig odh-dashboard-config -n redhat-ods-applications --ty
   }
 }'
 ----
+
+==== What is the script below doing?
+
+When you patch the `OdhDashboardConfig`, the OpenShift AI operator automatically spins up the Gen AI Studio components. However, you must explicitly tell the dashboard *how* to route traffic to the MaaS API. Without this script, the dashboard's internal proxy gets confused, loops back on itself, and crashes with an "Error loading components" message when you try to access the API Keys menu. 
+
+Here is exactly what this script accomplishes:
+
+* **Prevents Race Conditions (`oc wait`):** Patching the dashboard config triggers the OpenShift AI operator to reconcile the deployment. This command pauses the script until the operator finishes its work, ensuring our custom variables aren't overwritten mid-deployment.
+* **Captures the Dynamic Route (`export ROUTE_HOST`):** Because we configured our Gateway Route to auto-generate a host based on the cluster's domain, we must dynamically query OpenShift to find out what that public URL actually is.
+* **Injects the Routing Logic (`oc set env`):** This is the critical fix. It injects the `MAAS_API_URL` environment variable directly into the dashboard deployment. This explicitly forces the dashboard's Backend-For-Frontend (BFF) proxy to send all API Key and Model queries through our secure `openshift-ai-inference` Gateway, where Authorino can validate them.
+* **Applies the Changes (`oc rollout status`):** Forces the deployment to spin up new pods with the injected URL and waits for them to become healthy before releasing the terminal.
 
 
 [source,role="execute"]
