@@ -797,6 +797,30 @@ EOF</code></pre>
 }'</code></pre>
 </div>
 </div>
+<div class="sect3">
+<h4 id="_what_is_the_script_below_doing"><a class="anchor" href="#_what_is_the_script_below_doing"></a>What is the script below doing?</h4>
+<div class="paragraph">
+<p>When you patch the <code>OdhDashboardConfig</code>, the OpenShift AI operator automatically spins up the Gen AI Studio components. However, you must explicitly tell the dashboard <strong>how</strong> to route traffic to the MaaS API. Without this script, the dashboard&#8217;s internal proxy gets confused, loops back on itself, and crashes with an "Error loading components" message when you try to access the API Keys menu.</p>
+</div>
+<div class="paragraph">
+<p>Here is exactly what this script accomplishes:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Prevents Race Conditions (<code>oc wait</code>):</strong> Patching the dashboard config triggers the OpenShift AI operator to reconcile the deployment. This command pauses the script until the operator finishes its work, ensuring our custom variables aren&#8217;t overwritten mid-deployment.</p>
+</li>
+<li>
+<p><strong>Captures the Dynamic Route (<code>export ROUTE_HOST</code>):</strong> Because we configured our Gateway Route to auto-generate a host based on the cluster&#8217;s domain, we must dynamically query OpenShift to find out what that public URL actually is.</p>
+</li>
+<li>
+<p><strong>Injects the Routing Logic (<code>oc set env</code>):</strong> This is the critical fix. It injects the <code>MAAS_API_URL</code> environment variable directly into the dashboard deployment. This explicitly forces the dashboard&#8217;s Backend-For-Frontend (BFF) proxy to send all API Key and Model queries through our secure <code>openshift-ai-inference</code> Gateway, where Authorino can validate them.</p>
+</li>
+<li>
+<p><strong>Applies the Changes (<code>oc rollout status</code>):</strong> Forces the deployment to spin up new pods with the injected URL and waits for them to become healthy before releasing the terminal.</p>
+</li>
+</ul>
+</div>
 <div class="listingblock execute">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-none hljs"># Wait for the dashboard deployment to be fully available after patching the config
@@ -816,6 +840,7 @@ oc rollout status deployment/rhods-dashboard -n redhat-ods-applications</code></
 <p>Refresh your OpenShift AI browser window. The <strong>Gen AI Studio</strong> menu option will now appear in your left-hand navigation pane.</p>
 </div>
 <hr>
+</div>
 </div>
 </div>
 </div>
