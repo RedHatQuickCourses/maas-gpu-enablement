@@ -17,7 +17,7 @@ Ensure the following operators and settings are active:
 * **Red Hat Connectivity Link (v1.2+)**: Delivers the Kuadrant governance framework.
 * **Red Hat OpenShift AI (v3.4+)**: The core platform operator that manages the DataScienceCluster.
 * **Leader Worker Set (LWS) Operator**: Mandatory for `llm-d` orchestration to manage models that exceed single-node VRAM capacity.
-* **Cluster Observability Operator (Optional but Recommended):** While MaaS core routing works without it, ChocoTech's Finance team needs this to view the MaaS observability dashboard (Tech Preview) for token consumption tracking and showback reporting.
+* **Cluster Observability Operator**: While MaaS core routing works without it, ChocoTech's Finance team needs this to view the MaaS observability dashboard (Tech Preview) for token consumption tracking and showback reporting.
 
 {empty} +
 
@@ -26,7 +26,7 @@ Ensure the following operators and settings are active:
 ====
 [source,role="execute"]
 ----
-oc get csv -n openshift-lws-operator | grep -E "(servicemesh|rhcl|rhods|limitador|authorino|leader)"
+oc get csv -n openshift-lws-operator | grep -E "(servicemesh|rhcl|rhods|limitador|authorino|leader|cluster)"
 ----
 
 ====
@@ -50,8 +50,6 @@ The Connectivity Link operator manages Kuadrant (Authorino & Limitador), but Kua
 Create the namespace and Kuadrant instance:
 [source,role="execute"]
 ----
-oc create namespace kuadrant-system
-
 cat <<EOF | oc apply -f -
 apiVersion: v1
 kind: Namespace
@@ -98,6 +96,9 @@ EOF
 oc get pods -n openshift-user-workload-monitoring
 ----
 
+If this fails to return results, try again after a 10-15 seconds.
+
+
 Expected output (pods Running):
 [source,text]
 ----
@@ -110,82 +111,190 @@ thanos-ruler-user-workload-0           4/4     Running    0
 
 == Step 4: Create the MaaS Gateway
 
-Next, we establish the Front Door. A Gateway named `maas-default-gateway` must exist in the `openshift-ingress` namespace. *This becomes the single API endpoint for all of ChocoTech's model inference traffic.*
+Next, we establish the Front Door. According to Red Hat prerequisites, a Gateway named `maas-default-gateway` must exist in the `openshift-ingress` namespace. *This becomes the single API endpoint for all of ChocoTech's model inference traffic.*
 
-Create the Gateway resource:
+To ensure proper TLS hostname matching and external routing in a production environment, we will deploy the Gateway as an internal `ClusterIP` service and expose it using a native OpenShift Route with `reencrypt` TLS termination.
+
+=== 1. Create the infrastructure configuration
+Create a ConfigMap to instruct the OpenShift service-ca-operator to auto-provision an internal TLS certificate (`maas-gw-service-tls`) and deploy the Gateway as a `ClusterIP` rather than an external load balancer.
+
+[source,role="execute"]
+----
+cat <<EOF | oc apply -f -
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: gw-options
+  namespace: openshift-ingress
+data:
+  service: |
+    metadata:
+      annotations:
+        # OpenShift service-ca-operator auto-provisions a TLS certificate into this Secret.
+        service.beta.openshift.io/serving-cert-secret-name: "maas-gw-service-tls"
+    spec:
+      # ClusterIP avoids provisioning an external LoadBalancer; the OpenShift Route handles external ingress instead.
+      type: ClusterIP
+EOF
+----
+
+=== 3. Deploy the Gateway
+
+
+==== First, dynamically grab the OpenShift Gateway Controller class
+[source,role="execute"]
+----
+export GW_CLASS=$(oc get gatewayclass -o custom-columns=NAME:.metadata.name,CTRL:.spec.controllerName --no-headers | grep "openshift.io/gateway-controller" | awk '{print $1}' | head -n 1)
+----
+
+Create the Gateway resource. Red Hat requires this resource to include two specific annotations for MaaS to function correctly. Notice that we omit explicit hostnames from the listeners to prevent SNI mismatches when the OpenShift Route passes traffic through.
+
 [source,role="execute"]
 ----
 cat <<EOF | oc apply -f -
 apiVersion: gateway.networking.k8s.io/v1
 kind: Gateway
 metadata:
-  name: maas-default-gateway  // <2>
+  name: maas-default-gateway
   namespace: openshift-ingress
   annotations:
-    # Mandatory for MaaS to bootstrap TLS and Authorino integration
     security.opendatahub.io/authorino-tls-bootstrap: "true"
-    # Mandatory to allow maas-controller to manage policies and prevent overwriting
-    opendatahub.io/managed: "false" // <3>
+    opendatahub.io/managed: "false"
+  labels:
+    app.kubernetes.io/name: maas-gateway
+    istio.io/rev: openshift-gateway
+    kuadrant.io/gateway: "true"
 spec:
-  gatewayClassName: data-science-gateway-class  # Alternatively, use 'openshift-default' // <1>
+  gatewayClassName: ${GW_CLASS}
+  infrastructure:
+    parametersRef:
+      group: ""
+      kind: ConfigMap
+      name: gw-options
   listeners:
-  - name: https 
+  - name: http
+    port: 80
+    protocol: HTTP
+    allowedRoutes:
+      namespaces:
+        from: All
+  - name: https
     port: 443
     protocol: HTTPS
     tls:
       mode: Terminate
       certificateRefs:
-      - name: router-certs-default # This Secret MUST exist in the openshift-ingress namespace. Change to 'router-certs-default' to use the cluster default.
+      - group: ""
+        kind: Secret
+        name: maas-gw-service-tls
     allowedRoutes:
       namespaces:
         from: All
 EOF
 ----
-<1> **GatewayClass (The Blueprint):** This tells the cluster _who_ is responsible for building the load balancer and _what kind_ of underlying technology to use. By specifying `gatewayClassName: data-science-gateway-class`, you instruct the native OpenShift Gateway Controller to deploy the physical proxy infrastructure. If this is misconfigured or missing, your cluster won't know how to build the gateway, and it will sit in an unprogrammed state forever.
-<2> **Gateway (The Entry Endpoint):** The `Gateway` resource (which we named `maas-default-gateway`) is the instantiated infrastructure that listens for traffic. It defines the physical or virtual IP address, the open ports (like 80 or 443), and the TLS certificates. It essentially says, "I am built according to the `data-science-gateway-class` blueprint, and I am actively listening for connections."
-<3> This (opendatahub.io/managed: "false") annotation allows the maas-controller to manage the AuthPolicies and prevents the Open Data Hub (ODH) Model Controller from overwriting your gateway configurations.
+<1> **Authorino TLS Bootstrap:** Enables TLS communication between the Gateway and Authorino.
+<2> **Managed Status:** Allows the MaaS controller to manage authorization policies without interference from the ODH Model Controller.
 
+=== 4. Expose the Gateway via OpenShift Route
+Finally, create the OpenShift Route to act as the public entry point. This handles the external ingress and securely re-encrypts traffic back to the internal Gateway service.
+
+[source,role="execute"]
+----
+cat <<EOF | oc apply -f -
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: openshift-ai-inference
+  namespace: openshift-ingress
+  annotations:
+    router.openshift.io/service-ca-certificate: "true"
+spec:
+  port:
+    targetPort: 443
+  tls:
+    insecureEdgeTerminationPolicy: Redirect
+    termination: reencrypt
+  to:
+    kind: Service
+    name: maas-default-gateway-${GW_CLASS}
+    weight: 100
+EOF
+----
 
 [NOTE]
 ====
-*Understanding the Gateway API architecture*
+*Understanding the Gateway API architecture in OpenShift AI*
 
-* **HTTPRoute (The Router):** This is where the actual routing logic lives. An `HTTPRoute` attaches to a Gateway and contains the specific URL rules (e.g., "If a request path is `/llm/llama-3b/v1/chat/completions`, forward it to the model pod in the `chocotech-models` namespace").
+Red Hat OpenShift AI dictates the *requirements* of the Gateway API (specific namespace locations, Gateway names, and annotations) but leaves the physical proxy implementation up to the cluster administrator, noting that configuration templates are community-maintained. 
 
+The benefit of this architecture is the separation of infrastructure from application logic. As a platform engineer, you only build the Gateway. When ChocoTech deploys a model and checks the "Publish as MaaS" box, they do not need to write any networking rules. The MaaS controller automatically generates the `HTTPRoute` behind the scenes. That route dynamically attaches itself to the `maas-default-gateway`, securely linking the public endpoint through the Kuadrant governance layer directly to the internal model pod.
+====
+
+=== Optional: Verify GatewayClass Controller Compliance
+
+While the exact infrastructure deployment of the Gateway is flexible, the official Red Hat documentation explicitly requires that the `GatewayClass` backing your MaaS deployment is configured to use the OpenShift Gateway Controller (`openshift.io/gateway-controller`). 
+
+Run this quick sanity check to verify that your `openshift-ai-inference` GatewayClass was built using the correct underlying controller.
+
+[source,role="execute"]
+----
+oc get gatewayclass ${GW_CLASS} -o jsonpath='{.spec.controllerName}{"\n"}'
+----
+
+*Expected output:*
+[source,text]
+----
+openshift.io/gateway-controller
+----
+
+If the output matches, your underlying Gateway API infrastructure is fully compliant with Red Hat's MaaS prerequisites.
+
+---
 *How it all ties together in MaaS*
 
 The benefit of this architecture is the separation of infrastructure from application logic. As a platform engineer, you only build the gateway. 
 
 ChocoTech deploys a model and checks the "Publish as MaaS" box, they do not need to write any networking rules. The MaaS controller automatically generates the `HTTPRoute` behind the scenes. That route dynamically attaches itself to the `maas-default-gateway`, securely linking the public endpoint through the Kuadrant governance layer directly to the internal KServe model pod.
-====
 
 == Step 5: Configure Authorino Environment
 
-The OpenShift service-ca-operator automatically handles the population of the cluster CA bundle. However, you are responsible for annotating the Gateway to trigger the automatic creation of the required EnvoyFilter for TLS.  To get Models-as-a-Service (MaaS) running, you must complete two main configuration steps: setting the Authorino environment and annotating the Gateway.
+The OpenShift service-ca-operator automatically handles the population of the cluster CA bundle. However, you are responsible for annotating the Gateway to trigger the automatic creation of the required EnvoyFilter for TLS.  To get Models-as-a-Service (MaaS) running, you must configure the Authorino environment and verify the Gateway annotations.
 
 First, you must configure the Authorino deployment with SSL environment variables so it can communicate securely with the MaaS API.  
 
 [source,role="execute"]
 ----
+# Wait for the Authorino service to be created by the operator
+echo "Waiting for Authorino service to initialize..."
+until oc get service authorino-authorino-authorization -n kuadrant-system >/dev/null 2>&1; do
+  sleep 5
+done
+echo "Authorino service is ready."
+
 # Set SSL environment variables for outbound communication
 oc -n kuadrant-system set env deployment/authorino \
 SSL_CERT_FILE=/etc/ssl/certs/openshift-service-ca/service-ca-bundle.crt \
 REQUESTS_CA_BUNDLE=/etc/ssl/certs/openshift-service-ca/service-ca-bundle.crt
-----
 
-2. Annotate the Gateway
-Instead of manually generating a new certificate within the Gateway YAML, you apply an annotation that enables the platform to bootstrap the TLS connection automatically
+# Generate the TLS certificate for Authorino
+oc annotate service authorino-authorino-authorization -n kuadrant-system \
+service.beta.openshift.io/serving-cert-secret-name=authorino-server-cert --overwrite
 
-[source,role="execute"]
+# Patch the Authorino resource to enable the TLS listener
+oc patch authorino authorino -n kuadrant-system --type=merge --patch '
+{
+  "spec": {
+    "listener": {
+      "tls": {
+        "enabled": true,
+        "certSecretRef": {
+          "name": "authorino-server-cert"
+        }
+      }
+    }
+  }
+}'
 ----
-# Annotate the existing gateway to enable TLS bootstrap
-oc annotate gateway maas-default-gateway \
--n openshift-ingress \
-security.opendatahub.io/authorino-tls-bootstrap="true" \
---overwrite
-----
-
-. Verification Commands After running the code above, verify that the configuration was applied correctly to ensure the MaaS deployment doesn't show a "Degraded" status.  
 
 Verify Authorino SSL Variables:
 
@@ -320,6 +429,22 @@ oc patch odhdashboardconfig odh-dashboard-config -n redhat-ods-applications --ty
     }
   }
 }'
+----
+
+
+[source,role="execute"]
+----
+# Wait for the dashboard deployment to be fully available after patching the config
+oc wait --for=condition=Available deployment/rhods-dashboard -n redhat-ods-applications --timeout=300s
+
+# Capture the external Route URL
+export ROUTE_HOST=$(oc get route openshift-ai-inference -n openshift-ingress -o jsonpath='{.spec.host}')
+
+# Inject the URL into the Dashboard
+oc set env deployment/rhods-dashboard -n redhat-ods-applications MAAS_API_URL=https://${ROUTE_HOST}/maas-api
+
+# Wait for the Dashboard to restart with the new variable
+oc rollout status deployment/rhods-dashboard -n redhat-ods-applications
 ----
 
 Refresh your OpenShift AI browser window. The **Gen AI Studio** menu option will now appear in your left-hand navigation pane.
