@@ -26,7 +26,7 @@ Ensure the following operators and settings are active:
 ====
 [source,role="execute"]
 ----
-oc get csv -n openshift-lws-operator | grep -E "(servicemesh|rhcl|rhods|limitador|authorino|leader|cluster)"
+oc get csv | grep -E "(servicemesh|rhcl|rhods|limitador|authorino|leader|cluster)"
 ----
 
 ====
@@ -249,12 +249,7 @@ openshift.io/gateway-controller
 
 If the output matches, your underlying Gateway API infrastructure is fully compliant with Red Hat's MaaS prerequisites.
 
----
-*How it all ties together in MaaS*
 
-The benefit of this architecture is the separation of infrastructure from application logic. As a platform engineer, you only build the gateway. 
-
-ChocoTech deploys a model and checks the "Publish as MaaS" box, they do not need to write any networking rules. The MaaS controller automatically generates the `HTTPRoute` behind the scenes. That route dynamically attaches itself to the `maas-default-gateway`, securely linking the public endpoint through the Kuadrant governance layer directly to the internal KServe model pod.
 
 == Step 5: Configure Authorino Environment
 
@@ -459,13 +454,23 @@ oc set env deployment/rhods-dashboard -n redhat-ods-applications MAAS_API_URL=ht
 oc rollout status deployment/rhods-dashboard -n redhat-ods-applications
 ----
 
-Refresh your OpenShift AI browser window. The **Gen AI Studio** menu option will now appear in your left-hand navigation pane.
+Refresh your OpenShift AI browser window. The **Gen AI Studio - API Key generation tab** menu option will now appear in your left-hand navigation pane.
 
 ---
 
 == Step 8: Verification Summary
 
 Before moving on to building ChocoTech's subscription plans in Module 2, run this comprehensive verification script to confirm all components deployed successfully. 
+
+[WARNING]
+====
+**Manual File Creation Required:** You must create this file manually before adding the content (for example, by using `touch filename` or opening a new file directly in your text editor).
+
+**Copy/Paste Tip:** Due to web terminal buffer limitations, pasting the entire block of text at once may result in nothing being pasted.
+
+1. Copy and paste **tasks 1 through 5** first.
+2. Once those are successfully pasted, copy and paste the **remaining text**.
+====
 
 [source,bash]
 ----

@@ -22,7 +22,7 @@ To properly govern the platform, ChocoTech's Platform Engineering team must adhe
 
 === 1. Recommendations for MaaSSubscription (Quota)
 * **Centralized Deployment:** All subscriptions must be deployed into the central `models-as-a-service` namespace, rather than individual model namespaces, to allow platform-wide billing and quota management.
-* **Deploy Before Models:** You can "pre-wire" your platform's governance. Because subscriptions reference models by name (e.g., `llama-3-8b-ref`), you should deploy these policies before the model actually exists. This ensures the MaaS operator enforces token limits on the very first inference request.
+* **Deploy Before Models:** You can "pre-wire" your platform's governance. Because subscriptions reference models by name (e.g., `llama-3-8b`), you should deploy these policies before the model actually exists. This ensures the MaaS operator enforces token limits on the very first inference request.
 * **The Priority Numbering Scheme:** When a user belongs to multiple groups with different subscriptions, the system automatically selects the subscription with the highest priority level.
   * *Use incremental gaps:* Number priorities with gaps (e.g., 10, 20, 30) rather than sequential numbers so you can easily insert intermediate priorities later.
   * *Avoid identical priorities:* Do not set all subscriptions to the same priority, as this creates unpredictable behavior.
@@ -44,7 +44,7 @@ To solve ChocoTech's GPU Silo Crisis, the CIO has mandated a custom governance m
 
 In the upcoming sections, you will build the following structure using both `MaaSSubscription` and `MaaSAuthPolicy` resources:
 
-* **Gold Plan (Priority 100):** Mapped to the `chocotech-quality-control` group. This tier will have massive token limits to ensure the factory floor's defect detection models never experience throttling.
+* **Gold Plan (Priority 80):** Mapped to the `chocotech-quality-control` group. This tier will have massive token limits to ensure the factory floor's defect detection models never experience throttling.
 * **Silver Plan (Priority 50):** Mapped to the `chocotech-rd` group. This tier will have moderate token limits for recipe optimization testing.
 * **Bronze Plan (Priority 10):** Mapped to the `chocotech-marketing` group. This tier will have strict token limits to prevent their exploratory sentiment analysis from wasting expensive GPU cycles. 
 

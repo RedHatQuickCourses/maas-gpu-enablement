@@ -26,6 +26,47 @@ oc apply -f - -n chocotech-models
 
 *Expected Output:* `servingruntime.serving.kserve.io/vllm-cuda-runtime created`.
 
+---
+
+cat <<EOF | oc apply -f -
+apiVersion: v1
+kind: Secret
+metadata:
+  name: llama-3-8b
+  namespace: chocotech-models
+  labels:
+    opendatahub.io/dashboard: "true"
+  annotations:
+    opendatahub.io/connection-type-protocol: uri
+    opendatahub.io/connection-type-ref: uri-v1
+    openshift.io/display-name: "Llama 8b ModelCar (v1.3)"
+stringData:
+  URI: oci://quay.io/redhat-ai-services/modelcar-catalog:llama-3.1-8b-instruct
+type: Opaque
+EOF
+
+---
+
+cat <<EOF | oc apply -f -
+apiVersion: v1
+kind: Secret
+metadata:
+  name: qwen3-8b
+  namespace: chocotech-models
+  labels:
+    opendatahub.io/dashboard: "true"
+  annotations:
+    opendatahub.io/connection-type-protocol: uri
+    opendatahub.io/connection-type-ref: uri-v1
+    openshift.io/display-name: "Qwen 3 8b ModelCar (v1.0)"
+stringData:
+  URI: oci://quay.io/redhat-ai-services/modelcar-catalog:qwen3-8b
+type: Opaque
+EOF
+
+---
+
+
 == 2. Deploy the LLMInferenceService and MaaSModelRef
 
 Because ChocoTech uses GitOps, we will deploy the model using declarative YAML rather than clicking through the dashboard UI. 

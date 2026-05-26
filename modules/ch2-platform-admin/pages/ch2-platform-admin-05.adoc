@@ -8,10 +8,10 @@ To physically open the API Gateway and allow traffic to reach the models, we mus
 
 Just like the subscriptions, authorization policies must be deployed into the centralized `models-as-a-service` namespace. 
 
-We will create three policies to map our ChocoTech OpenShift groups (the `subjects`) to our target model (`llama-3-8b-ref`).
+We will create three policies to map our ChocoTech OpenShift groups (the `subjects`) to our target model (`llama-3-8b`).
 
 [IMPORTANT]
-Notice the `modelRefs` section in the YAML below. Even though we will not deploy the `llama-3-8b` model until Module 3, MaaS allows us to "pre-wire" our governance. Expect this policy to be in the failed state, until the model is deployed. We are explicitly telling the subscription: _"When a model reference named `llama-3-8b-ref` appears in the `chocotech-models` namespace, apply these limits."_
+Notice the `modelRefs` section in the YAML below. Even though we will not deploy the `llama-3-8b` model until Module 3, MaaS allows us to "pre-wire" our governance. Expect this policy to be in the failed state, until the model is deployed. We are explicitly telling the subscription: _"When a model reference named `llama-3-8b` appears in the `chocotech-models` namespace, apply these limits."_
 
 Execute the following block to deploy the Auth Policies:
 
@@ -26,7 +26,7 @@ metadata:
   namespace: models-as-a-service
 spec:
   modelRefs:
-    - name: llama-3-8b-ref
+    - name: llama-3-8b
       namespace: chocotech-models
   subjects:
     groups:
@@ -40,7 +40,7 @@ metadata:
   namespace: models-as-a-service
 spec:
   modelRefs:
-    - name: llama-3-8b-ref
+    - name: llama-3-8b
       namespace: chocotech-models
   subjects:
     groups:
@@ -54,7 +54,7 @@ metadata:
   namespace: models-as-a-service
 spec:
   modelRefs:
-    - name: llama-3-8b-ref
+    - name: llama-3-8b
       namespace: chocotech-models
   subjects:
     groups:
