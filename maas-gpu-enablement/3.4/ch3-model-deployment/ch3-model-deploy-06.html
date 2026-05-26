@@ -331,10 +331,10 @@ This section is under development
 <div class="ulist">
 <ul>
 <li>
-<p><strong>v1.0.0:</strong> Base Llama-3 8B Instruct (Currently deployed)</p>
+<p><strong>v1.3.0:</strong> Base Llama-3 8B Instruct (Currently deployed)</p>
 </li>
 <li>
-<p><strong>v1.1.0:</strong> Fine-tuned on chocolate defect images (The requested upgrade)</p>
+<p><strong>v1.4.0:</strong> Fine-tuned on chocolate defect images (The requested upgrade)</p>
 </li>
 <li>
 <p><strong>v2.0.0:</strong> Major architecture change (e.g., swapping to Llama-3 70B)</p>
@@ -376,7 +376,7 @@ metadata:
 # ... [truncating for brevity] ...
 spec:
   model:
-    uri: oci://quay.io/redhat-ai-services/modelcar-catalog:llama-3-8b-v1.1.0  # &lt;--- Update the path</code></pre>
+    uri: oci://quay.io/redhat-ai-services/modelcar-catalog:llama-3-8b-v1.4.0  # &lt;--- Update the path</code></pre>
 </div>
 </div>
 <div class="sect2">
@@ -404,13 +404,13 @@ spec:
 <p>The system spins up a completely new inference pod and begins downloading the <code>v1.1.0</code> weights into the new GPU&#8217;s VRAM.</p>
 </li>
 <li>
-<p>During this time, the <code>v1.0.0</code> pod continues serving live traffic from the Gateway. No user requests are dropped.</p>
+<p>During this time, the <code>v1.3.0</code> pod continues serving live traffic from the Gateway. No user requests are dropped.</p>
 </li>
 <li>
-<p>Once the <code>v1.1.0</code> pod reports a <code>Ready</code> status, KServe automatically flips the network route.</p>
+<p>Once the <code>v1.4.0</code> pod reports a <code>Ready</code> status, KServe automatically flips the network route.</p>
 </li>
 <li>
-<p>All new traffic seamlessly flows to <code>v1.1.0</code>. The old <code>v1.0.0</code> pod is then gracefully terminated, freeing up its GPU.</p>
+<p>All new traffic seamlessly flows to <code>v1.4.0</code>. The old <code>v1.3.0</code> pod is then gracefully terminated, freeing up its GPU.</p>
 </li>
 </ol>
 </div>
@@ -418,7 +418,7 @@ spec:
 <div class="sect2">
 <h3 id="_the_rollback"><a class="anchor" href="#_the_rollback"></a>The Rollback</h3>
 <div class="paragraph">
-<p>If the Quality Control team reports that the <code>v1.1.0</code> model is hallucinating or underperforming, the rollback process takes seconds. You simply revert the Git commit, and KServe repeats the rolling update process to restore the known-good state.</p>
+<p>If the Quality Control team reports that the <code>v1.4.0</code> model is hallucinating or underperforming, the rollback process takes seconds. You simply revert the Git commit, and KServe repeats the rolling update process to restore the known-good state.</p>
 </div>
 </div>
 </div>

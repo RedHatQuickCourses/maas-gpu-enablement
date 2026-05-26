@@ -296,10 +296,11 @@
 <div id="preamble">
 <div class="sectionbody">
 <div class="paragraph">
-<p>With the organizational subscriptions defined, we must enable programmatic access for ChocoTech&#8217;s applications. The Marketing team&#8217;s sentiment analysis application runs in an automated container; it cannot perform an interactive human login.</p>
+<p>With the organizational subscriptions defined, we must enable programmatic access for ChocoTech&#8217;s applications. The Quality Control team&#8217;s needs access to a Llama model to summarize test results.</p>
 </div>
 <div class="paragraph">
-<p>OpenShift AI 3.4 introduces Native API Key Management, which completely replaces the legacy requirement of manually constructing complex Kubernetes ServiceAccounts, RoleBindings, and raw JWTs. This new capability allows you to transition from short-lived Kubernetes tokens to secure, long-lived credentials.</p>
+<p>OpenShift AI 3.4 introduces Native API Key Management, users can create, list, and revoke their own API keys for model access. Administrators can also provision and manage API keys on behalf of users. API keys can be permanent or configured with custom expiration times, and individual keys can be revoked without affecting other keys for the
+same user.</p>
 </div>
 </div>
 </div>
@@ -341,11 +342,14 @@
 </ol>
 </div>
 <hr>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_exercise_1_enforce_global_security_guardrails"><a class="anchor" href="#_exercise_1_enforce_global_security_guardrails"></a>Exercise 1: Enforce Global Security Guardrails</h2>
-<div class="sectionbody">
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+<div class="title">Enforce Global Security Guardrails</div>
 <div class="paragraph">
 <p>By default, users can create "Permanent" keys. To enforce security policies, you can set a maximum expiration period for API keys across the entire platform.</p>
 </div>
@@ -362,11 +366,15 @@
 <div class="paragraph">
 <p><strong>Expected behavior:</strong> Anyone attempting to create an API key with an expiration longer than 90 days will now receive an error.</p>
 </div>
+</td>
+</tr>
+</table>
+</div>
 <hr>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_exercise_2_provisioning_the_application_key_service_account_pattern"><a class="anchor" href="#_exercise_2_provisioning_the_application_key_service_account_pattern"></a>Exercise 2: Provisioning the Application Key (Service Account Pattern)</h2>
+<h2 id="_provisioning_the_application_key_service_account_pattern"><a class="anchor" href="#_provisioning_the_application_key_service_account_pattern"></a>Provisioning the Application Key (Service Account Pattern)</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>We need to generate a key for the Marketing team&#8217;s automated sentiment analysis container. As a Platform Administrator, you will provision this key on their behalf.</p>
@@ -384,10 +392,10 @@
 <div class="ulist">
 <ul>
 <li>
-<p><strong>Name:</strong> <code>marketing-sentiment-app</code> (Using a descriptive name is a best practice for tracking and simplifies revocation.</p>
+<p><strong>Name:</strong> <code>gold-admin</code> (Using a descriptive name is a best practice for tracking and simplifies revocation.</p>
 </li>
 <li>
-<p><strong>Subscription:</strong> Select the <strong>Bronze Plan</strong> (This scopes the key&#8217;s access to the models and token limits defined for Marketing).</p>
+<p><strong>Subscription:</strong> Select the <strong>Gold Plan</strong> (This scopes the key&#8217;s access to the models and token limits defined for Quality Control).</p>
 </li>
 <li>
 <p><strong>Expiration:</strong> Select <code>90 days</code>.</p>
@@ -427,8 +435,11 @@
 </div>
 </div>
 <div class="sect1">
-<h2 id="_exercise_3_test_the_gateway"><a class="anchor" href="#_exercise_3_test_the_gateway"></a>Exercise 3: Test the Gateway</h2>
+<h2 id="_test_the_gateway_authorization"><a class="anchor" href="#_test_the_gateway_authorization"></a>Test the Gateway Authorization</h2>
 <div class="sectionbody">
+<div class="paragraph">
+<p>You won&#8217;t be able to complete this step, till a model is available, but including the steps here and will repeat them in the next section.</p>
+</div>
 <div class="paragraph">
 <p>Now that the identity and permissions are established, let&#8217;s test the authorization chain against the MaaS Gateway using our new key.</p>
 </div>

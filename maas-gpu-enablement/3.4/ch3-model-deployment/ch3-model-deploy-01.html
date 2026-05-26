@@ -311,13 +311,10 @@ This section is under development
 </div>
 </div>
 <div class="paragraph">
-<p>With the governance fences securely built at the network edge, it is time to bring ChocoTech&#8217;s AI factory online. The R&amp;D and Quality Control teams have submitted an urgent request: "We need access to Llama-3 8B for recipe optimization and defect analysis."</p>
+<p>With the governance fences securely built at the network edge, it is time to bring ChocoTech&#8217;s AI factory online. The R&amp;D and Quality Control teams have submitted an urgent request: "We need access to Llama-3-8B for recipe optimization and defect analysis."  For the second LLM you will substitute Qwen3-8b for Nvidia Nemotron, and make Qwen3 model only available to the Marketing and R&amp;D teams.</p>
 </div>
 <div class="paragraph">
-<p>However, they do not want to manage GPU drivers, Kubernetes manifests, or API routing. They just want an endpoint.</p>
-</div>
-<div class="paragraph">
-<p>Your task is to deploy these generative AI models onto your GPU nodes, ensure they integrate with the MaaS Gateway you built in Module 1, and properly link them to the Gold, Silver, and Bronze subscriptions you defined in Module 2.</p>
+<p>Your task is to deploy these generative AI models onto your GPU nodes, ensure they integrate with the MaaS Gateway you built in Module 1, and properly link them to the Gold, Silver, and Bronze subscriptions an authorizations you defined in Module 2.</p>
 </div>
 <!-- toc disabled -->
 </div>
@@ -330,9 +327,6 @@ This section is under development
 </div>
 <div class="ulist">
 <ul>
-<li>
-<p>Explain the architectural difference between a governed <code>LLMInferenceService</code> deployment and an ungoverned legacy deployment.</p>
-</li>
 <li>
 <p>Provision model serving runtimes using <code>llm-d</code> (for distributed inference) or <code>vLLM</code>.</p>
 </li>

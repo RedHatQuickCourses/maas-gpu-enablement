@@ -315,7 +315,7 @@ This section is under development
 <p>ChocoTech&#8217;s Marketing and R&amp;D teams have returned with a new request. While Llama-3 is excellent for general reasoning, they need a dedicated, highly proficient coding assistant model to help generate Python scripts and automate their data pipelines.</p>
 </div>
 <div class="paragraph">
-<p>As a platform engineer, you ran the hardware math (Section 3.1) and realized that deploying a massive model like Nemotron would require an A100 GPU cluster due to its VRAM footprint. Since those nodes are currently unavailable, you have pivoted to deploying <code>qwen3-4b</code>—a highly capable coding model that fits comfortably alongside your existing workloads on standard GPUs.</p>
+<p>As a platform engineer, you ran the hardware math (Section 3.1) and realized that deploying a massive model like Nemotron would require an A100 GPU cluster due to its VRAM footprint. Since those nodes are currently unavailable, you have pivoted to deploying <code>qwen3-8b</code>—a highly capable coding model that fits comfortably alongside your existing workloads on standard GPUs.</p>
 </div>
 <div class="paragraph">
 <p>This exercise demonstrates how easily you can expand the model catalog as new business requirements emerge. More importantly, it demonstrates how to apply strict, selective access controls so that restricted models do not appear for unauthorized users.</p>
@@ -331,6 +331,33 @@ This section is under development
 <p><strong>Single-GPU Lab Clusters</strong><br>
 If your lab environment only has a single GPU with limited VRAM (e.g., 24GB), you cannot run both Llama-3 and Qwen simultaneously. You can either scale down the previous Llama-3 deployment to 0 replicas before continuing, or simply read through this section to understand the governance mechanics without executing the YAML.</p>
 </div>
+<div class="paragraph">
+<p>=== Deploy from the RHOAI console simplication step</p>
+</div>
+<div class="paragraph">
+<p>To simplify the model deployment process through the OpenShift AI dashboard, let&#8217;s create a URI data connection in the <code>chocotech-models</code> project. This configuration stores the exact OCI registry location of our ModelCar-packaged Qwen3-8b image and uses specific annotations so the UI automatically recognizes it.</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">cat &lt;&lt;EOF | oc apply -f -
+apiVersion: v1
+kind: Secret
+metadata:
+  name: qwen3-8b
+  namespace: chocotech-models
+  labels:
+    opendatahub.io/dashboard: "true"
+  annotations:
+    opendatahub.io/connection-type-protocol: uri
+    opendatahub.io/connection-type-ref: uri-v1
+    openshift.io/display-name: "Qwen 3 8b ModelCar (v1.0)"
+stringData:
+  URI: oci://quay.io/redhat-ai-services/modelcar-catalog:qwen3-8b
+type: Opaque
+EOF</code></pre>
+</div>
+</div>
+<hr>
 </td>
 </tr>
 </table>
@@ -352,12 +379,12 @@ If your lab environment only has a single GPU with limited VRAM (e.g., 24GB), yo
 apiVersion: serving.kserve.io/v1alpha1
 kind: LLMInferenceService
 metadata:
-  name: qwen3-4b
+  name: qwen3-8b
   namespace: chocotech-models
 spec:
   # THE VAULT: Pointing to the Modelcar OCI image
   model:
-    uri: oci://quay.io/redhat-ai-services/modelcar-catalog:qwen3-4b
+    uri: oci://quay.io/redhat-ai-services/modelcar-catalog:qwen3-8b
   servingRuntime: "vllm-cuda-runtime"
   router:
     scheduler:
@@ -384,12 +411,12 @@ spec:
 apiVersion: maas.opendatahub.io/v1alpha1
 kind: MaaSModelRef
 metadata:
-  name: qwen3-4b
+  name: qwen3-8b
   namespace: chocotech-models
 spec:
   modelRef:
     kind: LLMInferenceService
-    name: qwen3-4b
+    name: qwen3-8b
 EOF</code></pre>
 </div>
 </div>
@@ -398,7 +425,7 @@ EOF</code></pre>
 </div>
 <div class="listingblock execute">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-none hljs">oc wait --for=condition=ready llminferenceservice/qwen3-4b -n chocotech-models --timeout=600s</code></pre>
+<pre class="highlightjs highlight"><code class="language-none hljs">oc wait --for=condition=ready llminferenceservice/qwen3-8b -n chocotech-models --timeout=600s</code></pre>
 </div>
 </div>
 <hr>
@@ -442,7 +469,7 @@ spec:
         - limit: 10000
           window: 1m
     # NEWLY ADDED MODEL QUOTA
-    - name: qwen3-4b
+    - name: qwen3-8b
       namespace: chocotech-models
       tokenRateLimits:
         - limit: 20000
@@ -466,7 +493,7 @@ spec:
         - limit: 2000
           window: 1m
     # NEWLY ADDED MODEL QUOTA
-    - name: qwen3-4b
+    - name: qwen3-8b
       namespace: chocotech-models
       tokenRateLimits:
         - limit: 8000
@@ -491,7 +518,7 @@ spec:
     - name: llama-3-8b
       namespace: chocotech-models
     # NEWLY ADDED MODEL ACCESS
-    - name: qwen3-4b
+    - name: qwen3-8b
       namespace: chocotech-models
   subjects:
     groups:
@@ -508,7 +535,7 @@ spec:
     - name: llama-3-8b
       namespace: chocotech-models
     # NEWLY ADDED MODEL ACCESS
-    - name: qwen3-4b
+    - name: qwen3-8b
       namespace: chocotech-models
   subjects:
     groups:
@@ -541,7 +568,7 @@ To accurately test selective access, you must generate an API key tied specifica
 <div class="paragraph">
 <p><strong>2. The UI Payoff</strong><br>
 Refresh the Gen AI Studio Models tab in the OpenShift AI dashboard.
-* Since you are testing with Bronze/Silver access, you will now see both <code>llama-3-8b</code> and <code>qwen3-4b</code> listed with their respective subscription access controls.
+* Since you are testing with Bronze/Silver access, you will now see both <code>llama-3-8b</code> and <code>qwen3-8b</code> listed with their respective subscription access controls.
 * If you switch to a user in the <strong>Quality Control (Gold)</strong> group, the Qwen model is entirely hidden from the catalog.</p>
 </div>
 <div class="paragraph">
@@ -572,7 +599,7 @@ curl -s -k -H "Authorization: Bearer $MAAS_API_KEY" \
       "owned_by": "chocotech-models"
     },
     {
-      "id": "qwen3-4b",
+      "id": "qwen3-8b",
       "object": "model",
       "owned_by": "chocotech-models"
     }

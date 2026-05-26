@@ -325,6 +325,13 @@ This section is under development
 <div class="paragraph">
 <p>In the previous section, we explicitly deployed a <code>MaaSModelRef</code> custom resource alongside our model. This resource references inference servers served through OpenShift AI and registers them with the MaaS Gateway.</p>
 </div>
+<div class="ulist">
+<ul>
+<li>
+<p>This is performed by selecting "Publish as MaaS" checkpoint during the deployment configuration process.</p>
+</li>
+</ul>
+</div>
 <div class="paragraph">
 <p>Verify the model was successfully registered with the MaaS API:</p>
 </div>
@@ -343,7 +350,7 @@ llama-3-8b       LLMInferenceService   llama-3-8b       True    5m</pre>
 </div>
 </div>
 <div class="paragraph">
-<p>By itself, this <code>MaaSModelRef</code> does not grant anyone access. However, because you "pre-wired" your governance in Module 2 by explicitly adding <code>llama-3-8b</code> to your Gold, Silver, and Bronze Subscriptions and AuthPolicies, the model is now instantly accessible and fully governed by Kuadrant rate limits.</p>
+<p>By itself, this <code>MaaSModelRef</code> does not grant anyone access. However, because we "pre-wired" your governance in Module 2 by explicitly adding <code>llama-3-8b</code> to our Gold, Silver, and Bronze Subscriptions and AuthPolicies, the model is now instantly accessible and fully governed by Kuadrant rate limits.</p>
 </div>
 </div>
 </div>
@@ -351,10 +358,10 @@ llama-3-8b       LLMInferenceService   llama-3-8b       True    5m</pre>
 <h2 id="_exercise_2_the_developer_payoff_generating_api_keys"><a class="anchor" href="#_exercise_2_the_developer_payoff_generating_api_keys"></a>Exercise 2: The Developer Payoff (Generating API Keys)</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Let&#8217;s switch hats. You are now a developer on the Marketing team logging in to find a model for your sentiment analysis application. You do not need to know anything about <code>vLLM</code> or OpenShift routes; you simply use the self-service catalog.</p>
+<p>Let&#8217;s switch hats. You are now a developer on the Quality Assurance team logging in to find a model for your analysis application. You do not need to know anything about <code>vLLM</code> or OpenShift routes; you simply use the self-service catalog.</p>
 </div>
 <div class="paragraph">
-<p><strong>Prerequisite:</strong> Ensure you are logged into the OpenShift AI dashboard as a user who belongs to the OpenShift group mapped to the Bronze or Silver subscription (e.g., <code>chocotech-marketing</code>).</p>
+<p><strong>Prerequisite:</strong> Ensure you are logged into the OpenShift AI dashboard as a user who belongs to the OpenShift group mapped to the gold-plan subscription (e.g., <code>chocotech-quality-control</code>).</p>
 </div>
 <div class="olist arabic">
 <ol class="arabic">
@@ -399,7 +406,7 @@ llama-3-8b       LLMInferenceService   llama-3-8b       True    5m</pre>
 <p>Click <strong>Create API key</strong>.</p>
 </li>
 <li>
-<p>Give the key a descriptive name (e.g., <code>marketing-sentiment-app</code>).</p>
+<p>Give the key a descriptive name (e.g., <code>quality-control-app</code>).</p>
 </li>
 <li>
 <p>From the <strong>Subscription</strong> dropdown, select the subscription that determines your token limits.</p>
@@ -475,7 +482,7 @@ curl -H "Authorization: Bearer $MAAS_API_KEY" \
 </div>
 <hr>
 <div class="paragraph">
-<p>In the next section, we will deploy a second model (Nemotron-4-8B-Instruct), which will only be available to the Silver and Bronze subscriptions.</p>
+<p>In the next section, we will deploy a second model (Nemotron-4-8B-Code), which will only be available to the Silver and Bronze subscriptions.</p>
 </div>
 </div>
 </div>

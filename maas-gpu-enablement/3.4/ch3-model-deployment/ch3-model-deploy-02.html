@@ -295,24 +295,8 @@
 <h1 class="page">3.1: Model selection, hardware sizing, and serving strategy</h1>
 <div id="preamble">
 <div class="sectionbody">
-<div class="exampleblock">
-<div class="content">
-<div class="admonitionblock warning">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-warning" title="Warning"></i>
-</td>
-<td class="content">
-This section is under development
-</td>
-</tr>
-</table>
-</div>
-</div>
-</div>
 <div class="paragraph">
-<p>ChocoTech&#8217;s Platform Engineering team has received competing generative AI requests from four different departments. As a platform engineer, you cannot simply provision GPUs and deploy models blindly. To prevent wasting expensive GPU resources, you must evaluate models based on their architecture and capabilities before deploying them.</p>
+<p>ChocoTech&#8217;s Platform Engineering team has received generative AI requests from three different departments. As a platform engineer, you cannot simply provision GPUs and deploy models blindly. To prevent wasting expensive GPU resources, you must evaluate models based on their architecture and capabilities before deploying them.</p>
 </div>
 <div class="paragraph">
 <p>Before you write a single line of YAML, you must answer three critical questions:</p>
@@ -330,10 +314,14 @@ This section is under development
 </li>
 </ul>
 </div>
+<div class="paragraph">
+<p>Before diving into the technical deployment steps, it is key to understand the "why" and "how" behind your configurations. The following content serves as a foundational introduction and reference guide for model selection, hardware sizing, and runtime architectures within OpenShift AI. It provides the necessary context to help you determine which models are the best candidates for your specific applications and infrastructure before you begin consuming cluster resources.</p>
+</div>
+<hr>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_1_evaluating_model_architecture_dense_vs_sparse"><a class="anchor" href="#_1_evaluating_model_architecture_dense_vs_sparse"></a>1. Evaluating model architecture: Dense vs. Sparse</h2>
+<h2 id="_evaluating_model_architecture_dense_vs_sparse"><a class="anchor" href="#_evaluating_model_architecture_dense_vs_sparse"></a>Evaluating model architecture: Dense vs. Sparse</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>Model architecture is not just a data science concern; it fundamentally impacts your GPU memory consumption, inference speed, and deployment complexity.</p>
@@ -403,7 +391,7 @@ This section is under development
 </div>
 </div>
 <div class="sect1">
-<h2 id="_2_evaluating_capabilities_reasoning_vs_non_reasoning"><a class="anchor" href="#_2_evaluating_capabilities_reasoning_vs_non_reasoning"></a>2. Evaluating capabilities: Reasoning vs. Non-Reasoning</h2>
+<h2 id="_evaluating_capabilities_reasoning_vs_non_reasoning"><a class="anchor" href="#_evaluating_capabilities_reasoning_vs_non_reasoning"></a>Evaluating capabilities: Reasoning vs. Non-Reasoning</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>Beyond the underlying architecture, a model&#8217;s capabilities determine its suitability for specific workloads and directly impact your computational costs.</p>
@@ -512,7 +500,7 @@ This section is under development
 </div>
 </div>
 <div class="sect1">
-<h2 id="_3_the_hardware_math_sizing_the_model"><a class="anchor" href="#_3_the_hardware_math_sizing_the_model"></a>3. The Hardware Math: Sizing the Model</h2>
+<h2 id="_the_hardware_math_sizing_the_model"><a class="anchor" href="#_the_hardware_math_sizing_the_model"></a>The Hardware Math: Sizing the Model</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>Once a model is selected, you must ensure it physically fits on your infrastructure. A common mistake is assuming that a model&#8217;s size correlates to standard disk storage, rather than Video RAM (VRAM).</p>
@@ -559,7 +547,7 @@ This section is under development
 </div>
 </div>
 <div class="sect1">
-<h2 id="_4_the_serving_strategy_why_llm_d"><a class="anchor" href="#_4_the_serving_strategy_why_llm_d"></a>4. The Serving Strategy: Why <code>llm-d</code>?</h2>
+<h2 id="_the_serving_strategy_why_llm_d"><a class="anchor" href="#_the_serving_strategy_why_llm_d"></a>The Serving Strategy: Why <code>llm-d</code>?</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>To successfully govern a model in OpenShift AI 3.4, it <strong>must</strong> be deployed using the <code>LLMInferenceService</code> architecture. This architecture is specifically designed for large language models and integrates directly with the MaaS gateway you built in Module 1 to enforce subscription-based access control.</p>
