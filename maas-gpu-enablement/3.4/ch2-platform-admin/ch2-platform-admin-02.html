@@ -350,7 +350,7 @@ This intentional separation provides maximum flexibility. For example, administr
 <p><strong>Centralized Deployment:</strong> All subscriptions must be deployed into the central <code>models-as-a-service</code> namespace, rather than individual model namespaces, to allow platform-wide billing and quota management.</p>
 </li>
 <li>
-<p><strong>Deploy Before Models:</strong> You can "pre-wire" your platform&#8217;s governance. Because subscriptions reference models by name (e.g., <code>llama-3-8b-ref</code>), you should deploy these policies before the model actually exists. This ensures the MaaS operator enforces token limits on the very first inference request.</p>
+<p><strong>Deploy Before Models:</strong> You can "pre-wire" your platform&#8217;s governance. Because subscriptions reference models by name (e.g., <code>llama-3-8b</code>), you should deploy these policies before the model actually exists. This ensures the MaaS operator enforces token limits on the very first inference request.</p>
 </li>
 <li>
 <p><strong>The Priority Numbering Scheme:</strong> When a user belongs to multiple groups with different subscriptions, the system automatically selects the subscription with the highest priority level.</p>
@@ -413,7 +413,7 @@ This intentional separation provides maximum flexibility. For example, administr
 <div class="ulist">
 <ul>
 <li>
-<p><strong>Gold Plan (Priority 100):</strong> Mapped to the <code>chocotech-quality-control</code> group. This tier will have massive token limits to ensure the factory floor&#8217;s defect detection models never experience throttling.</p>
+<p><strong>Gold Plan (Priority 80):</strong> Mapped to the <code>chocotech-quality-control</code> group. This tier will have massive token limits to ensure the factory floor&#8217;s defect detection models never experience throttling.</p>
 </li>
 <li>
 <p><strong>Silver Plan (Priority 50):</strong> Mapped to the <code>chocotech-rd</code> group. This tier will have moderate token limits for recipe optimization testing.</p>

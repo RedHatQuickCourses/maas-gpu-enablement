@@ -310,7 +310,7 @@
 <p>Just like the subscriptions, authorization policies must be deployed into the centralized <code>models-as-a-service</code> namespace.</p>
 </div>
 <div class="paragraph">
-<p>We will create three policies to map our ChocoTech OpenShift groups (the <code>subjects</code>) to our target model (<code>llama-3-8b-ref</code>).</p>
+<p>We will create three policies to map our ChocoTech OpenShift groups (the <code>subjects</code>) to our target model (<code>llama-3-8b</code>).</p>
 </div>
 <div class="admonitionblock important">
 <table>
@@ -319,7 +319,7 @@
 <i class="fa icon-important" title="Important"></i>
 </td>
 <td class="content">
-Notice the <code>modelRefs</code> section in the YAML below. Even though we will not deploy the <code>llama-3-8b</code> model until Module 3, MaaS allows us to "pre-wire" our governance. Expect this policy to be in the failed state, until the model is deployed. We are explicitly telling the subscription: <em>"When a model reference named <code>llama-3-8b-ref</code> appears in the <code>chocotech-models</code> namespace, apply these limits."</em>
+Notice the <code>modelRefs</code> section in the YAML below. Even though we will not deploy the <code>llama-3-8b</code> model until Module 3, MaaS allows us to "pre-wire" our governance. Expect this policy to be in the failed state, until the model is deployed. We are explicitly telling the subscription: <em>"When a model reference named <code>llama-3-8b</code> appears in the <code>chocotech-models</code> namespace, apply these limits."</em>
 </td>
 </tr>
 </table>
@@ -338,7 +338,7 @@ metadata:
   namespace: models-as-a-service
 spec:
   modelRefs:
-    - name: llama-3-8b-ref
+    - name: llama-3-8b
       namespace: chocotech-models
   subjects:
     groups:
@@ -352,7 +352,7 @@ metadata:
   namespace: models-as-a-service
 spec:
   modelRefs:
-    - name: llama-3-8b-ref
+    - name: llama-3-8b
       namespace: chocotech-models
   subjects:
     groups:
@@ -366,7 +366,7 @@ metadata:
   namespace: models-as-a-service
 spec:
   modelRefs:
-    - name: llama-3-8b-ref
+    - name: llama-3-8b
       namespace: chocotech-models
   subjects:
     groups:

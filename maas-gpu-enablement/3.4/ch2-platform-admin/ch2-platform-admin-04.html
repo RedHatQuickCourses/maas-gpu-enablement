@@ -330,7 +330,7 @@
 <p><strong>Gold Plan</strong> (Quality Control)</p>
 </div></div></td>
 <td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
-<p><code>100</code> (Highest)</p>
+<p><code>80</code> (Highest)</p>
 </div></div></td>
 <td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
 <p>50,000 tokens/min</p>
@@ -385,7 +385,7 @@
 <i class="fa icon-important" title="Important"></i>
 </td>
 <td class="content">
-Notice the <code>modelRefs</code> section in the YAML below. Even though we will not deploy the <code>llama-3-8b</code> model until Module 3, MaaS allows us to "pre-wire" our governance. Expect this deployment to be in the failed state, until the model is deployed. We are explicitly telling the subscription: <em>"When a model reference named <code>llama-3-8b-ref</code> appears in the <code>chocotech-models</code> namespace, apply these limits."</em>
+Notice the <code>modelRefs</code> section in the YAML below. Even though we will not deploy the <code>llama-3-8b</code> model until Module 3, MaaS allows us to "pre-wire" our governance. Expect this deployment to be in the failed state, until the model is deployed. We are explicitly telling the subscription: <em>"When a model reference named <code>llama-3-8b</code> appears in the <code>chocotech-models</code> namespace, apply these limits."</em>
 </td>
 </tr>
 </table>
@@ -403,13 +403,13 @@ metadata:
   name: gold-plan
   namespace: models-as-a-service
 spec:
-  priority: 100
+  priority: 80
   owner:
     groups:
       - name: chocotech-quality-control
     users: []
   modelRefs:
-    - name: llama-3-8b-ref
+    - name: llama-3-8b
       namespace: chocotech-models
       tokenRateLimits:
         - limit: 50000
@@ -427,7 +427,7 @@ spec:
       - name: chocotech-rd
     users: []
   modelRefs:
-    - name: llama-3-8b-ref
+    - name: llama-3-8b
       namespace: chocotech-models
       tokenRateLimits:
         - limit: 10000
@@ -445,7 +445,7 @@ spec:
       - name: chocotech-marketing
     users: []
   modelRefs:
-    - name: llama-3-8b-ref
+    - name: llama-3-8b
       namespace: chocotech-models
       tokenRateLimits:
         - limit: 2000
@@ -476,7 +476,7 @@ EOF</code></pre>
 <div class="content">
 <pre>NAME          PRIORITY   AGE
 bronze-plan   10         30s
-gold-plan     100        30s
+gold-plan     80         30s
 silver-plan   50         30s</pre>
 </div>
 </div>

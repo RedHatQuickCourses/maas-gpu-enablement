@@ -343,7 +343,7 @@
 <div class="content">
 <div class="listingblock execute">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-none hljs">oc get csv -n openshift-lws-operator | grep -E "(servicemesh|rhcl|rhods|limitador|authorino|leader|cluster)"</code></pre>
+<pre class="highlightjs highlight"><code class="language-none hljs">oc get csv | grep -E "(servicemesh|rhcl|rhods|limitador|authorino|leader|cluster)"</code></pre>
 </div>
 </div>
 </div>
@@ -640,16 +640,6 @@ EOF</code></pre>
 <div class="paragraph">
 <p>If the output matches, your underlying Gateway API infrastructure is fully compliant with Red Hat&#8217;s MaaS prerequisites.</p>
 </div>
-<hr>
-<div class="paragraph">
-<p><strong>How it all ties together in MaaS</strong></p>
-</div>
-<div class="paragraph">
-<p>The benefit of this architecture is the separation of infrastructure from application logic. As a platform engineer, you only build the gateway.</p>
-</div>
-<div class="paragraph">
-<p>ChocoTech deploys a model and checks the "Publish as MaaS" box, they do not need to write any networking rules. The MaaS controller automatically generates the <code>HTTPRoute</code> behind the scenes. That route dynamically attaches itself to the <code>maas-default-gateway</code>, securely linking the public endpoint through the Kuadrant governance layer directly to the internal KServe model pod.</p>
-</div>
 </div>
 </div>
 </div>
@@ -899,7 +889,7 @@ oc rollout status deployment/rhods-dashboard -n redhat-ods-applications</code></
 </div>
 </div>
 <div class="paragraph">
-<p>Refresh your OpenShift AI browser window. The <strong>Gen AI Studio</strong> menu option will now appear in your left-hand navigation pane.</p>
+<p>Refresh your OpenShift AI browser window. The <strong>Gen AI Studio - API Key generation tab</strong> menu option will now appear in your left-hand navigation pane.</p>
 </div>
 <hr>
 </div>
@@ -911,6 +901,33 @@ oc rollout status deployment/rhods-dashboard -n redhat-ods-applications</code></
 <div class="sectionbody">
 <div class="paragraph">
 <p>Before moving on to building ChocoTech&#8217;s subscription plans in Module 2, run this comprehensive verification script to confirm all components deployed successfully.</p>
+</div>
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-warning" title="Warning"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p><strong>Manual File Creation Required:</strong> You must create this file manually before adding the content (for example, by using <code>touch filename</code> or opening a new file directly in your text editor).</p>
+</div>
+<div class="paragraph">
+<p><strong>Copy/Paste Tip:</strong> Due to web terminal buffer limitations, pasting the entire block of text at once may result in nothing being pasted.</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Copy and paste <strong>tasks 1 through 5</strong> first.</p>
+</li>
+<li>
+<p>Once those are successfully pasted, copy and paste the <strong>remaining text</strong>.</p>
+</li>
+</ol>
+</div>
+</td>
+</tr>
+</table>
 </div>
 <div class="listingblock">
 <div class="content">

@@ -343,6 +343,45 @@ oc apply -f - -n chocotech-models</code></pre>
 <div class="paragraph">
 <p><strong>Expected Output:</strong> <code>servingruntime.serving.kserve.io/vllm-cuda-runtime created</code>.</p>
 </div>
+<hr>
+<div class="paragraph">
+<p>cat &lt;&lt;EOF | oc apply -f -
+apiVersion: v1
+kind: Secret
+metadata:
+  name: llama-3-8b
+  namespace: chocotech-models
+  labels:
+    opendatahub.io/dashboard: "true"
+  annotations:
+    opendatahub.io/connection-type-protocol: uri
+    opendatahub.io/connection-type-ref: uri-v1
+    openshift.io/display-name: "Llama 8b ModelCar (v1.3)"
+stringData:
+  URI: oci://quay.io/redhat-ai-services/modelcar-catalog:llama-3.1-8b-instruct
+type: Opaque
+EOF</p>
+</div>
+<hr>
+<div class="paragraph">
+<p>cat &lt;&lt;EOF | oc apply -f -
+apiVersion: v1
+kind: Secret
+metadata:
+  name: qwen3-8b
+  namespace: chocotech-models
+  labels:
+    opendatahub.io/dashboard: "true"
+  annotations:
+    opendatahub.io/connection-type-protocol: uri
+    opendatahub.io/connection-type-ref: uri-v1
+    openshift.io/display-name: "Qwen 3 8b ModelCar (v1.0)"
+stringData:
+  URI: oci://quay.io/redhat-ai-services/modelcar-catalog:qwen3-8b
+type: Opaque
+EOF</p>
+</div>
+<hr>
 </div>
 </div>
 <div class="sect1">
