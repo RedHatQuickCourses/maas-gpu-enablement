@@ -12,6 +12,8 @@ With Models-as-a-Service, OpenShift AI handles all of this automatically through
 
 In the previous section, we explicitly deployed a `MaaSModelRef` custom resource alongside our model. This resource references inference servers served through OpenShift AI and registers them with the MaaS Gateway. 
 
+ * This is performed by selecting "Publish as MaaS" checkpoint during the deployment configuration process.
+
 Verify the model was successfully registered with the MaaS API:
 
 [source,role="execute"]
@@ -25,13 +27,13 @@ NAME             MODELREF_KIND         MODELREF_NAME    READY   AGE
 llama-3-8b       LLMInferenceService   llama-3-8b       True    5m
 ----
 
-By itself, this `MaaSModelRef` does not grant anyone access. However, because you "pre-wired" your governance in Module 2 by explicitly adding `llama-3-8b` to your Gold, Silver, and Bronze Subscriptions and AuthPolicies, the model is now instantly accessible and fully governed by Kuadrant rate limits.
+By itself, this `MaaSModelRef` does not grant anyone access. However, because we "pre-wired" your governance in Module 2 by explicitly adding `llama-3-8b` to our Gold, Silver, and Bronze Subscriptions and AuthPolicies, the model is now instantly accessible and fully governed by Kuadrant rate limits.
 
 == Exercise 2: The Developer Payoff (Generating API Keys)
 
-Let's switch hats. You are now a developer on the Marketing team logging in to find a model for your sentiment analysis application. You do not need to know anything about `vLLM` or OpenShift routes; you simply use the self-service catalog.
+Let's switch hats. You are now a developer on the Quality Assurance team logging in to find a model for your analysis application. You do not need to know anything about `vLLM` or OpenShift routes; you simply use the self-service catalog.
 
-*Prerequisite:* Ensure you are logged into the OpenShift AI dashboard as a user who belongs to the OpenShift group mapped to the Bronze or Silver subscription (e.g., `chocotech-marketing`). 
+*Prerequisite:* Ensure you are logged into the OpenShift AI dashboard as a user who belongs to the OpenShift group mapped to the gold-plan subscription (e.g., `chocotech-quality-control`). 
 
 1. Navigate to **Gen AI studio** -> **AI asset endpoints** in the left-hand menu.
 2. Click on the **Models** tab.
@@ -50,7 +52,7 @@ For a real application, developers need a persistent API key rather than a 1-hou
 
 1. In the OpenShift AI dashboard, click **Gen AI studio** -> **API keys**.
 2. Click **Create API key**.
-3. Give the key a descriptive name (e.g., `marketing-sentiment-app`).
+3. Give the key a descriptive name (e.g., `quality-control-app`).
 4. From the **Subscription** dropdown, select the subscription that determines your token limits. 
 5. Leave the Expiration at the default (30 days) and click **Create**.
 
@@ -92,4 +94,4 @@ Due to limitations in the Kuadrant wasm-shim, the `model` label **does not** app
 
 ---
 
-In the next section, we will deploy a second model (Nemotron-4-8B-Instruct), which will only be available to the Silver and Bronze subscriptions.
+In the next section, we will deploy a second model (Nemotron-4-8B-Code), which will only be available to the Silver and Bronze subscriptions.

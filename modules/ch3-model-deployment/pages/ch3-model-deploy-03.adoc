@@ -28,6 +28,14 @@ oc apply -f - -n chocotech-models
 
 ---
 
+=== Deploy from the RHOAI console simplication step
+
+To simplify the model deployment process through the OpenShift AI dashboard, let's create a URI data connection in the `chocotech-models` project. This configuration stores the exact OCI registry location of our ModelCar-packaged Llama 3.1 8B image and uses specific annotations so the UI automatically recognizes it.
+
+Run the following command to create the data connection secret:
+
+[source,role="execute"]
+----
 cat <<EOF | oc apply -f -
 apiVersion: v1
 kind: Secret
@@ -44,25 +52,8 @@ stringData:
   URI: oci://quay.io/redhat-ai-services/modelcar-catalog:llama-3.1-8b-instruct
 type: Opaque
 EOF
+----
 
----
-
-cat <<EOF | oc apply -f -
-apiVersion: v1
-kind: Secret
-metadata:
-  name: qwen3-8b
-  namespace: chocotech-models
-  labels:
-    opendatahub.io/dashboard: "true"
-  annotations:
-    opendatahub.io/connection-type-protocol: uri
-    opendatahub.io/connection-type-ref: uri-v1
-    openshift.io/display-name: "Qwen 3 8b ModelCar (v1.0)"
-stringData:
-  URI: oci://quay.io/redhat-ai-services/modelcar-catalog:qwen3-8b
-type: Opaque
-EOF
 
 ---
 
@@ -87,15 +78,20 @@ kind: LLMInferenceService
 metadata:
   name: llama-3-8b
   namespace: chocotech-models
+  labels:
+    # These labels force the deployment to appear in the OpenShift AI UI
+    opendatahub.io/dashboard: "true"
+    opendatahub.io/genai-asset: "true"
+  annotations:
+    opendatahub.io/model-type: generative
+    openshift.io/display-name: "llama-3-8b"
 spec:
-  # THE VAULT: Pointing to our Modelcar OCI image
+  # OCI URI extracted directly from the running pod's modelcar container
   model:
     uri: oci://quay.io/redhat-ai-services/modelcar-catalog:llama-3.1-8b-instruct
-    
-  # THE ENGINE: Utilizing the localized runtime we extracted in step 1
+
   servingRuntime: "vllm-cuda-runtime"
   
-  # THE SCHEDULER: Bypassing standard round-robin for intelligent llm-d dispatching
   router:
     scheduler:
       template:
@@ -106,17 +102,24 @@ spec:
               - 'inference.networking.x-k8s.io'
               - '--pool-name'
               - '{{ .ObjectMeta.Name }}-inference-pool'
-            
-  # ENGINE TUNING: Injecting native vLLM parameters for maximum throughput
+
+  # Tuning extracted from your main container's environment variables
   template:
     spec:
       containers:
         - name: main
           env:
             - name: VLLM_ADDITIONAL_ARGS
-              value: "--max-model-len=8192 --gpu-memory-utilization=0.90"
-              
-  # THE HARDWARE: Requesting exact VRAM and GPU requirements
+              value: "--dtype=half --max-model-len=20000 --gpu-memory-utilization=0.95 --enable-auto-tool-choice --tool-call-parser=llama3_json --chat-template=/opt/app-root/template/tool_chat_template_llama3.2_json.jinja"
+          resources:
+            requests:
+              cpu: '1'
+              memory: 12Gi
+            limits:
+              cpu: '1'
+              memory: 12Gi
+
+  # Hardware footprint extracted from the pod specs
   placement:
     accelerator:
       name: "nvidia.com/gpu"

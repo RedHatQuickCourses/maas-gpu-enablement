@@ -1,10 +1,6 @@
 = 3.1: Model selection, hardware sizing, and serving strategy
 
-====
-WARNING: This section is under development
-====
-
-ChocoTech's Platform Engineering team has received competing generative AI requests from four different departments. As a platform engineer, you cannot simply provision GPUs and deploy models blindly. To prevent wasting expensive GPU resources, you must evaluate models based on their architecture and capabilities before deploying them. 
+ChocoTech's Platform Engineering team has received generative AI requests from three different departments. As a platform engineer, you cannot simply provision GPUs and deploy models blindly. To prevent wasting expensive GPU resources, you must evaluate models based on their architecture and capabilities before deploying them. 
 
 Before you write a single line of YAML, you must answer three critical questions:
 
@@ -12,7 +8,12 @@ Before you write a single line of YAML, you must answer three critical questions
 * *Will this model physically fit on our GPUs?* 
 * *How do we ensure the deployment inherits our Models-as-a-Service (MaaS) governance rules?* 
 
-== 1. Evaluating model architecture: Dense vs. Sparse
+
+Before diving into the technical deployment steps, it is key to understand the "why" and "how" behind your configurations. The following content serves as a foundational introduction and reference guide for model selection, hardware sizing, and runtime architectures within OpenShift AI. It provides the necessary context to help you determine which models are the best candidates for your specific applications and infrastructure before you begin consuming cluster resources.
+
+---
+
+== Evaluating model architecture: Dense vs. Sparse
 
 Model architecture is not just a data science concern; it fundamentally impacts your GPU memory consumption, inference speed, and deployment complexity.
 
@@ -39,7 +40,7 @@ Model architecture is not just a data science concern; it fundamentally impacts 
 
 **The ChocoTech Decision:** For the initial MaaS deployment, ChocoTech is standardizing on **dense models** (specifically Llama-3 8B). This minimizes deployment complexity and ensures predictable performance guarantees across all four departments.
 
-== 2. Evaluating capabilities: Reasoning vs. Non-Reasoning
+== Evaluating capabilities: Reasoning vs. Non-Reasoning
 
 Beyond the underlying architecture, a model's capabilities determine its suitability for specific workloads and directly impact your computational costs. 
 
@@ -90,7 +91,7 @@ Based on these technical assessments, you map the following model strategy for C
 | Their vendor chatbot requires ultra-fast responses for basic inquiries. Non-reasoning models are perfectly sufficient for FAQs.
 |===
 
-== 3. The Hardware Math: Sizing the Model
+== The Hardware Math: Sizing the Model
 
 Once a model is selected, you must ensure it physically fits on your infrastructure. A common mistake is assuming that a model's size correlates to standard disk storage, rather than Video RAM (VRAM). 
 
@@ -112,7 +113,7 @@ If ChocoTech wanted to deploy a massive 70B parameter model, it would require ~1
 * **INT4 quantization:** Reduces memory consumption by approximately 75%, but comes with noticeable quality degradation, particularly for complex reasoning tasks.
 ====
 
-== 4. The Serving Strategy: Why `llm-d`?
+== The Serving Strategy: Why `llm-d`?
 
 To successfully govern a model in OpenShift AI 3.4, it **must** be deployed using the `LLMInferenceService` architecture. This architecture is specifically designed for large language models and integrates directly with the MaaS gateway you built in Module 1 to enforce subscription-based access control. 
 

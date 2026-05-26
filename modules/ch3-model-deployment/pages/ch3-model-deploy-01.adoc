@@ -8,11 +8,9 @@
 WARNING: This section is under development
 ====
 
-With the governance fences securely built at the network edge, it is time to bring ChocoTech's AI factory online. The R&D and Quality Control teams have submitted an urgent request: "We need access to Llama-3 8B for recipe optimization and defect analysis." 
+With the governance fences securely built at the network edge, it is time to bring ChocoTech's AI factory online. The R&D and Quality Control teams have submitted an urgent request: "We need access to Llama-3-8B for recipe optimization and defect analysis."  For the second LLM you will substitute Qwen3-8b for Nvidia Nemotron, and make Qwen3 model only available to the Marketing and R&D teams. 
 
-However, they do not want to manage GPU drivers, Kubernetes manifests, or API routing. They just want an endpoint.
-
-Your task is to deploy these generative AI models onto your GPU nodes, ensure they integrate with the MaaS Gateway you built in Module 1, and properly link them to the Gold, Silver, and Bronze subscriptions you defined in Module 2.
+Your task is to deploy these generative AI models onto your GPU nodes, ensure they integrate with the MaaS Gateway you built in Module 1, and properly link them to the Gold, Silver, and Bronze subscriptions an authorizations you defined in Module 2.
 
 toc::[]
 
@@ -20,7 +18,6 @@ toc::[]
 
 By the end of this module, you will be able to:
 
-* Explain the architectural difference between a governed `LLMInferenceService` deployment and an ungoverned legacy deployment.
 * Provision model serving runtimes using `llm-d` (for distributed inference) or `vLLM`.
 * Understand how the "Publish as MaaS" function automatically generates `MaaSModelRef` custom resources to register models with the gateway.
 * Execute the critical post-deployment governance steps to link newly deployed models to existing `MaaSSubscription` and `MaaSAuthPolicy` resources.

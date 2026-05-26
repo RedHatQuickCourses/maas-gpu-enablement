@@ -6,7 +6,7 @@ WARNING: This section is under development
 
 ChocoTech's Marketing and R&D teams have returned with a new request. While Llama-3 is excellent for general reasoning, they need a dedicated, highly proficient coding assistant model to help generate Python scripts and automate their data pipelines.
 
-As a platform engineer, you ran the hardware math (Section 3.1) and realized that deploying a massive model like Nemotron would require an A100 GPU cluster due to its VRAM footprint. Since those nodes are currently unavailable, you have pivoted to deploying `qwen3-4b`—a highly capable coding model that fits comfortably alongside your existing workloads on standard GPUs.
+As a platform engineer, you ran the hardware math (Section 3.1) and realized that deploying a massive model like Nemotron would require an A100 GPU cluster due to its VRAM footprint. Since those nodes are currently unavailable, you have pivoted to deploying `qwen3-8b`—a highly capable coding model that fits comfortably alongside your existing workloads on standard GPUs.
 
 This exercise demonstrates how easily you can expand the model catalog as new business requirements emerge. More importantly, it demonstrates how to apply strict, selective access controls so that restricted models do not appear for unauthorized users.
 
@@ -14,6 +14,34 @@ This exercise demonstrates how easily you can expand the model catalog as new bu
 ====
 **Single-GPU Lab Clusters** +
 If your lab environment only has a single GPU with limited VRAM (e.g., 24GB), you cannot run both Llama-3 and Qwen simultaneously. You can either scale down the previous Llama-3 deployment to 0 replicas before continuing, or simply read through this section to understand the governance mechanics without executing the YAML.
+
+
+=== Deploy from the RHOAI console simplication step
+
+To simplify the model deployment process through the OpenShift AI dashboard, let's create a URI data connection in the `chocotech-models` project. This configuration stores the exact OCI registry location of our ModelCar-packaged Qwen3-8b image and uses specific annotations so the UI automatically recognizes it.
+
+[source,role="execute"]
+----
+cat <<EOF | oc apply -f -
+apiVersion: v1
+kind: Secret
+metadata:
+  name: qwen3-8b
+  namespace: chocotech-models
+  labels:
+    opendatahub.io/dashboard: "true"
+  annotations:
+    opendatahub.io/connection-type-protocol: uri
+    opendatahub.io/connection-type-ref: uri-v1
+    openshift.io/display-name: "Qwen 3 8b ModelCar (v1.0)"
+stringData:
+  URI: oci://quay.io/redhat-ai-services/modelcar-catalog:qwen3-8b
+type: Opaque
+EOF
+----
+
+---
+
 ====
 
 == Exercise 1: The deployment manifest
@@ -28,12 +56,12 @@ cat <<EOF | oc apply -f -
 apiVersion: serving.kserve.io/v1alpha1
 kind: LLMInferenceService
 metadata:
-  name: qwen3-4b
+  name: qwen3-8b
   namespace: chocotech-models
 spec:
   # THE VAULT: Pointing to the Modelcar OCI image
   model:
-    uri: oci://quay.io/redhat-ai-services/modelcar-catalog:qwen3-4b
+    uri: oci://quay.io/redhat-ai-services/modelcar-catalog:qwen3-8b
   servingRuntime: "vllm-cuda-runtime"
   router:
     scheduler:
@@ -60,12 +88,12 @@ spec:
 apiVersion: maas.opendatahub.io/v1alpha1
 kind: MaaSModelRef
 metadata:
-  name: qwen3-4b
+  name: qwen3-8b
   namespace: chocotech-models
 spec:
   modelRef:
     kind: LLMInferenceService
-    name: qwen3-4b
+    name: qwen3-8b
 EOF
 ----
 
@@ -73,7 +101,7 @@ Check the status condition to verify the model is healthy and ready to serve tra
 
 [source,role="execute"]
 ----
-oc wait --for=condition=ready llminferenceservice/qwen3-4b -n chocotech-models --timeout=600s
+oc wait --for=condition=ready llminferenceservice/qwen3-8b -n chocotech-models --timeout=600s
 ----
 
 ---
@@ -110,7 +138,7 @@ spec:
         - limit: 10000
           window: 1m
     # NEWLY ADDED MODEL QUOTA
-    - name: qwen3-4b
+    - name: qwen3-8b
       namespace: chocotech-models
       tokenRateLimits:
         - limit: 20000
@@ -134,7 +162,7 @@ spec:
         - limit: 2000
           window: 1m
     # NEWLY ADDED MODEL QUOTA
-    - name: qwen3-4b
+    - name: qwen3-8b
       namespace: chocotech-models
       tokenRateLimits:
         - limit: 8000
@@ -158,7 +186,7 @@ spec:
     - name: llama-3-8b
       namespace: chocotech-models
     # NEWLY ADDED MODEL ACCESS
-    - name: qwen3-4b
+    - name: qwen3-8b
       namespace: chocotech-models
   subjects:
     groups:
@@ -175,7 +203,7 @@ spec:
     - name: llama-3-8b
       namespace: chocotech-models
     # NEWLY ADDED MODEL ACCESS
-    - name: qwen3-4b
+    - name: qwen3-8b
       namespace: chocotech-models
   subjects:
     groups:
@@ -200,7 +228,7 @@ To accurately test selective access, you must generate an API key tied specifica
 
 **2. The UI Payoff** +
 Refresh the Gen AI Studio Models tab in the OpenShift AI dashboard.
-* Since you are testing with Bronze/Silver access, you will now see both `llama-3-8b` and `qwen3-4b` listed with their respective subscription access controls. 
+* Since you are testing with Bronze/Silver access, you will now see both `llama-3-8b` and `qwen3-8b` listed with their respective subscription access controls. 
 * If you switch to a user in the **Quality Control (Gold)** group, the Qwen model is entirely hidden from the catalog.
 
 **3. API Discovery (The Developer View)** +
@@ -228,7 +256,7 @@ curl -s -k -H "Authorization: Bearer $MAAS_API_KEY" \
       "owned_by": "chocotech-models"
     },
     {
-      "id": "qwen3-4b",
+      "id": "qwen3-8b",
       "object": "model",
       "owned_by": "chocotech-models"
     }

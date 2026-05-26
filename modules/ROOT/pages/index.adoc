@@ -37,7 +37,6 @@ In this hands-on QuickCourse, you will:
 * **MaaS Strategy**: Understand how Models-as-a-Service solves complex GPU resource allocation and "Shadow AI" challenges.
 * **Architect a Hub**: Design and implement a centralized model hub featuring governed, token-based consumption via Kuadrant and Authorino.
 * **Configure and Deploy**: Set up MaaS using operators and deploy generative AI models leveraging the highly scalable `LLMInferenceService` architecture.
-* **Integrate External Models**: Safely route traffic to external cloud providers (like OpenAI) using a two-tier authentication architecture.
 * **Enforce Governance**: Implement strict token quotas and rate limits using `MaaSSubscription` and `MaaSAuthPolicy` custom resources.
 * **Monitor and Report**: Enable telemetry, visualize API consumption, and export automated chargeback reports for financial accountability.
 * **Integrate Seamlessly**: Connect AI models into downstream applications using OpenAI-compatible APIs with robust exponential backoff retry logic.

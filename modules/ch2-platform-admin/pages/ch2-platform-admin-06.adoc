@@ -1,8 +1,9 @@
 = 2.3: Native API Key Management and programmatic access
 
-With the organizational subscriptions defined, we must enable programmatic access for ChocoTech's applications. The Marketing team's sentiment analysis application runs in an automated container; it cannot perform an interactive human login. 
+With the organizational subscriptions defined, we must enable programmatic access for ChocoTech's applications. The Quality Control team's needs access to a Llama model to summarize test results.
 
-OpenShift AI 3.4 introduces Native API Key Management, which completely replaces the legacy requirement of manually constructing complex Kubernetes ServiceAccounts, RoleBindings, and raw JWTs. This new capability allows you to transition from short-lived Kubernetes tokens to secure, long-lived credentials.
+OpenShift AI 3.4 introduces Native API Key Management, users can create, list, and revoke their own API keys for model access. Administrators can also provision and manage API keys on behalf of users. API keys can be permanent or configured with custom expiration times, and individual keys can be revoked without affecting other keys for the
+same user.
 
 == How API Keys Work in OpenShift AI 3.4
 
@@ -21,11 +22,12 @@ The platform supports two distinct workflows for generating keys:
 
 ---
 
-== Exercise 1: Enforce Global Security Guardrails
+.Enforce Global Security Guardrails
+[IMPORTANT]
+====
+By default, users can create "Permanent" keys. To enforce security policies, you can set a maximum expiration period for API keys across the entire platform. 
 
-By default, users can create "Permanent" keys. To enforce security policies, you can set a maximum expiration period for API keys across the entire platform.
-
-Execute the following command to patch the centralized `Tenant` custom resource and enforce a strict 90-day maximum lifetime (`maxExpirationDays`) for all new API keys:
+Execute the following command to patch the centralized `Tenant` custom resource and enforce a strict 90-day maximum lifetime (`maxExpirationDays`) for all new API keys: 
 
 [source,role="execute"]
 ----
@@ -35,17 +37,19 @@ oc patch tenant default-tenant -n models-as-a-service \
 ----
 *Expected behavior:* Anyone attempting to create an API key with an expiration longer than 90 days will now receive an error.
 
+====
+
 ---
 
-== Exercise 2: Provisioning the Application Key (Service Account Pattern)
+== Provisioning the Application Key (Service Account Pattern)
 
 We need to generate a key for the Marketing team's automated sentiment analysis container. As a Platform Administrator, you will provision this key on their behalf.
 
 1. In the OpenShift AI dashboard, navigate to **Gen AI studio → API keys**.
 2. Click **Create API key**.
 3. Fill out the creation form:
-* **Name:** `marketing-sentiment-app` (Using a descriptive name is a best practice for tracking and simplifies revocation.
-* **Subscription:** Select the **Bronze Plan** (This scopes the key's access to the models and token limits defined for Marketing).
+* **Name:** `gold-admin` (Using a descriptive name is a best practice for tracking and simplifies revocation.
+* **Subscription:** Select the **Gold Plan** (This scopes the key's access to the models and token limits defined for Quality Control).
 * **Expiration:** Select `90 days`.
 4. Click **Create**.
 
@@ -62,9 +66,11 @@ When removing a user from a group, you must manually revoke all associated API k
 
 ---
 
-== Exercise 3: Test the Gateway
+== Test the Gateway Authorization
 
-Now that the identity and permissions are established, let's test the authorization chain against the MaaS Gateway using our new key.
+You won't be able to complete this step, till a model is available, but including the steps here and will repeat them in the next section. 
+
+Now that the identity and permissions are established, let's test the authorization chain against the MaaS Gateway using our new key.  
 
 [source,role="execute"]
 ----
