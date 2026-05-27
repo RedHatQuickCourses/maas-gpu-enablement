@@ -317,11 +317,13 @@ In OpenShift AI 3.4, MaaS uses a subscription-based model for access control. If
 </table>
 </div>
 <hr>
-<details>
-<summary class="title">🛠️ Troubleshooting: Did something go wrong? (Click to expand)</summary>
-<div class="content">
+</div>
+</div>
+<div class="sect1">
+<h2 id="_day_2_troubleshooting_what_to_check_when_things_go_wrong"><a class="anchor" href="#_day_2_troubleshooting_what_to_check_when_things_go_wrong"></a>🛠️ Day-2 Troubleshooting: What to check when things go wrong</h2>
+<div class="sectionbody">
 <div class="paragraph">
-<p>If your verification checks failed in the previous step, locate your issue below to resolve it before proceeding to Module 2.</p>
+<p>As a Platform Engineer, you must know how to diagnose failures in the MaaS stack. If your verification checks failed in the previous step, use these methods to resolve them before proceeding to Module 2.</p>
 </div>
 <div class="paragraph">
 <p><strong>Issue: MaaS API pod is in <code>CrashLoopBackOff</code></strong></p>
@@ -353,7 +355,7 @@ In OpenShift AI 3.4, MaaS uses a subscription-based model for access control. If
 </ul>
 </div>
 <div class="paragraph">
-<p><strong>Issue: Kuadrant pods are not starting after creating the Kuadrant CR</strong></p>
+<p><strong>Issue: Kuadrant pods are not starting</strong></p>
 </div>
 <div class="ulist">
 <ul>
@@ -377,13 +379,11 @@ In OpenShift AI 3.4, MaaS uses a subscription-based model for access control. If
 <p><strong>Check for Errors:</strong> Run <code>oc describe gateway maas-default-gateway -n openshift-ingress</code>.</p>
 </li>
 <li>
-<p><strong>Root Cause:</strong> The Service Mesh operator is not installed, or the Istio control plane is not deployed. Ensure the <code>openshift-ingress</code> namespace exists and contains running <code>istiod-<strong></code> and <code>istio-ingressgateway-</strong></code> pods.</p>
+<p><strong>Root Cause:</strong> The Service Mesh operator is not installed, or the Istio control plane is not deployed. Ensure the <code>openshift-ingress</code> namespace exists and contains running <code>istiod-<strong></code> and <code>istio-ingressgateway-</strong></code> pods.
+---</p>
 </li>
 </ul>
 </div>
-</div>
-</details>
-<hr>
 </div>
 </div>
 <div class="sect1">

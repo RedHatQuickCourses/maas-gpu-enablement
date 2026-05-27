@@ -293,85 +293,6 @@
 </aside>
 <article class="doc">
 <h1 class="page">2.3: Defining Subscriptions and Token Limits</h1>
-<div id="preamble">
-<div class="sectionbody">
-<div class="paragraph">
-<p>We have identified our users (Groups). Now, it is time to build the subscription plans that will govern exactly how much compute those users can consume.</p>
-</div>
-<div class="paragraph">
-<p>In OpenShift AI 3.4, governance is centralized. Instead of deploying policies into your individual model namespaces, <strong>all subscriptions and authorization policies must be deployed into the central <code>models-as-a-service</code> namespace</strong>. This allows platform administrators to manage billing and quotas globally.</p>
-</div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_the_chocotech_subscription_strategy"><a class="anchor" href="#_the_chocotech_subscription_strategy"></a>The ChocoTech Subscription Strategy</h2>
-<div class="sectionbody">
-<div class="paragraph">
-<p>Based on the CIO&#8217;s requirements, we will implement the following structure:</p>
-</div>
-<table class="tableblock frame-all grid-rows stretch">
-<colgroup>
-<col style="width: 20%;">
-<col style="width: 20%;">
-<col style="width: 20%;">
-<col style="width: 40%;">
-</colgroup>
-<thead>
-<tr>
-<th class="tableblock halign-left valign-top">Subscription</th>
-<th class="tableblock halign-left valign-top">Priority Level</th>
-<th class="tableblock halign-left valign-top">Token Limits (Llama 3)</th>
-<th class="tableblock halign-left valign-top">Enterprise Value</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
-<p><strong>Gold Plan</strong> (Quality Control)</p>
-</div></div></td>
-<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
-<p><code>80</code> (Highest)</p>
-</div></div></td>
-<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
-<p>50,000 tokens/min</p>
-</div></div></td>
-<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
-<p><strong>Guaranteed Production:</strong> Ensures the factory floor defect-detection models are never throttled during peak demand.</p>
-</div></div></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
-<p><strong>Silver Plan</strong> (R&amp;D)</p>
-</div></div></td>
-<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
-<p><code>50</code> (Medium)</p>
-</div></div></td>
-<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
-<p>10,000 tokens/min</p>
-</div></div></td>
-<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
-<p><strong>Balanced Development:</strong> Provides generous capacity for recipe optimization testing without threatening Gold tier resources.</p>
-</div></div></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
-<p><strong>Bronze Plan</strong> (Marketing)</p>
-</div></div></td>
-<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
-<p><code>10</code> (Lowest)</p>
-</div></div></td>
-<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
-<p>2,000 tokens/min</p>
-</div></div></td>
-<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
-<p><strong>Cost Control:</strong> Strictly limits exploratory sentiment analysis, mathematically preventing runaway scripts from wasting expensive GPU cycles.</p>
-</div></div></td>
-</tr>
-</tbody>
-</table>
-<hr>
-</div>
-</div>
 <div class="sect1">
 <h2 id="_exercise_1_deploy_the_subscriptions"><a class="anchor" href="#_exercise_1_deploy_the_subscriptions"></a>Exercise 1: Deploy the Subscriptions</h2>
 <div class="sectionbody">
@@ -385,7 +306,12 @@
 <i class="fa icon-important" title="Important"></i>
 </td>
 <td class="content">
-Notice the <code>modelRefs</code> section in the YAML below. Even though we will not deploy the <code>llama-3-8b</code> model until Module 3, MaaS allows us to "pre-wire" our governance. Expect this deployment to be in the failed state, until the model is deployed. We are explicitly telling the subscription: <em>"When a model reference named <code>llama-3-8b</code> appears in the <code>chocotech-models</code> namespace, apply these limits."</em>
+<div class="paragraph">
+<p><strong>The "Pre-Wire" Trap:</strong> Notice the <code>modelRefs</code> section in the YAML below. Even though we will not deploy the <code>llama-3-8b</code> model until Module 3, MaaS allows us to "pre-wire" our governance.</p>
+</div>
+<div class="paragraph">
+<p>Because the referenced model does not exist yet (missing the <code>MaaSModelRef</code> object), the OpenShift AI operator will immediately flag these subscriptions with a <code>Failed</code> phase status. This is expected! We are explicitly telling the platform: <em>"When a model reference named <code>llama-3-8b</code> appears in the <code>chocotech-models</code> namespace, apply these limits."</em></p>
+</div>
 </td>
 </tr>
 </table>
@@ -459,10 +385,10 @@ EOF</code></pre>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_verification"><a class="anchor" href="#_verification"></a>Verification</h2>
+<h2 id="_verification_diagnosing_the_failure"><a class="anchor" href="#_verification_diagnosing_the_failure"></a>Verification &amp; Diagnosing the Failure</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Verify that the MaaS operator successfully registered the subscriptions in the central namespace:</p>
+<p>Verify that the MaaS operator successfully registered the subscriptions, and observe the expected failure state:</p>
 </div>
 <div class="listingblock execute">
 <div class="content">
@@ -481,10 +407,18 @@ silver-plan   Failed   50         8s</pre>
 </div>
 </div>
 <div class="paragraph">
-<p>You have successfully defined <strong>what</strong> the groups are allowed to do. However, as we learned in the "Two-Part Access Rule," a subscription alone does not open the door. If a developer attempts to hit the API Gateway right now, their request will be blocked.</p>
+<p>If a subscription shows a <code>Failed</code> phase status in production, your first troubleshooting step as a Platform Engineer is to check the conditions for the exact failure reason:</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">oc describe maassubscription gold-plan -n models-as-a-service</code></pre>
+</div>
 </div>
 <div class="paragraph">
-<p>In the next section, we will deploy the <code>MaaSAuthPolicy</code> to physically authorize this traffic at the network edge.</p>
+<p>You will see an error indicating that the model reference cannot be found. This will automatically resolve in Module 3 once we deploy the model!</p>
+</div>
+<div class="paragraph">
+<p>You have successfully defined <strong>what</strong> the groups are allowed to do. However, a subscription alone does not open the door. In the next section, we will deploy the <code>MaaSAuthPolicy</code> to physically authorize this traffic at the network edge.</p>
 </div>
 </div>
 </div>

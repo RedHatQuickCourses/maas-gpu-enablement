@@ -359,7 +359,7 @@
 <p><strong>Redundant Deployments</strong>: All four teams independently downloaded and deployed the Llama-3 8B model, wasting 32GB of storage and compute capacity per deployment.</p>
 </li>
 <li>
-<p><strong>Security "Black Boxes"</strong>: Without a centralized API gateway, there is zero visibility into who is sending what data to which model, making audit logs and PII filtering impossible to enforce.</p>
+<p><strong>The "Shadow IT" Security Crisis</strong>: Last week, the Marketing team got impatient and deployed a raw <code>LLMInferenceService</code> without any authentication. Without a centralized API gateway, there is zero visibility into who is sending what data to which model, making audit logs and PII filtering impossible to enforce.</p>
 </li>
 <li>
 <p><strong>No Chargeback Visibility</strong>: Finance cannot justify infrastructure costs without clear visibility into model usage across users and applications.</p>
@@ -375,7 +375,9 @@
 <td class="content">
 <div class="paragraph">
 <p><strong>The MaaS Opportunity</strong>
-We need to transition from hardware management to token delivery. MaaS transforms GPU infrastructure from dedicated, single-team clusters into a consumable backplane. Centralized IT manages the hardware, inference strategy, and governance policies (via KServe, Kuadrant, and the Gateway API), while the lines of business simply consume AI capabilities via tokens.</p>
+We need to transition from hardware management to token delivery.
+MaaS transforms GPU infrastructure from dedicated, single-team clusters into a consumable backplane.
+Centralized IT manages the hardware, inference strategy, and governance policies (via KServe, Kuadrant, and the Gateway API), while the lines of business simply consume AI capabilities via tokens.</p>
 </div>
 </td>
 </tr>

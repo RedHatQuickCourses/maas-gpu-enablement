@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>3.6: Day-2 operations and lifecycle management :: Models as a Service Breaking the GPU Silos on OpenShift AI 3.4</title>
+    <title>3.5: Day-2 operations and lifecycle management :: Models as a Service Breaking the GPU Silos on OpenShift AI 3.4</title>
     <link rel="prev" href="ch3-model-deploy-05.html">
     <link rel="next" href="ch3-model-deploy-summary.html">
     <meta name="generator" content="Antora 3.1.3">
@@ -292,7 +292,7 @@
   <div class="toc-menu"></div>
 </aside>
 <article class="doc">
-<h1 class="page">3.6: Day-2 operations and lifecycle management</h1>
+<h1 class="page">3.5: Day-2 operations and lifecycle management</h1>
 <div id="preamble">
 <div class="sectionbody">
 <div class="exampleblock">
@@ -318,7 +318,7 @@ This section is under development
 <p>"We cannot risk downtime," explains the QC Director. "Our production line depends on real-time defect detection. How do we update the model without causing an outage?"</p>
 </div>
 <div class="paragraph">
-<p>This is a classic "Day 2" production challenge. Because you deployed the model using Models-as-a-Service (MaaS) and GitOps, updating it is safe, auditable, and completely seamless for the end users. Furthermore, Day-2 operations in MaaS go beyond just updating model weights—they encompass security lifecycles and cost monitoring.</p>
+<p>This is a classic "Day 2" production challenge. Because you deployed the model using Models-as-a-Service (MaaS) and GitOps, updating it is safe, auditable, and completely seamless for the end users.</p>
 </div>
 </div>
 </div>
@@ -364,7 +364,10 @@ This section is under development
 <h2 id="_3_the_gitops_update_workflow"><a class="anchor" href="#_3_the_gitops_update_workflow"></a>3. The GitOps Update Workflow</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>To update the model, a Platform Engineer does <strong>not</strong> delete the running pod. Instead, they update the declarative YAML file in their Git repository. When updating the <code>LLMInferenceService</code>, the only line that needs to change is the <code>uri</code> pointing to the new vault location:</p>
+<p>To update the model, a Platform Engineer does <strong>not</strong> delete the running pod. Instead, they update the declarative YAML file in their Git repository.</p>
+</div>
+<div class="paragraph">
+<p>When updating the <code>LLMInferenceService</code>, the only line that needs to change is the <code>uri</code> pointing to the new vault location:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -380,9 +383,25 @@ spec:
 </div>
 </div>
 <div class="sect2">
-<h3 id="_graceful_rollouts_and_the_gpu_requirement"><a class="anchor" href="#_graceful_rollouts_and_the_gpu_requirement"></a>Graceful Rollouts and the GPU Requirement</h3>
+<h3 id="_graceful_rollouts_vs_the_pending_trap"><a class="anchor" href="#_graceful_rollouts_vs_the_pending_trap"></a>Graceful Rollouts vs. The "Pending" Trap</h3>
 <div class="paragraph">
-<p>When you commit this change and apply it to the cluster, OpenShift AI and KServe perform a <strong>Rolling Update</strong>.</p>
+<p>When you commit this change and apply it to the cluster, OpenShift AI and KServe attempt to perform a <strong>Rolling Update</strong>.</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>The system spins up a completely new inference pod and begins downloading the <code>v1.4.0</code> weights.</p>
+</li>
+<li>
+<p>During this time, the <code>v1.3.0</code> pod continues serving live traffic from the Gateway. No user requests are dropped.</p>
+</li>
+<li>
+<p>Once the <code>v1.4.0</code> pod reports a <code>Ready</code> status, KServe automatically flips the network route.</p>
+</li>
+<li>
+<p>The old <code>v1.3.0</code> pod is then gracefully terminated.</p>
+</li>
+</ol>
 </div>
 <div class="admonitionblock important">
 <table>
@@ -392,27 +411,14 @@ spec:
 </td>
 <td class="content">
 <div class="paragraph">
-<p><strong>Hardware Prerequisite for Zero-Downtime:</strong> To execute a graceful rollout, your OpenShift cluster <strong>must have an additional equivalent GPU available</strong>.</p>
+<p><strong>Hardware Troubleshooting: The "Pending Pod" Trap</strong> To execute a graceful rollout, your OpenShift cluster <strong>must have an additional equivalent GPU available</strong>.</p>
+</div>
+<div class="paragraph">
+<p>If you attempt this rolling update in a single-GPU lab environment, your new <code>v1.4.0</code> pod will hang in a <code>Pending</code> state forever because the <code>v1.3.0</code> pod is holding the only GPU hostage! If you encounter this in production, you must either add node capacity or force the update by scaling the old deployment down to 0 first (causing brief downtime).</p>
 </div>
 </td>
 </tr>
 </table>
-</div>
-<div class="olist arabic">
-<ol class="arabic">
-<li>
-<p>The system spins up a completely new inference pod and begins downloading the <code>v1.1.0</code> weights into the new GPU&#8217;s VRAM.</p>
-</li>
-<li>
-<p>During this time, the <code>v1.3.0</code> pod continues serving live traffic from the Gateway. No user requests are dropped.</p>
-</li>
-<li>
-<p>Once the <code>v1.4.0</code> pod reports a <code>Ready</code> status, KServe automatically flips the network route.</p>
-</li>
-<li>
-<p>All new traffic seamlessly flows to <code>v1.4.0</code>. The old <code>v1.3.0</code> pod is then gracefully terminated, freeing up its GPU.</p>
-</li>
-</ol>
 </div>
 </div>
 <div class="sect2">
@@ -432,7 +438,7 @@ spec:
 <div class="ulist">
 <ul>
 <li>
-<p><strong>API Key Lifecycle Management:</strong> You should mandate that teams rotate API keys periodically and revoke compromised keys immediately. It is critical to remember that API keys capture a user&#8217;s group memberships at the exact time of creation. If a user leaves the Quality Control team, their existing API keys will continue to work until they expire or are manually revoked by an administrator.</p>
+<p><strong>API Key Lifecycle Management:</strong> You must mandate that teams rotate API keys periodically and revoke compromised keys immediately. As we proved in the previous lab, API keys capture a user&#8217;s group memberships at the exact time of creation. If a user leaves the Quality Control team, administrators must manually revoke the API keys to immediately revoke access.</p>
 </li>
 <li>
 <p><strong>Cost Attribution (Showback):</strong> As usage scales, Finance will want to know which departments are consuming the most GPU compute. You can use the MaaS observability dashboard to monitor subscription-level usage metrics—such as token consumption and rate-limit violations—and export this usage data in CSV format for cost attribution and showback reporting.</p>
@@ -443,10 +449,7 @@ spec:
 <div class="sect2">
 <h3 id="_module_3_progress_check"><a class="anchor" href="#_module_3_progress_check"></a>Module 3 Progress Check</h3>
 <div class="paragraph">
-<p>You have successfully deployed a multi-model AI factory, secured it with subscription-based governance, and learned how to safely manage the lifecycle of those models and keys in production.</p>
-</div>
-<div class="paragraph">
-<p>You have completed the Platform Engineering infrastructure build! Proceed to the Module 3 Summary to review your architecture before we switch roles and become application developers in Module 4.</p>
+<p>You have successfully deployed a multi-model AI factory, secured it with subscription-based governance, and learned how to safely manage the lifecycle of those models and keys in production. You have completed the Platform Engineering infrastructure build! Proceed to the Module 3 Summary.</p>
 </div>
 </div>
 </div>

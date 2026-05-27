@@ -399,8 +399,20 @@ EOF</code></pre>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_step_3_enable_user_workload_monitoring"><a class="anchor" href="#_step_3_enable_user_workload_monitoring"></a>Step 3: Enable User Workload Monitoring:</h2>
+<h2 id="_step_3_the_trap_deploying_without_user_workload_monitoring"><a class="anchor" href="#_step_3_the_trap_deploying_without_user_workload_monitoring"></a>Step 3: The Trap (Deploying without User Workload Monitoring)</h2>
 <div class="sectionbody">
+<div class="paragraph">
+<p>Before we configure our Gateway and Database, let&#8217;s look at the most common failure point when deploying MaaS.</p>
+</div>
+<div class="paragraph">
+<p>In OpenShift AI 3.4, <strong>User Workload Monitoring</strong> is strictly required. This is the underlying mechanism that tracks token consumption and rate limiting across the platform. If it is disabled, the core MaaS installation will fail to function properly and will display a <code>Degraded</code> status.</p>
+</div>
+<div class="paragraph">
+<p>Let&#8217;s simulate this common misconfiguration. We will skip enabling User Workload Monitoring for now, proceed with the installation, and watch how the platform reacts.</p>
+</div>
+<details>
+<summary class="title">Expand for instructions to enable user Workload monitoring</summary>
+<div class="content">
 <div class="paragraph">
 <p>User Workload Monitoring is an OpenShift cluster setting that enables the Models as a Service (MaaS) platform to collect and expose usage data</p>
 </div>
@@ -460,6 +472,8 @@ prometheus-user-workload-0             6/6     Running    0
 thanos-ruler-user-workload-0           4/4     Running    0</code></pre>
 </div>
 </div>
+</div>
+</details>
 </div>
 </div>
 <div class="sect1">
@@ -786,7 +800,7 @@ EOF</code></pre>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_step_7_platform_activation"><a class="anchor" href="#_step_7_platform_activation"></a>Step 7: Platform activation</h2>
+<h2 id="_step_7_platform_activation_the_degraded_reality"><a class="anchor" href="#_step_7_platform_activation_the_degraded_reality"></a>Step 7: Platform activation &amp; The "Degraded" Reality</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>With the operators verified, Kuadrant running, the Gateway established, and the database online, you can now instruct the OpenShift AI operator to build the MaaS API layer.</p>
@@ -794,20 +808,7 @@ EOF</code></pre>
 <div class="sect2">
 <h3 id="_enable_the_maas_backend_and_llama_stack"><a class="anchor" href="#_enable_the_maas_backend_and_llama_stack"></a>Enable the MaaS Backend and Llama Stack</h3>
 <div class="paragraph">
-<p>You must edit the <code>default-dsc</code> CR to enable two critical components.</p>
-</div>
-<div class="olist arabic">
-<ol class="arabic">
-<li>
-<p><strong>Models As a Service:</strong> Provisions the core governance and routing controllers.</p>
-</li>
-<li>
-<p><strong>Llama Stack Operator:</strong> Activating this operator is strictly required for the MaaS dashboard features to function. If you do not enable the Llama Stack Operator, developers will be entirely unable to access the Gen AI Studio menu, the API Keys management page, or the Playground for model testing.</p>
-</li>
-</ol>
-</div>
-<div class="paragraph">
-<p>Apply the patch:</p>
+<p>Apply the patch to enable MaaS and the Llama Stack Operator in the <code>DataScienceCluster</code>:</p>
 </div>
 <div class="listingblock execute">
 <div class="content">
@@ -827,6 +828,68 @@ EOF</code></pre>
 }'</code></pre>
 </div>
 </div>
+</div>
+<div class="sect2">
+<h3 id="_diagnose_the_failure"><a class="anchor" href="#_diagnose_the_failure"></a>Diagnose the Failure</h3>
+<div class="paragraph">
+<p>Now, check the status of the <code>Tenant</code> custom resource. Because we intentionally skipped enabling User Workload Monitoring, the OpenShift AI Operator will refuse to report the MaaS component as healthy.</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">oc get tenants.maas.opendatahub.io default-tenant -n models-as-a-service -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}'</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>Expected Output:</strong>
+<code>False</code></p>
+</div>
+<div class="paragraph">
+<p>To see exactly <strong>why</strong> it failed, read the condition message:</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">oc get tenants.maas.opendatahub.io default-tenant -n models-as-a-service -o jsonpath='{.status.conditions[?(@.type=="Ready")].message}'</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The output will clearly indicate that User Workload Monitoring is missing. As a Platform Engineer, you will see this <code>False</code> or <code>Degraded</code> status frequently if prerequisites are missed.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_the_fix_enable_user_workload_monitoring"><a class="anchor" href="#_the_fix_enable_user_workload_monitoring"></a>The Fix: Enable User Workload Monitoring</h3>
+<div class="paragraph">
+<p>Now that we have seen the failure, let&#8217;s fix the cluster. Apply the following <code>ConfigMap</code> to enable User Workload Monitoring:</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">cat &lt;&lt;EOF | oc apply -f -
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cluster-monitoring-config
+  namespace: openshift-monitoring
+data:
+  config.yaml: |
+    enableUserWorkload: true
+EOF</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Wait a few moments, and check the <code>Tenant</code> status again:</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">oc get tenants.maas.opendatahub.io default-tenant -n models-as-a-service -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}'</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>Expected Output:</strong>
+<code>True</code></p>
+</div>
+<div class="paragraph">
+<p>The <code>Tenant</code> resource is now healthy.</p>
+</div>
+<hr>
 </div>
 <div class="sect2">
 <h3 id="_enable_the_dashboard_gen_ai_studio"><a class="anchor" href="#_enable_the_dashboard_gen_ai_studio"></a>Enable the Dashboard (Gen AI Studio)</h3>

@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>2.3: Native API Key Management and programmatic access :: Models as a Service Breaking the GPU Silos on OpenShift AI 3.4</title>
+    <title>2.5: Native API Key Management and programmatic access :: Models as a Service Breaking the GPU Silos on OpenShift AI 3.4</title>
     <link rel="prev" href="ch2-platform-admin-05.html">
     <link rel="next" href="ch2-platform-admin-summary.html">
     <meta name="generator" content="Antora 3.1.3">
@@ -292,7 +292,7 @@
   <div class="toc-menu"></div>
 </aside>
 <article class="doc">
-<h1 class="page">2.3: Native API Key Management and programmatic access</h1>
+<h1 class="page">2.5: Native API Key Management and programmatic access</h1>
 <div id="preamble">
 <div class="sectionbody">
 <div class="paragraph">
@@ -313,13 +313,13 @@ same user.</p>
 <div class="ulist">
 <ul>
 <li>
-<p><strong>Show-Once Security:</strong> API keys are cryptographically secure strings starting with <code>sk-oai-</code>. The plaintext key is only displayed once during creation. The platform only stores a SHA-256 hash of the key in the PostgreSQL database.</p>
+<p><strong>Show-Once Security:</strong> API keys are cryptographically secure strings starting with <code>sk-oai-</code>. The plaintext key is only displayed once during creation and cannot be retrieved later.</p>
 </li>
 <li>
-<p><strong>Immutable Subscription Binding:</strong> Every API key is strictly bound to a single subscription at the time it is minted. If a user or script creates a key without explicitly requesting a specific subscription, the MaaS API automatically selects the highest-priority accessible subscription the user qualifies for.</p>
+<p><strong>Immutable Subscription Binding:</strong> Every API key is strictly bound to a single subscription at the time it is minted. If a user belongs to multiple groups and creates a key without specifying a subscription, the system uses the subscription with the highest priority level.</p>
 </li>
 <li>
-<p><strong>Group Snapshotting:</strong> The user&#8217;s group membership is captured at API key creation time. API keys retain their group associations for performance reasons, meaning group information is not re-validated on every inference request.</p>
+<p><strong>The Group Snapshotting Vulnerability:</strong> API keys retain a snapshot of user group memberships from when the key was created. If a user is removed from a group, their existing API keys continue to grant access until you revoke them.</p>
 </li>
 </ul>
 </div>
@@ -423,12 +423,15 @@ same user.</p>
 </table>
 </div>
 <div class="sect2">
-<h3 id="_the_group_membership_gotcha"><a class="anchor" href="#_the_group_membership_gotcha"></a>⚠️ The Group Membership "Gotcha"</h3>
+<h3 id="_the_group_membership_gotcha_shadow_it_simulation"><a class="anchor" href="#_the_group_membership_gotcha_shadow_it_simulation"></a>⚠️ The Group Membership "Gotcha" (Shadow IT Simulation)</h3>
 <div class="paragraph">
-<p>Because API keys snapshot group membership, they do not automatically update if a user changes roles. If a user is removed from a group in the external OIDC provider, their existing API keys continue to work until they expire or are revoked by an administrator.</p>
+<p>Imagine a scenario where a ChocoTech R&amp;D engineer transfers to a different department, so IT removes them from the <code>chocotech-rd</code> OpenShift group.</p>
 </div>
 <div class="paragraph">
-<p>When removing a user from a group, you must manually revoke all associated API keys to immediately revoke access. Administrators must utilize the <strong>Revoke all keys for a single user</strong> administrative action in the dashboard to immediately cut off access when an employee leaves or changes departments.</p>
+<p>Because API keys snapshot group membership at creation time, the engineer&#8217;s old API key will <strong>still work</strong> and consume R&amp;D&#8217;s Silver Plan quota until the key reaches its 90-day expiration!</p>
+</div>
+<div class="paragraph">
+<p>To immediately revoke access after a group change, administrators must manually revoke the API keys for that user. You must utilize the <strong>Revoke user API keys</strong> administrative action in the dashboard (Gen AI studio → API keys) to immediately cut off access when an employee leaves or changes departments.</p>
 </div>
 <hr>
 </div>

@@ -296,10 +296,8 @@
 <div id="preamble">
 <div class="sectionbody">
 <div class="paragraph">
-<p>Before we configure OpenShift groups or write any YAML, we must define the core mechanisms that make OpenShift AI 3.4 governance possible.</p>
-</div>
-<div class="paragraph">
-<p>In a traditional, decentralized AI setup, any user with access to an API endpoint can theoretically send massive, computationally expensive prompts to an LLM. This leads to immediate resource exhaustion and makes cross-departmental chargebacks impossible.</p>
+<p>Before we configure OpenShift groups or write any YAML, we must define the core mechanisms that make OpenShift AI 3.4 governance possible.
+In a traditional, decentralized AI setup, any user with access to an API endpoint can theoretically send massive, computationally expensive prompts to an LLM. This leads to immediate resource exhaustion and makes cross-departmental chargebacks impossible.</p>
 </div>
 <div class="paragraph">
 <p>Models as a Service solves this by placing a strict, two-part governance layer between the user and the underlying KServe infrastructure.</p>
@@ -310,7 +308,8 @@
 <h2 id="_the_strategic_separation_of_access_and_quota"><a class="anchor" href="#_the_strategic_separation_of_access_and_quota"></a>The Strategic Separation of Access and Quota</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>In OpenShift AI 3.4, granting a team access to the AI platform requires exactly two custom resources working together. Think of it like joining a corporate gym:</p>
+<p>In OpenShift AI 3.4, granting a team access to the AI platform requires exactly two custom resources working together.
+Think of it like joining a corporate gym:</p>
 </div>
 <div class="olist arabic">
 <ol class="arabic">
@@ -350,16 +349,10 @@ This intentional separation provides maximum flexibility. For example, administr
 <p><strong>Centralized Deployment:</strong> All subscriptions must be deployed into the central <code>models-as-a-service</code> namespace, rather than individual model namespaces, to allow platform-wide billing and quota management.</p>
 </li>
 <li>
-<p><strong>Deploy Before Models:</strong> You can "pre-wire" your platform&#8217;s governance. Because subscriptions reference models by name (e.g., <code>llama-3-8b</code>), you should deploy these policies before the model actually exists. This ensures the MaaS operator enforces token limits on the very first inference request.</p>
-</li>
-<li>
 <p><strong>The Priority Numbering Scheme:</strong> When a user belongs to multiple groups with different subscriptions, the system automatically selects the subscription with the highest priority level.</p>
 </li>
 <li>
 <p><strong>Use incremental gaps:</strong> Number priorities with gaps (e.g., 10, 20, 30) rather than sequential numbers so you can easily insert intermediate priorities later.</p>
-</li>
-<li>
-<p><strong>Avoid identical priorities:</strong> Do not set all subscriptions to the same priority, as this creates unpredictable behavior.</p>
 </li>
 <li>
 <p><strong>Use priority for defaults, not security:</strong> Rely on priority levels for convenience, but use <code>MaaSAuthPolicy</code> to strictly enforce access control.</p>
@@ -375,13 +368,10 @@ This intentional separation provides maximum flexibility. For example, administr
 <div class="ulist">
 <ul>
 <li>
-<p><strong>The 403 Forbidden Rule:</strong> Without an authorization policy, users will receive <code>403 Forbidden</code> errors even if they have a valid subscription.</p>
+<p><strong>The 403 Forbidden Trap:</strong> Both a subscription and an authorization policy are strictly required. Without an authorization policy, users will receive <code>403 Forbidden</code> errors even if they have a valid subscription.</p>
 </li>
 <li>
-<p><strong>Aggregating Policies:</strong> You can create multiple <code>MaaSAuthPolicies</code> that reference the same model. The controller aggregates them, meaning a user matching <strong>any</strong> of the policies will be granted access.</p>
-</li>
-<li>
-<p><strong>The UI Synchronization Caveat:</strong> If administrators create a subscription via the OpenShift AI Dashboard UI, an initial authorization policy is created automatically with the same groups and models as the subscription. However, changes made to the subscription later (such as adding or removing groups or models) do not automatically update the authorization policy. You must manually update the corresponding policy to keep them synchronized.</p>
+<p><strong>The UI Synchronization Caveat:</strong> If administrators create a subscription via the OpenShift AI Dashboard UI, an initial authorization policy is created automatically. However, changes made to the subscription later (such as adding or removing groups or models) require manual updates to the authorization policy to keep them synchronized.</p>
 </li>
 </ul>
 </div>

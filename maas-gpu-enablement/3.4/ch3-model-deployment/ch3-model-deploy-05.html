@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>3.4: Expanding the catalog with selective access :: Models as a Service Breaking the GPU Silos on OpenShift AI 3.4</title>
+    <title>3.4: Expanding the catalog via the UI :: Models as a Service Breaking the GPU Silos on OpenShift AI 3.4</title>
     <link rel="prev" href="ch3-model-deploy-04.html">
     <link rel="next" href="ch3-model-deploy-06.html">
     <meta name="generator" content="Antora 3.1.3">
@@ -292,50 +292,42 @@
   <div class="toc-menu"></div>
 </aside>
 <article class="doc">
-<h1 class="page">3.4: Expanding the catalog with selective access</h1>
+<h1 class="page">3.4: Expanding the catalog via the UI</h1>
 <div id="preamble">
 <div class="sectionbody">
-<div class="exampleblock">
+<div class="paragraph">
+<p>ChocoTech&#8217;s Marketing and R&amp;D teams need a dedicated coding assistant model (Qwen3-8b). This exercise demonstrates how to expand the catalog using the OpenShift AI Dashboard UI, handle limited GPU capacity, and enforce selective access controls.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_1_capacity_management_scaling_down_llama_3"><a class="anchor" href="#_1_capacity_management_scaling_down_llama_3"></a>1. Capacity Management: Scaling down Llama-3</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>If your lab environment only has a single GPU with limited VRAM (e.g., 24GB), you cannot run both Llama-3 and Qwen simultaneously. As a Platform Engineer, you must free up VRAM before deploying the new model.</p>
+</div>
+<div class="paragraph">
+<p>Scale the Llama-3 deployment to 0 replicas:</p>
+</div>
+<div class="listingblock execute">
 <div class="content">
-<div class="admonitionblock warning">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-warning" title="Warning"></i>
-</td>
-<td class="content">
-This section is under development
-</td>
-</tr>
-</table>
+<pre class="highlightjs highlight"><code class="language-none hljs">oc scale llminferenceservice llama-3-8b -n chocotech-models --replicas=0</code></pre>
 </div>
 </div>
 </div>
+</div>
+<div class="sect1">
+<h2 id="_2_deploy_qwen3_via_the_dashboard_ui"><a class="anchor" href="#_2_deploy_qwen3_via_the_dashboard_ui"></a>2. Deploy Qwen3 via the Dashboard UI</h2>
+<div class="sectionbody">
 <div class="paragraph">
-<p>ChocoTech&#8217;s Marketing and R&amp;D teams have returned with a new request. While Llama-3 is excellent for general reasoning, they need a dedicated, highly proficient coding assistant model to help generate Python scripts and automate their data pipelines.</p>
+<p>While GitOps is powerful, OpenShift AI provides a seamless UI for model deployment.</p>
 </div>
-<div class="paragraph">
-<p>As a platform engineer, you ran the hardware math (Section 3.1) and realized that deploying a massive model like Nemotron would require an A100 GPU cluster due to its VRAM footprint. Since those nodes are currently unavailable, you have pivoted to deploying <code>qwen3-8b</code>—a highly capable coding model that fits comfortably alongside your existing workloads on standard GPUs.</p>
-</div>
-<div class="paragraph">
-<p>This exercise demonstrates how easily you can expand the model catalog as new business requirements emerge. More importantly, it demonstrates how to apply strict, selective access controls so that restricted models do not appear for unauthorized users.</p>
-</div>
-<div class="admonitionblock note">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-note" title="Note"></i>
-</td>
-<td class="content">
-<div class="paragraph">
-<p><strong>Single-GPU Lab Clusters</strong><br>
-If your lab environment only has a single GPU with limited VRAM (e.g., 24GB), you cannot run both Llama-3 and Qwen simultaneously. You can either scale down the previous Llama-3 deployment to 0 replicas before continuing, or simply read through this section to understand the governance mechanics without executing the YAML.</p>
-</div>
-<div class="paragraph">
-<p>=== Deploy from the RHOAI console simplication step</p>
-</div>
-<div class="paragraph">
-<p>To simplify the model deployment process through the OpenShift AI dashboard, let&#8217;s create a URI data connection in the <code>chocotech-models</code> project. This configuration stores the exact OCI registry location of our ModelCar-packaged Qwen3-8b image and uses specific annotations so the UI automatically recognizes it.</p>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>First, create the Data Connection secret so the UI knows where the Modelcar image lives:</p>
+</li>
+</ol>
 </div>
 <div class="listingblock execute">
 <div class="content">
@@ -357,91 +349,45 @@ type: Opaque
 EOF</code></pre>
 </div>
 </div>
-<hr>
-</td>
-</tr>
-</table>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>In the OpenShift AI dashboard, navigate to your <code>chocotech-models</code> project and click the <strong>Deployments</strong> tab.</p>
+</li>
+<li>
+<p>Click <strong>Deploy model</strong>.</p>
+</li>
+<li>
+<p>Configure the model:</p>
+<div class="ulist">
+<ul>
+<li>
+<p>Select <strong>Generative AI model (Example, LLM)</strong> as the model type.</p>
+</li>
+<li>
+<p>Make sure that the <strong>Use legacy deployment method</strong> checkbox is <strong>unchecked</strong>. <strong>(If checked, it bypasses MaaS entirely!)</strong></p>
+</li>
+<li>
+<p>Select the <code>Distributed Inference with llm-d</code> deployment resource and nvidia-gpu hardware profile.</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p>In the <strong>Advanced settings</strong> section, under Model availability, select <strong>Publish as MaaS</strong>.</p>
+</li>
+<li>
+<p>Click <strong>Deploy model</strong>.</p>
+</li>
+</ol>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_exercise_1_the_deployment_manifest"><a class="anchor" href="#_exercise_1_the_deployment_manifest"></a>Exercise 1: The deployment manifest</h2>
+<h2 id="_3_the_identity_swap_testing_selective_access"><a class="anchor" href="#_3_the_identity_swap_testing_selective_access"></a>3. The Identity Swap (Testing Selective Access)</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>We will use the exact same <code>LLMInferenceService</code> structure as before to deploy the Qwen model via OCI Modelcar and automatically generate its <code>MaaSModelRef</code>.</p>
-</div>
-<div class="paragraph">
-<p>Review and apply the <code>qwen-deployment.yaml</code> manifest:</p>
-</div>
-<div class="listingblock execute">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-none hljs">cat &lt;&lt;EOF | oc apply -f -
-apiVersion: serving.kserve.io/v1alpha1
-kind: LLMInferenceService
-metadata:
-  name: qwen3-8b
-  namespace: chocotech-models
-spec:
-  # THE VAULT: Pointing to the Modelcar OCI image
-  model:
-    uri: oci://quay.io/redhat-ai-services/modelcar-catalog:qwen3-8b
-  servingRuntime: "vllm-cuda-runtime"
-  router:
-    scheduler:
-      template:
-        containers:
-          - name: main
-            args:
-              - '--pool-group'
-              - 'inference.networking.x-k8s.io'
-              - '--pool-name'
-              - '{{ .ObjectMeta.Name }}-inference-pool'
-  template:
-    spec:
-      containers:
-        - name: main
-          env:
-            - name: VLLM_ADDITIONAL_ARGS
-              value: "--max-model-len=4096 --gpu-memory-utilization=0.85"
-  placement:
-    accelerator:
-      name: "nvidia.com/gpu"
-      count: 1
----
-apiVersion: maas.opendatahub.io/v1alpha1
-kind: MaaSModelRef
-metadata:
-  name: qwen3-8b
-  namespace: chocotech-models
-spec:
-  modelRef:
-    kind: LLMInferenceService
-    name: qwen3-8b
-EOF</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>Check the status condition to verify the model is healthy and ready to serve traffic <strong>(This may take several minutes to pull the OCI image)</strong>:</p>
-</div>
-<div class="listingblock execute">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-none hljs">oc wait --for=condition=ready llminferenceservice/qwen3-8b -n chocotech-models --timeout=600s</code></pre>
-</div>
-</div>
-<hr>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_exercise_2_post_deployment_governance_selective_access"><a class="anchor" href="#_exercise_2_post_deployment_governance_selective_access"></a>Exercise 2: Post-Deployment Governance (Selective Access)</h2>
-<div class="sectionbody">
-<div class="paragraph">
-<p>Currently, the Qwen model is successfully deployed and registered as a <code>MaaSModelRef</code>, but <strong>no one has access to it</strong>.</p>
-</div>
-<div class="paragraph">
-<p>We want to restrict this specialized coding model strictly to the <strong>Silver (R&amp;D)</strong> and <strong>Bronze (Marketing)</strong> subscriptions. The Gold (Quality Control) team should not have access to it, as it is strictly designed for coding, not factory floor defect analysis.</p>
-</div>
-<div class="paragraph">
-<p>In OpenShift AI 3.4, access is enforced entirely by <code>MaaSSubscription</code> and <code>MaaSAuthPolicy</code> resources. To grant access, we must append the new model reference to our existing governance manifests.</p>
+<p>Currently, the Qwen model is deployed, but no one has access to it. We want to restrict this model strictly to the <strong>Silver (R&amp;D)</strong> and <strong>Bronze (Marketing)</strong> subscriptions.</p>
 </div>
 <div class="olist arabic">
 <ol class="arabic">
@@ -550,7 +496,43 @@ EOF</code></pre>
 <div class="paragraph">
 <p>The Gold Plan (Quality Control) remains completely untouched. Kuadrant will physically block any attempts from the Gold group to route traffic to the Qwen model.</p>
 </div>
-<hr>
+<div class="paragraph">
+<p><strong>The Role Swap Challenge:</strong>
+You are currently an administrator in the Gold (Quality Control) group. Let&#8217;s simulate a department transfer to prove our governance works.</p>
+</div>
+<div class="paragraph">
+<p>Remove yourself from the Gold group and add yourself to the Bronze (Marketing) group:</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">oc adm groups remove-users chocotech-quality-control $(oc whoami)
+oc adm groups add-users chocotech-marketing $(oc whoami)</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_4_revocation_and_verification"><a class="anchor" href="#_4_revocation_and_verification"></a>4. Revocation and Verification</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Because API keys capture a snapshot of user group memberships from when the key was created, your old Gold API key is a security risk. To immediately revoke access after a group change, revoke the API keys for that user.</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>In the OpenShift AI dashboard, go to <strong>Gen AI studio → API keys</strong> and <strong>Revoke</strong> your previous key.</p>
+</li>
+<li>
+<p>Create a new key and select the <strong>Bronze Plan</strong>.</p>
+</li>
+<li>
+<p>Navigate to <strong>Gen AI studio → AI asset endpoints</strong>.</p>
+</li>
+<li>
+<p>You will now see <code>qwen3-8b</code> listed. Because you are no longer in the Gold group, you are experiencing the exact, filtered catalog view that a Marketing developer sees!</p>
+</li>
+</ol>
+</div>
 </div>
 </div>
 <div class="sect1">
@@ -558,18 +540,40 @@ EOF</code></pre>
 <div class="sectionbody">
 <div class="paragraph">
 <p><strong>1. Generate a Test API Key</strong><br>
-To accurately test selective access, you must generate an API key tied specifically to the Bronze Plan (Marketing).
-* In the OpenShift AI dashboard, click <strong>Gen AI studio</strong> &#8594; <strong>API keys</strong>.
-* Click <strong>Create API key</strong>.
-* Name it <code>marketing-qwen-test</code>.
-* Select <strong>Bronze</strong> from the Subscription dropdown.
-* Click <strong>Create</strong> and immediately copy the <code>sk-oai-&#8230;&#8203;</code> key.</p>
+To accurately test selective access, you must generate an API key tied specifically to the Bronze Plan (Marketing).</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>In the OpenShift AI dashboard, click <strong>Gen AI studio</strong> &#8594; <strong>API keys</strong>.</p>
+</li>
+<li>
+<p>Click <strong>Create API key</strong>.</p>
+</li>
+<li>
+<p>Name it <code>marketing-qwen-test</code>.</p>
+</li>
+<li>
+<p>Select <strong>Bronze</strong> from the Subscription dropdown.</p>
+</li>
+<li>
+<p>Click <strong>Create</strong> and immediately copy the <code>sk-oai-&#8230;&#8203;</code> key.</p>
+</li>
+</ul>
 </div>
 <div class="paragraph">
 <p><strong>2. The UI Payoff</strong><br>
-Refresh the Gen AI Studio Models tab in the OpenShift AI dashboard.
-* Since you are testing with Bronze/Silver access, you will now see both <code>llama-3-8b</code> and <code>qwen3-8b</code> listed with their respective subscription access controls.
-* If you switch to a user in the <strong>Quality Control (Gold)</strong> group, the Qwen model is entirely hidden from the catalog.</p>
+Refresh the Gen AI Studio Models tab in the OpenShift AI dashboard.</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Since you are testing with Bronze/Silver access, you will now see both <code>llama-3-8b</code> and <code>qwen3-8b</code> listed with their respective subscription access controls.</p>
+</li>
+<li>
+<p>If you switch to a user in the <strong>Quality Control (Gold)</strong> group, the Qwen model is entirely hidden from the catalog.</p>
+</li>
+</ul>
 </div>
 <div class="paragraph">
 <p><strong>3. API Discovery (The Developer View)</strong><br>

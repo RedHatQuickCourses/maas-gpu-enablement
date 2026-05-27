@@ -294,11 +294,13 @@
 <div id="preamble">
 <div class="sectionbody">
 <div class="paragraph">
-<p>Welcome to this <strong>Red Hat OpenShift AI 3.4 - Models as a Service</strong> QuickCourse!</p>
+<p>Welcome to this <strong>Red Hat OpenShift AI 3.4 - Models as a Service</strong> QuickCourse!
+---</p>
 </div>
-<hr>
 <div class="paragraph">
-<p>The CIO at ChocoTech Industries just called an emergency meeting. "We’ve invested over $500,000 in GPU infrastructure across four teams," she says, reviewing the quarterly report. "Yet our R&amp;D team is waiting three weeks for capacity while Quality Control’s GPUs sit idle 60% of the time. This doesn’t make sense."</p>
+<p>The CIO at ChocoTech Industries just called an emergency meeting.
+"We’ve invested over $500,000 in GPU infrastructure across four teams," she says, reviewing the quarterly report.
+"Yet our R&amp;D team is waiting three weeks for capacity while Quality Control’s GPUs sit idle 60% of the time. This doesn’t make sense."</p>
 </div>
 <div class="paragraph">
 <p>ChocoTech needs to align their AI Strategy to optimize for GPU utilization across business units, moving to a centralized, governed platform where all teams can access AI models efficiently.</p>
@@ -309,10 +311,9 @@
 <h2 id="_the_maas_mandate"><a class="anchor" href="#_the_maas_mandate"></a>The MaaS Mandate</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Designed for Platform Engineers and Developers, this course provides the steps to build a governed Models-as-a-Service (MaaS) ecosystem on OpenShift AI 3.4. We skip the trial-and-error of figuring out which operators and registries to install.</p>
-</div>
-<div class="paragraph">
-<p>Instead, you will learn how to immediately transform fragmented, isolated hardware into a fairly scheduled, multi-tenant shared service, empowering your business units to deploy agentic AI smoothly, securely, and at scale.</p>
+<p>Designed for Platform Engineers and Developers, this course provides the steps to build a governed Models-as-a-Service (MaaS) ecosystem on OpenShift AI 3.4.
+Rather than just showing you the "happy path," we will walk through the exact steps to build this architecture while intentionally navigating the common pitfalls, misconfigurations, and Day-2 troubleshooting realities you will face in production.
+You will learn how to immediately transform fragmented, isolated hardware into a fairly scheduled, multi-tenant shared service, empowering your business units to deploy agentic AI smoothly, securely, and at scale.</p>
 </div>
 <div class="admonitionblock note">
 <table>
@@ -379,6 +380,9 @@
 </li>
 <li>
 <p><strong>Enforce Governance</strong>: Implement strict token quotas and rate limits using <code>MaaSSubscription</code> and <code>MaaSAuthPolicy</code> custom resources.</p>
+</li>
+<li>
+<p><strong>Troubleshoot and Recover:</strong> Diagnose <code>Degraded</code> Tenant resources, missing Gateway annotations, and 403/429 authorization failures.</p>
 </li>
 <li>
 <p><strong>Monitor and Report</strong>: Enable telemetry, visualize API consumption, and export automated chargeback reports for financial accountability.</p>
