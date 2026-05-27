@@ -113,10 +113,10 @@ oc get maassubscription -n models-as-a-service
 
 *Expected output:*
 ----
-NAME          PRIORITY   AGE
-bronze-plan   10         30s
-gold-plan     80         30s
-silver-plan   50         30s
+NAME          PHASE    PRIORITY   AGE
+bronze-plan   Failed   10         8s
+gold-plan     Failed   80         8s
+silver-plan   Failed   50         8s
 ----
 
 You have successfully defined *what* the groups are allowed to do. However, as we learned in the "Two-Part Access Rule," a subscription alone does not open the door. If a developer attempts to hit the API Gateway right now, their request will be blocked. 

@@ -74,6 +74,14 @@ Verify that the MaaS operator successfully registered the authorization policies
 oc get maasauthpolicy -n models-as-a-service
 ----
 
+*Expected output:*
+----
+NAME            PHASE    AGE
+bronze-access   Failed   9s
+gold-access     Failed   9s
+silver-access   Failed   9s
+----
+
 Check Tenant Readiness:
 [source,role="execute"]
 ----
