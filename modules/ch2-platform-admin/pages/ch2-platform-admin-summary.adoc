@@ -1,4 +1,4 @@
-= 2.5: Summary & troubleshooting
+= 2.6: Summary & troubleshooting
 
 You have successfully transformed ChocoTech's OpenShift AI platform from a raw, ungoverned infrastructure into a highly secure, multi-tenant enterprise AI factory. If ChocoTech had opted for a generic public API, they would currently have zero internal cost control and no way to prioritize mission-critical workloads over experimental scripts. By building these policies directly into the OpenShift network edge, you have secured the company's ROI and established absolute Quality of Service (QoS).
 
@@ -28,27 +28,24 @@ Kuadrant's Limitador component, operating at the network edge, tracks the token 
 The API gateway intercepts the request and validates the provided API key (`sk-oai-...`). Because the key was permanently bound to the user's OpenShift group membership and highest priority subscription at the time it was created, the gateway immediately applies the correct token limits.
 
 ---
+== 🛠️ Day-2 Troubleshooting: Governance & Authentication
 
-.🛠️ Troubleshooting: Governance & Authentication (Click to expand)
-[%collapsible]
-====
-If you encountered any issues verifying your policies, check the following common resolutions:
+As you integrate applications, you will inevitably run into authorization errors. Use this cheat sheet to diagnose Gateway rejections:
 
-**Issue: Token authentication returns `401 Unauthorized`**
+**Issue: Request returns `401 Unauthorized`**
 
-* **Check API Key:** OpenShift tokens are not supported for MaaS inference. Ensure you are using a MaaS API key (starting with `sk-oai-`) generated from the Gen AI Studio dashboard.
-* **Check Key Revocation:** Verify in the Gen AI Studio UI that your API Key is marked as "Active" and has not been revoked or expired.
+* **Check API Key Prefix:** Ensure you're using the `Authorization: Bearer <key>` header format with the full API key including the `sk-oai-` prefix. OpenShift tokens are not valid for MaaS authentication.
+* **Check Key Revocation:** The API key might be expired or manually revoked. Generate a new MaaS API key from the dashboard.
 
 **Issue: Request returns `403 Forbidden`**
 
-* **Verify AuthPolicy:** A subscription grants limits, but an AuthPolicy grants access. Verify your `MaaSAuthPolicy` exists in the `models-as-a-service` namespace and explicitly lists both your model and your OpenShift group.
-* **Check Group Membership:** Ensure your user account is actually a member of the required OpenShift group (e.g., `oc get group chocotech-quality-control -o yaml`).
+* **The Missing AuthPolicy Trap:** A subscription grants quota, but an AuthPolicy grants access. Without an authorization policy, users receive 403 Forbidden errors even if they have a valid subscription.
+* **Verify AuthPolicy Configuration:** Ask your administrator to verify that an authorization policy exists for your groups to access the model through the API gateway. Ensure your OpenShift group is explicitly listed in the `subjects` array.
 
-**Issue: Authorino or Limitador pods are crashing / pending**
+**Issue: Request returns `429 Too Many Requests`**
 
-* **Check Pod Events:** Run `oc describe pod -l app=authorino -n kuadrant-system`.
-* **Common Causes:** Insufficient CPU/Memory on the cluster nodes, or a network issue preventing the cluster from pulling the Kuadrant images from `quay.io`.
-====
+* **Token Limits Exhausted:** This means Kuadrant's Limitador component blocked the request because your subscription token limits are exhausted.
+* **Implement Backoff:** Ensure your application's retry logic is respecting the `Retry-After` header value provided in the 429 response.
 
 ---
 

@@ -1,4 +1,4 @@
-= 2.3: Native API Key Management and programmatic access
+= 2.5: Native API Key Management and programmatic access
 
 With the organizational subscriptions defined, we must enable programmatic access for ChocoTech's applications. The Quality Control team's needs access to a Llama model to summarize test results.
 
@@ -9,9 +9,9 @@ same user.
 
 Before generating keys, it is crucial to understand how the MaaS controller handles identity and security at the network edge:
 
-* **Show-Once Security:** API keys are cryptographically secure strings starting with `sk-oai-`. The plaintext key is only displayed once during creation. The platform only stores a SHA-256 hash of the key in the PostgreSQL database.
-* **Immutable Subscription Binding:** Every API key is strictly bound to a single subscription at the time it is minted. If a user or script creates a key without explicitly requesting a specific subscription, the MaaS API automatically selects the highest-priority accessible subscription the user qualifies for.
-* **Group Snapshotting:** The user's group membership is captured at API key creation time. API keys retain their group associations for performance reasons, meaning group information is not re-validated on every inference request.
+* **Show-Once Security:** API keys are cryptographically secure strings starting with `sk-oai-`. The plaintext key is only displayed once during creation and cannot be retrieved later.
+* **Immutable Subscription Binding:** Every API key is strictly bound to a single subscription at the time it is minted. If a user belongs to multiple groups and creates a key without specifying a subscription, the system uses the subscription with the highest priority level.
+* **The Group Snapshotting Vulnerability:** API keys retain a snapshot of user group memberships from when the key was created. If a user is removed from a group, their existing API keys continue to grant access until you revoke them.
 
 == Self-Service vs. Programmatic Access
 
@@ -58,11 +58,13 @@ We need to generate a key for the Marketing team's automated sentiment analysis 
 **Secure your key immediately!** Save the API key in a secure location. Never commit API keys to version control. Store API keys in environment variables, Kubernetes secrets, or secret management systems such as HashiCorp Vault.
 ====
 
-=== ⚠️ The Group Membership "Gotcha"
+=== ⚠️ The Group Membership "Gotcha" (Shadow IT Simulation)
 
-Because API keys snapshot group membership, they do not automatically update if a user changes roles. If a user is removed from a group in the external OIDC provider, their existing API keys continue to work until they expire or are revoked by an administrator. 
+Imagine a scenario where a ChocoTech R&D engineer transfers to a different department, so IT removes them from the `chocotech-rd` OpenShift group. 
 
-When removing a user from a group, you must manually revoke all associated API keys to immediately revoke access. Administrators must utilize the **Revoke all keys for a single user** administrative action in the dashboard to immediately cut off access when an employee leaves or changes departments.
+Because API keys snapshot group membership at creation time, the engineer's old API key will *still work* and consume R&D's Silver Plan quota until the key reaches its 90-day expiration! 
+
+To immediately revoke access after a group change, administrators must manually revoke the API keys for that user. You must utilize the **Revoke user API keys** administrative action in the dashboard (Gen AI studio → API keys) to immediately cut off access when an employee leaves or changes departments.
 
 ---
 

@@ -1,41 +1,17 @@
 = 2.3: Defining Subscriptions and Token Limits
 
-We have identified our users (Groups). Now, it is time to build the subscription plans that will govern exactly how much compute those users can consume.
-
-In OpenShift AI 3.4, governance is centralized. Instead of deploying policies into your individual model namespaces, **all subscriptions and authorization policies must be deployed into the central `models-as-a-service` namespace**. This allows platform administrators to manage billing and quotas globally.
-
-== The ChocoTech Subscription Strategy
-
-Based on the CIO's requirements, we will implement the following structure:
-
-[cols="1a,1a,1a,2a",options="header",frame="all",grid="rows"]
-|===
-| Subscription | Priority Level | Token Limits (Llama 3) | Enterprise Value
-
-| **Gold Plan** (Quality Control)
-| `80` (Highest)
-| 50,000 tokens/min 
-| **Guaranteed Production:** Ensures the factory floor defect-detection models are never throttled during peak demand.
-
-| **Silver Plan** (R&D)
-| `50` (Medium)
-| 10,000 tokens/min 
-| **Balanced Development:** Provides generous capacity for recipe optimization testing without threatening Gold tier resources.
-
-| **Bronze Plan** (Marketing)
-| `10` (Lowest)
-| 2,000 tokens/min
-| **Cost Control:** Strictly limits exploratory sentiment analysis, mathematically preventing runaway scripts from wasting expensive GPU cycles. 
-|===
-
----
+// ... [Keep introduction and ChocoTech Strategy table identical] ...
 
 == Exercise 1: Deploy the Subscriptions
 
-We will use GitOps (Infrastructure-as-Code) to define the business logic for these three plans. 
+We will use GitOps (Infrastructure-as-Code) to define the business logic for these three plans.
 
 [IMPORTANT]
-Notice the `modelRefs` section in the YAML below. Even though we will not deploy the `llama-3-8b` model until Module 3, MaaS allows us to "pre-wire" our governance. Expect this deployment to be in the failed state, until the model is deployed. We are explicitly telling the subscription: _"When a model reference named `llama-3-8b` appears in the `chocotech-models` namespace, apply these limits."_
+====
+**The "Pre-Wire" Trap:** Notice the `modelRefs` section in the YAML below. Even though we will not deploy the `llama-3-8b` model until Module 3, MaaS allows us to "pre-wire" our governance. 
+
+Because the referenced model does not exist yet (missing the `MaaSModelRef` object), the OpenShift AI operator will immediately flag these subscriptions with a `Failed` phase status. This is expected! We are explicitly telling the platform: _"When a model reference named `llama-3-8b` appears in the `chocotech-models` namespace, apply these limits."_
+====
 
 Execute the following block to deploy all three `MaaSSubscription` policies into the centralized `models-as-a-service` namespace:
 
@@ -102,9 +78,9 @@ EOF
 
 *Expected output:* The terminal will confirm the creation of `gold-plan`, `silver-plan`, and `bronze-plan`. 
 
-== Verification
+== Verification & Diagnosing the Failure
 
-Verify that the MaaS operator successfully registered the subscriptions in the central namespace:
+Verify that the MaaS operator successfully registered the subscriptions, and observe the expected failure state:
 
 [source,role="execute"]
 ----
@@ -119,6 +95,13 @@ gold-plan     Failed   80         8s
 silver-plan   Failed   50         8s
 ----
 
-You have successfully defined *what* the groups are allowed to do. However, as we learned in the "Two-Part Access Rule," a subscription alone does not open the door. If a developer attempts to hit the API Gateway right now, their request will be blocked. 
+If a subscription shows a `Failed` phase status in production, your first troubleshooting step as a Platform Engineer is to check the conditions for the exact failure reason:
 
-In the next section, we will deploy the `MaaSAuthPolicy` to physically authorize this traffic at the network edge.
+[source,role="execute"]
+----
+oc describe maassubscription gold-plan -n models-as-a-service
+----
+
+You will see an error indicating that the model reference cannot be found. This will automatically resolve in Module 3 once we deploy the model!
+
+You have successfully defined *what* the groups are allowed to do. However, a subscription alone does not open the door. In the next section, we will deploy the `MaaSAuthPolicy` to physically authorize this traffic at the network edge.

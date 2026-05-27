@@ -1,20 +1,21 @@
 = 2.1: Understanding subscriptions and authorization policies
 
-Before we configure OpenShift groups or write any YAML, we must define the core mechanisms that make OpenShift AI 3.4 governance possible. 
-
-In a traditional, decentralized AI setup, any user with access to an API endpoint can theoretically send massive, computationally expensive prompts to an LLM. This leads to immediate resource exhaustion and makes cross-departmental chargebacks impossible. 
+Before we configure OpenShift groups or write any YAML, we must define the core mechanisms that make OpenShift AI 3.4 governance possible.
+In a traditional, decentralized AI setup, any user with access to an API endpoint can theoretically send massive, computationally expensive prompts to an LLM. This leads to immediate resource exhaustion and makes cross-departmental chargebacks impossible.
 
 Models as a Service solves this by placing a strict, two-part governance layer between the user and the underlying KServe infrastructure.
 
 == The Strategic Separation of Access and Quota
 
-In OpenShift AI 3.4, granting a team access to the AI platform requires exactly two custom resources working together. Think of it like joining a corporate gym:
+In OpenShift AI 3.4, granting a team access to the AI platform requires exactly two custom resources working together. 
+Think of it like joining a corporate gym:
 
 1. **The `MaaSAuthPolicy` (The Keycard Reader / Access):** This is the physical enforcement mechanism at the door. It authorizes specific groups to access model endpoints through the API gateway.
-2. **The `MaaSSubscription` (The Membership Contract / Quota):** This defines the terms once you are inside. It defines which models groups can access and configures the token rate limits for those models. 
+2. **The `MaaSSubscription` (The Membership Contract / Quota):** This defines the terms once you are inside. It defines which models groups can access and configures the token rate limits for those models.
+
 
 [NOTE]
-This intentional separation provides maximum flexibility. For example, administrators can create a generic "Premium" subscription that provides a massive token quota across 20 models, but use specific Authorization Policies to restrict a specialized team to only 5 of those models. 
+This intentional separation provides maximum flexibility. For example, administrators can create a generic "Premium" subscription that provides a massive token quota across 20 models, but use specific Authorization Policies to restrict a specialized team to only 5 of those models.
 
 == Design Recommendations & Best Practices
 
@@ -22,17 +23,15 @@ To properly govern the platform, ChocoTech's Platform Engineering team must adhe
 
 === 1. Recommendations for MaaSSubscription (Quota)
 * **Centralized Deployment:** All subscriptions must be deployed into the central `models-as-a-service` namespace, rather than individual model namespaces, to allow platform-wide billing and quota management.
-* **Deploy Before Models:** You can "pre-wire" your platform's governance. Because subscriptions reference models by name (e.g., `llama-3-8b`), you should deploy these policies before the model actually exists. This ensures the MaaS operator enforces token limits on the very first inference request.
-* **The Priority Numbering Scheme:** When a user belongs to multiple groups with different subscriptions, the system automatically selects the subscription with the highest priority level.
+* **The Priority Numbering Scheme:** When a user belongs to multiple groups with different subscriptions, the system automatically selects the subscription with the highest priority level. 
   * *Use incremental gaps:* Number priorities with gaps (e.g., 10, 20, 30) rather than sequential numbers so you can easily insert intermediate priorities later.
-  * *Avoid identical priorities:* Do not set all subscriptions to the same priority, as this creates unpredictable behavior.
   * *Use priority for defaults, not security:* Rely on priority levels for convenience, but use `MaaSAuthPolicy` to strictly enforce access control.
 * **Handling Quota Exhaustion:** When developers hit the token limits defined in the subscription, they will receive an HTTP `429 Too Many Requests` error. Developers should implement exponential backoff retry logic that reads the `Retry-After` response header to automatically pause and re-attempt the request.
 
 === 2. Recommendations for MaaSAuthPolicy (Access)
-* **The 403 Forbidden Rule:** Without an authorization policy, users will receive `403 Forbidden` errors even if they have a valid subscription.
-* **Aggregating Policies:** You can create multiple `MaaSAuthPolicies` that reference the same model. The controller aggregates them, meaning a user matching *any* of the policies will be granted access.
-* **The UI Synchronization Caveat:** If administrators create a subscription via the OpenShift AI Dashboard UI, an initial authorization policy is created automatically with the same groups and models as the subscription. However, changes made to the subscription later (such as adding or removing groups or models) do not automatically update the authorization policy. You must manually update the corresponding policy to keep them synchronized.
+* **The 403 Forbidden Trap:** Both a subscription and an authorization policy are strictly required. Without an authorization policy, users will receive `403 Forbidden` errors even if they have a valid subscription.
+* **The UI Synchronization Caveat:** If administrators create a subscription via the OpenShift AI Dashboard UI, an initial authorization policy is created automatically. However, changes made to the subscription later (such as adding or removing groups or models) require manual updates to the authorization policy to keep them synchronized.
+
 
 === 3. Recommendations for MaaSModelRef (Registration)
 * **Automatic Generation:** You generally do not need to create `MaaSModelRef` objects manually for internal models. Publishing as MaaS creates a `MaaSModelRef` object that notifies the MaaS system of the model's existence.

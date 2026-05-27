@@ -65,7 +65,19 @@ spec: {}
 EOF
 ----
 
-== Step 3: Enable User Workload Monitoring:
+== Step 3: The Trap (Deploying without User Workload Monitoring)
+
+Before we configure our Gateway and Database, let's look at the most common failure point when deploying MaaS. 
+
+In OpenShift AI 3.4, **User Workload Monitoring** is strictly required. This is the underlying mechanism that tracks token consumption and rate limiting across the platform. If it is disabled, the core MaaS installation will fail to function properly and will display a `Degraded` status. 
+
+Let's simulate this common misconfiguration. We will skip enabling User Workload Monitoring for now, proceed with the installation, and watch how the platform reacts.
+
+
+
+.Expand for instructions to enable user Workload monitoring
+[%collapsible]
+====
 
 User Workload Monitoring is an OpenShift cluster setting that enables the Models as a Service (MaaS) platform to collect and expose usage data
 
@@ -107,7 +119,7 @@ prometheus-operator-6bd7f9ddfc-vn49s   2/2     Running    0
 prometheus-user-workload-0             6/6     Running    0 
 thanos-ruler-user-workload-0           4/4     Running    0
 ----
-
+====
 
 == Step 4: Create the MaaS Gateway
 
@@ -378,18 +390,14 @@ EOF
 
 ---
 
-== Step 7: Platform activation
+== Step 7: Platform activation & The "Degraded" Reality
 
 With the operators verified, Kuadrant running, the Gateway established, and the database online, you can now instruct the OpenShift AI operator to build the MaaS API layer.
 
 === Enable the MaaS Backend and Llama Stack
 
-You must edit the `default-dsc` CR to enable two critical components. 
+Apply the patch to enable MaaS and the Llama Stack Operator in the `DataScienceCluster`:
 
-1. **Models As a Service:** Provisions the core governance and routing controllers.
-2. **Llama Stack Operator:** Activating this operator is strictly required for the MaaS dashboard features to function. If you do not enable the Llama Stack Operator, developers will be entirely unable to access the Gen AI Studio menu, the API Keys management page, or the Playground for model testing.
-
-Apply the patch:
 [source,role="execute"]
 ----
 oc patch datasciencecluster default-dsc --type=merge -p '{
@@ -407,6 +415,59 @@ oc patch datasciencecluster default-dsc --type=merge -p '{
   }
 }'
 ----
+
+=== Diagnose the Failure
+
+Now, check the status of the `Tenant` custom resource. Because we intentionally skipped enabling User Workload Monitoring, the OpenShift AI Operator will refuse to report the MaaS component as healthy.
+
+[source,role="execute"]
+----
+oc get tenants.maas.opendatahub.io default-tenant -n models-as-a-service -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}'
+----
+
+**Expected Output:**
+`False` 
+
+To see exactly *why* it failed, read the condition message:
+
+[source,role="execute"]
+----
+oc get tenants.maas.opendatahub.io default-tenant -n models-as-a-service -o jsonpath='{.status.conditions[?(@.type=="Ready")].message}'
+----
+
+The output will clearly indicate that User Workload Monitoring is missing. As a Platform Engineer, you will see this `False` or `Degraded` status frequently if prerequisites are missed.
+
+=== The Fix: Enable User Workload Monitoring
+
+Now that we have seen the failure, let's fix the cluster. Apply the following `ConfigMap` to enable User Workload Monitoring:
+
+[source,role="execute"]
+----
+cat <<EOF | oc apply -f -
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cluster-monitoring-config
+  namespace: openshift-monitoring
+data:
+  config.yaml: |
+    enableUserWorkload: true
+EOF
+----
+
+Wait a few moments, and check the `Tenant` status again:
+
+[source,role="execute"]
+----
+oc get tenants.maas.opendatahub.io default-tenant -n models-as-a-service -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}'
+----
+
+**Expected Output:**
+`True` 
+
+The `Tenant` resource is now healthy.
+
+---
 
 === Enable the Dashboard (Gen AI Studio)
 

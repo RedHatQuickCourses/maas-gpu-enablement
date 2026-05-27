@@ -1,4 +1,4 @@
-= 3.6: Day-2 operations and lifecycle management
+= 3.5: Day-2 operations and lifecycle management
 
 ====
 WARNING: This section is under development
@@ -8,7 +8,7 @@ ChocoTech's Quality Control team has been successfully using the `llama-3-8b` mo
 
 "We cannot risk downtime," explains the QC Director. "Our production line depends on real-time defect detection. How do we update the model without causing an outage?"
 
-This is a classic "Day 2" production challenge. Because you deployed the model using Models-as-a-Service (MaaS) and GitOps, updating it is safe, auditable, and completely seamless for the end users. Furthermore, Day-2 operations in MaaS go beyond just updating model weights—they encompass security lifecycles and cost monitoring.
+This is a classic "Day 2" production challenge. Because you deployed the model using Models-as-a-Service (MaaS) and GitOps, updating it is safe, auditable, and completely seamless for the end users.
 
 == 1. Version Management Strategy
 
@@ -30,7 +30,9 @@ When you update the model weights, the Gold Plan token limits remain perfectly i
 
 == 3. The GitOps Update Workflow
 
-To update the model, a Platform Engineer does *not* delete the running pod. Instead, they update the declarative YAML file in their Git repository. When updating the `LLMInferenceService`, the only line that needs to change is the `uri` pointing to the new vault location:
+To update the model, a Platform Engineer does *not* delete the running pod. Instead, they update the declarative YAML file in their Git repository.
+
+When updating the `LLMInferenceService`, the only line that needs to change is the `uri` pointing to the new vault location:
 
 [source,yaml]
 ----
@@ -45,18 +47,21 @@ spec:
     uri: oci://quay.io/redhat-ai-services/modelcar-catalog:llama-3-8b-v1.4.0  # <--- Update the path
 ----
 
-=== Graceful Rollouts and the GPU Requirement
-When you commit this change and apply it to the cluster, OpenShift AI and KServe perform a **Rolling Update**. 
+=== Graceful Rollouts vs. The "Pending" Trap
+
+When you commit this change and apply it to the cluster, OpenShift AI and KServe attempt to perform a **Rolling Update**. 
+
+1. The system spins up a completely new inference pod and begins downloading the `v1.4.0` weights.
+2. During this time, the `v1.3.0` pod continues serving live traffic from the Gateway. No user requests are dropped.
+3. Once the `v1.4.0` pod reports a `Ready` status, KServe automatically flips the network route.
+4. The old `v1.3.0` pod is then gracefully terminated.
 
 [IMPORTANT]
 ====
-**Hardware Prerequisite for Zero-Downtime:** To execute a graceful rollout, your OpenShift cluster **must have an additional equivalent GPU available**. 
-====
+**Hardware Troubleshooting: The "Pending Pod" Trap** To execute a graceful rollout, your OpenShift cluster **must have an additional equivalent GPU available**. 
 
-1. The system spins up a completely new inference pod and begins downloading the `v1.1.0` weights into the new GPU's VRAM.
-2. During this time, the `v1.3.0` pod continues serving live traffic from the Gateway. No user requests are dropped.
-3. Once the `v1.4.0` pod reports a `Ready` status, KServe automatically flips the network route.
-4. All new traffic seamlessly flows to `v1.4.0`. The old `v1.3.0` pod is then gracefully terminated, freeing up its GPU.
+If you attempt this rolling update in a single-GPU lab environment, your new `v1.4.0` pod will hang in a `Pending` state forever because the `v1.3.0` pod is holding the only GPU hostage! If you encounter this in production, you must either add node capacity or force the update by scaling the old deployment down to 0 first (causing brief downtime).
+====
 
 === The Rollback 
 If the Quality Control team reports that the `v1.4.0` model is hallucinating or underperforming, the rollback process takes seconds. You simply revert the Git commit, and KServe repeats the rolling update process to restore the known-good state.
@@ -65,12 +70,10 @@ If the Quality Control team reports that the `v1.4.0` model is hallucinating or 
 
 As ChocoTech's AI usage matures, platform engineers must also manage the lifecycle of user access and platform costs.
 
-* **API Key Lifecycle Management:** You should mandate that teams rotate API keys periodically and revoke compromised keys immediately. It is critical to remember that API keys capture a user's group memberships at the exact time of creation. If a user leaves the Quality Control team, their existing API keys will continue to work until they expire or are manually revoked by an administrator.
+* **API Key Lifecycle Management:** You must mandate that teams rotate API keys periodically and revoke compromised keys immediately. As we proved in the previous lab, API keys capture a user's group memberships at the exact time of creation. If a user leaves the Quality Control team, administrators must manually revoke the API keys to immediately revoke access.
 * **Cost Attribution (Showback):** As usage scales, Finance will want to know which departments are consuming the most GPU compute. You can use the MaaS observability dashboard to monitor subscription-level usage metrics—such as token consumption and rate-limit violations—and export this usage data in CSV format for cost attribution and showback reporting.
 
 ---
 
 ### Module 3 Progress Check
-You have successfully deployed a multi-model AI factory, secured it with subscription-based governance, and learned how to safely manage the lifecycle of those models and keys in production. 
-
-You have completed the Platform Engineering infrastructure build! Proceed to the Module 3 Summary to review your architecture before we switch roles and become application developers in Module 4.
+You have successfully deployed a multi-model AI factory, secured it with subscription-based governance, and learned how to safely manage the lifecycle of those models and keys in production. You have completed the Platform Engineering infrastructure build! Proceed to the Module 3 Summary.

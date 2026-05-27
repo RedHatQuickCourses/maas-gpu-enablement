@@ -2,7 +2,7 @@
 
 You have successfully transformed ChocoTech's fragmented GPU infrastructure from a state of passive monitoring to active enablement. The physical and network foundations are now officially MaaS-capable.
 
-Before we move on to establishing the actual governance rules, verify that your environment is healthy. 
+Before we move on to establishing the actual governance rules, verify that your environment is healthy.
 
 [TIP]
 ====
@@ -12,10 +12,9 @@ In OpenShift AI 3.4, MaaS uses a subscription-based model for access control. If
 
 ---
 
-.🛠️ Troubleshooting: Did something go wrong? (Click to expand)
-[%collapsible]
-====
-If your verification checks failed in the previous step, locate your issue below to resolve it before proceeding to Module 2.
+== 🛠️ Day-2 Troubleshooting: What to check when things go wrong
+
+As a Platform Engineer, you must know how to diagnose failures in the MaaS stack. If your verification checks failed in the previous step, use these methods to resolve them before proceeding to Module 2.
 
 **Issue: MaaS API pod is in `CrashLoopBackOff`**
 
@@ -28,7 +27,7 @@ If your verification checks failed in the previous step, locate your issue below
 * **Verify Dashboard Patch:** Run `oc get odhdashboardconfig odh-dashboard-config -n redhat-ods-applications -o yaml | grep -A 5 dashboardConfig` to ensure `genAiStudio` is set to `true`.
 * **Hard Reload:** Clear your browser cache and hard-refresh the page (Ctrl+Shift+R or Cmd+Shift+R).
 
-**Issue: Kuadrant pods are not starting after creating the Kuadrant CR**
+**Issue: Kuadrant pods are not starting**
 
 * **Check Connectivity Link operator logs:** Run `oc logs -n openshift-operators deployment/connectivity-link-operator --tail=50`.
 * **Verify Kuadrant CRDs are installed:** Run `oc get crd | grep kuadrant`.
@@ -38,18 +37,6 @@ If your verification checks failed in the previous step, locate your issue below
 * **Verify Service Mesh:** Ensure the control plane is healthy by running `oc get pods -n openshift-ingress`.
 * **Check for Errors:** Run `oc describe gateway maas-default-gateway -n openshift-ingress`.
 * *Root Cause:* The Service Mesh operator is not installed, or the Istio control plane is not deployed. Ensure the `openshift-ingress` namespace exists and contains running `istiod-*` and `istio-ingressgateway-*` pods.
-====
-////
----
-
-== The ChocoTech impact
-
-By completing this module, you have laid the groundwork to solve ChocoTech's GPU Silo Crisis. **What you accomplished:**
-
-* **Infrastructure Ready:** The platform can now logically route and enforce policies across Quality Control, R&D, Marketing, and Supply Chain.
-* **Self-Service Enabled:** Business unit leads will soon be able to generate API tokens for their developers securely, bypassing traditional IT ticket bottlenecks.
-* **API Gateway Operational:** A single, robust endpoint has replaced the four separate, insecure model-serving endpoints that teams were managing independently.
-////
 ---
 
 == Your journey progress

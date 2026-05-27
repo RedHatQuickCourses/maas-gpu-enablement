@@ -36,34 +36,34 @@ The API gateway intercepts the request and validates the provided API key. Becau
 
 ---
 
-.🛠️ Troubleshooting: Model Deployment & Catalog (Click to expand)
-[%collapsible]
-====
-If you encountered any issues verifying your deployments or catalog, check the following common resolutions from the OpenShift AI administration guide:
+== 🛠️ Day-2 Troubleshooting: Model Deployment & Catalog
+
+As a Platform Engineer, you will field support tickets when models fail to deploy or users cannot connect. Use this guide to resolve common Day-2 issues:
+
+**Issue: Model Pod stuck in `Pending` during an update**
+
+* **The Hardware Trap:** You likely attempted a rolling update without spare GPU capacity. KServe keeps the old pod running (consuming the GPU) while trying to start the new pod.
+* **The Fix:** If you lack spare GPUs, you must scale the old `llminferenceservice` down to 0 replicas to free the GPU, then scale it back up with the new configuration.
 
 **Issue: The model does not appear in the Gen AI Studio catalog**
 
-* **Check the MaaS API:** Check that the MaaS API is running using `oc get pods -n redhat-ods-applications -l app.kubernetes.io/name=maas-api`.
-* **Verify Registration:** Check that the `MaaSModelRef` was created using `oc get maasmodelref -n <your-project-namespace>` If the object does not exist, the operator did not register the model.
-* **Verify Readiness:** Verify that the model deployment is in a Ready state by checking the `llminferenceservice` status.
+* **Verify Registration:** Check that the `MaaSModelRef` was created using `oc get maasmodelref -n <your-project-namespace>`. If the object does not exist, the operator did not register the model.
+* **Use legacy deployment method:** If deployed via the UI, ensure the **Use legacy deployment method** checkbox was unchecked. Legacy deployments bypass the MaaS architecture entirely.
 
 **Issue: User access errors (403 Forbidden)**
 
 * **Missing Policies:** Verify that the user has both a subscription and an authorization policy. A subscription grants quota for specific models with token limits. An authorization policy is required to authorize groups to access model endpoints through the API gateway.
+* **Selective Access Mismatch:** Confirm the user belongs to the OpenShift group explicitly listed in the AuthPolicy subjects.
 
-**Issue: User access errors (401 Unauthorized)**
+**Issue: Authentication errors (401 Unauthorized)**
 
 * **Invalid Tokens:** Ensure you are using a MaaS API key generated from the dashboard. OpenShift tokens are not valid for MaaS authentication.
+* **Revoked/Expired Keys:** The API key might be expired or manually revoked. Generate a new MaaS API key.
 
 **Issue: Model not found (404)**
 
-* **Incorrect Model Name:** Verify the model name using the `/v1/models` endpoint.
-* **Not Deployed:** Ask your administrator to check if the model is deployed and ready.
-
-**Issue: Custom Grafana dashboards are not showing model-specific rate limiting data**
-
-* **Telemetry Limitations:** The `model` label appears only on the `authorized_hits` metric due to Kuadrant wasm-shim limitations. It does not append to the `authorized_calls` or `limited_calls` HTTP 429 rejection metrics.
-====
+* **Typo in URL:** Ensure the URL format is correct: `https://maas.<domain>/llm/<model-name>/v1/chat/completions`.
+* **Incorrect Model Name:** Verify the exact model name using the `/v1/models` discovery endpoint.
 
 ---
 
