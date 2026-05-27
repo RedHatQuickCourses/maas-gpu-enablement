@@ -4,9 +4,9 @@
 WARNING: This section is under development
 ====
 
-ChocoTech's R&D team has a new requirement: they need access to OpenAI's `gpt-4o` to parse highly complex, unstructured chemical supply chain documents. 
+ChocoTech's R&D team has a new requirement: they need access to OpenAI's `gpt-4o` to parse highly complex, unstructured chemical supply chain documents. Historically, developers would bypass the platform team, use a corporate credit card to generate an OpenAI API key, and embed it directly into their application code. 
 
-Historically, developers would bypass the platform team, use a corporate credit card to generate an OpenAI API key, and embed it directly into their application code. This creates a "Shadow AI" problem: Finance cannot track who is spending the money, Security cannot rotate the compromised keys, and a single runaway script can rack up thousands of dollars in a weekend.
+This creates a "Shadow AI" problem: Finance cannot track who is spending the money, Security cannot rotate the compromised keys, and a single runaway script can rack up thousands of dollars in a weekend. 
 
 In OpenShift AI 3.4, you can solve this by routing inference requests to external cloud providers (like OpenAI, Anthropic, AWS Bedrock, or Google Vertex AI) through the exact same Models-as-a-Service (MaaS) gateway you use for locally deployed models.
 
@@ -20,10 +20,19 @@ External models for Models-as-a-Service is currently available in Red Hat OpenSh
 
 External model access in MaaS uses a secure, two-tier authentication pattern:
 
-1. **User Authentication (The Developer):** The developer authenticates to the MaaS gateway using their standard ChocoTech `sk-oai-` API key. MaaS validates their subscription limits just like an internal model.
-2. **Provider Authentication (The Platform):** MaaS intercepts the request, strips the user's API key, and automatically injects a master provider API key (stored securely in a Kubernetes secret) before forwarding the request to OpenAI. 
+1. **User Authentication (The Developer):** The developer authenticates to the MaaS gateway using their standard ChocoTech `sk-oai-` API key. MaaS validates their subscription limits and confirms access to the requested external model just like an internal model.
+2. **Provider Authentication (The Platform):** MaaS automatically injects the master provider API key (stored securely in a Kubernetes secret) before forwarding the request to the external provider. As a result, users need only their MaaS API key to access external models.
 
-Because all users share the same master provider API key behind the scenes, you must ensure the token limits you configure in your MaaS Subscriptions prevent your users from collectively breaching the aggregate token limit imposed by the external provider.
+[WARNING]
+====
+**The Master Key Depletion Trap** +
+Because external models use this two-tier authentication, token limits apply at two levels.
+
+* **MaaS Subscription Level:** Limits configured in MaaS subscriptions apply per-user within MaaS.
+* **External Provider Level:** Token limits imposed by the external provider on the API key apply to the aggregate consumption of *all* users of that external model.
+
+Because all users share the same provider API key, the provider-level limit is shared across the entire group of users. Administrators must mathematically ensure that the token limits across all internal MaaS subscriptions do not exceed the master key's external rate limit. If the provider-level limit is exceeded, no users can access the model until the provider resets the limit. Individual MaaS subscription limits do not affect this provider-level restriction.
+====
 
 == Exercise 1: Storing the Master Credentials
 

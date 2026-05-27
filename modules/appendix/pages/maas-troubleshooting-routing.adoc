@@ -68,43 +68,27 @@ oc set env deployment/rhods-dashboard -n redhat-ods-applications MAAS_API_URL=ht
 oc rollout status deployment/rhods-dashboard -n redhat-ods-applications
 ----
 
-=== Issue 3: Gateway TLS Certificate Missing (`ResolvedRefs: False`)
+=== Issue 3: Missing Gateway Annotations (TLS and Authorization Failures)
 
-**Symptom:** The Gateway is deployed, but no traffic routes successfully. When checking the Gateway status, you see a `ResolvedRefs: False` condition complaining about an `InvalidCertificateRef`.
+**Symptom:** The Gateway is deployed, but traffic fails to route to Authorino, or the ODH Model Controller keeps fighting your MaaS configurations. You might see TLS handshake failures or authorization policies that refuse to enforce.
 
 **The Root Cause:**
-The MaaS Gateway requires a valid TLS certificate to terminate HTTPS connections. If the secret `maas-gateway-cert` is missing from the `openshift-ingress` namespace, the HTTPS listener fails to initialize.
+The Gateway resource must include two very specific annotations for the MaaS controller to function correctly. Without these, the gateway either fails to secure traffic or gets overwritten by competing controllers.
 
 **The Fix:**
-You must generate a self-signed TLS certificate and attach it to the Gateway.
+You must verify and apply the required annotations to your `maas-default-gateway` in the `openshift-ingress` namespace.
+
+1. **`security.opendatahub.io/authorino-tls-bootstrap: "true"`**: The MaaS controller detects this annotation and automatically creates an EnvoyFilter resource that configures the Envoy proxy to use TLS when communicating with Authorino. Without it, secure internal routing fails.
+2. **`opendatahub.io/managed: "false"`**: This allows the MaaS controller to manage authorization policies without interference from the ODH Model Controller.
+
+Run the following command to forcefully overwrite and apply these annotations to your Gateway:
 
 [source,role="execute"]
 ----
-# 1. Get the cluster domain
-export CLUSTER_DOMAIN=$(oc get ingresses.config.openshift.io cluster -o jsonpath='{.spec.domain}')
-
-# 2. Generate a self-signed certificate
-openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
-  -keyout /tmp/maas-gateway.key \
-  -out /tmp/maas-gateway.crt \
-  -subj "/CN=maas.apps.${CLUSTER_DOMAIN}" \
-  -addext "subjectAltName=DNS:maas.apps.${CLUSTER_DOMAIN}"
-
-# 3. Create the TLS Secret
-oc create secret tls maas-gateway-cert \
-  --cert=/tmp/maas-gateway.crt \
-  --key=/tmp/maas-gateway.key \
-  -n openshift-ingress
-
-# 4. Wait for the Gateway controller to reconcile (approx 30 seconds)
-----
-
-Verify the fix by checking the listener status. It should now report `"status": "True"`.
-
-[source,role="execute"]
-----
-oc get gateway maas-default-gateway -n openshift-ingress \
-  -o jsonpath='{.status.listeners[0].conditions[?(@.type=="ResolvedRefs")]}'
+oc annotate gateway maas-default-gateway -n openshift-ingress \
+  security.opendatahub.io/authorino-tls-bootstrap="true" \
+  opendatahub.io/managed="false" \
+  --overwrite
 ----
 
 By understanding the traffic flow and keeping these three troubleshooting strategies nearby, you can resolve the vast majority of network routing issues encountered in Models-as-a-Service deployments.
