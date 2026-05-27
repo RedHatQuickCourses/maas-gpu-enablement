@@ -312,10 +312,10 @@ This section is under development
 </div>
 </div>
 <div class="paragraph">
-<p>ChocoTech&#8217;s R&amp;D team has a new requirement: they need access to OpenAI&#8217;s <code>gpt-4o</code> to parse highly complex, unstructured chemical supply chain documents.</p>
+<p>ChocoTech&#8217;s R&amp;D team has a new requirement: they need access to OpenAI&#8217;s <code>gpt-4o</code> to parse highly complex, unstructured chemical supply chain documents. Historically, developers would bypass the platform team, use a corporate credit card to generate an OpenAI API key, and embed it directly into their application code.</p>
 </div>
 <div class="paragraph">
-<p>Historically, developers would bypass the platform team, use a corporate credit card to generate an OpenAI API key, and embed it directly into their application code. This creates a "Shadow AI" problem: Finance cannot track who is spending the money, Security cannot rotate the compromised keys, and a single runaway script can rack up thousands of dollars in a weekend.</p>
+<p>This creates a "Shadow AI" problem: Finance cannot track who is spending the money, Security cannot rotate the compromised keys, and a single runaway script can rack up thousands of dollars in a weekend.</p>
 </div>
 <div class="paragraph">
 <p>In OpenShift AI 3.4, you can solve this by routing inference requests to external cloud providers (like OpenAI, Anthropic, AWS Bedrock, or Google Vertex AI) through the exact same Models-as-a-Service (MaaS) gateway you use for locally deployed models.</p>
@@ -346,15 +346,40 @@ External models for Models-as-a-Service is currently available in Red Hat OpenSh
 <div class="olist arabic">
 <ol class="arabic">
 <li>
-<p><strong>User Authentication (The Developer):</strong> The developer authenticates to the MaaS gateway using their standard ChocoTech <code>sk-oai-</code> API key. MaaS validates their subscription limits just like an internal model.</p>
+<p><strong>User Authentication (The Developer):</strong> The developer authenticates to the MaaS gateway using their standard ChocoTech <code>sk-oai-</code> API key. MaaS validates their subscription limits and confirms access to the requested external model just like an internal model.</p>
 </li>
 <li>
-<p><strong>Provider Authentication (The Platform):</strong> MaaS intercepts the request, strips the user&#8217;s API key, and automatically injects a master provider API key (stored securely in a Kubernetes secret) before forwarding the request to OpenAI.</p>
+<p><strong>Provider Authentication (The Platform):</strong> MaaS automatically injects the master provider API key (stored securely in a Kubernetes secret) before forwarding the request to the external provider. As a result, users need only their MaaS API key to access external models.</p>
 </li>
 </ol>
 </div>
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-warning" title="Warning"></i>
+</td>
+<td class="content">
 <div class="paragraph">
-<p>Because all users share the same master provider API key behind the scenes, you must ensure the token limits you configure in your MaaS Subscriptions prevent your users from collectively breaching the aggregate token limit imposed by the external provider.</p>
+<p><strong>The Master Key Depletion Trap</strong><br>
+Because external models use this two-tier authentication, token limits apply at two levels.</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>MaaS Subscription Level:</strong> Limits configured in MaaS subscriptions apply per-user within MaaS.</p>
+</li>
+<li>
+<p><strong>External Provider Level:</strong> Token limits imposed by the external provider on the API key apply to the aggregate consumption of <strong>all</strong> users of that external model.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Because all users share the same provider API key, the provider-level limit is shared across the entire group of users. Administrators must mathematically ensure that the token limits across all internal MaaS subscriptions do not exceed the master key&#8217;s external rate limit. If the provider-level limit is exceeded, no users can access the model until the provider resets the limit. Individual MaaS subscription limits do not affect this provider-level restriction.</p>
+</div>
+</td>
+</tr>
+</table>
 </div>
 </div>
 </div>

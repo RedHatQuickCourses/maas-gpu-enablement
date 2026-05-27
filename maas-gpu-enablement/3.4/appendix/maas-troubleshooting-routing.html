@@ -412,46 +412,37 @@ oc rollout status deployment/rhods-dashboard -n redhat-ods-applications</code></
 </div>
 </div>
 <div class="sect2">
-<h3 id="_issue_3_gateway_tls_certificate_missing_resolvedrefs_false"><a class="anchor" href="#_issue_3_gateway_tls_certificate_missing_resolvedrefs_false"></a>Issue 3: Gateway TLS Certificate Missing (<code>ResolvedRefs: False</code>)</h3>
+<h3 id="_issue_3_missing_gateway_annotations_tls_and_authorization_failures"><a class="anchor" href="#_issue_3_missing_gateway_annotations_tls_and_authorization_failures"></a>Issue 3: Missing Gateway Annotations (TLS and Authorization Failures)</h3>
 <div class="paragraph">
-<p><strong>Symptom:</strong> The Gateway is deployed, but no traffic routes successfully. When checking the Gateway status, you see a <code>ResolvedRefs: False</code> condition complaining about an <code>InvalidCertificateRef</code>.</p>
+<p><strong>Symptom:</strong> The Gateway is deployed, but traffic fails to route to Authorino, or the ODH Model Controller keeps fighting your MaaS configurations. You might see TLS handshake failures or authorization policies that refuse to enforce.</p>
 </div>
 <div class="paragraph">
 <p><strong>The Root Cause:</strong>
-The MaaS Gateway requires a valid TLS certificate to terminate HTTPS connections. If the secret <code>maas-gateway-cert</code> is missing from the <code>openshift-ingress</code> namespace, the HTTPS listener fails to initialize.</p>
+The Gateway resource must include two very specific annotations for the MaaS controller to function correctly. Without these, the gateway either fails to secure traffic or gets overwritten by competing controllers.</p>
 </div>
 <div class="paragraph">
 <p><strong>The Fix:</strong>
-You must generate a self-signed TLS certificate and attach it to the Gateway.</p>
+You must verify and apply the required annotations to your <code>maas-default-gateway</code> in the <code>openshift-ingress</code> namespace.</p>
 </div>
-<div class="listingblock execute">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-none hljs"># 1. Get the cluster domain
-export CLUSTER_DOMAIN=$(oc get ingresses.config.openshift.io cluster -o jsonpath='{.spec.domain}')
-
-# 2. Generate a self-signed certificate
-openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
-  -keyout /tmp/maas-gateway.key \
-  -out /tmp/maas-gateway.crt \
-  -subj "/CN=maas.apps.${CLUSTER_DOMAIN}" \
-  -addext "subjectAltName=DNS:maas.apps.${CLUSTER_DOMAIN}"
-
-# 3. Create the TLS Secret
-oc create secret tls maas-gateway-cert \
-  --cert=/tmp/maas-gateway.crt \
-  --key=/tmp/maas-gateway.key \
-  -n openshift-ingress
-
-# 4. Wait for the Gateway controller to reconcile (approx 30 seconds)</code></pre>
-</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong><code>security.opendatahub.io/authorino-tls-bootstrap: "true"</code></strong>: The MaaS controller detects this annotation and automatically creates an EnvoyFilter resource that configures the Envoy proxy to use TLS when communicating with Authorino. Without it, secure internal routing fails.</p>
+</li>
+<li>
+<p><strong><code>opendatahub.io/managed: "false"</code></strong>: This allows the MaaS controller to manage authorization policies without interference from the ODH Model Controller.</p>
+</li>
+</ol>
 </div>
 <div class="paragraph">
-<p>Verify the fix by checking the listener status. It should now report <code>"status": "True"</code>.</p>
+<p>Run the following command to forcefully overwrite and apply these annotations to your Gateway:</p>
 </div>
 <div class="listingblock execute">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-none hljs">oc get gateway maas-default-gateway -n openshift-ingress \
-  -o jsonpath='{.status.listeners[0].conditions[?(@.type=="ResolvedRefs")]}'</code></pre>
+<pre class="highlightjs highlight"><code class="language-none hljs">oc annotate gateway maas-default-gateway -n openshift-ingress \
+  security.opendatahub.io/authorino-tls-bootstrap="true" \
+  opendatahub.io/managed="false" \
+  --overwrite</code></pre>
 </div>
 </div>
 <div class="paragraph">
