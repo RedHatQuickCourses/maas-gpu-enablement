@@ -1,0 +1,79 @@
+= 4.5: Summary & Troubleshooting
+
+====
+WARNING: This section is under development
+====
+
+You have successfully completed the final phase of the ChocoTech AI Factory deployment. By stepping into both the Developer and Platform Engineer roles, you closed the loop between consuming AI resources and paying for them. 
+
+If ChocoTech had simply handed out API keys without observability, the Finance team would have no way to attribute cloud costs to the specific departments consuming the GPU time. By enabling Kuadrant rate-limit metrics, MaaS Gateway telemetry, and deploying a custom Grafana instance, you transformed raw infrastructure logs into actionable financial and operational data.
+
+== What you accomplished
+
+* **Application Integration:** Wrote a Python load-generator script that successfully authenticated against the MaaS Gateway and utilized exponential backoff to gracefully handle `HTTP 429` rate-limit rejections.
+* **Kuadrant & Tenant Observability:** Patched the Kuadrant custom resource to create a `PodMonitor` for Limitador, and enabled Tenant telemetry to track exact token consumption.
+* **The "God View" Grafana Dashboard:** Bypassed UI abstractions to deploy a physical Grafana instance, wired it securely to OpenShift's Thanos Querier, and built a custom dashboard to visualize the three pillars of AI observability: Finance/Governance, User Experience (Latency), and Hardware Efficiency.
+
+---
+
+== Knowledge check
+
+Test your understanding of MaaS observability and integration before concluding the course:
+
+1. **Why is it critical for client applications to read the `Retry-After` header when they receive a `429 Too Many Requests` error?**
++
+If applications ignore the header and aggressively retry, they waste network resources and continue to hit the rate limit. Reading the header allows the application to pause execution (exponential backoff) and resume exactly when the token bucket has refilled.
+
+2. **Why is the `captureUser` telemetry flag set to `false` by default in the Tenant custom resource?**
++
+Enabling user-level tracking on a cluster with hundreds or thousands of users exponentially increases metric cardinality. This can severely bloat the Prometheus database and impact cluster monitoring performance. (We used `app_id` to track API keys instead!)
+
+3. **What are the three pillars of AI Observability?**
++
+A production-grade AI platform must monitor *User Experience* (Time to First Token/Latency), *Hardware Efficiency* (GPU Utilization and VRAM), and *Model Health* (Queue Depth and HTTP Server errors).
+
+---
+
+.🛠️ Troubleshooting: Observability & Grafana (Click to expand)
+[%collapsible]
+====
+If you encountered any issues generating traffic or viewing metrics, check the following common resolutions:
+
+**Issue: Grafana doesn't have the OpenShift-Prometheus data source**
+
+* **The Cause:** The Grafana Operator uses label selectors to bind datasources. If your Grafana instance was missing the `dashboards: "grafana"` label, the operator ignored it.
+* **The Fix:** Apply the label (`oc label grafana chocotech-grafana dashboards=grafana -n chocotech-models`), then delete and recreate the `GrafanaDatasource` resource to wake the operator up.
+
+**Issue: Cannot reach the Grafana URL (Route Not Found)**
+
+* **The Cause:** Depending on the OpenShift ingress configuration, the v5 Grafana Operator sometimes fails to generate a Route automatically. 
+* **The Fix:** Manually expose the backend service using `oc create route edge chocotech-grafana --service=chocotech-grafana-service -n chocotech-models`.
+
+**Issue: Grafana Query Editor only shows dropdowns**
+
+* **The Cause:** Grafana defaults to "Builder" mode.
+* **The Fix:** Look at the far right of the query row and click the **Code** toggle button to switch to text mode, allowing you to paste raw PromQL queries.
+
+**Issue: No metrics are appearing in Grafana or OpenShift Console**
+
+* **Prometheus is not a time machine:** Metrics only appear *after* the `PodMonitor` and Tenant telemetry are enabled. If you ran the Python script before patching Kuadrant/Tenant, you must delete the old Kubernetes Job and redeploy it to generate fresh traffic!
+====
+
+---
+
+== Your journey progress
+
+[cols="1a,1a,1a,1a",frame="none",grid="none"]
+|===
+| **✅ Module 1** +
+_Architecture & Foundation_ 
+| **✅ Module 2** +
+_Policies & Governance_ 
+| **✅ Module 3** +
+_Model Deployment_ 
+| **✅ Module 4** +
+_Application Integration_
+|===
+
+[quote]
+**Course Complete!** You have successfully guided ChocoTech from a raw Kubernetes cluster to a fully governed, multi-tenant AI Factory. You possess the skills to deploy API gateways, configure token subscriptions, publish large language models, and visualize the advanced telemetry required to run AI at an enterprise scale.

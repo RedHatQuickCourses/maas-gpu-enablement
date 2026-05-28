@@ -1,53 +1,64 @@
-= 4.3: The Observability Dashboard and Chargeback
+= 4.3: Metrics and Chargeback Reporting
 
 ====
 WARNING: This section is under development
 ====
 
-The simulated developer traffic has concluded, and the telemetry pipeline is actively scraping Kuadrant's rate-limiting logs and the MaaS Gateway's token counters. 
+The simulated developer traffic has concluded, and the telemetry pipeline is actively scraping Kuadrant's rate-limiting logs and the MaaS Gateway's token counters. It is time to answer the final business request from ChocoTech's Finance team: *"How much of the monthly cloud budget did the Marketing department consume this week?"*
 
-It is time to answer the final business request from ChocoTech's Finance team: *"How much of the monthly cloud budget did the Marketing department consume this week?"*
+While some environments feature high-level dashboards, true Platform Engineers know how to extract billing data directly from the cluster's observability engine. We are going to bypass the OpenShift AI UI and query the native Prometheus database to generate our chargeback report.
 
-As a platform engineer, you do not need to manually parse logs or write complex PromQL queries to answer this. OpenShift AI 3.4 provides a built-in observability dashboard specifically designed for this exact Models-as-a-Service (MaaS) showback reporting.
+== Exercise 1: Accessing the Native Metrics Engine
 
-== Exercise 1: Exploring the MaaS Dashboard
+To find the raw token consumption data, we need to query the OpenShift Container Platform's native observability stack.
 
-Let's navigate to the dashboard and visualize the chaos our load-generator script created.
+1. Log into your **OpenShift Web Console** (Administrator perspective).
+2. In the left-hand navigation menu, expand **Observe** and click **Metrics**.
+3. You will see a PromQL (Prometheus Query Language) "Expression" bar. This is your direct line to the Kuadrant Limitador database.
 
+== Exercise 2: Calculating Consumed Tokens (The Bill)
 
+Finance needs to know exactly how many tokens the Marketing team successfully processed against the `qwen3-8b` model. Limitador tracks this using the `authorized_hits` metric.
 
-1. In the OpenShift AI dashboard, click **Observe & monitor** -> **Dashboard** in the left navigation menu.
-2. The Observability dashboard page displays three tabs; click the **Usage** tab to view the Models-as-a-Service metrics.
-3. From the **Time period** dropdown, ensure the time range captures the last few minutes when you ran the Python script.
-4. From the **Subscription** dropdown, select the **Bronze Plan** to filter the metrics exclusively to the Marketing department's workload.
+1. In the Expression bar, type the following exact query:
++
+[source,role="execute"]
+----
+authorized_hits
+----
+2. Click **Run queries** (or press Enter).
+3. Look at the data table below the graph. 
 
-== Exercise 2: Analyzing the Metrics
+You will see several rows of data. Look specifically at the labels attached to the metric. You will see `limitador_namespace="models-as-a-service"` and, crucially, `model="qwen3-8b"`. The numerical value associated with this row is the exact number of tokens the Marketing team consumed under their Bronze Plan before they were throttled. This is the hard data Finance uses to bill the department!
 
-Review the **Overview** section at the top of the dashboard. This section aggregates the Prometheus data into clear, actionable business metrics:
+== Exercise 3: Verifying the Governance (The Savings)
 
-* **Total Tokens:** The total number of tokens (input prompts + model responses) consumed by the Marketing team.
-* **Total Requests:** The total number of API calls made to the `llama-3-8b` model.
-* **Total Errors:** This metric validates your governance policies! It reflects the exact number of failed requests, directly correlating to the `429 Too Many Requests` rate-limit violations generated when the script breached the Bronze token quota.
-* **Success Rate:** The percentage of successful requests compared to total requests.
+Chargeback isn't just about billing for what was used; it is also about proving what was saved. We need to show Finance how many rogue requests the platform *blocked* to protect the budget.
 
-Scroll down to the **Token Consumption by User** table. This provides a granular breakdown, showing exactly which user (identified by their API key ownership) consumed which tokens, against which specific model.
+1. Clear the Expression bar and type the following query:
++
+[source,role="execute"]
+----
+limited_calls
+----
+2. Click **Run queries**.
 
-== Exercise 3: Exporting the Chargeback Report
+This metric tracks the exact number of requests that Kuadrant rejected with an `HTTP 429 Too Many Requests` error. Every single count on this metric represents a moment where your MaaS governance architecture successfully protected ChocoTech's single GPU from being overwhelmed by the Marketing team's aggressive batch job.
 
-Finance requires structured data to process inter-departmental billing. OpenShift AI allows you to export these filtered metrics directly to a CSV file.
+== Exercise 4: Exporting the Chargeback Report
+
+Finance requires structured data to process inter-departmental billing. OpenShift allows you to export these PromQL results directly to a file.
 
 [IMPORTANT]
 ====
 **Showback vs. Billing-Grade Metering** +
-The MaaS observability dashboard is designed for internal usage tracking and "showback" reporting. The exported CSV data is suitable for allocating costs across ChocoTech's departments, but it is not intended for external, billing-grade invoicing. For strict external billing, you would configure external metering tools to consume the Limitador metrics directly.
+This method is perfect for internal "showback" reporting and allocating costs across ChocoTech's internal departments. However, for strict external customer billing, you would typically configure dedicated metering tools (like Red Hat's Cost Management service) to consume these Limitador metrics automatically.
 ====
 
 To generate the report:
-1. Ensure your filters are still set to the **Bronze Plan** and the desired time period.
-2. Hover over the **Token Consumption by User** table.
-3. Click the **Export as CSV** button.
-4. Save the generated CSV file to your local system.
 
-You can now email this file to the Finance team, providing them with the exact mathematical proof they need to attribute GPU costs to the Marketing department!
+1. Ensure your query is set to `authorized_hits` so the token counts are visible.
+2. In the Metrics UI, look for the **Export** button (typically located near the Run Queries button or above the data table).
+3. Export the data as a CSV file to your local system.
 
----
+You can now email this file to the Finance team, providing them with the exact mathematical proof they need to attribute GPU costs to the Marketing department. You have successfully built, secured, and monetized an Enterprise AI Factory!

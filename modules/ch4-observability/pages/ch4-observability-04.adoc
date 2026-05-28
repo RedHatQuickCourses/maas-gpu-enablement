@@ -1,79 +1,152 @@
-= 4.4: Summary & troubleshooting
+= 4.4: Advanced Telemetry & The "God View" Dashboard
 
 ====
 WARNING: This section is under development
 ====
 
-You have successfully completed the final phase of the ChocoTech AI Factory deployment. By stepping into both the Developer and Platform Engineer roles, you closed the loop between consuming AI resources and paying for them.
+You have successfully delivered the chargeback report to the Finance team using the native OpenShift metrics console. 
 
-If ChocoTech had simply handed out API keys without observability, the Finance team would have no way to attribute cloud costs to the specific departments consuming the GPU time. By enabling Kuadrant rate-limit metrics and MaaS Gateway telemetry, you transformed raw infrastructure logs into actionable financial data.
+**A note on the OpenShift AI UI:** Depending on your specific build version or RBAC permissions, you may occasionally see an "Observe & monitor" tab in the OpenShift AI dashboard. However, because this feature is often hidden behind feature flags in early releases, we will not rely on it. Instead, we will do what true Platform Engineers do: build our own centralized "God View" using Grafana.
 
-== What you accomplished
+Tokens tell you *how much* was generated, but latency tells you *how fast* it felt to the user. Hardware metrics tell you if the physical cluster is burning out. To get a complete 360-degree view of your Enterprise AI Factory, we need to bring all these metrics into one place.
 
-* **Application Integration:** Wrote a Python load-generator script that successfully authenticated against the MaaS Gateway and utilized exponential backoff to gracefully handle `HTTP 429` rate-limit rejections.
-* **Kuadrant Observability:** Patched the Kuadrant custom resource to create a `PodMonitor`, instructing Prometheus to scrape Limitador for rate-limit violations.
-* **Tenant Telemetry:** Patched the `Tenant` custom resource to enable token consumption metrics while consciously disabling `captureUser` to protect Prometheus database performance.
-* **Automated Chargeback:** Navigated the OpenShift AI observability dashboard to visualize the simulated traffic and exported a structured CSV report for the Finance team.
+== The Three Pillars of AI Observability
+
+Beyond token counting, a production-grade AI platform requires monitoring across three specific domains:
+
+* **User Experience (Latency):** Large Language Models stream their text. 
+  ** *Time To First Token (TTFT)* measures the "loading time" before the first word appears.
+  ** *Inter-Token Latency (ITL)* measures the "typing speed" of the subsequent words. If these spike, applications feel broken.
+* **Hardware Efficiency (GPU):** Monitoring raw `GPU Utilization` and `VRAM Usage` tells you if your models are efficiently batched or if you need to buy more physical hardware.
+* **Model Health (Queues):** Tracking `Queue Depth` reveals if user requests are piling up waiting for GPU compute cycles. 
+
+== Exercise 1: Deploying the Grafana Instance
+
+The Grafana Operator is already installed on your cluster. Let's deploy a physical Grafana instance into the `chocotech-models` namespace. 
+
+Notice the `labels` section! The operator uses this label to automatically bind our Prometheus data source to this specific Grafana instance later.
+
+[source,role="execute"]
+----
+cat <<EOF | oc apply -f -
+apiVersion: grafana.integreatly.org/v1beta1
+kind: Grafana
+metadata:
+  name: chocotech-grafana
+  namespace: chocotech-models
+  labels:
+    dashboards: "grafana"
+spec:
+  config:
+    auth.anonymous:
+      enabled: "true"
+      org_role: "Admin"
+EOF
+----
+*Note: We are enabling anonymous admin access strictly for this lab environment so you do not have to fight with login credentials during the exercise.*
+
+Because operators can sometimes behave differently depending on the cluster's ingress configuration, we will explicitly command OpenShift to expose the Grafana service over HTTPS:
+
+[source,role="execute"]
+----
+oc create route edge chocotech-grafana --service=chocotech-grafana-service -n chocotech-models
+----
+
+== Exercise 2: Connecting the Prometheus Datasource
+
+Grafana needs permission to read the data from OpenShift's central Prometheus database (Thanos Querier). First, we grant the Grafana service account cluster-monitoring permissions. 
+
+[source,role="execute"]
+----
+oc adm policy add-cluster-role-to-user cluster-monitoring-view -z chocotech-grafana-sa -n chocotech-models
+----
+
+Next, we extract a security token and dynamically create the `GrafanaDatasource` custom resource so Grafana knows exactly where to pull the metrics from.
+
+[source,role="execute"]
+----
+export SA_TOKEN=$(oc create token chocotech-grafana-sa -n chocotech-models --duration=24h)
+
+cat <<EOF | oc apply -f -
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDatasource
+metadata:
+  name: openshift-prometheus
+  namespace: chocotech-models
+spec:
+  instanceSelector:
+    matchLabels:
+      dashboards: "grafana"
+  datasource:
+    name: OpenShift-Prometheus
+    type: prometheus
+    access: proxy
+    url: https://thanos-querier.openshift-monitoring.svc.cluster.local:9091
+    isDefault: true
+    jsonData:
+      tlsSkipVerify: true
+      timeInterval: "5s"
+      httpHeaderName1: "Authorization"
+    secureJsonData:
+      httpHeaderValue1: "Bearer ${SA_TOKEN}"
+EOF
+----
+
+== Exercise 3: Accessing Grafana and Building Panels
+
+Your Grafana instance is now live and wired into the cluster's telemetry stream! Retrieve your secure Grafana URL:
+
+[source,role="execute"]
+----
+oc get route chocotech-grafana -n chocotech-models -o jsonpath='{"https://"}{.spec.host}{"\n"}'
+----
+
+Open that URL in a new browser tab. 
+
+=== Step 1: Import the NVIDIA Hardware Dashboard
+NVIDIA provides an excellent pre-built dashboard for DCGM metrics. 
+1. In Grafana, click the **+** (Create) icon in the left menu and select **Import**.
+2. Type `12239` into the "Import via grafana.com" field and click **Load**.
+3. Select `OpenShift-Prometheus` from the datasource dropdown at the bottom and click **Import**.
+4. You now have a real-time view of your GPU Utilization, Temperature, and VRAM capacity!
+
+=== Step 2: Build the Custom MaaS Dashboard
+Now, let's create a custom dashboard for your finance and governance metrics. 
+
+1. Click the **+** icon and select **New Dashboard**.
+2. Click **Add visualization** and select `OpenShift-Prometheus` as your data source.
+3. **IMPORTANT:** By default, Grafana opens the query editor in "Builder" mode (using dropdown menus). To paste the exact PromQL queries below, look at the right side of the query row and click the **Code** button to switch to text mode!
+
+Build the following panels:
+
+**Panel 1: Total Tokens Consumed (Finance)** +
+Set the visualization type to **Stat** or **Gauge**.
+[source,role="execute"]
+----
+sum(authorized_hits{model="qwen3-8b"})
+----
+
+**Panel 2: Tokens Consumed by User (Chargeback)** +
+Set the visualization type to **Bar chart** or **Pie chart**. This query groups the token consumption by the specific API Key ID (`app_id`)!
+[source,role="execute"]
+----
+sum(authorized_hits{model="qwen3-8b"}) by (app_id)
+----
+
+**Panel 3: Rate Limit Rejections (Governance)** +
+Set the visualization type to **Time series**.
+[source,role="execute"]
+----
+sum(rate(limited_calls[5m]))
+----
+
+**Panel 4: Time To First Token (Latency/SRE)** +
+Set the visualization type to **Time series**. This shows the 95th percentile loading time for your models.
+[source,role="execute"]
+----
+histogram_quantile(0.95, sum(rate(vllm:time_to_first_token_seconds_bucket[5m])) by (le, model_name))
+----
+
+Save your dashboard. You now have a unified "God View" of your entire AI infrastructure!
 
 ---
-
-== Knowledge check
-
-Test your understanding of MaaS observability and integration before concluding the course:
-
-1. **Why is it critical for client applications to read the `Retry-After` header when they receive a `429 Too Many Requests` error?**
-+
-If applications ignore the header and aggressively retry, they waste network resources and continue to hit the rate limit. Reading the header allows the application to pause execution (exponential backoff) and resume exactly when the token bucket has refilled.
-
-2. **Why is the `captureUser` telemetry flag set to `false` by default in the Tenant custom resource?**
-+
-Enabling user-level tracking on a cluster with hundreds or thousands of users exponentially increases metric cardinality. This can severely bloat the Prometheus database and impact cluster monitoring performance.
-
-3. **What is the difference between Kuadrant observability and MaaS Tenant telemetry?**
-+
-Kuadrant observability (via Limitador) tracks *enforcement*—specifically, how many requests were rejected due to rate limits. MaaS Tenant telemetry tracks *consumption*—specifically, how many input and output tokens were processed by the models.
-
----
-
-.🛠️ Troubleshooting: Observability & Integration (Click to expand)
-[%collapsible]
-====
-If you encountered any issues generating traffic or viewing metrics, check the following common resolutions:
-
-**Issue: No metrics are appearing in the Usage dashboard**
-
-* **Check Telemetry Flags:** Ensure both the Kuadrant `observability.enable: true` and the Tenant `telemetry.enabled: true` patches were successfully applied.
-* **Generate Traffic:** Metrics only appear after requests are made. Ensure your Python script successfully ran and generated traffic.
-* **Verify User Workload Monitoring:** MaaS observability requires OpenShift's User Workload Monitoring to be enabled on the cluster. Without it, the MaaS deployment will degrade.
-
-**Issue: The CSV export contains missing "User" data**
-
-* **Expected Behavior:** Because we explicitly set `captureUser: false` in the Tenant patch to protect database performance, the exported CSV will not break down token consumption by individual users, but rather by the aggregated Subscription.
-
-**Issue: The Python script crashes with an SSL/TLS error**
-
-* **Check Warnings:** In a lab environment with self-signed certificates, ensure you included `verify=False` in your Python `requests.post()` call and suppressed warnings using `export PYTHONWARNINGS="ignore:Unverified HTTPS request"`.
-
-**Issue: The Usage tab is missing from the Dashboard**
-
-* **Check Dashboard Config:** Verify that `spec.dashboardConfig.observabilityDashboard` is set to `true` in the `OdhDashboardConfig` custom resource.
-====
-
----
-
-== Your journey progress
-
-[cols="1a,1a,1a,1a",frame="none",grid="none"]
-|===
-| **✅ Module 1** +
-_Architecture & Foundation_ 
-| **✅ Module 2** +
-_Policies & Governance_ 
-| **✅ Module 3** +
-_Model Deployment_ 
-| **✅ Module 4** +
-_Application Integration_
-|===
-
-[quote]
-**Course Complete!** You have successfully guided ChocoTech from a raw Kubernetes cluster to a fully governed, multi-tenant AI Factory. You possess the skills to deploy API gateways, configure token subscriptions, publish large language models, and export the financial metrics required to run AI at an enterprise scale.
