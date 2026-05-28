@@ -4,15 +4,17 @@
 :toc: macro
 :toclevels: 1
 
-====
-WARNING: This section is under development
-====
-
-ChocoTech's AI Factory is live, and the business units are successfully accessing the model catalog. However, on day three of production, you receive a Slack message from the lead developer on the Marketing team (Bronze Subscription): 
+ChocoTech's AI Factory is live, and the business units are successfully accessing the multi-model catalog. However, on day three of production, you receive a Slack message from the lead developer on the Marketing team (Bronze Subscription): 
 
 > *"Our new batch-processing script for sentiment analysis keeps crashing with a '429 Too Many Requests' error. Also, Finance just emailed asking how much of the monthly cloud budget our department consumed this week. How do we fix the script, and where do I get the billing data?"*
 
 This module bridges the final gap between the Application Developer and the Platform Engineer. You will step into the developer's shoes to write a robust application that gracefully handles Models-as-a-Service (MaaS) rate limits. Then, you will switch back to the platform engineer role to enable telemetry, analyze the resulting metrics, and export the automated chargeback reports for Finance.
+
+[WARNING]
+.The Silent Telemetry Trap
+====
+OpenShift AI will report a 100% healthy MaaS installation even if User Workload Monitoring (UWM) is disabled on the OpenShift cluster. The Gateway and Kuadrant rate-limiting components do not require Prometheus to enforce rules. However, if UWM is not enabled, your platform will silently drop all token tracking data, leaving your chargeback dashboards completely blank! You will verify this pipeline in this module.
+====
 
 toc::[]
 
@@ -22,8 +24,8 @@ By the end of this module, you will be able to:
 
 * Implement exponential backoff in client applications to gracefully handle Kuadrant's `429 Too Many Requests` rate limits.
 * Configure Kuadrant and Tenant custom resources to enable platform-wide rate-limiting metrics and token telemetry.
-* Navigate the MaaS observability dashboard to track token consumption by user, model, and subscription.
-* Export subscription-level usage data in CSV format for automated financial chargeback workflows.
+* Navigate the MaaS observability dashboard to track token consumption by model and subscription.
+* Export token-level usage data in CSV format for automated financial chargeback workflows.
 
 ---
 
@@ -39,13 +41,13 @@ To solve the Marketing team's errors and satisfy Finance's billing requirements,
 | You will run a Python load-generator script using the Marketing team's API key. This script will intentionally attempt to breach the Bronze tier's token quota to demonstrate how developers must handle HTTP 429 rate limits in their code.
 
 | **2. Enabling Telemetry**
-| The load generator will create a massive spike in traffic, but without instrumentation, that data is invisible. You will patch the `Kuadrant` and `Tenant` custom resources to instruct Prometheus to scrape the token consumption metrics.
+| The load generator will create a massive spike in traffic. You will patch the `Kuadrant` and `Tenant` custom resources to instruct Prometheus to scrape the token consumption metrics.
 
 | **3. The Observability Dashboard**
 | You will access the MaaS observability dashboard to visualize the chaos you just created. You will analyze Total Tokens, Request Counts, and the specific rate-limit violations triggered by the Python script.
 
 | **4. Cost Attribution (Chargeback)**
-| Finally, you will export the usage data into a structured CSV format, providing the Finance team with the exact mathematical proof they need to bill the Marketing department for their token consumption.
+| Finally, you will export the usage data into a structured CSV format, providing the Finance team with the exact mathematical proof they need to bill the Marketing department.
 |===
 
 By the end of this module, ChocoTech will have a fully monitored, financially accountable, and developer-friendly AI ecosystem.

@@ -1,143 +1,115 @@
-= 4.1: Simulating Developer Traffic (The Chaos Generator)
+== Exercise 3: Run the Load Generator (Kubernetes Job)
 
-====
-WARNING: This section is under development
-====
+Instead of running a Python script on our local machine, we are going to run this exactly how the Marketing department would: as a containerized Kubernetes `Job` running inside the cluster. 
 
-When developers consume models through Models-as-a-Service (MaaS), they are no longer talking directly to a limitless GPU. They are communicating through Kuadrant's Limitador component, which strictly enforces the token limits you defined in your subscriptions. 
+We are going to deploy a self-contained container that automatically writes and executes a Python load-generation script. This script continuously sends prompts to the Gateway and uses exponential backoff to handle rate limits.
 
-If a developer writes a script that aggressively queries the API without respecting these limits, Kuadrant will physically block the traffic and return an `HTTP 429 Too Many Requests` error, accompanied by a `Retry-After` header. 
-
-To simulate the Marketing team's workload and generate data for our observability dashboard, we are going to run a Python load-generator script. This script intentionally attempts to breach the Bronze Plan's token quota while demonstrating the enterprise best-practice for handling rate limits: **Exponential Backoff**.
-
-== Exercise 1: Configure Group Membership
-
-Because MaaS API keys capture a snapshot of a user's group memberships at the exact time the key is created, your current lab user must belong to the Marketing group *before* generating the test key.
-
-Execute this command in your terminal to dynamically add your current OpenShift user to the Marketing group:
+**1. Secure the API Key**
+First, save the Marketing API key you just generated into a Kubernetes Secret so our container can mount it securely:
 
 [source,role="execute"]
 ----
-# Add your current user to the Marketing group
-oc adm groups add-users chocotech-marketing $(oc whoami)
+export MAAS_API_KEY="<your-copied-bronze-api-key>"
 
-# Verify the membership
-oc get group chocotech-marketing
+oc create secret generic marketing-api-key \
+  --from-literal=key=$MAAS_API_KEY \
+  -n chocotech-models
 ----
 
-== Exercise 2: Generate the Bronze API Key
-
-Now that you are officially a member of the Marketing team, you must generate an API key tied to their specific token quota.
-
-1. In the OpenShift AI dashboard, navigate to **Gen AI studio** -> **API keys**.
-2. Click **Create API key**.
-3. Name it `marketing-batch-job`.
-4. From the **Subscription** dropdown, select the **Bronze Plan**.
-5. Click **Create** and copy the `sk-oai-...` key immediately.
-
-== Exercise 3: The Developer Integration Script
-
-
-
-In a terminal connected to your cluster, create a new Python file named `marketing-batch-job.py`. This script uses the standard OpenAI-compatible `/v1/chat/completions` endpoint provided by the MaaS gateway. Notice how the `make_request_with_retry` function is explicitly designed to catch `429` status codes and pause execution based on the `Retry-After` header.
+**2. Deploy the Batch Job**
+Next, retrieve the Gateway URL and deploy the Kubernetes Job. This will spin up a lightweight Python container, dynamically write our batch script, and execute it against the MaaS API.
 
 [source,role="execute"]
 ----
-cat << 'EOF' > marketing-batch-job.py
-import os
-import time
-import requests
-import json
+export GATEWAY_HOST=$(oc get gateway maas-default-gateway -n openshift-ingress -o jsonpath='{.status.addresses[0].value}')
 
-# Fetch credentials from environment variables
-API_KEY = os.environ.get("MAAS_API_KEY")
-GATEWAY_URL = os.environ.get("MAAS_URL")
-MODEL_NAME = "llama-3-8b" # Targeting the universally available model
-
-if not API_KEY or not GATEWAY_URL:
-    raise ValueError("Please set MAAS_API_KEY and MAAS_URL environment variables.")
-
-headers = {
-    "Authorization": f"Bearer {API_KEY}",
-    "Content-Type": "application/json"
-}
-
-# Requesting a large output to quickly consume tokens
-payload = {
-    "model": MODEL_NAME,
-    "messages": [
-        {"role": "system", "content": "You are a marketing sentiment analyzer."},
-        {"role": "user", "content": "Write a 500-word detailed analysis on why chocolate is the best dessert, exploring historical, chemical, and culinary perspectives."}
-    ],
-    "max_tokens": 800 
-}
-
-def make_request_with_retry(url, headers, data, max_retries=5):
-    for attempt in range(max_retries):
-        print(f"--- Request Attempt {attempt + 1} ---")
-        response = requests.post(url, headers=headers, json=data, verify=False)
-        
-        if response.status_code == 200:
-            tokens_used = response.json().get('usage', {}).get('total_tokens', 0)
-            print(f"✅ Success! Consumed {tokens_used} tokens.")
-            return True
+cat <<EOF | oc apply -f -
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: marketing-chaos-job
+  namespace: chocotech-models
+spec:
+  backoffLimit: 0
+  template:
+    spec:
+      containers:
+      - name: chaos-generator
+        image: registry.access.redhat.com/ubi9/python-311
+        command: ["/bin/bash", "-c"]
+        args:
+          - |
+            pip install --quiet requests urllib3
             
-        elif response.status_code == 429:
-            # Kuadrant intercepted the request due to token limits
-            retry_after = int(response.headers.get('Retry-After', 10))
-            print(f"🛑 429 Rate Limit Hit! Kuadrant says retry after {retry_after} seconds.")
-            time.sleep(retry_after)
-            continue
-            
-        elif response.status_code == 403:
-            print("❌ 403 Forbidden: Your API key's subscription cannot access this model.")
-            return False
-            
-        else:
-            print(f"⚠️ Error {response.status_code}: {response.text}")
-            return False
-            
-    print("❌ Max retries exceeded. The batch job failed.")
-    return False
+            # Write the Python script dynamically
+            cat << 'PYEOF' > marketing-batch-job.py
+            import os
+            import time
+            import requests
+            import urllib3
 
-# Simulate a batch job generating 20 rapid requests
-print(f"Initiating Marketing Batch Job targeting {GATEWAY_URL}...")
-for i in range(20):
-    success = make_request_with_retry(f"{GATEWAY_URL}/maas-api/v1/chat/completions", headers, payload)
-    if not success:
-        break
+            urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+            api_key = os.getenv("MAAS_API_KEY")
+            base_url = os.getenv("MAAS_URL")
+            url = f"{base_url}/v1/chat/completions"
+
+            headers = {
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json"
+            }
+
+            data = {
+                "model": "meta-llama/Meta-Llama-3-8B-Instruct",
+                "messages": [{"role": "user", "content": "Write a detailed 500 word essay on the history of chocolate manufacturing."}],
+                "max_tokens": 600
+            }
+
+            print(f"Starting batch job against {url}...\n")
+
+            for i in range(1, 20):
+                print(f"Request {i}...", end=" ")
+                response = requests.post(url, headers=headers, json=data, verify=False)
+                
+                if response.status_code == 200:
+                    print("✅ Success! Consumed tokens.")
+                elif response.status_code == 429:
+                    retry_after = int(response.headers.get("Retry-After", 10))
+                    print(f"🛑 429 Rate Limit Hit! Sleeping for {retry_after} seconds...")
+                    time.sleep(retry_after)
+                else:
+                    print(f"❌ Error: {response.status_code} - {response.text}")
+                    time.sleep(2)
+            PYEOF
+            
+            echo "Executing batch script against $MAAS_URL..."
+            python marketing-batch-job.py
+        env:
+        - name: MAAS_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: marketing-api-key
+              key: key
+        - name: MAAS_URL
+          value: "https://${GATEWAY_HOST}"
+      restartPolicy: Never
 EOF
 ----
 
-== Exercise 4: Execute the Chaos
-
-To run this script, you must provide it with the external Gateway URL and the Bronze API key you just generated. 
-
-Run the following commands in your terminal, replacing the `<your-bronze-api-key>` placeholder with your actual `sk-oai-...` key.
+**3. Watch the Chaos!**
+The job is now running in the background. Let's tail the logs of the container to watch it interact with the Kuadrant rate limiter in real time:
 
 [source,role="execute"]
 ----
-export MAAS_API_KEY="<your-bronze-api-key>"
-export MAAS_URL="https://$(oc get route openshift-ai-inference -n openshift-ingress -o jsonpath='{.spec.host}')"
-
-# Install the requests library if you do not have it
-pip install requests urllib3
-
-# Suppress insecure TLS warnings for the lab environment
-export PYTHONWARNINGS="ignore:Unverified HTTPS request"
-
-# Run the load generator
-python3 marketing-batch-job.py
+oc logs -f job/marketing-chaos-job -n chocotech-models
 ----
 
 **Expected Behavior:**
 Watch the terminal output closely. 
 
-1. The first few requests will succeed, returning `✅ Success! Consumed ~850 tokens.`
+1. The first few requests will succeed, returning `✅ Success! Consumed tokens.`
 2. Because the Bronze Plan has a strict token limit, the script will rapidly consume its quota.
-3. Suddenly, you will see `🛑 429 Rate Limit Hit!`. This is Kuadrant physically protecting the cluster GPUs from the Marketing team's aggressive batch job.
+3. Suddenly, you will see `🛑 429 Rate Limit Hit! Sleeping for X seconds...`. This is Kuadrant physically protecting the cluster GPUs from the Marketing team's aggressive batch job.
 4. The Python script reads the `Retry-After` header, sleeps for the required time, and successfully resumes processing once the Kuadrant token bucket refills.
 
-By running this script, you have successfully taught the developer how to integrate with MaaS securely. More importantly, you have just pumped the MaaS platform full of rich telemetry data—successful requests, token consumption metrics, and rate-limit violations.
-
-In the next section, we will switch back to the Platform Engineer role, enable the OpenShift AI observability stack, and transform this raw data into a financial chargeback report!
+*(Press `Ctrl+C` to exit the log tail when you are satisfied).*
