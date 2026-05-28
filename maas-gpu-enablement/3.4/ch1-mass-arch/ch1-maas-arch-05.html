@@ -347,7 +347,7 @@ In OpenShift AI 3.4, MaaS uses a subscription-based model for access control. If
 <p><strong>Verify Llama Stack:</strong> The UI relies on the Llama Stack Operator. Run <code>oc get datasciencecluster default-dsc -o jsonpath='{.spec.components.llamastackoperator.managementState}'</code>. It must be <code>Managed</code>.</p>
 </li>
 <li>
-<p><strong>Verify Dashboard Patch:</strong> Run <code>oc get odhdashboardconfig odh-dashboard-config -n redhat-ods-applications -o yaml | grep -A 5 dashboardConfig</code> to ensure <code>genAiStudio</code> is set to <code>true</code>.</p>
+<p><strong>Verify Dashboard Patch:</strong> Run <code>oc get odhdashboardconfig odh-dashboard-config -n redhat-ods-applications -o yaml | grep -A 10 dashboardConfig</code> to ensure <code>genAiStudio</code> is set to <code>true</code>.</p>
 </li>
 <li>
 <p><strong>Hard Reload:</strong> Clear your browser cache and hard-refresh the page (Ctrl+Shift+R or Cmd+Shift+R).</p>
@@ -360,7 +360,7 @@ In OpenShift AI 3.4, MaaS uses a subscription-based model for access control. If
 <div class="ulist">
 <ul>
 <li>
-<p><strong>Check Connectivity Link operator logs:</strong> Run <code>oc logs -n openshift-operators deployment/connectivity-link-operator --tail=50</code>.</p>
+<p><strong>Check Connectivity Link operator logs:</strong> Run <code>oc logs -n openshift-operators deployment/kuadrant-operator-controller-manager --tail=50</code>.</p>
 </li>
 <li>
 <p><strong>Verify Kuadrant CRDs are installed:</strong> Run <code>oc get crd | grep kuadrant</code>.</p>

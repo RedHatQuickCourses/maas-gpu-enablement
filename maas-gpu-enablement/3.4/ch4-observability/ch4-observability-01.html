@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Untitled :: Models as a Service Breaking the GPU Silos on OpenShift AI 3.4</title>
+    <title>4.1: Application Integration &amp; The Rate Limit Reality :: Models as a Service Breaking the GPU Silos on OpenShift AI 3.4</title>
     <link rel="prev" href="ch4-observability-intro.html">
     <link rel="next" href="ch4-observability-02.html">
     <meta name="generator" content="Antora 3.1.3">
@@ -292,18 +292,40 @@
   <div class="toc-menu"></div>
 </aside>
 <article class="doc">
-<div class="sect1">
-<h2 id="_exercise_3_run_the_load_generator_kubernetes_job"><a class="anchor" href="#_exercise_3_run_the_load_generator_kubernetes_job"></a>Exercise 3: Run the Load Generator (Kubernetes Job)</h2>
+<h1 class="page">4.1: Application Integration &amp; The Rate Limit Reality</h1>
+<div id="preamble">
 <div class="sectionbody">
 <div class="paragraph">
-<p>Instead of running a Python script on our local machine, we are going to run this exactly how the Marketing department would: as a containerized Kubernetes <code>Job</code> running inside the cluster.</p>
+<p>The platform is secure, and Finance is happy. Now, it is time to build apps.</p>
 </div>
 <div class="paragraph">
-<p>We are going to deploy a self-contained container that automatically writes and executes a Python load-generation script. This script continuously sends prompts to the Gateway and uses exponential backoff to handle rate limits.</p>
+<p>Because OpenShift AI&#8217;s MaaS gateway is fully OpenAI-compatible, integrating ChocoTech&#8217;s existing applications requires almost zero code refactoring. However, because we built strict Token Rate Limits into our Subscriptions in Module 2, developers <strong>must</strong> know how to handle API rejections.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_the_429_too_many_requests_trap"><a class="anchor" href="#_the_429_too_many_requests_trap"></a>The "429 Too Many Requests" Trap</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Imagine a Marketing developer writes a Python script to analyze 1,000 product reviews. Because the Marketing team is on the <strong>Bronze Plan</strong>, they are strictly limited to a specific amount of tokens per minute for the Qwen model.</p>
 </div>
 <div class="paragraph">
-<p><strong>1. Secure the API Key</strong>
-First, save the Marketing API key you just generated into a Kubernetes Secret so our container can mount it securely:</p>
+<p>Halfway through the script, the developer hits the limit. Kuadrant&#8217;s Limitador service intercepts the request and instantly returns an <code>HTTP 429 Too Many Requests</code> error. If the script is poorly written, the application crashes entirely.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_exercise_1_the_robust_python_load_generator"><a class="anchor" href="#_exercise_1_the_robust_python_load_generator"></a>Exercise 1: The Robust Python Load Generator</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>To survive in a governed MaaS ecosystem, developers must implement <strong>exponential backoff retry logic</strong>. When Kuadrant rejects a request, it provides a <code>Retry-After</code> HTTP header telling the application exactly how many seconds to wait before the token bucket resets.</p>
+</div>
+<div class="paragraph">
+<p>Instead of running a local script, we are going to deploy a containerized Kubernetes Job that acts as a "chaos generator". It will intentionally spam the MaaS Gateway to trigger a rate limit, and use exponential backoff to handle it gracefully.</p>
+</div>
+<div class="paragraph">
+<p><strong>1. Secure the API Key</strong><br>
+First, save the Bronze (Marketing) API key you generated earlier into a Kubernetes Secret.</p>
 </div>
 <div class="listingblock execute">
 <div class="content">
@@ -315,12 +337,72 @@ oc create secret generic marketing-api-key \
 </div>
 </div>
 <div class="paragraph">
-<p><strong>2. Deploy the Batch Job</strong>
-Next, retrieve the Gateway URL and deploy the Kubernetes Job. This will spin up a lightweight Python container, dynamically write our batch script, and execute it against the MaaS API.</p>
+<p><strong>2. Create the Python Script (ConfigMap)</strong><br>
+We will store the Python script in a ConfigMap.</p>
+</div>
+<div class="paragraph">
+<p><strong>Notice the Routing URL:</strong> In OpenShift AI 3.4, the Data Plane inference endpoint is dynamically generated using the namespace and the model name. Our route is <code>/chocotech-models/qwen3-8b/v1/chat/completions</code>.</p>
 </div>
 <div class="listingblock execute">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-none hljs">export GATEWAY_HOST=$(oc get gateway maas-default-gateway -n openshift-ingress -o jsonpath='{.status.addresses[0].value}')
+<pre class="highlightjs highlight"><code class="language-none hljs">cat &lt;&lt; 'EOF' | oc apply -f -
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: marketing-batch-script
+  namespace: chocotech-models
+data:
+  marketing-batch-job.py: |
+    import os
+    import time
+    import requests
+    import urllib3
+
+    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+    api_key = os.getenv("MAAS_API_KEY")
+    base_url = os.getenv("MAAS_URL")
+
+    # OpenShift AI 3.4 Data Plane inference route
+    url = f"{base_url}/chocotech-models/qwen3-8b/v1/chat/completions"
+
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json"
+    }
+
+    data = {
+        "model": "qwen3-8b",
+        "messages": [{"role": "user", "content": "Write a detailed 500 word essay on the history of chocolate manufacturing."}],
+        "max_tokens": 600
+    }
+
+    print(f"Starting batch job against {url}...\n")
+
+    for i in range(1, 20):
+        print(f"Request {i}...", end=" ")
+        response = requests.post(url, headers=headers, json=data, verify=False)
+
+        if response.status_code == 200:
+            print("✅ Success! Consumed tokens.")
+        elif response.status_code == 429:
+            # Kuadrant provides the exact wait time!
+            retry_after = int(response.headers.get("Retry-After", 10))
+            print(f"🛑 429 Rate Limit Hit! Sleeping for {retry_after} seconds...")
+            time.sleep(retry_after)
+        else:
+            print(f"❌ Error: {response.status_code} - {response.text}")
+            time.sleep(2)
+EOF</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>3. Deploy the Batch Job</strong><br>
+Deploy the Job to mount the script and execute it against the external Gateway Route.</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">export ROUTE_HOST=$(oc get route openshift-ai-inference -n openshift-ingress -o jsonpath='{.spec.host}')
 
 cat &lt;&lt;EOF | oc apply -f -
 apiVersion: batch/v1
@@ -339,50 +421,8 @@ spec:
         args:
           - |
             pip install --quiet requests urllib3
-
-            # Write the Python script dynamically
-            cat &lt;&lt; 'PYEOF' &gt; marketing-batch-job.py
-            import os
-            import time
-            import requests
-            import urllib3
-
-            urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-
-            api_key = os.getenv("MAAS_API_KEY")
-            base_url = os.getenv("MAAS_URL")
-            url = f"{base_url}/v1/chat/completions"
-
-            headers = {
-                "Authorization": f"Bearer {api_key}",
-                "Content-Type": "application/json"
-            }
-
-            data = {
-                "model": "meta-llama/Meta-Llama-3-8B-Instruct",
-                "messages": [{"role": "user", "content": "Write a detailed 500 word essay on the history of chocolate manufacturing."}],
-                "max_tokens": 600
-            }
-
-            print(f"Starting batch job against {url}...\n")
-
-            for i in range(1, 20):
-                print(f"Request {i}...", end=" ")
-                response = requests.post(url, headers=headers, json=data, verify=False)
-
-                if response.status_code == 200:
-                    print("✅ Success! Consumed tokens.")
-                elif response.status_code == 429:
-                    retry_after = int(response.headers.get("Retry-After", 10))
-                    print(f"🛑 429 Rate Limit Hit! Sleeping for {retry_after} seconds...")
-                    time.sleep(retry_after)
-                else:
-                    print(f"❌ Error: {response.status_code} - {response.text}")
-                    time.sleep(2)
-            PYEOF
-
-            echo "Executing batch script against $MAAS_URL..."
-            python marketing-batch-job.py
+            echo "Executing batch script against \$MAAS_URL..."
+            python /opt/scripts/marketing-batch-job.py
         env:
         - name: MAAS_API_KEY
           valueFrom:
@@ -390,14 +430,25 @@ spec:
               name: marketing-api-key
               key: key
         - name: MAAS_URL
-          value: "https://${GATEWAY_HOST}"
+          value: "https://${ROUTE_HOST}"
+        volumeMounts:
+        - name: script-volume
+          mountPath: /opt/scripts
+      volumes:
+      - name: script-volume
+        configMap:
+          name: marketing-batch-script
       restartPolicy: Never
 EOF</code></pre>
 </div>
 </div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_exercise_2_watch_the_throttling_in_real_time"><a class="anchor" href="#_exercise_2_watch_the_throttling_in_real_time"></a>Exercise 2: Watch the Throttling in Real-Time</h2>
+<div class="sectionbody">
 <div class="paragraph">
-<p><strong>3. Watch the Chaos!</strong>
-The job is now running in the background. Let&#8217;s tail the logs of the container to watch it interact with the Kuadrant rate limiter in real time:</p>
+<p>Tail the logs of the container to watch the Python script hit Kuadrant&#8217;s rate limits:</p>
 </div>
 <div class="listingblock execute">
 <div class="content">
@@ -405,27 +456,46 @@ The job is now running in the background. Let&#8217;s tail the logs of the conta
 </div>
 </div>
 <div class="paragraph">
-<p><strong>Expected Behavior:</strong>
-Watch the terminal output closely.</p>
+<p>You will see several <code>✅ Success</code> messages as the Marketing team consumes their Bronze Tier quota. Eventually, Limitador will intervene, triggering the <code>🛑 429 Rate Limit Hit</code>. Because of our robust error handling, the script will simply sleep and resume, ensuring ChocoTech&#8217;s applications never crash under load.</p>
 </div>
-<div class="olist arabic">
-<ol class="arabic">
-<li>
-<p>The first few requests will succeed, returning <code>✅ Success! Consumed tokens.</code></p>
-</li>
-<li>
-<p>Because the Bronze Plan has a strict token limit, the script will rapidly consume its quota.</p>
-</li>
-<li>
-<p>Suddenly, you will see <code>🛑 429 Rate Limit Hit! Sleeping for X seconds&#8230;&#8203;</code>. This is Kuadrant physically protecting the cluster GPUs from the Marketing team&#8217;s aggressive batch job.</p>
-</li>
-<li>
-<p>The Python script reads the <code>Retry-After</code> header, sleeps for the required time, and successfully resumes processing once the Kuadrant token bucket refills.</p>
-</li>
-</ol>
+<hr>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_exercise_3_tuning_subscriptions_finding_the_sweet_spot"><a class="anchor" href="#_exercise_3_tuning_subscriptions_finding_the_sweet_spot"></a>Exercise 3: Tuning Subscriptions (Finding the Sweet Spot)</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>In a real-world scenario, you may need to adjust a team&#8217;s token quota up or down based on their workload. If your script finished all 20 requests without hitting a 429 rate limit, it means the Marketing team&#8217;s token limit is too generous!</p>
 </div>
 <div class="paragraph">
-<p><strong>(Press <code>Ctrl+C</code> to exit the log tail when you are satisfied).</strong></p>
+<p>To force the rate limiter to trigger, you can dynamically patch the <code>MaaSSubscription</code> to severely restrict their limit (e.g., dropping it to 1,000 tokens per minute), and then redeploy the job to test the new boundaries.</p>
+</div>
+<div class="paragraph">
+<p><strong>1. Patch the Subscription Limit</strong><br>
+Drop the token limit for <code>qwen3-8b</code> to 1000 tokens per minute:</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">oc patch maassubscription bronze-plan -n models-as-a-service --type=json -p='[
+  {"op": "replace", "path": "/spec/modelRefs/1/tokenRateLimits/0/limit", "value": 1000}
+]'</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>2. Delete the Completed Job</strong><br>
+Because Kubernetes Jobs are immutable, you must delete the old deployment before re-running it:</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">oc delete job marketing-chaos-job -n chocotech-models</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>3. Redeploy and Watch</strong><br>
+Scroll back up to Exercise 1, re-copy the Job deployment block (<code>cat &lt;&lt;EOF | oc apply -f -</code>), and paste it into your terminal to deploy the batch job again. Tail the logs, and you will see Limitador aggressively block the traffic much earlier in the cycle!</p>
+</div>
+<div class="paragraph">
+<p>Feel free to keep experimenting! You can delete the job, tweak the token limits up or down, and redeploy to see exactly how Kuadrant mathematically protects your cluster&#8217;s GPU capacity in real-time.</p>
 </div>
 </div>
 </div>
