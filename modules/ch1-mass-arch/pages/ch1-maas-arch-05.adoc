@@ -24,12 +24,12 @@ As a Platform Engineer, you must know how to diagnose failures in the MaaS stack
 **Issue: Gen AI Studio is not visible in the dashboard**
 
 * **Verify Llama Stack:** The UI relies on the Llama Stack Operator. Run `oc get datasciencecluster default-dsc -o jsonpath='{.spec.components.llamastackoperator.managementState}'`. It must be `Managed`.
-* **Verify Dashboard Patch:** Run `oc get odhdashboardconfig odh-dashboard-config -n redhat-ods-applications -o yaml | grep -A 5 dashboardConfig` to ensure `genAiStudio` is set to `true`.
+* **Verify Dashboard Patch:** Run `oc get odhdashboardconfig odh-dashboard-config -n redhat-ods-applications -o yaml | grep -A 10 dashboardConfig` to ensure `genAiStudio` is set to `true`.
 * **Hard Reload:** Clear your browser cache and hard-refresh the page (Ctrl+Shift+R or Cmd+Shift+R).
 
 **Issue: Kuadrant pods are not starting**
 
-* **Check Connectivity Link operator logs:** Run `oc logs -n openshift-operators deployment/connectivity-link-operator --tail=50`.
+* **Check Connectivity Link operator logs:** Run `oc logs -n openshift-operators deployment/kuadrant-operator-controller-manager --tail=50`.
 * **Verify Kuadrant CRDs are installed:** Run `oc get crd | grep kuadrant`.
 
 **Issue: Gateway status shows `PROGRAMMED=False` or `Unknown`**

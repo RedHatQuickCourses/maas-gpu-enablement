@@ -51,15 +51,3 @@ To generate the report:
 You can now email this file to the Finance team, providing them with the exact mathematical proof they need to attribute GPU costs to the Marketing department!
 
 ---
-
-== 🎉 Course Conclusion: The AI Factory is Complete
-
-Congratulations! You have successfully completed the ChocoTech platform engineering journey. 
-
-Let's review what you have accomplished:
-* **Module 1:** You deployed a secure, edge-routed API Gateway using Authorino and Kuadrant, creating the foundational infrastructure for Models-as-a-Service.
-* **Module 2:** You established strict governance by defining Token Limits via Subscriptions and explicitly authorizing access for different business units.
-* **Module 3:** You deployed large language models using the highly scalable `LLMInferenceService` architecture, securely publishing them to a multi-tenant self-service catalog.
-* **Module 4:** You empowered developers to securely query those models while simultaneously instrumenting the platform to track every token for financial accountability.
-
-ChocoTech no longer operates a raw, ungoverned AI cluster. You have built a highly secure, financially accountable, and multi-tenant Enterprise AI Factory!
