@@ -3,9 +3,9 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>4.4: Summary &amp; troubleshooting :: Models as a Service Breaking the GPU Silos on OpenShift AI 3.4</title>
+    <title>4.4: Advanced Telemetry &amp; The "God View" Dashboard :: Models as a Service Breaking the GPU Silos on OpenShift AI 3.4</title>
     <link rel="prev" href="ch4-observability-03.html">
-    <link rel="next" href="#index.adoc">
+    <link rel="next" href="ch4-observability-05.html">
     <meta name="generator" content="Antora 3.1.3">
 <link rel="stylesheet" href="../../../_/css/site.css">
 <link rel="stylesheet" href="../../../_/css/vendor/tabs.css">
@@ -224,6 +224,12 @@
       4.4: Lab - Observability &amp; Automated Chargeback
     </a>
   </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="ch4-observability-05.html" data-progress-path="/maas-gpu-enablement/3.4/ch4-observability/ch4-observability-05.html">
+      <span class="nav-progress-mark" aria-hidden="true">✓</span>
+      4.5: TroubleShooting and Summary
+    </a>
+  </li>
 </ul>
   </li>
 </ul>
@@ -292,7 +298,7 @@
   <div class="toc-menu"></div>
 </aside>
 <article class="doc">
-<h1 class="page">4.4: Summary &amp; troubleshooting</h1>
+<h1 class="page">4.4: Advanced Telemetry &amp; The "God View" Dashboard</h1>
 <div id="preamble">
 <div class="sectionbody">
 <div class="exampleblock">
@@ -312,162 +318,223 @@ This section is under development
 </div>
 </div>
 <div class="paragraph">
-<p>You have successfully completed the final phase of the ChocoTech AI Factory deployment. By stepping into both the Developer and Platform Engineer roles, you closed the loop between consuming AI resources and paying for them.</p>
+<p>You have successfully delivered the chargeback report to the Finance team using the native OpenShift metrics console.</p>
 </div>
 <div class="paragraph">
-<p>If ChocoTech had simply handed out API keys without observability, the Finance team would have no way to attribute cloud costs to the specific departments consuming the GPU time. By enabling Kuadrant rate-limit metrics and MaaS Gateway telemetry, you transformed raw infrastructure logs into actionable financial data.</p>
+<p><strong>A note on the OpenShift AI UI:</strong> Depending on your specific build version or RBAC permissions, you may occasionally see an "Observe &amp; monitor" tab in the OpenShift AI dashboard. However, because this feature is often hidden behind feature flags in early releases, we will not rely on it. Instead, we will do what true Platform Engineers do: build our own centralized "God View" using Grafana.</p>
+</div>
+<div class="paragraph">
+<p>Tokens tell you <strong>how much</strong> was generated, but latency tells you <strong>how fast</strong> it felt to the user. Hardware metrics tell you if the physical cluster is burning out. To get a complete 360-degree view of your Enterprise AI Factory, we need to bring all these metrics into one place.</p>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_what_you_accomplished"><a class="anchor" href="#_what_you_accomplished"></a>What you accomplished</h2>
+<h2 id="_the_three_pillars_of_ai_observability"><a class="anchor" href="#_the_three_pillars_of_ai_observability"></a>The Three Pillars of AI Observability</h2>
 <div class="sectionbody">
+<div class="paragraph">
+<p>Beyond token counting, a production-grade AI platform requires monitoring across three specific domains:</p>
+</div>
 <div class="ulist">
 <ul>
 <li>
-<p><strong>Application Integration:</strong> Wrote a Python load-generator script that successfully authenticated against the MaaS Gateway and utilized exponential backoff to gracefully handle <code>HTTP 429</code> rate-limit rejections.</p>
+<p><strong>User Experience (Latency):</strong> Large Language Models stream their text.</p>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Time To First Token (TTFT)</strong> measures the "loading time" before the first word appears.</p>
 </li>
 <li>
-<p><strong>Kuadrant Observability:</strong> Patched the Kuadrant custom resource to create a <code>PodMonitor</code>, instructing Prometheus to scrape Limitador for rate-limit violations.</p>
-</li>
-<li>
-<p><strong>Tenant Telemetry:</strong> Patched the <code>Tenant</code> custom resource to enable token consumption metrics while consciously disabling <code>captureUser</code> to protect Prometheus database performance.</p>
-</li>
-<li>
-<p><strong>Automated Chargeback:</strong> Navigated the OpenShift AI observability dashboard to visualize the simulated traffic and exported a structured CSV report for the Finance team.</p>
+<p><strong>Inter-Token Latency (ITL)</strong> measures the "typing speed" of the subsequent words. If these spike, applications feel broken.</p>
 </li>
 </ul>
 </div>
-<hr>
+</li>
+<li>
+<p><strong>Hardware Efficiency (GPU):</strong> Monitoring raw <code>GPU Utilization</code> and <code>VRAM Usage</code> tells you if your models are efficiently batched or if you need to buy more physical hardware.</p>
+</li>
+<li>
+<p><strong>Model Health (Queues):</strong> Tracking <code>Queue Depth</code> reveals if user requests are piling up waiting for GPU compute cycles.</p>
+</li>
+</ul>
+</div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_knowledge_check"><a class="anchor" href="#_knowledge_check"></a>Knowledge check</h2>
+<h2 id="_exercise_1_deploying_the_grafana_instance"><a class="anchor" href="#_exercise_1_deploying_the_grafana_instance"></a>Exercise 1: Deploying the Grafana Instance</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Test your understanding of MaaS observability and integration before concluding the course:</p>
+<p>The Grafana Operator is already installed on your cluster. Let&#8217;s deploy a physical Grafana instance into the <code>chocotech-models</code> namespace.</p>
+</div>
+<div class="paragraph">
+<p>Notice the <code>labels</code> section! The operator uses this label to automatically bind our Prometheus data source to this specific Grafana instance later.</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">cat &lt;&lt;EOF | oc apply -f -
+apiVersion: grafana.integreatly.org/v1beta1
+kind: Grafana
+metadata:
+  name: chocotech-grafana
+  namespace: chocotech-models
+  labels:
+    dashboards: "grafana"
+spec:
+  config:
+    auth.anonymous:
+      enabled: "true"
+      org_role: "Admin"
+EOF</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>Note: We are enabling anonymous admin access strictly for this lab environment so you do not have to fight with login credentials during the exercise.</strong></p>
+</div>
+<div class="paragraph">
+<p>Because operators can sometimes behave differently depending on the cluster&#8217;s ingress configuration, we will explicitly command OpenShift to expose the Grafana service over HTTPS:</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">oc create route edge chocotech-grafana --service=chocotech-grafana-service -n chocotech-models</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_exercise_2_connecting_the_prometheus_datasource"><a class="anchor" href="#_exercise_2_connecting_the_prometheus_datasource"></a>Exercise 2: Connecting the Prometheus Datasource</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Grafana needs permission to read the data from OpenShift&#8217;s central Prometheus database (Thanos Querier). First, we grant the Grafana service account cluster-monitoring permissions.</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">oc adm policy add-cluster-role-to-user cluster-monitoring-view -z chocotech-grafana-sa -n chocotech-models</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Next, we extract a security token and dynamically create the <code>GrafanaDatasource</code> custom resource so Grafana knows exactly where to pull the metrics from.</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">export SA_TOKEN=$(oc create token chocotech-grafana-sa -n chocotech-models --duration=24h)
+
+cat &lt;&lt;EOF | oc apply -f -
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDatasource
+metadata:
+  name: openshift-prometheus
+  namespace: chocotech-models
+spec:
+  instanceSelector:
+    matchLabels:
+      dashboards: "grafana"
+  datasource:
+    name: OpenShift-Prometheus
+    type: prometheus
+    access: proxy
+    url: https://thanos-querier.openshift-monitoring.svc.cluster.local:9091
+    isDefault: true
+    jsonData:
+      tlsSkipVerify: true
+      timeInterval: "5s"
+      httpHeaderName1: "Authorization"
+    secureJsonData:
+      httpHeaderValue1: "Bearer ${SA_TOKEN}"
+EOF</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_exercise_3_accessing_grafana_and_building_panels"><a class="anchor" href="#_exercise_3_accessing_grafana_and_building_panels"></a>Exercise 3: Accessing Grafana and Building Panels</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Your Grafana instance is now live and wired into the cluster&#8217;s telemetry stream! Retrieve your secure Grafana URL:</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">oc get route chocotech-grafana -n chocotech-models -o jsonpath='{"https://"}{.spec.host}{"\n"}'</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Open that URL in a new browser tab.</p>
+</div>
+<div class="sect2">
+<h3 id="_step_1_import_the_nvidia_hardware_dashboard"><a class="anchor" href="#_step_1_import_the_nvidia_hardware_dashboard"></a>Step 1: Import the NVIDIA Hardware Dashboard</h3>
+<div class="paragraph">
+<p>NVIDIA provides an excellent pre-built dashboard for DCGM metrics.
+1. In Grafana, click the <strong>+</strong> (Create) icon in the left menu and select <strong>Import</strong>.
+2. Type <code>12239</code> into the "Import via grafana.com" field and click <strong>Load</strong>.
+3. Select <code>OpenShift-Prometheus</code> from the datasource dropdown at the bottom and click <strong>Import</strong>.
+4. You now have a real-time view of your GPU Utilization, Temperature, and VRAM capacity!</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_step_2_build_the_custom_maas_dashboard"><a class="anchor" href="#_step_2_build_the_custom_maas_dashboard"></a>Step 2: Build the Custom MaaS Dashboard</h3>
+<div class="paragraph">
+<p>Now, let&#8217;s create a custom dashboard for your finance and governance metrics.</p>
 </div>
 <div class="olist arabic">
 <ol class="arabic">
 <li>
-<p><strong>Why is it critical for client applications to read the <code>Retry-After</code> header when they receive a <code>429 Too Many Requests</code> error?</strong></p>
-<div class="paragraph">
-<p>If applications ignore the header and aggressively retry, they waste network resources and continue to hit the rate limit. Reading the header allows the application to pause execution (exponential backoff) and resume exactly when the token bucket has refilled.</p>
-</div>
+<p>Click the <strong>+</strong> icon and select <strong>New Dashboard</strong>.</p>
 </li>
 <li>
-<p><strong>Why is the <code>captureUser</code> telemetry flag set to <code>false</code> by default in the Tenant custom resource?</strong></p>
-<div class="paragraph">
-<p>Enabling user-level tracking on a cluster with hundreds or thousands of users exponentially increases metric cardinality. This can severely bloat the Prometheus database and impact cluster monitoring performance.</p>
-</div>
+<p>Click <strong>Add visualization</strong> and select <code>OpenShift-Prometheus</code> as your data source.</p>
 </li>
 <li>
-<p><strong>What is the difference between Kuadrant observability and MaaS Tenant telemetry?</strong></p>
-<div class="paragraph">
-<p>Kuadrant observability (via Limitador) tracks <strong>enforcement</strong>—specifically, how many requests were rejected due to rate limits. MaaS Tenant telemetry tracks <strong>consumption</strong>—specifically, how many input and output tokens were processed by the models.</p>
-</div>
+<p><strong>IMPORTANT:</strong> By default, Grafana opens the query editor in "Builder" mode (using dropdown menus). To paste the exact PromQL queries below, look at the right side of the query row and click the <strong>Code</strong> button to switch to text mode!</p>
 </li>
 </ol>
 </div>
-<hr>
-<details>
-<summary class="title">🛠️ Troubleshooting: Observability &amp; Integration (Click to expand)</summary>
+<div class="paragraph">
+<p>Build the following panels:</p>
+</div>
+<div class="paragraph">
+<p><strong>Panel 1: Total Tokens Consumed (Finance)</strong><br>
+Set the visualization type to <strong>Stat</strong> or <strong>Gauge</strong>.</p>
+</div>
+<div class="listingblock execute">
 <div class="content">
-<div class="paragraph">
-<p>If you encountered any issues generating traffic or viewing metrics, check the following common resolutions:</p>
+<pre class="highlightjs highlight"><code class="language-none hljs">sum(authorized_hits{model="qwen3-8b"})</code></pre>
 </div>
-<div class="paragraph">
-<p><strong>Issue: No metrics are appearing in the Usage dashboard</strong></p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><strong>Check Telemetry Flags:</strong> Ensure both the Kuadrant <code>observability.enable: true</code> and the Tenant <code>telemetry.enabled: true</code> patches were successfully applied.</p>
-</li>
-<li>
-<p><strong>Generate Traffic:</strong> Metrics only appear after requests are made. Ensure your Python script successfully ran and generated traffic.</p>
-</li>
-<li>
-<p><strong>Verify User Workload Monitoring:</strong> MaaS observability requires OpenShift&#8217;s User Workload Monitoring to be enabled on the cluster. Without it, the MaaS deployment will degrade.</p>
-</li>
-</ul>
 </div>
 <div class="paragraph">
-<p><strong>Issue: The CSV export contains missing "User" data</strong></p>
+<p><strong>Panel 2: Tokens Consumed by User (Chargeback)</strong><br>
+Set the visualization type to <strong>Bar chart</strong> or <strong>Pie chart</strong>. This query groups the token consumption by the specific API Key ID (<code>app_id</code>)!</p>
 </div>
-<div class="ulist">
-<ul>
-<li>
-<p><strong>Expected Behavior:</strong> Because we explicitly set <code>captureUser: false</code> in the Tenant patch to protect database performance, the exported CSV will not break down token consumption by individual users, but rather by the aggregated Subscription.</p>
-</li>
-</ul>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">sum(authorized_hits{model="qwen3-8b"}) by (app_id)</code></pre>
+</div>
 </div>
 <div class="paragraph">
-<p><strong>Issue: The Python script crashes with an SSL/TLS error</strong></p>
+<p><strong>Panel 3: Rate Limit Rejections (Governance)</strong><br>
+Set the visualization type to <strong>Time series</strong>.</p>
 </div>
-<div class="ulist">
-<ul>
-<li>
-<p><strong>Check Warnings:</strong> In a lab environment with self-signed certificates, ensure you included <code>verify=False</code> in your Python <code>requests.post()</code> call and suppressed warnings using <code>export PYTHONWARNINGS="ignore:Unverified HTTPS request"</code>.</p>
-</li>
-</ul>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">sum(rate(limited_calls[5m]))</code></pre>
+</div>
 </div>
 <div class="paragraph">
-<p><strong>Issue: The Usage tab is missing from the Dashboard</strong></p>
+<p><strong>Panel 4: Time To First Token (Latency/SRE)</strong><br>
+Set the visualization type to <strong>Time series</strong>. This shows the 95th percentile loading time for your models.</p>
 </div>
-<div class="ulist">
-<ul>
-<li>
-<p><strong>Check Dashboard Config:</strong> Verify that <code>spec.dashboardConfig.observabilityDashboard</code> is set to <code>true</code> in the <code>OdhDashboardConfig</code> custom resource.</p>
-</li>
-</ul>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">histogram_quantile(0.95, sum(rate(vllm:time_to_first_token_seconds_bucket[5m])) by (le, model_name))</code></pre>
 </div>
 </div>
-</details>
+<div class="paragraph">
+<p>Save your dashboard. You now have a unified "God View" of your entire AI infrastructure!</p>
+</div>
 <hr>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_your_journey_progress"><a class="anchor" href="#_your_journey_progress"></a>Your journey progress</h2>
-<div class="sectionbody">
-<table class="tableblock frame-none grid-none stretch">
-<colgroup>
-<col style="width: 25%;">
-<col style="width: 25%;">
-<col style="width: 25%;">
-<col style="width: 25%;">
-</colgroup>
-<tbody>
-<tr>
-<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
-<p><strong>✅ Module 1</strong><br>
-<em>Architecture &amp; Foundation</em></p>
-</div></div></td>
-<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
-<p><strong>✅ Module 2</strong><br>
-<em>Policies &amp; Governance</em></p>
-</div></div></td>
-<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
-<p><strong>✅ Module 3</strong><br>
-<em>Model Deployment</em></p>
-</div></div></td>
-<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
-<p><strong>✅ Module 4</strong><br>
-<em>Application Integration</em></p>
-</div></div></td>
-</tr>
-</tbody>
-</table>
-<div class="quoteblock">
-<blockquote>
-<strong>Course Complete!</strong> You have successfully guided ChocoTech from a raw Kubernetes cluster to a fully governed, multi-tenant AI Factory. You possess the skills to deploy API gateways, configure token subscriptions, publish large language models, and export the financial metrics required to run AI at an enterprise scale.
-</blockquote>
 </div>
 </div>
 </div>
 <nav class="pagination">
   <span class="prev"><a href="ch4-observability-03.html">4.3: Rate Limits and Quotas</a></span>
-  <span class="next"><a href="#index.adoc">Appendix</a></span>
+  <span class="next"><a href="ch4-observability-05.html">4.5: TroubleShooting and Summary</a></span>
 </nav>
 </article>
   </div>
