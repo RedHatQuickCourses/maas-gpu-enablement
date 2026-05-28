@@ -294,24 +294,8 @@
 <h1 class="page">Module 4: Observability, Chargeback, and Application Integration</h1>
 <div id="preamble">
 <div class="sectionbody">
-<div class="exampleblock">
-<div class="content">
-<div class="admonitionblock warning">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-warning" title="Warning"></i>
-</td>
-<td class="content">
-This section is under development
-</td>
-</tr>
-</table>
-</div>
-</div>
-</div>
 <div class="paragraph">
-<p>ChocoTech&#8217;s AI Factory is live, and the business units are successfully accessing the model catalog. However, on day three of production, you receive a Slack message from the lead developer on the Marketing team (Bronze Subscription):</p>
+<p>ChocoTech&#8217;s AI Factory is live, and the business units are successfully accessing the multi-model catalog. However, on day three of production, you receive a Slack message from the lead developer on the Marketing team (Bronze Subscription):</p>
 </div>
 <div class="quoteblock">
 <blockquote>
@@ -322,6 +306,21 @@ This section is under development
 </div>
 <div class="paragraph">
 <p>This module bridges the final gap between the Application Developer and the Platform Engineer. You will step into the developer&#8217;s shoes to write a robust application that gracefully handles Models-as-a-Service (MaaS) rate limits. Then, you will switch back to the platform engineer role to enable telemetry, analyze the resulting metrics, and export the automated chargeback reports for Finance.</p>
+</div>
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-warning" title="Warning"></i>
+</td>
+<td class="content">
+<div class="title">The Silent Telemetry Trap</div>
+<div class="paragraph">
+<p>OpenShift AI will report a 100% healthy MaaS installation even if User Workload Monitoring (UWM) is disabled on the OpenShift cluster. The Gateway and Kuadrant rate-limiting components do not require Prometheus to enforce rules. However, if UWM is not enabled, your platform will silently drop all token tracking data, leaving your chargeback dashboards completely blank! You will verify this pipeline in this module.</p>
+</div>
+</td>
+</tr>
+</table>
 </div>
 <!-- toc disabled -->
 </div>
@@ -341,10 +340,10 @@ This section is under development
 <p>Configure Kuadrant and Tenant custom resources to enable platform-wide rate-limiting metrics and token telemetry.</p>
 </li>
 <li>
-<p>Navigate the MaaS observability dashboard to track token consumption by user, model, and subscription.</p>
+<p>Navigate the MaaS observability dashboard to track token consumption by model and subscription.</p>
 </li>
 <li>
-<p>Export subscription-level usage data in CSV format for automated financial chargeback workflows.</p>
+<p>Export token-level usage data in CSV format for automated financial chargeback workflows.</p>
 </li>
 </ul>
 </div>
@@ -382,7 +381,7 @@ This section is under development
 <p><strong>2. Enabling Telemetry</strong></p>
 </div></div></td>
 <td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
-<p>The load generator will create a massive spike in traffic, but without instrumentation, that data is invisible. You will patch the <code>Kuadrant</code> and <code>Tenant</code> custom resources to instruct Prometheus to scrape the token consumption metrics.</p>
+<p>The load generator will create a massive spike in traffic. You will patch the <code>Kuadrant</code> and <code>Tenant</code> custom resources to instruct Prometheus to scrape the token consumption metrics.</p>
 </div></div></td>
 </tr>
 <tr>
@@ -398,7 +397,7 @@ This section is under development
 <p><strong>4. Cost Attribution (Chargeback)</strong></p>
 </div></div></td>
 <td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
-<p>Finally, you will export the usage data into a structured CSV format, providing the Finance team with the exact mathematical proof they need to bill the Marketing department for their token consumption.</p>
+<p>Finally, you will export the usage data into a structured CSV format, providing the Finance team with the exact mathematical proof they need to bill the Marketing department.</p>
 </div></div></td>
 </tr>
 </tbody>
