@@ -301,27 +301,11 @@
 <h1 class="page">4.4: Advanced Telemetry &amp; The "God View" Dashboard</h1>
 <div id="preamble">
 <div class="sectionbody">
-<div class="exampleblock">
-<div class="content">
-<div class="admonitionblock warning">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-warning" title="Warning"></i>
-</td>
-<td class="content">
-This section is under development
-</td>
-</tr>
-</table>
-</div>
-</div>
-</div>
 <div class="paragraph">
 <p>You have successfully delivered the chargeback report to the Finance team using the native OpenShift metrics console.</p>
 </div>
 <div class="paragraph">
-<p><strong>A note on the OpenShift AI UI:</strong> Depending on your specific build version or RBAC permissions, you may occasionally see an "Observe &amp; monitor" tab in the OpenShift AI dashboard. However, because this feature is often hidden behind feature flags in early releases, we will not rely on it. Instead, we will do what true Platform Engineers do: build our own centralized "God View" using Grafana.</p>
+<p><strong>A note on the OpenShift AI UI:</strong> Depending on your specific build version or RBAC permissions, you may see an "Observe &amp; monitor" tab in the OpenShift AI dashboard. However, because this feature is often hidden behind feature flags in early releases, we will not rely on it. Instead, we will do what true Platform Engineers do: build our own centralized "Dashboard" using Grafana.</p>
 </div>
 <div class="paragraph">
 <p>Tokens tell you <strong>how much</strong> was generated, but latency tells you <strong>how fast</strong> it felt to the user. Hardware metrics tell you if the physical cluster is burning out. To get a complete 360-degree view of your Enterprise AI Factory, we need to bring all these metrics into one place.</p>
@@ -363,7 +347,7 @@ This section is under development
 <h2 id="_exercise_1_deploying_the_grafana_instance"><a class="anchor" href="#_exercise_1_deploying_the_grafana_instance"></a>Exercise 1: Deploying the Grafana Instance</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>The Grafana Operator is already installed on your cluster. Let&#8217;s deploy a physical Grafana instance into the <code>chocotech-models</code> namespace.</p>
+<p>Deploy the  Grafana Operator if not already installed on your cluster. Next, let&#8217;s deploy a physical Grafana instance into the <code>chocotech-models</code> namespace.</p>
 </div>
 <div class="paragraph">
 <p>Notice the <code>labels</code> section! The operator uses this label to automatically bind our Prometheus data source to this specific Grafana instance later.</p>
@@ -461,11 +445,23 @@ EOF</code></pre>
 <div class="sect2">
 <h3 id="_step_1_import_the_nvidia_hardware_dashboard"><a class="anchor" href="#_step_1_import_the_nvidia_hardware_dashboard"></a>Step 1: Import the NVIDIA Hardware Dashboard</h3>
 <div class="paragraph">
-<p>NVIDIA provides an excellent pre-built dashboard for DCGM metrics.
-1. In Grafana, click the <strong>+</strong> (Create) icon in the left menu and select <strong>Import</strong>.
-2. Type <code>12239</code> into the "Import via grafana.com" field and click <strong>Load</strong>.
-3. Select <code>OpenShift-Prometheus</code> from the datasource dropdown at the bottom and click <strong>Import</strong>.
-4. You now have a real-time view of your GPU Utilization, Temperature, and VRAM capacity!</p>
+<p>NVIDIA provides an excellent pre-built dashboard for DCGM metrics.</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>In Grafana, click the <strong>+</strong> (Create) icon in the left menu and select <strong>Import</strong>.</p>
+</li>
+<li>
+<p>Type <code>12239</code> into the "Import via grafana.com" field and click <strong>Load</strong>.</p>
+</li>
+<li>
+<p>Select <code>OpenShift-Prometheus</code> from the datasource dropdown at the bottom and click <strong>Import</strong>.</p>
+</li>
+<li>
+<p>You now have a real-time view of your GPU Utilization, Temperature, and VRAM capacity!</p>
+</li>
+</ol>
 </div>
 </div>
 <div class="sect2">
@@ -526,7 +522,7 @@ Set the visualization type to <strong>Time series</strong>. This shows the 95th 
 </div>
 </div>
 <div class="paragraph">
-<p>Save your dashboard. You now have a unified "God View" of your entire AI infrastructure!</p>
+<p>Save your dashboard. You now have a unified view of your entire AI infrastructure!</p>
 </div>
 <hr>
 </div>

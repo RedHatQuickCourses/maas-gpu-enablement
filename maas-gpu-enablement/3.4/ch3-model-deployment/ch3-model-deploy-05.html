@@ -306,17 +306,32 @@
 </div>
 </div>
 </div>
-<div class="sect1">
-<h2 id="_1_capacity_management_scaling_down_llama_3"><a class="anchor" href="#_1_capacity_management_scaling_down_llama_3"></a>1. Capacity Management: Scaling down Llama-3</h2>
-<div class="sectionbody">
+<div class="sect2">
+<h3 id="_1_capacity_management_scaling_down_llama_3"><a class="anchor" href="#_1_capacity_management_scaling_down_llama_3"></a>1. Capacity Management: Scaling down Llama-3</h3>
 <div class="paragraph">
-<p>If your lab environment only has a single GPU with limited VRAM (e.g., 24GB), you cannot run both Llama-3 and Qwen simultaneously. As a Platform Engineer, you must free up VRAM before deploying the new model. Scale the Llama-3 deployment to 0 replicas:</p>
+<p>If your lab environment only has a single GPU with limited VRAM (e.g., 24GB), you cannot run both Llama-3 and Qwen simultaneously. As a Platform Engineer, you must free up VRAM before deploying the new model.</p>
 </div>
-<div class="listingblock execute">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-none hljs">oc scale llminferenceservice llama-3-8b -n chocotech-models --replicas=0</code></pre>
+<div class="paragraph">
+<p>Rather than deleting the <code>llama-3-8b</code> deployment entirely, you will simply <strong>stop</strong> it using the OpenShift AI dashboard. This immediately releases the GPU back to the cluster while keeping your model configuration intact, allowing you to easily toggle between models later when testing different group and subscription combinations.</p>
 </div>
-</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>In the OpenShift AI dashboard, navigate to <strong>AI HUB - Models</strong> and select the <code>chocotech-models</code> project.</p>
+</li>
+<li>
+<p>Click the <strong>Deployments</strong> tab.</p>
+</li>
+<li>
+<p>Locate your <code>llama-3-8b</code> model in the list.</p>
+</li>
+<li>
+<p>Click the action menu (the three vertical dots) next to the model, and select <strong>Stop</strong> (or toggle the status switch to the off position).</p>
+</li>
+<li>
+<p>Wait a few moments for the status to update, confirming that the inference pod has spun down and the GPU has been successfully released.</p>
+</li>
+</ol>
 </div>
 </div>
 <div class="sect1">
@@ -482,7 +497,7 @@ spec:
     - name: qwen3-4b
       namespace: chocotech-models
       tokenRateLimits:
-        - limit: 2000
+        - limit: 5000
           window: 1m
 ---
 apiVersion: maas.opendatahub.io/v1alpha1
@@ -506,7 +521,7 @@ spec:
     - name: qwen3-4b
       namespace: chocotech-models
       tokenRateLimits:
-        - limit: 1000
+        - limit: 2000
           window: 1m
 EOF</code></pre>
 </div>
@@ -582,15 +597,6 @@ oc adm groups add-users chocotech-marketing $(oc whoami)</code></pre>
 <ol class="arabic">
 <li>
 <p>In the OpenShift AI dashboard, go to <strong>Gen AI studio → API keys</strong> and <strong>Revoke</strong> your previous key.</p>
-</li>
-<li>
-<p>Create a new key and select the <strong>Bronze Plan</strong>.</p>
-</li>
-<li>
-<p>Navigate to <strong>Gen AI studio → AI asset endpoints</strong>.</p>
-</li>
-<li>
-<p>You will now see <code>qwen3-4b</code> listed. Because you are no longer in the Gold group, you are experiencing the exact, filtered catalog view that a Marketing developer sees!</p>
 </li>
 </ol>
 </div>

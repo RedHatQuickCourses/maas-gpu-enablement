@@ -417,6 +417,21 @@ curl -H "Authorization: Bearer $MAAS_API_KEY" \
 <div class="paragraph">
 <p>You should receive a JSON response listing <code>llama-3-8b</code>, confirming that Kuadrant validated your API key, verified your subscription, and successfully authorized the request.</p>
 </div>
+<div class="paragraph">
+<p>Next, send a test query to LLM to validate operation.</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">curl -s -k -X POST https://${ROUTE_HOST}/chocotech-models/llama-3-8b/v1/chat/completions \
+  -H "Authorization: Bearer $MAAS_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "qwen3-4b",
+    "messages": [{"role": "user", "content": "Say hello!"}],
+    "max_tokens": 50
+  }' | jq</code></pre>
+</div>
+</div>
 <hr>
 <div class="paragraph">
 <p>In the next section, we will deploy a second model (Qwen3-4b-code), which will only be available to the Silver and Bronze subscriptions.</p>
