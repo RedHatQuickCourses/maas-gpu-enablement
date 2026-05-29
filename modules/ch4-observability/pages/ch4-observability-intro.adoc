@@ -4,7 +4,11 @@
 :toc: macro
 :toclevels: 1
 
-ChocoTech's AI Factory is live, and the business units are successfully accessing the multi-model catalog. However, on day three of production, you receive a Slack message from the lead developer on the Marketing team (Bronze Subscription): 
+====
+WARNING: This section is under development
+====
+
+ChocoTech's AI Factory is live, and the business units are successfully accessing the multi-model catalog. However, on day three of production, you receive an urgent Slack message from the lead developer on the Marketing team (Bronze Subscription): 
 
 > *"Our new batch-processing script for sentiment analysis keeps crashing with a '429 Too Many Requests' error. Also, Finance just emailed asking how much of the monthly cloud budget our department consumed this week. How do we fix the script, and where do I get the billing data?"*
 
@@ -51,6 +55,9 @@ To solve the Marketing team's errors and satisfy Finance's billing requirements,
 |===
 
 By the end of this module, ChocoTech will have a fully monitored, financially accountable, and developer-friendly AI ecosystem.
+
+
+////
 
 
 export MAAS_API_KEY="<your-copied-bronze-api-key>"
@@ -161,4 +168,4 @@ curl -s -k -X POST https://${ROUTE_HOST}/chocotech-models/qwen3-8b/v1/chat/compl
   }' | jq
 
 
-  
+  ////

@@ -1,9 +1,5 @@
 = 3.3: Verifying the MaaS catalog and gateway publication
 
-====
-WARNING: This section is under development
-====
-
 If ChocoTech had deployed this model using standard open-source tools, the Platform Engineering team's job would not be finished. They would still need to manually write documentation, securely email the endpoint URL to the developers, and coordinate static API keys. 
 
 With Models-as-a-Service, OpenShift AI handles all of this automatically through a self-service catalog. 
@@ -27,11 +23,15 @@ NAME             MODELREF_KIND         MODELREF_NAME    READY   AGE
 llama-3-8b       LLMInferenceService   llama-3-8b       True    5m
 ----
 
-By itself, this `MaaSModelRef` does not grant anyone access. However, because we "pre-wired" your governance in Module 2 by explicitly adding `llama-3-8b` to our Gold, Silver, and Bronze Subscriptions and AuthPolicies, the model is now instantly accessible and fully governed by Kuadrant rate limits.
+By itself, this `MaaSModelRef` does not grant anyone access. However, because we "pre-wired" governance in Module 2 by explicitly adding `llama-3-8b` to our Gold, Silver, and Bronze Subscriptions and AuthPolicies, the model is now instantly accessible and fully governed by Kuadrant rate limits.
+
+
 
 == Exercise 2: The Developer Payoff (Generating API Keys)
 
 Let's switch hats. You are now a developer on the Quality Assurance team logging in to find a model for your analysis application. You do not need to know anything about `vLLM` or OpenShift routes; you simply use the self-service catalog.
+
+////
 
 *Prerequisite:* Ensure you are logged into the OpenShift AI dashboard as a user who belongs to the OpenShift group mapped to the gold-plan subscription (e.g., `chocotech-quality-control`). 
 
@@ -45,6 +45,8 @@ This dialog provides critical connection details:
 * **The external API endpoint URL:** The exact gateway routing URL developers need.
 * **Subscription Selector:** A dropdown for choosing which subscription's token quota to draw from.
 * **Temporary API Key:** A button to generate a 1-hour temporary API key for quick testing.
+
+////
 
 ### Creating a Persistent API Key
 
@@ -83,15 +85,7 @@ curl -H "Authorization: Bearer $MAAS_API_KEY" \
 
 You should receive a JSON response listing `llama-3-8b`, confirming that Kuadrant validated your API key, verified your subscription, and successfully authorized the request.
 
-== Important Note for Administrators: Telemetry Limitations
-
-Because Kuadrant tracks every token that passes through the gateway, OpenShift AI provides an out-of-the-box observability dashboard for administrators. As you prepare to build chargeback reports for ChocoTech's Finance team, you must be aware of two specific telemetry configurations:
-
-1. **User Tracking is Disabled by Default:** To reduce metric cardinality and protect privacy, the `captureUser` setting in the telemetry configuration is set to `false` by default. 
-2. **Model Label Limitations:** When inspecting the underlying Prometheus metrics, you will find that the `model` label (which identifies whether traffic hit `llama-3` or another model) only appears on the `authorized_hits` metric. 
-
-Due to limitations in the Kuadrant wasm-shim, the `model` label **does not** appear on the `authorized_calls` (total API requests) or `limited_calls` (rate-limited HTTP 429 rejections) metrics. Keep this in mind when troubleshooting or building custom Grafana dashboards for specific models.
 
 ---
 
-In the next section, we will deploy a second model (Nemotron-4-8B-Code), which will only be available to the Silver and Bronze subscriptions.
+In the next section, we will deploy a second model (Qwen3-4b-code), which will only be available to the Silver and Bronze subscriptions.

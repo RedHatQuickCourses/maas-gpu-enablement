@@ -1,23 +1,37 @@
 = 4.1: Application Integration & The Rate Limit Reality
 
+====
+WARNING: This section is under development
+====
+
 The platform is secure, and Finance is happy. Now, it is time to build apps. 
 
 Because OpenShift AI's MaaS gateway is fully OpenAI-compatible, integrating ChocoTech's existing applications requires almost zero code refactoring. However, because we built strict Token Rate Limits into our Subscriptions in Module 2, developers *must* know how to handle API rejections.
 
 == The "429 Too Many Requests" Trap
 
-Imagine a Marketing developer writes a Python script to analyze 1,000 product reviews. Because the Marketing team is on the **Bronze Plan**, they are strictly limited to a specific amount of tokens per minute for the Qwen model. 
+Imagine a Marketing developer writes a Python script to analyze 1,000 product reviews. Because the Marketing team is on the **Bronze Plan**, they are strictly limited to a specific amount of tokens per minute for the Qwen model.
 
 Halfway through the script, the developer hits the limit. Kuadrant's Limitador service intercepts the request and instantly returns an `HTTP 429 Too Many Requests` error. If the script is poorly written, the application crashes entirely.
 
 == Exercise 1: The Robust Python Load Generator
 
+
 To survive in a governed MaaS ecosystem, developers must implement **exponential backoff retry logic**. When Kuadrant rejects a request, it provides a `Retry-After` HTTP header telling the application exactly how many seconds to wait before the token bucket resets.
 
 Instead of running a local script, we are going to deploy a containerized Kubernetes Job that acts as a "chaos generator". It will intentionally spam the MaaS Gateway to trigger a rate limit, and use exponential backoff to handle it gracefully.
 
-**1. Secure the API Key** +
-First, save the Bronze (Marketing) API key you generated earlier into a Kubernetes Secret.
+**Step 0: Configure Group Membership** +
+Because API keys snapshot your group membership, you must belong to the Marketing group *before* you test this. Run this to add your current lab account to the group:
+
+[source,role="execute"]
+----
+oc adm groups add-users chocotech-marketing $(oc whoami)
+----
+*(Note: If you have not generated a Bronze Plan API Key yet, go to the Gen AI Studio -> API Keys dashboard, select the Bronze Plan, and generate one now).*
+
+**Step 1: Secure the API Key** +
+Save the Bronze (Marketing) API key into a Kubernetes Secret so our Job can mount it securely. Replace `<your-copied-bronze-api-key>` with your actual `sk-oai-...` key.
 
 [source,role="execute"]
 ----
@@ -28,7 +42,7 @@ oc create secret generic marketing-api-key \
   -n chocotech-models
 ----
 
-**2. Create the Python Script (ConfigMap)** +
+**Step 2: Create the Python Script (ConfigMap)** +
 We will store the Python script in a ConfigMap. 
 
 *Notice the Routing URL:* In OpenShift AI 3.4, the Data Plane inference endpoint is dynamically generated using the namespace and the model name. Our route is `/chocotech-models/qwen3-8b/v1/chat/completions`.
@@ -86,7 +100,7 @@ data:
 EOF
 ----
 
-**3. Deploy the Batch Job** +
+**Step 3: Deploy the Batch Job** +
 Deploy the Job to mount the script and execute it against the external Gateway Route.
 
 [source,role="execute"]

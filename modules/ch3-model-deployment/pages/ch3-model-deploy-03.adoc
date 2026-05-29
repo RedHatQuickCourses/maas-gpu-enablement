@@ -1,38 +1,18 @@
-= 3.2: Deploying the governed model via GitOps
+= 3.2: Deploying the Governed Model via the OpenShift AI UI
 
 ====
 WARNING: This section is under development
 ====
 
-With the hardware math verified and the `LLMInferenceService` architecture selected, it is time to deliver the AI capabilities to ChocoTech's R&D team. 
+While advanced platform engineers often manage workloads via GitOps pipelines, OpenShift AI provides a cloud-native, wizard-driven user interface specifically designed for deploying models into a **Models-as-a-Service (MaaS)** fabric. Using the UI allows us to quickly configure inference runtimes, allocate dedicated GPU resources, and directly publish the model to the centralized MaaS gateway without writing complex Kubernetes Custom Resources by hand.
 
-In a production environment, pulling massive 16GB model weights directly from the public internet every time a pod scales up is highly inefficient and poses a security risk. Instead, ChocoTech uses a "Vault" strategy: downloading the model once to a high-speed S3-compatible storage array inside the cluster, where all inference pods pull their weights locally.
+In this exercise, you will step into the role of the AI Platform Administrator and use the OpenShift AI model deployment wizard to deploy our target model (`llama-3-8b`) into the `chocotech-models` project.
 
-To simplify the deployment for this lab exercise, we will bypass the S3 setup and deploy our model using the **Modelcar** packaged format. We will pull the model directly from a public Red Hat OCI repository (`oci://quay.io/redhat-ai-services/modelcar-catalog:llama-3.1-8b-instruct`). While pulling the model upon each restart is not optimal for production, the OCI format offers a clean, streamlined solution for this lab exercise.
+== Exercise 1: Create the ModelCar Data Connection
 
-== 1. Extract the Serving Runtime (The Engine)
+To simplify the model deployment process through the OpenShift AI dashboard, we will first create a URI data connection in the `chocotech-models` project. This configuration stores the exact OCI registry location of our ModelCar-packaged Llama 3 model and uses specific OpenDataHub annotations so the UI automatically recognizes it in the deployment dropdown menus.
 
-OpenShift AI includes certified, cluster-wide runtime templates. However, platform engineers often extract these templates into local project namespaces. 
-
-*Why do we do this?* Localizing the serving runtime gives you absolute control over the compute engine. It allows you to inject custom environment variables, lock specific version tags, and apply unique accelerator configurations for ChocoTech's models without inadvertently impacting workloads in other departments.
-
-Execute the following command to extract the official vLLM template from the central OpenShift AI namespace and install it locally into your `chocotech-models` project:
-
-[source,role="execute"]
-----
-oc process vllm-cuda-runtime-template -n redhat-ods-applications | \
-oc apply -f - -n chocotech-models
-----
-
-*Expected Output:* `servingruntime.serving.kserve.io/vllm-cuda-runtime created`.
-
----
-
-=== Deploy from the RHOAI console simplication step
-
-To simplify the model deployment process through the OpenShift AI dashboard, let's create a URI data connection in the `chocotech-models` project. This configuration stores the exact OCI registry location of our ModelCar-packaged Llama 3.1 8B image and uses specific annotations so the UI automatically recognizes it.
-
-Run the following command to create the data connection secret:
+Run the following command in your terminal to create the data connection secret:
 
 [source,role="execute"]
 ----
@@ -54,123 +34,74 @@ type: Opaque
 EOF
 ----
 
+== Exercise 2: Launching the Deployment Wizard
 
----
+Now that the data connection is staged, let's deploy the model visually.
+
+1. Open your **OpenShift AI Dashboard** and navigate to **AI Hub - Models** from the left-hand navigation menu.
+2. From the project dropdown at the top of the page, ensure that **chocotech-models** is selected.
+3. Click the **Deploy model** button to initiate the multi-step model deployment wizard.
+
+== Exercise 3: Navigating the Deployment Wizard
+
+Follow the step-by-step instructions below to configure the model runtime, hardware allocation, and MaaS governance properties.
+
+=== Step 1: Model Details and Location
+
+Instead of manually typing out the OCI registry URL, we will leverage the internal data connection you just created.
+
+ . For Model location, select the down arrow button then **Existing connection**.
+ . Select **Llama 8b ModelCar (v1.3).:** From the dropdown list, or choose the data connection we configured in the previous step (e.g., your pre-defined OCI Modelcar registry or internal storage path containing the model weights).
+ .. **Folder path:** If required by your data connection type, specify the subfolder path containing the weights.
+ . **Model Type:** Select *Generative AI model (Example, LLM*)*
+ . Click **Next**.
 
 
-== 2. Deploy the LLMInferenceService and MaaSModelRef
 
-Because ChocoTech uses GitOps, we will deploy the model using declarative YAML rather than clicking through the dashboard UI.
-In OpenShift AI 3.4, a governed deployment requires two distinct resources working together:
+=== Step 2: Model Deployment Configuration
 
-1. **`LLMInferenceService`:** This provisions the actual inference engine, requests the GPU, and loads the weights into VRAM.
-2. **`MaaSModelRef`:** This is the critical registration resource. It explicitly notifies the MaaS platform that the model exists so it can be exposed through the API Gateway. Publishing as MaaS creates a `MaaSModelRef` object that registers the model with MaaS for subscription assignment.
+ . **Name:** Enter `llama-3-8b`.
+ . **Hardware profile:** Select **gpu-profile**.
+ . **Deployment resource:** Select **manual**.
+ . **Serving runtime:** From the dropdown menu, select **Distributed inference with llm-d*.
+ . **Number of replicas:** Leave this set to `1`. (In a production environment, you would scale this for high availability and usage requirements).
+ . Click **Next**.
 
-Execute the following block to deploy both resources into the `chocotech-models` namespace:
+=== Step 3: Advanced Settings & Governance
 
-[source,role="execute"]
-----
-cat <<EOF | oc apply -f -
-apiVersion: serving.kserve.io/v1alpha1
-kind: LLMInferenceService
-metadata:
-  name: llama-3-8b
-  namespace: chocotech-models
-  labels:
-    # These labels force the deployment to appear in the OpenShift AI UI
-    opendatahub.io/dashboard: "true"
-    opendatahub.io/genai-asset: "true"
-  annotations:
-    opendatahub.io/model-type: generative
-    openshift.io/display-name: "llama-3-8b"
-spec:
-  # OCI URI extracted directly from the running pod's modelcar container
-  model:
-    uri: oci://quay.io/redhat-ai-services/modelcar-catalog:llama-3.1-8b-instruct
+This step is critical for integrating the model into ChocoTech's financial and security framework.
 
-  servingRuntime: "vllm-cuda-runtime"
-  
-  router:
-    scheduler:
-      template:
-        containers:
-          - name: main
-            args:
-              - '--pool-group'
-              - 'inference.networking.x-k8s.io'
-              - '--pool-name'
-              - '{{ .ObjectMeta.Name }}-inference-pool'
+ . **Model Availability:** Check the box next to **Publish as MaaS**. +
 
-  # Tuning extracted from your main container's environment variables
-  template:
-    spec:
-      containers:
-        - name: main
-          env:
-            - name: VLLM_ADDITIONAL_ARGS
-              value: "--dtype=half --max-model-len=20000 --gpu-memory-utilization=0.95 --enable-auto-tool-choice --tool-call-parser=llama3_json --chat-template=/opt/app-root/template/tool_chat_template_llama3.2_json.jinja"
-          resources:
-            requests:
-              cpu: '1'
-              memory: 12Gi
-            limits:
-              cpu: '1'
-              memory: 12Gi
+Checking *Publish as MaaS* automatically instructs OpenShift AI to generate a `MaaSModelRef` resource under the hood. This links the newly created model endpoint directly to the MaaS gateway, enabling our Authorino security policies and Kuadrant token quotas to intercept traffic.
 
-  # Hardware footprint extracted from the pod specs
-  placement:
-    accelerator:
-      name: "nvidia.com/gpu"
-      count: 1
----
-apiVersion: maas.opendatahub.io/v1alpha1
-kind: MaaSModelRef
-metadata:
-  name: llama-3-8b
-  namespace: chocotech-models
-spec:
-  modelRef:
-    kind: LLMInferenceService
-    name: llama-3-8b
-EOF
-----
 
-Check the status condition to verify the model is healthy and ready to serve traffic. *(Note: This may take several minutes as the node pulls the 16GB OCI image).*
+ . **Configuration Parameters:** Select **Add custom runtime arguments**. This allows us to fine-tune the vLLM deployment. Add the following parameters:
 
 [source,role="execute"]
 ----
-oc wait --for=condition=Ready llminferenceservice/llama-3-8b -n chocotech-models --timeout=600s
+--dtype=half 
+--max-model-len=20000 
+--gpu-memory-utilization=0.95 
+--enable-auto-tool-choice 
+--tool-call-parser=llama3_json 
+--chat-template=/opt/app-root/template/tool_chat_template_llama3.2_json.jinja
 ----
 
-== 3. The Post-Deployment Governance Step
-
-A critical architectural concept in OpenShift AI 3.4 is that publishing a model to MaaS (via the `MaaSModelRef`) does not immediately grant anyone access to it. After publishing, an administrator must create a subscription and add this model to make it accessible to user groups.
-
-However, we **pre-wired ChocoTech's governance strategy** in Module 2! You already explicitly listed the `llama-3-8b` model in your Gold, Silver, and Bronze subscriptions. Because the architecture operates dynamically, the MaaS controllers instantly map the model to your existing subscriptions.
+3. **Routing Settings:** Leave the Rolling update selection and model route timeout selections set to their defaults.
+4. **Verify Subscriptions:** Ensure the model is mapped to the available tenant subscriptions (such as our Bronze Tier) so your developers can successfully authenticate against it using their assigned API keys.
+5. Review your configuration choices on the summary pane and click **Deploy model**.
 
 ---
-////
-== Alternative: The UI Deployment Walkthrough
 
-While GitOps is the standard for Platform Engineers, administrators can also deploy models directly through the OpenShift AI dashboard UI. 
+== Exercise 4: Verifying the Deployment Status
 
-When deploying a generative AI model via the dashboard wizard, selecting **Publish as MaaS** under Model availability makes the model accessible to users through the MaaS gateway by automatically generating the `MaaSModelRef` object.
+Once submitted, the platform transitions the model status to `Progressing` while it pulls the weights and initializes the inference engine.
 
-[WARNING]
-====
-**Explicit Warning: The "Legacy Deployment Method" Checkbox** +
-Models deployed for MaaS use the `LLMInferenceService` architecture, which integrates with the MaaS gateway for subscription-based quota enforcement. If you deploy models via the UI, you must ensure the **Use legacy deployment method** checkbox is cleared. The legacy deployment method uses traditional KServe InferenceService resources with serving runtimes, bypassing MaaS architecture entirely.
-====
+1. Navigate back to the **Model Serving** dashboard.
+2. Under the `chocotech-models` project view, locate your `llama-3-8b` model deployment.
+3. Wait until the status indicator shifts from a blue spinning icon to a green checkmark indicating **Loaded** or **Active**.
 
-.📺 Video Walkthrough: UI Model Deployment
-[%collapsible]
-====
-_Click play below to watch a 2-minute demonstration of an AI Administrator safely deploying a model via the Gen AI Studio deployment wizard._
+---
 
-// NOTE FOR AUTHOR: Insert your video embed code here.
-`[Video Embed: Deploying a MaaS Model via the OpenShift AI Dashboard]`
-====
-////
-
-
-In the next section, we will step into the developer's shoes and verify our GitOps deployment succeeded by checking the MaaS Catalog and actively testing the Kuadrant rate limits!
+In the next section, we will step out of the administrator interface and into the developer's shoes to verify that our newly deployed, UI-managed model is actively accepting authorized API traffic!
