@@ -8,11 +8,11 @@ This module guides you through the exact activation sequence: verifying required
 
 == Step 1: Configuration check & operator verification
 
-Before applying any configurations, ensure your cluster meets the baseline requirements. You must be running OpenShift version 4.20.0 (officially 4.19.9) or later. Furthermore, specific operators and monitoring stacks must be installed. If any of these are missing, the deployment will silently fail.
+Before applying any configurations, ensure your cluster meets the baseline requirements. You must be running OpenShift version 4.20.0 (officially 4.19.9) or later. Furthermore, specific operators and monitoring stacks must be installed. If any of these are missing, the deployment may silently fail.
 
 Ensure the following operators and settings are active:
 
-* **User Workload Monitoring:** This is absolutely critical for MaaS. Without it, the MaaS Tenant resource will show a `Degraded` status, and the platform will fail to collect token consumption metrics.
+* **User Workload Monitoring:** Without it, the MaaS Tenant resource will show a `Degraded` status, and the platform will fail to collect token consumption metrics.
 * **Red Hat OpenShift Service Mesh 3**: Provides the underlying Istio networking that powers the Gateway API implementation.
 * **Red Hat Connectivity Link (v1.2+)**: Delivers the Kuadrant governance framework.
 * **Red Hat OpenShift AI (v3.4+)**: The core platform operator that manages the DataScienceCluster.
@@ -67,9 +67,9 @@ EOF
 
 == Step 3: The Trap (Deploying without User Workload Monitoring)
 
-Before we configure our Gateway and Database, let's look at the most common failure point when deploying MaaS. 
+Before we configure our Gateway and Database, let's look at a common failure point when deploying MaaS. 
 
-In OpenShift AI 3.4, **User Workload Monitoring** is strictly required. This is the underlying mechanism that tracks token consumption and rate limiting across the platform. If it is disabled, the core MaaS installation will fail to function properly and will display a `Degraded` status. 
+In OpenShift AI 3.4, User Workload Monitoring is strictly required for observability. While the Kuadrant rate-limiting engine will physically continue to enforce token quotas without it, the OpenShift AI Operator requires UWM to be active. If it is disabled, the platform will silently drop all token tracking data, and the OpenShift AI operator will flag the core MaaS Tenant resource with a Degraded status."
 
 Let's simulate this common misconfiguration. We will skip enabling User Workload Monitoring for now, proceed with the installation, and watch how the platform reacts.
 
@@ -256,7 +256,7 @@ oc get gatewayclass ${GW_CLASS} -o jsonpath='{.spec.controllerName}{"\n"}'
 *Expected output:*
 [source,text]
 ----
-openshift.io/gateway-controller
+openshift.io/gateway-controller/v1
 ----
 
 If the output matches, your underlying Gateway API infrastructure is fully compliant with Red Hat's MaaS prerequisites.
@@ -416,9 +416,9 @@ oc patch datasciencecluster default-dsc --type=merge -p '{
 }'
 ----
 
-=== Diagnose the Failure
+=== Verify Tenant Status and The Silent Telemetry Trap
 
-Now, check the status of the `Tenant` custom resource. Because we intentionally skipped enabling User Workload Monitoring, the OpenShift AI Operator will refuse to report the MaaS component as healthy.
+Check the status of the `Tenant` custom resource. Because we intentionally skipped enabling User Workload Monitoring (UWM) earlier, you might expect an error. 
 
 [source,role="execute"]
 ----
@@ -426,20 +426,20 @@ oc get tenants.maas.opendatahub.io default-tenant -n models-as-a-service -o json
 ----
 
 **Expected Output:**
-`False` 
+`True` 
 
-To see exactly *why* it failed, read the condition message:
+To see exactly what is happening, read the condition message:
 
 [source,role="execute"]
 ----
 oc get tenants.maas.opendatahub.io default-tenant -n models-as-a-service -o jsonpath='{.status.conditions[?(@.type=="Ready")].message}'
 ----
 
-The output will clearly indicate that User Workload Monitoring is missing. As a Platform Engineer, you will see this `False` or `Degraded` status frequently if prerequisites are missed.
+**The Trap:** You will notice that MaaS reports as healthy (`True`). The core Kuadrant gateway and rate-limiting will function perfectly without UWM. However, without UWM enabled, the platform will silently drop all token tracking data, leaving your chargeback dashboards completely blank. 
 
 === The Fix: Enable User Workload Monitoring
 
-Now that we have seen the failure, let's fix the cluster. Apply the following `ConfigMap` to enable User Workload Monitoring:
+To ensure we can collect metrics and view the observability dashboard later, let's configure the cluster properly. Apply the following `ConfigMap` to enable User Workload Monitoring:
 
 [source,role="execute"]
 ----
@@ -455,17 +455,7 @@ data:
 EOF
 ----
 
-Wait a few moments, and check the `Tenant` status again:
-
-[source,role="execute"]
-----
-oc get tenants.maas.opendatahub.io default-tenant -n models-as-a-service -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}'
-----
-
-**Expected Output:**
-`True` 
-
-The `Tenant` resource is now healthy.
+Wait a few moments for the monitoring stack to initialize. Your `Tenant` resource remains healthy, but now the underlying Prometheus infrastructure is actively primed to scrape Limitador for token telemetry.
 
 ---
 

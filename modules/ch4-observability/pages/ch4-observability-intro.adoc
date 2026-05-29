@@ -4,9 +4,6 @@
 :toc: macro
 :toclevels: 1
 
-====
-WARNING: This section is under development
-====
 
 ChocoTech's AI Factory is live, and the business units are successfully accessing the multi-model catalog. However, on day three of production, you receive an urgent Slack message from the lead developer on the Marketing team (Bronze Subscription): 
 

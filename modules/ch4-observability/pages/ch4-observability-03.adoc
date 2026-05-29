@@ -1,9 +1,5 @@
 = 4.3: OpenShift Metrics and Chargeback
 
-====
-WARNING: This section is under development
-====
-
 The simulated developer traffic has concluded, and the telemetry pipeline is actively scraping Kuadrant's rate-limiting logs and the MaaS Gateway's token counters. 
 
 It is time to answer the final business request from ChocoTech's Finance team: *"How much of the monthly cloud budget did the Marketing department consume this week?"*

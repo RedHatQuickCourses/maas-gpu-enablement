@@ -1,21 +1,16 @@
 = 4.1: Application Integration & The Rate Limit Reality
 
-====
-WARNING: This section is under development
-====
-
 The platform is secure, and Finance is happy. Now, it is time to build apps. 
 
 Because OpenShift AI's MaaS gateway is fully OpenAI-compatible, integrating ChocoTech's existing applications requires almost zero code refactoring. However, because we built strict Token Rate Limits into our Subscriptions in Module 2, developers *must* know how to handle API rejections.
 
-== The "429 Too Many Requests" Trap
+== The "429 Too Many Requests"
 
 Imagine a Marketing developer writes a Python script to analyze 1,000 product reviews. Because the Marketing team is on the **Bronze Plan**, they are strictly limited to a specific amount of tokens per minute for the Qwen model.
 
 Halfway through the script, the developer hits the limit. Kuadrant's Limitador service intercepts the request and instantly returns an `HTTP 429 Too Many Requests` error. If the script is poorly written, the application crashes entirely.
 
 == Exercise 1: The Robust Python Load Generator
-
 
 To survive in a governed MaaS ecosystem, developers must implement **exponential backoff retry logic**. When Kuadrant rejects a request, it provides a `Retry-After` HTTP header telling the application exactly how many seconds to wait before the token bucket resets.
 

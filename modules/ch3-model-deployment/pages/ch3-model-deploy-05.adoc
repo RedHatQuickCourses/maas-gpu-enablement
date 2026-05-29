@@ -2,14 +2,17 @@
 
 ChocoTech's Marketing and R&D teams need a dedicated coding assistant model (qwen3-4b). This exercise demonstrates how to expand the catalog using the OpenShift AI Dashboard UI, handle limited GPU capacity, and enforce selective access controls.
 
-== 1. Capacity Management: Scaling down Llama-3
+=== 1. Capacity Management: Scaling down Llama-3
 
-If your lab environment only has a single GPU with limited VRAM (e.g., 24GB), you cannot run both Llama-3 and Qwen simultaneously. As a Platform Engineer, you must free up VRAM before deploying the new model. Scale the Llama-3 deployment to 0 replicas:
+If your lab environment only has a single GPU with limited VRAM (e.g., 24GB), you cannot run both Llama-3 and Qwen simultaneously. As a Platform Engineer, you must free up VRAM before deploying the new model. 
 
-[source,role="execute"]
-----
-oc scale llminferenceservice llama-3-8b -n chocotech-models --replicas=0
-----
+Rather than deleting the `llama-3-8b` deployment entirely, you will simply **stop** it using the OpenShift AI dashboard. This immediately releases the GPU back to the cluster while keeping your model configuration intact, allowing you to easily toggle between models later when testing different group and subscription combinations.
+
+1. In the OpenShift AI dashboard, navigate to **AI HUB - Models** and select the `chocotech-models` project.
+2. Click the **Deployments** tab.
+3. Locate your `llama-3-8b` model in the list.
+4. Click the action menu (the three vertical dots) next to the model, and select **Stop** (or toggle the status switch to the off position).
+5. Wait a few moments for the status to update, confirming that the inference pod has spun down and the GPU has been successfully released.
 
 == 2. Deploy Qwen3 via the Dashboard UI
 
@@ -110,7 +113,7 @@ spec:
     - name: qwen3-4b
       namespace: chocotech-models
       tokenRateLimits:
-        - limit: 2000
+        - limit: 5000
           window: 1m
 ---
 apiVersion: maas.opendatahub.io/v1alpha1
@@ -134,7 +137,7 @@ spec:
     - name: qwen3-4b
       namespace: chocotech-models
       tokenRateLimits:
-        - limit: 1000
+        - limit: 2000
           window: 1m
 EOF
 ----
@@ -197,9 +200,6 @@ oc adm groups add-users chocotech-marketing $(oc whoami)
 Because API keys capture a snapshot of user group memberships from when the key was created, your old Gold API key is a security risk. To immediately revoke access after a group change, revoke the API keys for that user.
 
 1. In the OpenShift AI dashboard, go to **Gen AI studio → API keys** and **Revoke** your previous key.
-2. Create a new key and select the **Bronze Plan**.
-3. Navigate to **Gen AI studio → AI asset endpoints**.
-4. You will now see `qwen3-4b` listed. Because you are no longer in the Gold group, you are experiencing the exact, filtered catalog view that a Marketing developer sees!
 
 == Exercise 3: Verify the multi-model catalog
 

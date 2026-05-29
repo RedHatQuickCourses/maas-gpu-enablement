@@ -1,12 +1,8 @@
 = 4.4: Advanced Telemetry & The "God View" Dashboard
 
-====
-WARNING: This section is under development
-====
-
 You have successfully delivered the chargeback report to the Finance team using the native OpenShift metrics console. 
 
-**A note on the OpenShift AI UI:** Depending on your specific build version or RBAC permissions, you may occasionally see an "Observe & monitor" tab in the OpenShift AI dashboard. However, because this feature is often hidden behind feature flags in early releases, we will not rely on it. Instead, we will do what true Platform Engineers do: build our own centralized "God View" using Grafana.
+**A note on the OpenShift AI UI:** Depending on your specific build version or RBAC permissions, you may see an "Observe & monitor" tab in the OpenShift AI dashboard. However, because this feature is often hidden behind feature flags in early releases, we will not rely on it. Instead, we will do what true Platform Engineers do: build our own centralized "Dashboard" using Grafana.
 
 Tokens tell you *how much* was generated, but latency tells you *how fast* it felt to the user. Hardware metrics tell you if the physical cluster is burning out. To get a complete 360-degree view of your Enterprise AI Factory, we need to bring all these metrics into one place.
 
@@ -22,7 +18,7 @@ Beyond token counting, a production-grade AI platform requires monitoring across
 
 == Exercise 1: Deploying the Grafana Instance
 
-The Grafana Operator is already installed on your cluster. Let's deploy a physical Grafana instance into the `chocotech-models` namespace. 
+Deploy the  Grafana Operator if not already installed on your cluster. Next, let's deploy a physical Grafana instance into the `chocotech-models` namespace. 
 
 Notice the `labels` section! The operator uses this label to automatically bind our Prometheus data source to this specific Grafana instance later.
 
@@ -105,10 +101,11 @@ Open that URL in a new browser tab.
 
 === Step 1: Import the NVIDIA Hardware Dashboard
 NVIDIA provides an excellent pre-built dashboard for DCGM metrics. 
-1. In Grafana, click the **+** (Create) icon in the left menu and select **Import**.
-2. Type `12239` into the "Import via grafana.com" field and click **Load**.
-3. Select `OpenShift-Prometheus` from the datasource dropdown at the bottom and click **Import**.
-4. You now have a real-time view of your GPU Utilization, Temperature, and VRAM capacity!
+
+ . In Grafana, click the **+** (Create) icon in the left menu and select **Import**.
+ . Type `12239` into the "Import via grafana.com" field and click **Load**.
+ . Select `OpenShift-Prometheus` from the datasource dropdown at the bottom and click **Import**.
+ . You now have a real-time view of your GPU Utilization, Temperature, and VRAM capacity!
 
 === Step 2: Build the Custom MaaS Dashboard
 Now, let's create a custom dashboard for your finance and governance metrics. 
@@ -147,6 +144,6 @@ Set the visualization type to **Time series**. This shows the 95th percentile lo
 histogram_quantile(0.95, sum(rate(vllm:time_to_first_token_seconds_bucket[5m])) by (le, model_name))
 ----
 
-Save your dashboard. You now have a unified "God View" of your entire AI infrastructure!
+Save your dashboard. You now have a unified view of your entire AI infrastructure!
 
 ---
