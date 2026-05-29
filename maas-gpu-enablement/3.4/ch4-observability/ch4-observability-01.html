@@ -375,7 +375,7 @@ oc create secret generic marketing-api-key \
 We will store the Python script in a ConfigMap.</p>
 </div>
 <div class="paragraph">
-<p><strong>Notice the Routing URL:</strong> In OpenShift AI 3.4, the Data Plane inference endpoint is dynamically generated using the namespace and the model name. Our route is <code>/chocotech-models/qwen3-8b/v1/chat/completions</code>.</p>
+<p><strong>Notice the Routing URL:</strong> In OpenShift AI 3.4, the Data Plane inference endpoint is dynamically generated using the namespace and the model name. Our route is <code>/chocotech-models/qwen3-4b/v1/chat/completions</code>.</p>
 </div>
 <div class="listingblock execute">
 <div class="content">
@@ -398,7 +398,7 @@ data:
     base_url = os.getenv("MAAS_URL")
 
     # OpenShift AI 3.4 Data Plane inference route
-    url = f"{base_url}/chocotech-models/qwen3-8b/v1/chat/completions"
+    url = f"{base_url}/chocotech-models/qwen3-4b/v1/chat/completions"
 
     headers = {
         "Authorization": f"Bearer {api_key}",
@@ -406,7 +406,7 @@ data:
     }
 
     data = {
-        "model": "qwen3-8b",
+        "model": "qwen3-4b",
         "messages": [{"role": "user", "content": "Write a detailed 500 word essay on the history of chocolate manufacturing."}],
         "max_tokens": 600
     }
@@ -506,7 +506,7 @@ EOF</code></pre>
 </div>
 <div class="paragraph">
 <p><strong>1. Patch the Subscription Limit</strong><br>
-Drop the token limit for <code>qwen3-8b</code> to 1000 tokens per minute:</p>
+Drop the token limit for <code>qwen3-4b</code> to 1000 tokens per minute:</p>
 </div>
 <div class="listingblock execute">
 <div class="content">
