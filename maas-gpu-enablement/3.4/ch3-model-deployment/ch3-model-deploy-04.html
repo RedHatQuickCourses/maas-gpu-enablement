@@ -301,22 +301,6 @@
 <h1 class="page">3.3: Verifying the MaaS catalog and gateway publication</h1>
 <div id="preamble">
 <div class="sectionbody">
-<div class="exampleblock">
-<div class="content">
-<div class="admonitionblock warning">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-warning" title="Warning"></i>
-</td>
-<td class="content">
-This section is under development
-</td>
-</tr>
-</table>
-</div>
-</div>
-</div>
 <div class="paragraph">
 <p>If ChocoTech had deployed this model using standard open-source tools, the Platform Engineering team&#8217;s job would not be finished. They would still need to manually write documentation, securely email the endpoint URL to the developers, and coordinate static API keys.</p>
 </div>
@@ -356,7 +340,7 @@ llama-3-8b       LLMInferenceService   llama-3-8b       True    5m</pre>
 </div>
 </div>
 <div class="paragraph">
-<p>By itself, this <code>MaaSModelRef</code> does not grant anyone access. However, because we "pre-wired" your governance in Module 2 by explicitly adding <code>llama-3-8b</code> to our Gold, Silver, and Bronze Subscriptions and AuthPolicies, the model is now instantly accessible and fully governed by Kuadrant rate limits.</p>
+<p>By itself, this <code>MaaSModelRef</code> does not grant anyone access. However, because we "pre-wired" governance in Module 2 by explicitly adding <code>llama-3-8b</code> to our Gold, Silver, and Bronze Subscriptions and AuthPolicies, the model is now instantly accessible and fully governed by Kuadrant rate limits.</p>
 </div>
 </div>
 </div>
@@ -365,38 +349,6 @@ llama-3-8b       LLMInferenceService   llama-3-8b       True    5m</pre>
 <div class="sectionbody">
 <div class="paragraph">
 <p>Let&#8217;s switch hats. You are now a developer on the Quality Assurance team logging in to find a model for your analysis application. You do not need to know anything about <code>vLLM</code> or OpenShift routes; you simply use the self-service catalog.</p>
-</div>
-<div class="paragraph">
-<p><strong>Prerequisite:</strong> Ensure you are logged into the OpenShift AI dashboard as a user who belongs to the OpenShift group mapped to the gold-plan subscription (e.g., <code>chocotech-quality-control</code>).</p>
-</div>
-<div class="olist arabic">
-<ol class="arabic">
-<li>
-<p>Navigate to <strong>Gen AI studio</strong> &#8594; <strong>AI asset endpoints</strong> in the left-hand menu.</p>
-</li>
-<li>
-<p>Click on the <strong>Models</strong> tab.</p>
-</li>
-</ol>
-</div>
-<div class="paragraph">
-<p>You should immediately see the <code>llama-3-8b</code> model populated in the catalog grid. Clicking the <strong>View</strong> button under the Endpoints column reveals a dialog with a <strong>Model as a Service</strong> badge.</p>
-</div>
-<div class="paragraph">
-<p>This dialog provides critical connection details:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><strong>The external API endpoint URL:</strong> The exact gateway routing URL developers need.</p>
-</li>
-<li>
-<p><strong>Subscription Selector:</strong> A dropdown for choosing which subscription&#8217;s token quota to draw from.</p>
-</li>
-<li>
-<p><strong>Temporary API Key:</strong> A button to generate a 1-hour temporary API key for quick testing.</p>
-</li>
-</ul>
 </div>
 <div class="sect2">
 <h3 id="_creating_a_persistent_api_key"><a class="anchor" href="#_creating_a_persistent_api_key"></a>Creating a Persistent API Key</h3>
@@ -465,30 +417,9 @@ curl -H "Authorization: Bearer $MAAS_API_KEY" \
 <div class="paragraph">
 <p>You should receive a JSON response listing <code>llama-3-8b</code>, confirming that Kuadrant validated your API key, verified your subscription, and successfully authorized the request.</p>
 </div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_important_note_for_administrators_telemetry_limitations"><a class="anchor" href="#_important_note_for_administrators_telemetry_limitations"></a>Important Note for Administrators: Telemetry Limitations</h2>
-<div class="sectionbody">
-<div class="paragraph">
-<p>Because Kuadrant tracks every token that passes through the gateway, OpenShift AI provides an out-of-the-box observability dashboard for administrators. As you prepare to build chargeback reports for ChocoTech&#8217;s Finance team, you must be aware of two specific telemetry configurations:</p>
-</div>
-<div class="olist arabic">
-<ol class="arabic">
-<li>
-<p><strong>User Tracking is Disabled by Default:</strong> To reduce metric cardinality and protect privacy, the <code>captureUser</code> setting in the telemetry configuration is set to <code>false</code> by default.</p>
-</li>
-<li>
-<p><strong>Model Label Limitations:</strong> When inspecting the underlying Prometheus metrics, you will find that the <code>model</code> label (which identifies whether traffic hit <code>llama-3</code> or another model) only appears on the <code>authorized_hits</code> metric.</p>
-</li>
-</ol>
-</div>
-<div class="paragraph">
-<p>Due to limitations in the Kuadrant wasm-shim, the <code>model</code> label <strong>does not</strong> appear on the <code>authorized_calls</code> (total API requests) or <code>limited_calls</code> (rate-limited HTTP 429 rejections) metrics. Keep this in mind when troubleshooting or building custom Grafana dashboards for specific models.</p>
-</div>
 <hr>
 <div class="paragraph">
-<p>In the next section, we will deploy a second model (Nemotron-4-8B-Code), which will only be available to the Silver and Bronze subscriptions.</p>
+<p>In the next section, we will deploy a second model (Qwen3-4b-code), which will only be available to the Silver and Bronze subscriptions.</p>
 </div>
 </div>
 </div>

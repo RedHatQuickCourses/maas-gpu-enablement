@@ -321,10 +321,10 @@ This section is under development
 <p>The Marketing team&#8217;s batch script successfully ran, consumed its token quota, and gracefully handled the <code>429 Too Many Requests</code> errors. The infrastructure is protected.</p>
 </div>
 <div class="paragraph">
-<p>However, if you log into the OpenShift AI dashboard right now to pull the billing report for the Finance team, the data will be missing!</p>
+<p>However, when you log into the OpenShift AI dashboard to pull the billing report for the Finance team, the data might be missing!</p>
 </div>
 <div class="paragraph">
-<p>While we enabled User Workload Monitoring in Module 1, OpenShift AI components are secure by default. To save space in the Prometheus database, the platform does not scrape high-cardinality rate-limiting or model-specific usage metrics automatically. To satisfy Finance&#8217;s chargeback requirements, you must explicitly enable telemetry across the Kuadrant governance layer and the Models-as-a-Service (MaaS) Tenant.</p>
+<p>By default, to save space in the Prometheus database, OpenShift AI does not scrape high-cardinality rate-limiting or model-specific usage metrics. To satisfy Finance&#8217;s chargeback requirements, you must explicitly enable telemetry across the Kuadrant governance layer and the Models-as-a-Service (MaaS) Tenant.</p>
 </div>
 </div>
 </div>
@@ -332,7 +332,10 @@ This section is under development
 <h2 id="_exercise_1_enable_kuadrant_observability"><a class="anchor" href="#_exercise_1_enable_kuadrant_observability"></a>Exercise 1: Enable Kuadrant Observability</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Kuadrant uses a component called Limitador to physically enforce the token limits defined in your subscriptions. By enabling observability on the Kuadrant custom resource, you instruct the platform to create a <code>PodMonitor</code>. This tells Prometheus to start scraping Limitador for the exact rate-limiting metrics (like those 429 errors the Marketing team just generated) required for the MaaS observability dashboard.</p>
+<p>Kuadrant uses a component called Limitador to physically enforce the token limits defined in your subscriptions.</p>
+</div>
+<div class="paragraph">
+<p>By enabling observability on the Kuadrant custom resource, you instruct the platform to create a <code>PodMonitor</code>. This tells Prometheus to start scraping Limitador for the exact rate-limiting metrics (like those 429 errors the Marketing team just generated) required for the MaaS observability dashboard.</p>
 </div>
 <div class="paragraph">
 <p>Execute this command to patch the Kuadrant resource:</p>
@@ -372,7 +375,7 @@ This section is under development
 <td class="content">
 <div class="paragraph">
 <p><strong>Metric Cardinality &amp; Privacy</strong><br>
-In the patch below, <code>captureUser</code> and <code>captureGroup</code> are set to <code>false</code>. This is the enterprise default. Enabling user-level tracking on a cluster with thousands of developers will exponentially increase metric cardinality and can bloat the Prometheus database. We will rely on Subscription-level aggregation for our financial chargebacks.</p>
+In the patch below, <code>captureUser</code> and <code>captureGroup</code> are set to <code>false</code>. This is the enterprise default. Enabling user-level tracking on a cluster with thousands of developers will exponentially increase metric cardinality and can severely bloat the Prometheus database. We will rely on Subscription-level aggregation for our financial chargebacks.</p>
 </div>
 </td>
 </tr>
@@ -406,102 +409,33 @@ In the patch below, <code>captureUser</code> and <code>captureGroup</code> are s
 </div>
 </div>
 <div class="sect1">
-<h2 id="_exercise_3_generating_fresh_telemetry_data_the_prometheus_reality"><a class="anchor" href="#_exercise_3_generating_fresh_telemetry_data_the_prometheus_reality"></a>Exercise 3: Generating Fresh Telemetry Data (The Prometheus Reality)</h2>
+<h2 id="_exercise_3_verify_the_prometheus_metrics_pipeline"><a class="anchor" href="#_exercise_3_verify_the_prometheus_metrics_pipeline"></a>Exercise 3: Verify the Prometheus Metrics Pipeline</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Now that the telemetry pipeline is active, we need to verify the data. But there is a catch: <strong>Prometheus is not a time machine.</strong></p>
+<p>Before we look at the UI dashboard, let&#8217;s verify that Prometheus is successfully scraping the underlying data. We will query the Prometheus API directly to check for <code>authorized_calls</code> (the total API requests made to the models).</p>
 </div>
 <div class="paragraph">
-<p>When you ran the <code>marketing-chaos-job</code> earlier, Kuadrant was blocking traffic, but Prometheus was not watching. Because you applied the <code>PodMonitor</code> <strong>after</strong> that script finished, Prometheus has no historical record of those tokens or 429 errors. To see the metrics, we must generate fresh traffic.</p>
-</div>
-<div class="paragraph">
-<p><strong>1. Clean up the old job</strong><br>
-Delete the completed job so Kubernetes allows us to redeploy it:</p>
+<p>Run this command to query the Prometheus service inside the cluster:</p>
 </div>
 <div class="listingblock execute">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-none hljs">oc delete job marketing-chaos-job -n chocotech-models</code></pre>
+<pre class="highlightjs highlight"><code class="language-none hljs">oc exec -n openshift-monitoring sts/prometheus-k8s -c prometheus -- \
+  curl -s 'http://localhost:9090/api/v1/query?query=authorized_calls' | jq</code></pre>
 </div>
-</div>
-<div class="paragraph">
-<p><strong>2. Redeploy the load generator</strong><br>
-Fire off the exact same Job deployment. Ensure your <code>ROUTE_HOST</code> variable is still active:</p>
-</div>
-<div class="listingblock execute">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-none hljs">export ROUTE_HOST=$(oc get route openshift-ai-inference -n openshift-ingress -o jsonpath='{.spec.host}')
-
-cat &lt;&lt;EOF | oc apply -f -
-apiVersion: batch/v1
-kind: Job
-metadata:
-  name: marketing-chaos-job
-  namespace: chocotech-models
-spec:
-  backoffLimit: 0
-  template:
-    spec:
-      containers:
-      - name: chaos-generator
-        image: registry.access.redhat.com/ubi9/python-311
-        command: ["/bin/bash", "-c"]
-        args:
-          - |
-            python /opt/scripts/marketing-batch-job.py
-        env:
-        - name: MAAS_API_KEY
-          valueFrom:
-            secretKeyRef:
-              name: marketing-api-key
-              key: key
-        - name: MAAS_URL
-          value: "https://${ROUTE_HOST}"
-        volumeMounts:
-        - name: script-volume
-          mountPath: /opt/scripts
-      volumes:
-      - name: script-volume
-        configMap:
-          name: marketing-batch-script
-      restartPolicy: Never
-EOF</code></pre>
-</div>
-</div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_exercise_4_verify_the_prometheus_metrics_pipeline"><a class="anchor" href="#_exercise_4_verify_the_prometheus_metrics_pipeline"></a>Exercise 4: Verify the Prometheus Metrics Pipeline</h2>
-<div class="sectionbody">
-<div class="paragraph">
-<p>Prometheus scrapes metrics on a polling interval (usually every 30 seconds). Give the cluster about <strong>1 to 2 minutes</strong> to collect the new data from the running job, then verify it natively in the OpenShift console.</p>
-</div>
-<div class="olist arabic">
-<ol class="arabic">
-<li>
-<p>Log into your OpenShift Web Console (Administrator perspective).</p>
-</li>
-<li>
-<p>In the left-hand menu, navigate to <strong>Observe</strong> → <strong>Metrics</strong>.</p>
-</li>
-<li>
-<p>In the "Expression" query bar, type the following exact metric name:
-<code>limited_calls</code></p>
-</li>
-<li>
-<p>Click <strong>Run queries</strong> (or press Enter).</p>
-</li>
-</ol>
 </div>
 <div class="paragraph">
 <p><strong>Expected Output:</strong>
-You should see a graph and a data table populating with metric data labeled by <code>limitador_namespace</code>, proving that Prometheus successfully captured the rate-limit violations in real-time!</p>
+You should see a JSON response containing metric data labeled with <code>limitador_namespace</code>, proving that Prometheus successfully captured the requests.</p>
 </div>
 <div class="paragraph">
-<p><strong>(Note: The <code>model</code> label does not appear on the <code>limited_calls</code> or <code>authorized_calls</code> metrics due to Kuadrant wasm-shim limitations; it only appears on the <code>authorized_hits</code> token consumption metric.)</strong></p>
+<p><strong>(Note: If you query for <code>limited_calls</code> or <code>authorized_calls</code>, be aware that the <code>model</code> label does not appear on these metrics due to Kuadrant wasm-shim limitations; the <code>model</code> label only appears on <code>authorized_hits</code> )</strong></p>
 </div>
 <hr>
 <div class="paragraph">
-<p>The telemetry pipeline is officially flowing. Every token consumed and every rate limit enforced is now being permanently recorded. In the final section of this course, you will navigate to the MaaS Observability Dashboard to visualize this telemetry data and export the definitive chargeback report.</p>
+<p>The telemetry pipeline is officially flowing. Every token consumed and every rate limit enforced is now being permanently recorded.</p>
+</div>
+<div class="paragraph">
+<p>In the final section of this course, you will navigate to the MaaS Observability Dashboard to visualize this telemetry data and export the definitive CSV chargeback report for ChocoTech&#8217;s Finance team!</p>
 </div>
 </div>
 </div>
