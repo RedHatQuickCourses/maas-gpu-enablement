@@ -45,7 +45,7 @@ oc create secret generic marketing-api-key \
 **Step 2: Create the Python Script (ConfigMap)** +
 We will store the Python script in a ConfigMap. 
 
-*Notice the Routing URL:* In OpenShift AI 3.4, the Data Plane inference endpoint is dynamically generated using the namespace and the model name. Our route is `/chocotech-models/qwen3-8b/v1/chat/completions`.
+*Notice the Routing URL:* In OpenShift AI 3.4, the Data Plane inference endpoint is dynamically generated using the namespace and the model name. Our route is `/chocotech-models/qwen3-4b/v1/chat/completions`.
 
 [source,role="execute"]
 ----
@@ -68,7 +68,7 @@ data:
     base_url = os.getenv("MAAS_URL")
     
     # OpenShift AI 3.4 Data Plane inference route
-    url = f"{base_url}/chocotech-models/qwen3-8b/v1/chat/completions"
+    url = f"{base_url}/chocotech-models/qwen3-4b/v1/chat/completions"
 
     headers = {
         "Authorization": f"Bearer {api_key}",
@@ -76,7 +76,7 @@ data:
     }
 
     data = {
-        "model": "qwen3-8b",
+        "model": "qwen3-4b",
         "messages": [{"role": "user", "content": "Write a detailed 500 word essay on the history of chocolate manufacturing."}],
         "max_tokens": 600
     }
@@ -165,7 +165,7 @@ In a real-world scenario, you may need to adjust a team's token quota up or down
 To force the rate limiter to trigger, you can dynamically patch the `MaaSSubscription` to severely restrict their limit (e.g., dropping it to 1,000 tokens per minute), and then redeploy the job to test the new boundaries.
 
 **1. Patch the Subscription Limit** +
-Drop the token limit for `qwen3-8b` to 1000 tokens per minute:
+Drop the token limit for `qwen3-4b` to 1000 tokens per minute:
 
 [source,role="execute"]
 ----

@@ -94,7 +94,7 @@ data:
     }
 
     data = {
-        "model": "qwen3-8b",
+        "model": "qwen3-4b",
         "messages": [{"role": "user", "content": "Write a detailed 500 word essay on the history of chocolate manufacturing."}],
         "max_tokens": 600
     }
@@ -158,11 +158,11 @@ EOF
 
 bash-5.1 ~ $ export ROUTE_HOST=$(oc get route openshift-ai-inference -n openshift-ingress -o jsonpath='{.spec.host}')
 
-curl -s -k -X POST https://${ROUTE_HOST}/chocotech-models/qwen3-8b/v1/chat/completions \
+curl -s -k -X POST https://${ROUTE_HOST}/chocotech-models/qwen3-4b/v1/chat/completions \
   -H "Authorization: Bearer $MAAS_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "qwen3-8b",
+    "model": "qwen3-4b",
     "messages": [{"role": "user", "content": "Say hello!"}],
     "max_tokens": 50
   }' | jq

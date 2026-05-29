@@ -123,14 +123,14 @@ Build the following panels:
 Set the visualization type to **Stat** or **Gauge**.
 [source,role="execute"]
 ----
-sum(authorized_hits{model="qwen3-8b"})
+sum(authorized_hits{model="qwen3-4b"})
 ----
 
 **Panel 2: Tokens Consumed by User (Chargeback)** +
 Set the visualization type to **Bar chart** or **Pie chart**. This query groups the token consumption by the specific API Key ID (`app_id`)!
 [source,role="execute"]
 ----
-sum(authorized_hits{model="qwen3-8b"}) by (app_id)
+sum(authorized_hits{model="qwen3-4b"}) by (app_id)
 ----
 
 **Panel 3: Rate Limit Rejections (Governance)** +
