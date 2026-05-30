@@ -3,7 +3,9 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Lab Environment :: Models as a Service Breaking the GPU Silos on OpenShift AI 3.4</title>
+    <title>Lab Environment Setup :: Models as a Service Breaking the GPU Silos on OpenShift AI 3.4</title>
+    <link rel="prev" href="../index.html">
+    <link rel="next" href="../ch1-mass-arch/ch1-scenario-01.html">
     <meta name="generator" content="Antora 3.1.3">
 <link rel="stylesheet" href="../../../_/css/site.css">
 <link rel="stylesheet" href="../../../_/css/vendor/tabs.css">
@@ -44,6 +46,16 @@
     <a class="nav-link" href="../index.html" data-progress-path="/maas-gpu-enablement/3.4/index.html">
       <span class="nav-progress-mark" aria-hidden="true">✓</span>
       Models-as-a-Service Introduction
+    </a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item is-current-page" data-depth="1">
+    <a class="nav-link" href="index.html" data-progress-path="/maas-gpu-enablement/3.4/LABENV/index.html">
+      <span class="nav-progress-mark" aria-hidden="true">✓</span>
+      Lab Environment Setup
     </a>
   </li>
 </ul>
@@ -286,7 +298,7 @@
 <nav class="breadcrumbs" aria-label="breadcrumbs">
   <ul>
     <li><a href="../index.html">Models as a Service Breaking the GPU Silos on OpenShift AI 3.4</a></li>
-    <li><a href="index.html">Lab Environment</a></li>
+    <li><a href="index.html">Lab Environment Setup</a></li>
   </ul>
 </nav>
 </div>
@@ -295,37 +307,33 @@
   <div class="toc-menu"></div>
 </aside>
 <article class="doc">
-<h1 class="page">Lab Environment</h1>
-<div class="sect1">
-<h2 id="_lab_environment_options"><a class="anchor" href="#_lab_environment_options"></a>Lab Environment Options</h2>
+<h1 class="page">Lab Environment Setup</h1>
+<div id="preamble">
 <div class="sectionbody">
 <div class="paragraph">
-<p>This course offers two lab environment options on the Red Hat Demo Platform (RHDP). Choose the environment that best matches your learning objectives and budget constraints.</p>
-</div>
-<div class="sect2">
-<h3 id="_option_1_red_hat_openshift_ai_3_recommended_for_most_users"><a class="anchor" href="#_option_1_red_hat_openshift_ai_3_recommended_for_most_users"></a>Option 1: Red Hat OpenShift AI 3 (Recommended for Most Users)</h3>
-<div class="paragraph">
-<p><strong>Best for:</strong> General course labs, getting started, cost-conscious learning</p>
+<p>Building an Models-as-a-Service platform requires the right foundation. For this course, you will be working in a live, GPU-accelerated Single Node OpenShift (SNO) environment provisioned through the Red Hat Demo Platform (RHDP).</p>
 </div>
 <div class="paragraph">
-<p>This is the <strong>recommended lab environment</strong> for most course activities. It provides a production-ready OpenShift AI 3 environment with GPU acceleration.</p>
+<p><strong>Direct Link:</strong> <a href="https://catalog.demo.redhat.com/catalog/babylon-catalog-prod?item=babylon-catalog-prod/published.openshift-ai-v3.prod&amp;utm_source=webapp&amp;utm_medium=share-link" target="_blank" rel="noopener">Red Hat OpenShift AI 3</a></p>
 </div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_understanding_your_infrastructure"><a class="anchor" href="#_understanding_your_infrastructure"></a>Understanding Your Infrastructure</h2>
+<div class="sectionbody">
 <div class="paragraph">
-<p><strong>Lab Configuration:</strong></p>
+<p>This is the exact environment used to validate all course exercises, model deployments, and observability tasks.</p>
 </div>
 <div class="ulist">
 <ul>
 <li>
-<p><strong>Single NVIDIA A10 GPU</strong> with 24GB memory</p>
+<p><strong>Base Hardware:</strong> By default, your instance provides a single NVIDIA L4 GPU with 24GB of VRAM.</p>
 </li>
 <li>
-<p><strong>Pre-deployed Llama model</strong> utilizing the GPU</p>
+<p><strong>Advanced Hardware:</strong> Depending on your RHDP access level, you may be able to select larger node sizes, such as the <code>g6.12xlarge</code>, which includes four NVIDIA L4 GPUs—enough compute power to run up to four small-sized LLMs simultaneously.</p>
 </li>
 <li>
-<p>Full Red Hat OpenShift AI 3 operator and dashboard</p>
-</li>
-<li>
-<p>Suitable for most GPU operator, model deployment, and observability labs</p>
+<p><strong>Pre-Deployed Assets:</strong> The lab comes pre-configured with OpenShift AI 3.4 and includes a <code>llama-32-2b</code> model already deployed. This pre-deployed model is immediately available for the playground and serves as an excellent base for agentic development.</p>
 </li>
 </ul>
 </div>
@@ -337,213 +345,62 @@
 </td>
 <td class="content">
 <div class="paragraph">
-<p><strong>Important Limitations:</strong></p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><strong>Model Deployment:</strong> To deploy a new model, you must first stop the running Llama model to free GPU resources.</p>
-</li>
-<li>
-<p><strong>MIG and GPU Slicing Labs:</strong> This single-GPU environment may not function correctly for Multi-Instance GPU (MIG) partitioning and time-slicing labs. For these advanced GPU sharing labs, use Option 2.</p>
-</li>
-</ul>
+<p><strong>Resource Management</strong><br>
+While this instance has enough memory to host all OpenShift AI features, the environment may struggle if you enable every single feature simultaneously. Additionally, to deploy a new model during the labs, you must first stop the pre-running Llama model (located in the <code>my-first-model</code> project) to free up the GPU resources.</p>
 </div>
 </td>
 </tr>
 </table>
 </div>
-<div class="paragraph">
-<p><strong>Direct Link:</strong> <a href="https://catalog.demo.redhat.com/catalog/babylon-catalog-prod?item=babylon-catalog-prod/published.openshift-ai-v3.prod&amp;utm_source=webapp&amp;utm_medium=share-link" target="_blank" rel="noopener">Red Hat OpenShift AI 3</a></p>
-</div>
 <hr>
-</div>
-<div class="sect2">
-<h3 id="_option_2_introducing_llm_d_production_ready_scalable_llm_inference"><a class="anchor" href="#_option_2_introducing_llm_d_production_ready_scalable_llm_inference"></a>Option 2: Introducing llm-d - Production-Ready Scalable LLM Inference</h3>
-<div class="paragraph">
-<p><strong>Best for:</strong> Advanced GPU sharing labs (MIG, slicing), multi-GPU scenarios, production-like environments</p>
-</div>
-<div class="paragraph">
-<p>This environment provides a more robust, multi-GPU setup designed for production-scale LLM inference patterns.</p>
-</div>
-<div class="paragraph">
-<p><strong>Lab Configuration:</strong></p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><strong>Multiple NVIDIA GPUs</strong> across multiple nodes</p>
-</li>
-<li>
-<p>Designed for GPU partitioning (MIG) and time-slicing demonstrations</p>
-</li>
-<li>
-<p>Production-grade configuration for scalable LLM inference</p>
-</li>
-<li>
-<p>Required for advanced GPU sharing and multi-GPU labs</p>
-</li>
-</ul>
-</div>
-<div class="admonitionblock important">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-important" title="Important"></i>
-</td>
-<td class="content">
-<div class="paragraph">
-<p><strong>Cost Warning:</strong></p>
-</div>
-<div class="paragraph">
-<p>This lab environment utilizes multiple expensive GPU resources and incurs <strong>significant costs</strong> while running.</p>
-</div>
-<div class="paragraph">
-<p><strong>You MUST shut down this lab when not actively using it.</strong> Do not leave this environment running overnight or between lab sessions.</p>
-</div>
-</td>
-</tr>
-</table>
-</div>
-<div class="paragraph">
-<p><strong>Direct Link:</strong> <a href="https://catalog.demo.redhat.com/catalog/babylon-catalog-prod?item=babylon-catalog-prod/published.llm-d-intro.prod&amp;utm_source=webapp&amp;utm_medium=share-link" target="_blank" rel="noopener">Introducing llm-d: Your Production-Ready Path to Scalable LLM Inference</a></p>
-</div>
-<hr>
-</div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_instructions_to_launch_your_lab_on_rhdp"><a class="anchor" href="#_instructions_to_launch_your_lab_on_rhdp"></a>Instructions to Launch Your Lab on RHDP</h2>
+<h2 id="_interactive_order_walkthrough"><a class="anchor" href="#_interactive_order_walkthrough"></a>Interactive Order Walkthrough</h2>
 <div class="sectionbody">
+<div class="paragraph">
+<p>If you are new to the Red Hat Demo Platform, use the interactive tour below to see exactly how to navigate the catalog and select the correct GPU parameters for your lab environment.</p>
+</div>
+<iframe
+  src="https://demo.arcade.software/0dtjNJXkvWw8oAX8wOw0?embed&embed_mobile=inline&embed_desktop=inline&show_copy_link=true"
+  width="100%"
+  height="600px"
+  frameborder="0"
+  allowfullscreen
+  webkitallowfullscreen
+  mozallowfullscreen
+  allow="clipboard-write"
+  muted>
+</iframe>
+<hr>
+<div class="sect2">
+<h3 id="_provisioning_timeline_access"><a class="anchor" href="#_provisioning_timeline_access"></a>Provisioning Timeline &amp; Access</h3>
+<div class="paragraph">
+<p>Lab provisioning typically takes <strong>60 to 90 minutes</strong>.</p>
+</div>
+<div class="paragraph">
+<p>You will receive an email with your access details once the environment is fully operational. Alternatively, you can retrieve your credentials directly from the RHDP portal:</p>
+</div>
 <div class="olist arabic">
 <ol class="arabic">
 <li>
-<p><strong>Log in</strong> to the <a href="#RHDP-Portal-Links">RHDP portal</a> (see links below)</p>
+<p>On the RHDP portal, <strong>click</strong> on <strong>Services</strong> in the left-hand navigation menu.</p>
 </li>
 <li>
-<p><strong>Click</strong> on one of the direct lab links above, or search for the lab name in the RHDP catalog</p>
+<p><strong>Select your lab</strong> from the active listings on the right-hand side of the page.</p>
 </li>
 <li>
-<p>On the catalog page, <strong>click</strong> the <strong>Order</strong> button</p>
-</li>
-<li>
-<p><strong>Fill out</strong> the required details in the order form</p>
-</li>
-<li>
-<p><strong>Review the warning</strong> at the bottom of the form and <strong>check the box</strong> labeled:<br>
-<em>”I confirm that I understand the above warnings.”</em></p>
-</li>
-<li>
-<p><strong>Click</strong> the <strong>Order</strong> button to place your lab order</p>
-</li>
-</ol>
-</div>
-<div class="sect2">
-<h3 id="_lab_provisioning_timeline"><a class="anchor" href="#_lab_provisioning_timeline"></a>Lab Provisioning Timeline</h3>
-<div class="ulist">
-<ul>
-<li>
-<p>Lab provisioning typically takes <strong>60-90 minutes</strong></p>
-</li>
-<li>
-<p>You will receive an <strong>email with access details</strong> once your lab environment is ready</p>
-</li>
-<li>
-<p>You can also <strong>retrieve lab access</strong> directly from the RHDP portal under <strong>Services</strong></p>
-</li>
-</ul>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_how_to_access_your_running_lab"><a class="anchor" href="#_how_to_access_your_running_lab"></a>How to Access Your Running Lab</h3>
-<div class="olist arabic">
-<ol class="arabic">
-<li>
-<p>On the RHDP portal, <strong>click</strong> on the <strong>Services</strong> option in the left-hand menu</p>
-</li>
-<li>
-<p><strong>Select your lab</strong> from the listings on the right-hand side of the page</p>
-</li>
-<li>
-<p><strong>View access details</strong> including OpenShift console URL, credentials, and API endpoints</p>
+<p><strong>View your access details</strong>, which will include your OpenShift console URL, administrator credentials, and API endpoints.</p>
 </li>
 </ol>
 </div>
 </div>
-<div class="sect2">
-<h3 id="RHDP-Portal-Links"><a class="anchor" href="#RHDP-Portal-Links"></a>RHDP Portal Links</h3>
-<div class="ulist">
-<ul>
-<li>
-<p><strong>Red Hat associates:</strong> <a href="https://demo.redhat.com/" target="_blank" rel="noopener">https://demo.redhat.com/</a></p>
-</li>
-<li>
-<p><strong>Red Hat partners:</strong> <a href="https://partner.demo.redhat.com/" target="_blank" rel="noopener">https://partner.demo.redhat.com/</a></p>
-</li>
-</ul>
-</div>
-<hr>
 </div>
 </div>
-</div>
-<div class="sect1">
-<h2 id="_lab_selection_guide"><a class="anchor" href="#_lab_selection_guide"></a>Lab Selection Guide</h2>
-<div class="sectionbody">
-<div class="paragraph">
-<p>Use this guide to select the appropriate lab environment for each chapter:</p>
-</div>
-<table class="tableblock frame-all grid-all stretch">
-<colgroup>
-<col style="width: 33.3333%;">
-<col style="width: 33.3333%;">
-<col style="width: 33.3334%;">
-</colgroup>
-<thead>
-<tr>
-<th class="tableblock halign-left valign-top">Course Chapter/Lab</th>
-<th class="tableblock halign-left valign-top">Option 1 (RHOAI 3)</th>
-<th class="tableblock halign-left valign-top">Option 2 (llm-d)</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Chapter 1: GPU Operator Deployment</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">✓ Recommended</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">✓ Works</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Chapter 2: MIG and GPU Slicing</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">⚠ Limited (single GPU)</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">✓ Recommended</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Chapter 3: Observability and Monitoring</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">✓ Recommended</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">✓ Works</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Multi-GPU Scenarios</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">✗ Not supported</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">✓ Required</p></td>
-</tr>
-</tbody>
-</table>
-<div class="admonitionblock tip">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-tip" title="Tip"></i>
-</td>
-<td class="content">
-<div class="paragraph">
-<p><strong>Start with Option 1</strong> (Red Hat OpenShift AI 3) for your initial learning. Only provision <strong>Option 2</strong> (llm-d) when you reach labs that specifically require MIG, GPU slicing, or multi-GPU configurations.</p>
-</div>
-</td>
-</tr>
-</table>
-</div>
-</div>
-</div>
+<nav class="pagination">
+  <span class="prev"><a href="../index.html">Models-as-a-Service Introduction</a></span>
+  <span class="next"><a href="../ch1-mass-arch/ch1-scenario-01.html">Course Scenario - ChocoTech</a></span>
+</nav>
 </article>
   </div>
 </main>
