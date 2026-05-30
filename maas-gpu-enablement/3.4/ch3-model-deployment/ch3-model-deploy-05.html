@@ -363,7 +363,7 @@ metadata:
   annotations:
     opendatahub.io/connection-type-protocol: uri
     opendatahub.io/connection-type-ref: uri-v1
-    openshift.io/display-name: "Qwen 3 8b ModelCar (v1.0)"
+    openshift.io/display-name: "Qwen 3 4b ModelCar (v1.0)"
 stringData:
   URI: oci://quay.io/redhat-ai-services/modelcar-catalog:qwen3-4b
 type: Opaque
@@ -395,9 +395,6 @@ EOF</code></pre>
 </li>
 <li>
 <p><strong>Name:</strong> Select <strong>Qwen 3 4b ModelCar (v1.0)</strong> from the dropdown list.</p>
-</li>
-<li>
-<p><strong>Folder path:</strong> Leave this blank.</p>
 </li>
 <li>
 <p><strong>Model Type:</strong> Select <strong>Generative AI model (Example, LLM)</strong>.</p>
@@ -455,9 +452,6 @@ Checking <strong>Publish as MaaS</strong> automatically instructs OpenShift AI t
 --max-model-len=8192
 --gpu-memory-utilization=0.95</code></pre>
 </div>
-</div>
-<div class="paragraph">
-<p><strong>(Note: We removed the Llama-3 specific tool-calling parsers from the previous section since we are deploying Qwen).</strong></p>
 </div>
 <div class="olist arabic">
 <ol class="arabic">

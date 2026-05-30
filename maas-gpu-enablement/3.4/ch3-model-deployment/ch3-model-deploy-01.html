@@ -311,7 +311,7 @@
 <div id="preamble">
 <div class="sectionbody">
 <div class="paragraph">
-<p>With the governance fences securely built at the network edge, it is time to bring ChocoTech&#8217;s AI Model Catalog online. The R&amp;D and Quality Control teams have submitted an urgent request: "We need access to Llama-3-8B for recipe optimization and defect analysis."  For the second LLM you will substitute qwen3-4b for Nvidia Nemotron, and make Qwen3 model only available to the Marketing and R&amp;D teams.</p>
+<p>With the governance fences securely built at the network edge, it is time to bring ChocoTech&#8217;s AI Model Catalog online. The R&amp;D and Quality Control teams have submitted an urgent request: "We need access to Llama-3-8b for recipe optimization and defect analysis."  For the second LLM you will substitute qwen3-4b for Nvidia Nemotron, and make qwen3-4b model only available to the Marketing and R&amp;D teams.</p>
 </div>
 <div class="paragraph">
 <p>Your task is to deploy these generative AI models onto your GPU nodes, ensure they integrate with the MaaS Gateway you built in Module 1, and properly link them to the Gold, Silver, and Bronze subscriptions an authorizations you defined in Module 2.</p>
@@ -340,13 +340,13 @@ For the lab environments with a single GPU, we&#8217;ll swap models by stopping 
 <div class="ulist">
 <ul>
 <li>
-<p>Provision model serving runtimes using <code>llm-d</code> (for distributed inference) or <code>vLLM</code>.</p>
+<p>Provision model serving runtimes using <code>distributed inference with llm-d</code>.</p>
 </li>
 <li>
-<p>Understand how the "Publish as MaaS" function automatically generates <code>MaaSModelRef</code> custom resources to register models with the gateway.</p>
+<p>Understand how selecting the "Publish as MaaS" function automatically generates <code>MaaSModelRef</code> custom resources to register models with the gateway.</p>
 </li>
 <li>
-<p>Execute post-deployment governance steps to link newly deployed models to existing <code>MaaSSubscription</code> and <code>MaaSAuthPolicy</code> resources.</p>
+<p>Execute post-deployment governance steps to generate API Keys for deployed models linking to the <code>MaaSSubscription</code> and <code>MaaSAuthPolicy</code> resources.</p>
 </li>
 </ul>
 </div>
@@ -376,7 +376,7 @@ For the lab environments with a single GPU, we&#8217;ll swap models by stopping 
 <p><strong>1. Hardware &amp; Runtime Sizing</strong></p>
 </div></div></td>
 <td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
-<p>Analyze the hardware requirements for your target models and select the appropriate serving runtime (<code>llm-d</code> or <code>vLLM</code>).</p>
+<p>Analyze the hardware requirements for your target models and select the appropriate serving runtime (<code>llm-d</code>).</p>
 </div></div></td>
 </tr>
 <tr>
@@ -400,7 +400,7 @@ For the lab environments with a single GPU, we&#8217;ll swap models by stopping 
 <p><strong>4. Post-Deployment Governance</strong></p>
 </div></div></td>
 <td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
-<p>A model published to MaaS is not immediately accessible. You will manually update your existing ChocoTech Subscriptions and AuthPolicies to append the newly generated model reference, officially closing the governance loop.</p>
+<p>A model published to MaaS is not immediately accessible. You will manually generate an API Key for access, officially closing the governance loop.</p>
 </div></div></td>
 </tr>
 </tbody>

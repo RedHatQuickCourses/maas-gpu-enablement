@@ -387,57 +387,6 @@ same user.</p>
 </table>
 </div>
 <hr>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_provisioning_the_application_key_service_account_pattern"><a class="anchor" href="#_provisioning_the_application_key_service_account_pattern"></a>Provisioning the Application Key (Service Account Pattern)</h2>
-<div class="sectionbody">
-<div class="paragraph">
-<p>We need to generate a key for the Marketing team&#8217;s automated sentiment analysis container. As a Platform Administrator, you will provision this key on their behalf.</p>
-</div>
-<div class="olist arabic">
-<ol class="arabic">
-<li>
-<p>In the OpenShift AI dashboard, navigate to <strong>Gen AI studio → API keys</strong>.</p>
-</li>
-<li>
-<p>Click <strong>Create API key</strong>.</p>
-</li>
-<li>
-<p>Fill out the creation form:</p>
-<div class="ulist">
-<ul>
-<li>
-<p><strong>Name:</strong> <code>gold-admin</code> (Using a descriptive name is a best practice for tracking and simplifies revocation.</p>
-</li>
-<li>
-<p><strong>Subscription:</strong> Select the <strong>Gold Plan</strong> (This scopes the key&#8217;s access to the models and token limits defined for Quality Control).</p>
-</li>
-<li>
-<p><strong>Expiration:</strong> Select <code>90 days</code>.</p>
-</li>
-</ul>
-</div>
-</li>
-<li>
-<p>Click <strong>Create</strong>.</p>
-</li>
-</ol>
-</div>
-<div class="admonitionblock important">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-important" title="Important"></i>
-</td>
-<td class="content">
-<div class="paragraph">
-<p><strong>Secure your key immediately!</strong> Save the API key in a secure location. Never commit API keys to version control. Store API keys in environment variables, Kubernetes secrets, or secret management systems such as HashiCorp Vault.</p>
-</div>
-</td>
-</tr>
-</table>
-</div>
 <div class="sect2">
 <h3 id="_the_group_membership_gotcha_shadow_it_simulation"><a class="anchor" href="#_the_group_membership_gotcha_shadow_it_simulation"></a>⚠️ The Group Membership "Gotcha" (Shadow IT Simulation)</h3>
 <div class="paragraph">
@@ -450,58 +399,6 @@ same user.</p>
 <p>To immediately revoke access after a group change, administrators must manually revoke the API keys for that user. You must utilize the <strong>Revoke user API keys</strong> administrative action in the dashboard (Gen AI studio → API keys) to immediately cut off access when an employee leaves or changes departments.</p>
 </div>
 <hr>
-</div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_test_the_gateway_authorization"><a class="anchor" href="#_test_the_gateway_authorization"></a>Test the Gateway Authorization</h2>
-<div class="sectionbody">
-<div class="paragraph">
-<p>You won&#8217;t be able to complete this step, till a model is available, but including the steps here and will repeat them in the next section.</p>
-</div>
-<div class="paragraph">
-<p>Now that the identity and permissions are established, let&#8217;s test the authorization chain against the MaaS Gateway using our new key.</p>
-</div>
-<div class="listingblock execute">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-none hljs"># 1. Export your newly created API key
-export MAAS_API_KEY="sk-oai-your-copied-key-here"
-
-# 2. Retrieve the MaaS Gateway URL
-export CLUSTER_DOMAIN=$(oc get ingresses.config.openshift.io cluster -o jsonpath='{.spec.domain}')
-export MAAS_URL="https://maas.${CLUSTER_DOMAIN}"
-
-# 3. Test authentication against the models endpoint
-curl -s -w "\nHTTP Status: %{http_code}\n" \
-  $MAAS_URL/v1/models \
-  -H "Authorization: Bearer $MAAS_API_KEY" \
-  -k</code></pre>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_decoding_the_results"><a class="anchor" href="#_decoding_the_results"></a>Decoding the Results</h3>
-<div class="paragraph">
-<p>If your configuration is correct, you will receive the following output:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-json hljs" data-lang="json">{
-  "object": "list",
-  "data": []
-}
-HTTP Status: 200</code></pre>
-</div>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><strong>HTTP 200 OK:</strong> This is the critical success indicator. It proves that the Kuadrant gateway successfully validated your <code>sk-oai-</code> API key and mapped it to the correct Subscription and AuthPolicy.</p>
-</li>
-<li>
-<p><strong>Empty <code>data</code> array:</strong> This is completely expected. We have successfully authenticated, but we have not published any models to MaaS yet.</p>
-</li>
-</ul>
-</div>
 <div class="paragraph">
 <p>ChocoTech&#8217;s programmatic authentication is now secure and strictly governed. In <strong>Module 3</strong>, we will finally deploy the models and watch the MaaS catalog populate automatically!</p>
 </div>

@@ -421,75 +421,11 @@ EOF</code></pre>
 <p>Before we configure our Gateway and Database, let&#8217;s look at a common failure point when deploying MaaS.</p>
 </div>
 <div class="paragraph">
-<p>In OpenShift AI 3.4, User Workload Monitoring is strictly required for observability. While the Kuadrant rate-limiting engine will physically continue to enforce token quotas without it, the OpenShift AI Operator requires UWM to be active. If it is disabled, the platform will silently drop all token tracking data, and the OpenShift AI operator will flag the core MaaS Tenant resource with a Degraded status."</p>
+<p>In OpenShift AI 3.4, User Workload Monitoring is required for observability. While the Kuadrant rate-limiting engine will physically continue to enforce token quotas without it, the OpenShift AI Operator requires UWM to be active. If it is disabled, the platform will silently drop all token tracking data, and the OpenShift AI operator will flag the core MaaS Tenant resource with a Degraded status."</p>
 </div>
 <div class="paragraph">
 <p>Let&#8217;s simulate this common misconfiguration. We will skip enabling User Workload Monitoring for now, proceed with the installation, and watch how the platform reacts.</p>
 </div>
-<details>
-<summary class="title">Expand for instructions to enable user Workload monitoring</summary>
-<div class="content">
-<div class="paragraph">
-<p>User Workload Monitoring is an OpenShift cluster setting that enables the Models as a Service (MaaS) platform to collect and expose usage data</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>It is required for the following reasons:</p>
-<div class="ulist">
-<ul>
-<li>
-<p>Tracking Consumption: It is the underlying mechanism that tracks token consumption, request counts, and rate limiting across the platform.</p>
-</li>
-<li>
-<p>Without it, the platform cannot collect the token metrics necessary for enforcing subscription quotas or providing Finance teams with accurate chargeback data.</p>
-</li>
-<li>
-<p>Platform Health: If User Workload Monitoring is not enabled, the core MaaS installation and the centralized Tenant custom resource will fail to function properly and will display a Degraded status.</p>
-</li>
-</ul>
-</div>
-</li>
-</ul>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">cat &lt;&lt;EOF | oc apply -f -
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: cluster-monitoring-config
-  namespace: openshift-monitoring
-data:
-  config.yaml: |
-    enableUserWorkload: true
-EOF</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p><strong>Verify User Workload Monitoring pods are running:</strong></p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get pods -n openshift-user-workload-monitoring</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>If this fails to return results, try again after a 10-15 seconds.</p>
-</div>
-<div class="paragraph">
-<p>Expected output (pods Running):</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-text hljs" data-lang="text">NAME                                   READY   STATUS    AGE
-prometheus-operator-6bd7f9ddfc-vn49s   2/2     Running    0
-prometheus-user-workload-0             6/6     Running    0
-thanos-ruler-user-workload-0           4/4     Running    0</code></pre>
-</div>
-</div>
-</div>
-</details>
 </div>
 </div>
 <div class="sect1">
@@ -583,18 +519,7 @@ spec:
 EOF</code></pre>
 </div>
 </div>
-<div class="colist arabic">
-<table>
-<tr>
-<td><i class="conum" data-value="1"></i><b>1</b></td>
-<td><strong>Authorino TLS Bootstrap:</strong> Enables TLS communication between the Gateway and Authorino.</td>
-</tr>
-<tr>
-<td><i class="conum" data-value="2"></i><b>2</b></td>
-<td><strong>Managed Status:</strong> Allows the MaaS controller to manage authorization policies without interference from the ODH Model Controller.</td>
-</tr>
-</table>
-</div>
+<hr>
 </div>
 </div>
 <div class="sect2">
@@ -917,7 +842,7 @@ EOF</code></pre>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_what_is_the_script_below_doing"><a class="anchor" href="#_what_is_the_script_below_doing"></a>What is the script below doing?</h4>
+<h4 id="_this_is_patch_to_resolve_a_routing_issue_with_api_key_page_url"><a class="anchor" href="#_this_is_patch_to_resolve_a_routing_issue_with_api_key_page_url"></a>This is patch to resolve a routing issue with API Key page URL</h4>
 <div class="paragraph">
 <p>When you patch the <code>OdhDashboardConfig</code>, the OpenShift AI operator automatically spins up the Gen AI Studio components. However, you must explicitly tell the dashboard <strong>how</strong> to route traffic to the MaaS API. Without this script, the dashboard&#8217;s internal proxy gets confused, loops back on itself, and crashes with an "Error loading components" message when you try to access the API Keys menu.</p>
 </div>
@@ -955,8 +880,15 @@ oc set env deployment/rhods-dashboard -n redhat-ods-applications MAAS_API_URL=ht
 oc rollout status deployment/rhods-dashboard -n redhat-ods-applications</code></pre>
 </div>
 </div>
+<div class="exampleblock">
+<div class="content">
 <div class="paragraph">
 <p>Refresh your OpenShift AI browser window. The <strong>Gen AI Studio - API Key generation tab</strong> menu option will now appear in your left-hand navigation pane.</p>
+</div>
+<div class="paragraph">
+<p>The menu options for <strong>Subscription</strong> and <strong>Authorization policies</strong> will appear in the <code>Settings</code> section of the OpenShift AI dashboard.</p>
+</div>
+</div>
 </div>
 <hr>
 </div>

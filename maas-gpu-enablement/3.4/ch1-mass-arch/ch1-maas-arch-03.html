@@ -423,11 +423,11 @@
 <div class="olist arabic">
 <ol class="arabic">
 <li>
-<p><strong>The Request Arrives (Gateway API):</strong> The Marketing application sends a POST request to `/v1/chat/completions containing their MaaS API key (passed as a Bearer token) and the prompt data.. The Gateway API catches this at the network edge.</p>
+<p><strong>The Request Arrives (Gateway API):</strong> The Marketing application sends a POST request to <code>/v1/chat/completions</code> containing their MaaS API key (passed as a Bearer token) and the prompt data. The Gateway API catches this at the network edge.</p>
 </li>
 <li>
-<p><strong>Identity Verification (Kuadrant - Authorino):</strong> The Gateway pauses the request and asks Authorino, "Is this token valid, and what subscription level does this user have?" Authorino confirms the user is in the "Bronze" subscription group. Next it checks the Authorization policy which (TobeAdded)
-(If the token was invalid, it would immediately return a <code>401 Unauthorized</code> without touching the GPU).</p>
+<p><strong>Identity Verification (Kuadrant - Authorino):</strong> The Gateway pauses the request and asks Authorino, "Is this token valid, and what subscription level does this user have?" Authorino confirms the user is in the "Bronze" subscription group. Next it checks the Authorization policy which:
+if the token was invalid, it would immediately return a <code>401 Unauthorized</code> without touching the GPU.</p>
 </li>
 <li>
 <p><strong>Policy Enforcement (Kuadrant - Limitador):</strong> Policies (MaaSAuthPolicy) and subscriptions (MaaSSubscription) work together. Both use RBAC references (subjects or owners). A user must have both a matching policy (access) and a matching subscription (quota) to use a model. Limitador checks the Bronze subscription quota. "Has the Marketing team exceeded their 10,000 tokens-per-hour limit?" If they are within limits, the request is permitted. (If exceeded, it returns a <code>429 Too Many Requests</code>).</p>

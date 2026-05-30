@@ -335,7 +335,7 @@
 <i class="fa icon-important" title="Important"></i>
 </td>
 <td class="content">
-Notice the <code>modelRefs</code> section in the YAML below. Even though we will not deploy the <code>llama-3-8b</code> model until Module 3, MaaS allows us to "pre-wire" our governance. Expect this policy to be in the failed state, until the model is deployed. We are explicitly telling the subscription: <em>"When a model reference named <code>llama-3-8b</code> appears in the <code>chocotech-models</code> namespace, apply these limits."</em>
+Notice the <code>modelRefs</code> section in the YAML below. Even though we will not deploy the <code>llama-3-8b</code> model until Module 3, MaaS allows us to "pre-wire" our governance. Expect this policy to be in the failed state, until the model is deployed.
 </td>
 </tr>
 </table>
@@ -417,17 +417,6 @@ bronze-access   Failed   9s
 gold-access     Failed   9s
 silver-access   Failed   9s</pre>
 </div>
-</div>
-<div class="paragraph">
-<p>Check Tenant Readiness:</p>
-</div>
-<div class="listingblock execute">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-none hljs">oc get tenant default-tenant -n models-as-a-service -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}'</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>Expected output: True</p>
 </div>
 <hr>
 <div class="paragraph">

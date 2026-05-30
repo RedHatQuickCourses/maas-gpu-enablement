@@ -378,7 +378,7 @@ EOF</code></pre>
 <p>Open your <strong>OpenShift AI Dashboard</strong> and navigate to <strong>AI Hub - Models</strong> from the left-hand navigation menu.</p>
 </li>
 <li>
-<p>From the project dropdown at the top of the page, ensure that <strong>chocotech-models</strong> is selected.</p>
+<p>Select <strong>Deployments</strong>, then from the project dropdown at the top of the page, ensure that <strong>chocotech-models</strong> is selected.</p>
 </li>
 <li>
 <p>Click the <strong>Deploy model</strong> button to initiate the multi-step model deployment wizard.</p>
@@ -414,7 +414,7 @@ EOF</code></pre>
 </div>
 </li>
 <li>
-<p><strong>Model Type:</strong> Select <strong>Generative AI model (Example, LLM</strong>)*</p>
+<p><strong>Model Type:</strong> Select <strong>Generative AI model (Example, LLM</strong>)</p>
 </li>
 <li>
 <p>Click <strong>Next</strong>.</p>
@@ -436,7 +436,7 @@ EOF</code></pre>
 <p><strong>Deployment resource:</strong> Select <strong>manual</strong>.</p>
 </li>
 <li>
-<p><strong>Serving runtime:</strong> From the dropdown menu, select <strong>*Distributed inference with llm-d</strong>.</p>
+<p><strong>Serving runtime:</strong> From the dropdown menu, select <strong>Distributed inference with llm-d</strong>.</p>
 </li>
 <li>
 <p><strong>Number of replicas:</strong> Leave this set to <code>1</code>. (In a production environment, you would scale this for high availability and usage requirements).</p>
@@ -515,7 +515,16 @@ EOF</code></pre>
 </li>
 </ol>
 </div>
-<hr>
+<div class="paragraph">
+<p>While you wait for the model to provision, it takes aobut 10-15 minutes However once the Deployment is submitted, the Subscriptions and Authorizations we provisioned in module 2 will change from Failed, to Active or Degraded, once they find the model if no one is assigned to the group membership.</p>
+</div>
+<div class="paragraph">
+<p>You can view in the OPenShift AI dashboard - Setting -Subscriptions and Authorizations.</p>
+</div>
+<div class="paragraph">
+<p>You will also see
+---</p>
+</div>
 <div class="paragraph">
 <p>In the next section, we will step out of the administrator interface and into the developer&#8217;s shoes to verify that our newly deployed, UI-managed model is actively accepting authorized API traffic!</p>
 </div>
