@@ -8,7 +8,6 @@ The current state of GPU allocations across ChocoTech's business units:
 * **R&D**: 4x NVIDIA L40S GPUs for recipe optimization
 * **Marketing**: 2x NVIDIA L4 GPUs for sentiment analysis 
 * **Supply Chain**: 2x NVIDIA L40S GPUs for inventory prediction
-== The Solution: What is Models as a Service (MaaS)?
 
 
 == OpenShift Ai 3.4 - Models-as-a-Service (MaaS)
@@ -35,6 +34,11 @@ models. External models is a Technology Preview feature in Red Hat OpenShift AI.
  * **Multi-runtime support:** Expose models served with llm-d or vLLM runtimes through MaaS governance. This provides
 runtime flexibility and enables consistent governance across different serving infrastructures.
 vLLM runtime support is a Technology Preview feature in Red Hat OpenShift AI.
+
+
+image::maas-platform.png[A detailed infographic diagram illustrating how OpenShift AI 3.4 Models-as-a-Service (MaaS) resolves a GPU silo crisis. Technology preview features are also noted at the bottom,link=self,window=blank,width=800,title="From Crisis to Consolidation: MaaS Transforms GPU Infrastructure and Consumption"]
+
+---
 
 == The MaaS Impact: Problem vs. Payoff
 

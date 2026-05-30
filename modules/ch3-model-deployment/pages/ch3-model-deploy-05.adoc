@@ -31,7 +31,7 @@ metadata:
   annotations:
     opendatahub.io/connection-type-protocol: uri
     opendatahub.io/connection-type-ref: uri-v1
-    openshift.io/display-name: "Qwen 3 8b ModelCar (v1.0)"
+    openshift.io/display-name: "Qwen 3 4b ModelCar (v1.0)"
 stringData:
   URI: oci://quay.io/redhat-ai-services/modelcar-catalog:qwen3-4b
 type: Opaque
@@ -49,9 +49,8 @@ Instead of manually typing out the OCI registry URL, we will leverage the intern
 
 1. **Model location:** Select the down arrow button, then **Existing connection**.
 2. **Name:** Select **Qwen 3 4b ModelCar (v1.0)** from the dropdown list.
-3. **Folder path:** Leave this blank.
-4. **Model Type:** Select **Generative AI model (Example, LLM)**.
-5. Click **Next**.
+3. **Model Type:** Select **Generative AI model (Example, LLM)**.
+4. Click **Next**.
 
 === Step 2: Model Deployment Configuration
 
@@ -66,10 +65,10 @@ Instead of manually typing out the OCI registry URL, we will leverage the intern
 
 This step is critical for integrating the model into ChocoTech's financial and security framework.
 
-1. **Model Availability:** Check the box next to **Publish as MaaS**. +
+ 1. **Model Availability:** Check the box next to **Publish as MaaS**. +
 Checking *Publish as MaaS* automatically instructs OpenShift AI to generate a `MaaSModelRef` resource under the hood. This links the newly created model endpoint directly to the MaaS gateway, enabling our Authorino security policies and Kuadrant token quotas to intercept traffic.
 
-2. **Configuration Parameters:** Select **Add custom runtime arguments**. This allows us to fine-tune the vLLM deployment. Add the following parameters:
+ 2. **Configuration Parameters:** Select **Add custom runtime arguments**. This allows us to fine-tune the vLLM deployment. Add the following parameters:
 
 [source,role="execute"]
 ----
@@ -77,10 +76,9 @@ Checking *Publish as MaaS* automatically instructs OpenShift AI to generate a `M
 --max-model-len=8192 
 --gpu-memory-utilization=0.95
 ----
-*(Note: We removed the Llama-3 specific tool-calling parsers from the previous section since we are deploying Qwen).*
 
-3. **Routing Settings:** Leave the Rolling update selection and model route timeout selections set to their defaults.
-4. Review your configuration choices on the summary pane and click **Deploy model**.
+ 3. **Routing Settings:** Leave the Rolling update selection and model route timeout selections set to their defaults.
+ 4. Review your configuration choices on the summary pane and click **Deploy model**.
 
 == 3. The Identity Swap (Testing Selective Access)
 

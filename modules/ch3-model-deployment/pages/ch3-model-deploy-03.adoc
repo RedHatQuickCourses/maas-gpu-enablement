@@ -39,7 +39,7 @@ EOF
 Now that the data connection is staged, let's deploy the model visually.
 
 1. Open your **OpenShift AI Dashboard** and navigate to **AI Hub - Models** from the left-hand navigation menu.
-2. From the project dropdown at the top of the page, ensure that **chocotech-models** is selected.
+2. Select *Deployments*, then from the project dropdown at the top of the page, ensure that **chocotech-models** is selected.
 3. Click the **Deploy model** button to initiate the multi-step model deployment wizard.
 
 == Exercise 3: Navigating the Deployment Wizard
@@ -53,7 +53,7 @@ Instead of manually typing out the OCI registry URL, we will leverage the intern
  . For Model location, select the down arrow button then **Existing connection**.
  . Select **Llama 8b ModelCar (v1.3).:** From the dropdown list, or choose the data connection we configured in the previous step (e.g., your pre-defined OCI Modelcar registry or internal storage path containing the model weights).
  .. **Folder path:** If required by your data connection type, specify the subfolder path containing the weights.
- . **Model Type:** Select *Generative AI model (Example, LLM*)*
+ . **Model Type:** Select *Generative AI model (Example, LLM*)
  . Click **Next**.
 
 
@@ -63,7 +63,7 @@ Instead of manually typing out the OCI registry URL, we will leverage the intern
  . **Name:** Enter `llama-3-8b`.
  . **Hardware profile:** Select **gpu-profile**.
  . **Deployment resource:** Select **manual**.
- . **Serving runtime:** From the dropdown menu, select **Distributed inference with llm-d*.
+ . **Serving runtime:** From the dropdown menu, select **Distributed inference with llm-d**.
  . **Number of replicas:** Leave this set to `1`. (In a production environment, you would scale this for high availability and usage requirements).
  . Click **Next**.
 
@@ -102,6 +102,13 @@ Once submitted, the platform transitions the model status to `Progressing` while
 2. Under the `chocotech-models` project view, locate your `llama-3-8b` model deployment.
 3. Wait until the status indicator shifts from a blue spinning icon to a green checkmark indicating **Loaded** or **Active**.
 
+
+While you wait for the model to provision, it takes aobut 10-15 minutes However once the Deployment is submitted, the Subscriptions and Authorizations we provisioned in module 2 will change from Failed, to Active or Degraded, once they find the model if no one is assigned to the group membership. 
+
+You can view in the OPenShift AI dashboard - Setting -Subscriptions and Authorizations. 
+
+You will also see
 ---
 
 In the next section, we will step out of the administrator interface and into the developer's shoes to verify that our newly deployed, UI-managed model is actively accepting authorized API traffic!
+

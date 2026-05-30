@@ -94,7 +94,7 @@ curl -s -k -X POST https://${ROUTE_HOST}/chocotech-models/llama-3-8b/v1/chat/com
   -H "Authorization: Bearer $MAAS_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "qwen3-4b",
+    "model": "llama-3-8b",
     "messages": [{"role": "user", "content": "Say hello!"}],
     "max_tokens": 50
   }' | jq

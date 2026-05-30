@@ -11,7 +11,7 @@ Just like the subscriptions, authorization policies must be deployed into the ce
 We will create three policies to map our ChocoTech OpenShift groups (the `subjects`) to our target model (`llama-3-8b`).
 
 [IMPORTANT]
-Notice the `modelRefs` section in the YAML below. Even though we will not deploy the `llama-3-8b` model until Module 3, MaaS allows us to "pre-wire" our governance. Expect this policy to be in the failed state, until the model is deployed. We are explicitly telling the subscription: _"When a model reference named `llama-3-8b` appears in the `chocotech-models` namespace, apply these limits."_
+Notice the `modelRefs` section in the YAML below. Even though we will not deploy the `llama-3-8b` model until Module 3, MaaS allows us to "pre-wire" our governance. Expect this policy to be in the failed state, until the model is deployed.
 
 Execute the following block to deploy the Auth Policies:
 
@@ -81,14 +81,6 @@ bronze-access   Failed   9s
 gold-access     Failed   9s
 silver-access   Failed   9s
 ----
-
-Check Tenant Readiness:
-[source,role="execute"]
-----
-oc get tenant default-tenant -n models-as-a-service -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}'   
-----
-
-Expected output: True  
 
 ---
 

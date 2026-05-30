@@ -41,23 +41,6 @@ oc patch tenant default-tenant -n models-as-a-service \
 
 ---
 
-== Provisioning the Application Key (Service Account Pattern)
-
-We need to generate a key for the Marketing team's automated sentiment analysis container. As a Platform Administrator, you will provision this key on their behalf.
-
-1. In the OpenShift AI dashboard, navigate to **Gen AI studio → API keys**.
-2. Click **Create API key**.
-3. Fill out the creation form:
-* **Name:** `gold-admin` (Using a descriptive name is a best practice for tracking and simplifies revocation.
-* **Subscription:** Select the **Gold Plan** (This scopes the key's access to the models and token limits defined for Quality Control).
-* **Expiration:** Select `90 days`.
-4. Click **Create**.
-
-[IMPORTANT]
-====
-**Secure your key immediately!** Save the API key in a secure location. Never commit API keys to version control. Store API keys in environment variables, Kubernetes secrets, or secret management systems such as HashiCorp Vault.
-====
-
 === ⚠️ The Group Membership "Gotcha" (Shadow IT Simulation)
 
 Imagine a scenario where a ChocoTech R&D engineer transfers to a different department, so IT removes them from the `chocotech-rd` OpenShift group. 
@@ -67,43 +50,5 @@ Because API keys snapshot group membership at creation time, the engineer's old 
 To immediately revoke access after a group change, administrators must manually revoke the API keys for that user. You must utilize the **Revoke user API keys** administrative action in the dashboard (Gen AI studio → API keys) to immediately cut off access when an employee leaves or changes departments.
 
 ---
-
-== Test the Gateway Authorization
-
-You won't be able to complete this step, till a model is available, but including the steps here and will repeat them in the next section. 
-
-Now that the identity and permissions are established, let's test the authorization chain against the MaaS Gateway using our new key.  
-
-[source,role="execute"]
-----
-# 1. Export your newly created API key
-export MAAS_API_KEY="sk-oai-your-copied-key-here"
-
-# 2. Retrieve the MaaS Gateway URL
-export CLUSTER_DOMAIN=$(oc get ingresses.config.openshift.io cluster -o jsonpath='{.spec.domain}')
-export MAAS_URL="https://maas.${CLUSTER_DOMAIN}"
-
-# 3. Test authentication against the models endpoint
-curl -s -w "\nHTTP Status: %{http_code}\n" \
-  $MAAS_URL/v1/models \
-  -H "Authorization: Bearer $MAAS_API_KEY" \
-  -k
-----
-
-=== Decoding the Results
-
-If your configuration is correct, you will receive the following output:
-
-[source,json]
-----
-{
-  "object": "list",
-  "data": []
-}
-HTTP Status: 200
-----
-
-* **HTTP 200 OK:** This is the critical success indicator. It proves that the Kuadrant gateway successfully validated your `sk-oai-` API key and mapped it to the correct Subscription and AuthPolicy.
-* **Empty `data` array:** This is completely expected. We have successfully authenticated, but we have not published any models to MaaS yet.
 
 ChocoTech's programmatic authentication is now secure and strictly governed. In **Module 3**, we will finally deploy the models and watch the MaaS catalog populate automatically!

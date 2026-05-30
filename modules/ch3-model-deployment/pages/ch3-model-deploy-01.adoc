@@ -4,7 +4,7 @@
 :toc: macro
 :toclevels: 1
 
-With the governance fences securely built at the network edge, it is time to bring ChocoTech's AI Model Catalog online. The R&D and Quality Control teams have submitted an urgent request: "We need access to Llama-3-8B for recipe optimization and defect analysis."  For the second LLM you will substitute qwen3-4b for Nvidia Nemotron, and make Qwen3 model only available to the Marketing and R&D teams. 
+With the governance fences securely built at the network edge, it is time to bring ChocoTech's AI Model Catalog online. The R&D and Quality Control teams have submitted an urgent request: "We need access to Llama-3-8b for recipe optimization and defect analysis."  For the second LLM you will substitute qwen3-4b for Nvidia Nemotron, and make qwen3-4b model only available to the Marketing and R&D teams. 
 
 Your task is to deploy these generative AI models onto your GPU nodes, ensure they integrate with the MaaS Gateway you built in Module 1, and properly link them to the Gold, Silver, and Bronze subscriptions an authorizations you defined in Module 2.
 
@@ -16,9 +16,9 @@ toc::[]
 
 By the end of this module, you will be able to:
 
-* Provision model serving runtimes using `llm-d` (for distributed inference) or `vLLM`.
-* Understand how the "Publish as MaaS" function automatically generates `MaaSModelRef` custom resources to register models with the gateway.
-* Execute post-deployment governance steps to link newly deployed models to existing `MaaSSubscription` and `MaaSAuthPolicy` resources.
+* Provision model serving runtimes using `distributed inference with llm-d`.
+* Understand how selecting the "Publish as MaaS" function automatically generates `MaaSModelRef` custom resources to register models with the gateway.
+* Execute post-deployment governance steps to generate API Keys for deployed models linking to the `MaaSSubscription` and `MaaSAuthPolicy` resources.
 
 ---
 
@@ -31,7 +31,7 @@ Deploying a model and making it accessible through MaaS is a strict, multi-step 
 | Phase | Action
 
 | **1. Hardware & Runtime Sizing**
-| Analyze the hardware requirements for your target models and select the appropriate serving runtime (`llm-d` or `vLLM`). 
+| Analyze the hardware requirements for your target models and select the appropriate serving runtime (`llm-d`). 
 
 | **2. The Deployment**
 | Provision the model using the `LLMInferenceService` architecture. You will explicitly  ensure the model does not bypass the MaaS gateway.
@@ -40,7 +40,7 @@ Deploying a model and making it accessible through MaaS is a strict, multi-step 
 | Use the "Publish as MaaS" feature to automatically generate a `MaaSModelRef` custom resource, notifying the MaaS platform that the model is ready for governance.
 
 | **4. Post-Deployment Governance**
-| A model published to MaaS is not immediately accessible. You will manually update your existing ChocoTech Subscriptions and AuthPolicies to append the newly generated model reference, officially closing the governance loop.
+| A model published to MaaS is not immediately accessible. You will manually generate an API Key for access, officially closing the governance loop.
 |===
 
 By the end of this module, ChocoTech's business units will finally have self-service, heavily governed access to state-of-the-art AI models.

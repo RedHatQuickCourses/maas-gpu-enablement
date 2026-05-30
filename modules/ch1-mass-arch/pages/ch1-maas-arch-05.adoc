@@ -4,10 +4,14 @@ You have successfully transformed ChocoTech's fragmented GPU infrastructure from
 
 Before we move on to establishing the actual governance rules, verify that your environment is healthy.
 
+Make sure you explore the OpenShift AI dashboard to experience the new menu options that are available with Models as a Service as your management and access tools. 
+
+
+
 [TIP]
 ====
 **OpenShift AI 3.4 Requirement** +
-In OpenShift AI 3.4, MaaS uses a subscription-based model for access control. If you are missing Custom Resource Definitions (like `MaaSSubscription`), check your Operator Lifecycle Manager (OLM) to ensure your cluster is subscribed to the `3.4` (or beta/EA) update channel, as version 3.3 does not support these features.
+In OpenShift AI 3.4, MaaS uses a subscription-based model for access control. If you are missing Custom Resource Definitions (like `MaaSSubscription`), check your Operator Lifecycle Manager (OLM) to ensure your cluster is subscribed to the `3.4` `stable.3x` channel, as version 3.3 does not support these features.
 ====
 
 ---

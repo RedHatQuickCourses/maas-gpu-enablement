@@ -69,13 +69,13 @@ EOF
 
 Before we configure our Gateway and Database, let's look at a common failure point when deploying MaaS. 
 
-In OpenShift AI 3.4, User Workload Monitoring is strictly required for observability. While the Kuadrant rate-limiting engine will physically continue to enforce token quotas without it, the OpenShift AI Operator requires UWM to be active. If it is disabled, the platform will silently drop all token tracking data, and the OpenShift AI operator will flag the core MaaS Tenant resource with a Degraded status."
+In OpenShift AI 3.4, User Workload Monitoring is required for observability. While the Kuadrant rate-limiting engine will physically continue to enforce token quotas without it, the OpenShift AI Operator requires UWM to be active. If it is disabled, the platform will silently drop all token tracking data, and the OpenShift AI operator will flag the core MaaS Tenant resource with a Degraded status."
 
 Let's simulate this common misconfiguration. We will skip enabling User Workload Monitoring for now, proceed with the installation, and watch how the platform reacts.
 
 
-
-.Expand for instructions to enable user Workload monitoring
+////
+.Expand for instructions to enable user Workload monitoring now
 [%collapsible]
 ====
 
@@ -120,6 +120,7 @@ prometheus-user-workload-0             6/6     Running    0
 thanos-ruler-user-workload-0           4/4     Running    0
 ----
 ====
+////
 
 == Step 4: Create the MaaS Gateway
 
@@ -204,8 +205,8 @@ spec:
         from: All
 EOF
 ----
-<1> **Authorino TLS Bootstrap:** Enables TLS communication between the Gateway and Authorino.
-<2> **Managed Status:** Allows the MaaS controller to manage authorization policies without interference from the ODH Model Controller.
+
+---
 
 === 4. Expose the Gateway via OpenShift Route
 Finally, create the OpenShift Route to act as the public entry point. This handles the external ingress and securely re-encrypts traffic back to the internal Gateway service.
@@ -478,7 +479,7 @@ oc patch odhdashboardconfig odh-dashboard-config -n redhat-ods-applications --ty
 }'
 ----
 
-==== What is the script below doing?
+==== This is patch to resolve a routing issue with API Key page URL
 
 When you patch the `OdhDashboardConfig`, the OpenShift AI operator automatically spins up the Gen AI Studio components. However, you must explicitly tell the dashboard *how* to route traffic to the MaaS API. Without this script, the dashboard's internal proxy gets confused, loops back on itself, and crashes with an "Error loading components" message when you try to access the API Keys menu. 
 
@@ -505,7 +506,11 @@ oc set env deployment/rhods-dashboard -n redhat-ods-applications MAAS_API_URL=ht
 oc rollout status deployment/rhods-dashboard -n redhat-ods-applications
 ----
 
+====
 Refresh your OpenShift AI browser window. The **Gen AI Studio - API Key generation tab** menu option will now appear in your left-hand navigation pane.
+
+The menu options for *Subscription* and *Authorization policies* will appear in the `Settings` section of the OpenShift AI dashboard.
+====
 
 ---
 
