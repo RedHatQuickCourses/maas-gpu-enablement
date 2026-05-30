@@ -1,118 +1,52 @@
-= Lab Environment
+= Lab Environment Setup
 
-== Lab Environment Options
-
-This course offers two lab environment options on the Red Hat Demo Platform (RHDP). Choose the environment that best matches your learning objectives and budget constraints.
-
-=== Option 1: Red Hat OpenShift AI 3 (Recommended for Most Users)
-
-**Best for:** General course labs, getting started, cost-conscious learning
-
-This is the **recommended lab environment** for most course activities. It provides a production-ready OpenShift AI 3 environment with GPU acceleration.
-
-**Lab Configuration:**
-
-* **Single NVIDIA A10 GPU** with 24GB memory
-* **Pre-deployed Llama model** utilizing the GPU
-* Full Red Hat OpenShift AI 3 operator and dashboard
-* Suitable for most GPU operator, model deployment, and observability labs
-
-[WARNING]
-====
-**Important Limitations:**
-
-* **Model Deployment:** To deploy a new model, you must first stop the running Llama model to free GPU resources.
-* **MIG and GPU Slicing Labs:** This single-GPU environment may not function correctly for Multi-Instance GPU (MIG) partitioning and time-slicing labs. For these advanced GPU sharing labs, use Option 2.
-====
+Building an Models-as-a-Service platform requires the right foundation. For this course, you will be working in a live, GPU-accelerated Single Node OpenShift (SNO) environment provisioned through the Red Hat Demo Platform (RHDP).
 
 **Direct Link:** https://catalog.demo.redhat.com/catalog/babylon-catalog-prod?item=babylon-catalog-prod/published.openshift-ai-v3.prod&utm_source=webapp&utm_medium=share-link[Red Hat OpenShift AI 3,window=_blank]
 
----
+== Understanding Your Infrastructure
 
-=== Option 2: Introducing llm-d - Production-Ready Scalable LLM Inference
+This is the exact environment used to validate all course exercises, model deployments, and observability tasks. 
 
-**Best for:** Advanced GPU sharing labs (MIG, slicing), multi-GPU scenarios, production-like environments
+* **Base Hardware:** By default, your instance provides a single NVIDIA L4 GPU with 24GB of VRAM. 
+* **Advanced Hardware:** Depending on your RHDP access level, you may be able to select larger node sizes, such as the `g6.12xlarge`, which includes four NVIDIA L4 GPUs—enough compute power to run up to four small-sized LLMs simultaneously.
+* **Pre-Deployed Assets:** The lab comes pre-configured with OpenShift AI 3.4 and includes a `llama-32-2b` model already deployed. This pre-deployed model is immediately available for the playground and serves as an excellent base for agentic development.
 
-This environment provides a more robust, multi-GPU setup designed for production-scale LLM inference patterns.
-
-**Lab Configuration:**
-
-* **Multiple NVIDIA GPUs** across multiple nodes
-* Designed for GPU partitioning (MIG) and time-slicing demonstrations
-* Production-grade configuration for scalable LLM inference
-* Required for advanced GPU sharing and multi-GPU labs
-
-[IMPORTANT]
+[WARNING]
 ====
-**Cost Warning:**
-
-This lab environment utilizes multiple expensive GPU resources and incurs **significant costs** while running.
-
-**You MUST shut down this lab when not actively using it.** Do not leave this environment running overnight or between lab sessions.
+**Resource Management** +
+While this instance has enough memory to host all OpenShift AI features, the environment may struggle if you enable every single feature simultaneously. Additionally, to deploy a new model during the labs, you must first stop the pre-running Llama model (located in the `my-first-model` project) to free up the GPU resources.
 ====
-
-**Direct Link:** https://catalog.demo.redhat.com/catalog/babylon-catalog-prod?item=babylon-catalog-prod/published.llm-d-intro.prod&utm_source=webapp&utm_medium=share-link[Introducing llm-d: Your Production-Ready Path to Scalable LLM Inference,window=_blank]
 
 ---
 
-== Instructions to Launch Your Lab on RHDP
+== Interactive Order Walkthrough
 
-. **Log in** to the xref:#RHDP-Portal-Links[RHDP portal] (see links below)
-. **Click** on one of the direct lab links above, or search for the lab name in the RHDP catalog
-. On the catalog page, **click** the **Order** button
-. **Fill out** the required details in the order form
-. **Review the warning** at the bottom of the form and **check the box** labeled: +
-   _”I confirm that I understand the above warnings.”_
-. **Click** the **Order** button to place your lab order
+If you are new to the Red Hat Demo Platform, use the interactive tour below to see exactly how to navigate the catalog and select the correct GPU parameters for your lab environment.
 
-=== Lab Provisioning Timeline
-
-- Lab provisioning typically takes **60-90 minutes**
-- You will receive an **email with access details** once your lab environment is ready
-- You can also **retrieve lab access** directly from the RHDP portal under **Services**
-
-=== How to Access Your Running Lab
-
-. On the RHDP portal, **click** on the **Services** option in the left-hand menu
-. **Select your lab** from the listings on the right-hand side of the page
-. **View access details** including OpenShift console URL, credentials, and API endpoints
-
-[[RHDP-Portal-Links]]
-=== RHDP Portal Links
-
-- **Red Hat associates:** https://demo.redhat.com/[https://demo.redhat.com/,window=_blank]
-- **Red Hat partners:** https://partner.demo.redhat.com/[https://partner.demo.redhat.com/,window=_blank]
+++++
+<iframe 
+  src="https://demo.arcade.software/0dtjNJXkvWw8oAX8wOw0?embed&embed_mobile=inline&embed_desktop=inline&show_copy_link=true"
+  width="100%" 
+  height="600px" 
+  frameborder="0" 
+  allowfullscreen
+  webkitallowfullscreen
+  mozallowfullscreen
+  allow="clipboard-write"
+  muted>
+</iframe>
+++++
 
 ---
 
-== Lab Selection Guide
+=== Provisioning Timeline & Access
 
-Use this guide to select the appropriate lab environment for each chapter:
+Lab provisioning typically takes **60 to 90 minutes**. 
 
-[cols=”2,1,1”,options=”header”]
-|===
-|Course Chapter/Lab |Option 1 (RHOAI 3) |Option 2 (llm-d)
+You will receive an email with your access details once the environment is fully operational. Alternatively, you can retrieve your credentials directly from the RHDP portal:
 
-|Chapter 1: GPU Operator Deployment
-|✓ Recommended
-|✓ Works
-
-|Chapter 2: MIG and GPU Slicing
-|⚠ Limited (single GPU)
-|✓ Recommended
-
-|Chapter 3: Observability and Monitoring
-|✓ Recommended
-|✓ Works
-
-|Multi-GPU Scenarios
-|✗ Not supported
-|✓ Required
-
-|===
-
-[TIP]
-====
-**Start with Option 1** (Red Hat OpenShift AI 3) for your initial learning. Only provision **Option 2** (llm-d) when you reach labs that specifically require MIG, GPU slicing, or multi-GPU configurations.
-====
+1. On the RHDP portal, **click** on **Services** in the left-hand navigation menu.
+2. **Select your lab** from the active listings on the right-hand side of the page.
+3. **View your access details**, which will include your OpenShift console URL, administrator credentials, and API endpoints.
 
