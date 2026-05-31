@@ -160,12 +160,12 @@ In a real-world scenario, you may need to adjust a team's token quota up or down
 To force the rate limiter to trigger, you can dynamically patch the `MaaSSubscription` to severely restrict their limit (e.g., dropping it to 1,000 tokens per minute), and then redeploy the job to test the new boundaries.
 
 **1. Patch the Subscription Limit** +
-Drop the token limit for `qwen3-4b` to 1000 tokens per minute:
+Drop the token limit for `qwen3-4b` to 500 tokens per minute:
 
 [source,role="execute"]
 ----
 oc patch maassubscription bronze-plan -n models-as-a-service --type=json -p='[
-  {"op": "replace", "path": "/spec/modelRefs/1/tokenRateLimits/0/limit", "value": 1000}
+  {"op": "replace", "path": "/spec/modelRefs/1/tokenRateLimits/0/limit", "value": 500}
 ]'
 ----
 

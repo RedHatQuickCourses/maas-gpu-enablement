@@ -17,7 +17,7 @@ Before generating keys, it is crucial to understand how the MaaS controller hand
 
 The platform supports two distinct workflows for generating keys:
 
-1. **Creating API Keys by Users (Self-Service):** The platform empowers developers to manage their own access. For permanent keys, users navigate to **Gen AI studio → API keys**.
+1. **Creating API Keys by Users (Self-Service):** The platform empowers developers to manage their own access. For keys, users navigate to **Gen AI studio → API keys**.
 2. **Creating API Keys as Service Accounts (Programmatic Access):** For automated applications, platform administrators centrally provision API keys on behalf of users or applications. 
 
 ---

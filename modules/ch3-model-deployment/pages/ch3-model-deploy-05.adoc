@@ -65,20 +65,20 @@ Instead of manually typing out the OCI registry URL, we will leverage the intern
 
 This step is critical for integrating the model into ChocoTech's financial and security framework.
 
- 1. **Model Availability:** Check the box next to **Publish as MaaS**. +
+ . **Model Availability:** Check the box next to **Publish as MaaS**. +
 Checking *Publish as MaaS* automatically instructs OpenShift AI to generate a `MaaSModelRef` resource under the hood. This links the newly created model endpoint directly to the MaaS gateway, enabling our Authorino security policies and Kuadrant token quotas to intercept traffic.
 
- 2. **Configuration Parameters:** Select **Add custom runtime arguments**. This allows us to fine-tune the vLLM deployment. Add the following parameters:
-
+ . **Configuration Parameters:** Select **Add custom runtime arguments**. This allows us to fine-tune the vLLM deployment. Add the following parameters:
++
 [source,role="execute"]
 ----
 --dtype=half 
 --max-model-len=8192 
 --gpu-memory-utilization=0.95
 ----
-
- 3. **Routing Settings:** Leave the Rolling update selection and model route timeout selections set to their defaults.
- 4. Review your configuration choices on the summary pane and click **Deploy model**.
++
+ . **Routing Settings:** Leave the Rolling update selection and model route timeout selections set to their defaults.
+ . Review your configuration choices on the summary pane and click **Deploy model**.
 
 == 3. The Identity Swap (Testing Selective Access)
 
@@ -135,7 +135,7 @@ spec:
     - name: qwen3-4b
       namespace: chocotech-models
       tokenRateLimits:
-        - limit: 2000
+        - limit: 1000
           window: 1m
 EOF
 ----
@@ -227,26 +227,35 @@ curl -s -k -H "Authorization: Bearer $MAAS_API_KEY" \
   https://${ROUTE_HOST}/maas-api/v1/models | jq
 ----
 
-*Expected output showing both models*:
+*Expected output showing only the qwen model*:
 [source,json]
 ----
 {
   "object": "list",
   "data": [
     {
-      "id": "llama-3-8b",
-      "object": "model",
-      "owned_by": "chocotech-models"
-    },
-    {
       "id": "qwen3-4b",
+      "created": 1780183661,
       "object": "model",
-      "owned_by": "chocotech-models"
+      "owned_by": "chocotech-models/qwen3-4b",
+      "kind": "LLMInferenceService",
+      "url": "http://maas-default-gateway-chocotech-models/qwen3-4b",
+      "ready": true,
+      "modelDetails": {
+        "displayName": "qwen3-4b"
+      },
+      "subscriptions": [
+        {
+          "name": "bronze-plan"
+        }
+      ]
     }
-  ]
-}
+  ],
+  "object": "list"
 ----
 
-*(Note: If you run this exact same API call using a Gold Plan API Key, the Gateway will dynamically filter the JSON response to only return `llama-3-8b`).*
+*(Note: If you run this exact same API call using a Gold Plan API Key, the Gateway will dynamically filter the JSON response to only return `llama-3-8b`).
+If you had multiple GPUs and both models are available ("Ready State"), then you will see two models returned in the list.*
+
 
 ChocoTech now operates a fully governed, multi-model AI factory. Quality Control relies on the universally available Llama-3 for factory logic, while Marketing and R&D can utilize the specialized Qwen coder model without risking exposure to the Gold tier production environment.

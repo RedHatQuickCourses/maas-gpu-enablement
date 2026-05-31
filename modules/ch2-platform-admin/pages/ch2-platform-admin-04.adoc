@@ -15,6 +15,8 @@ Because the referenced model does not exist yet (missing the `MaaSModelRef` obje
 
 Execute the following block to deploy all three `MaaSSubscription` policies into the centralized `models-as-a-service` namespace:
 
+NOTE:  Notice the `Token limits` are extrememly low in the following deployment.
+
 
 [source,role="execute"]
 ----

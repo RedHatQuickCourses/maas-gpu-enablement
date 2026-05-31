@@ -25,7 +25,7 @@ Kuadrant's Limitador component, operating at the network edge, tracks the token 
 
 3. **How does the system know which subscription limits to apply to a programmatic user's request?**
 +
-The API gateway intercepts the request and validates the provided API key (`sk-oai-...`). Because the key was permanently bound to the user's OpenShift group membership and highest priority subscription at the time it was created, the gateway immediately applies the correct token limits.
+The API gateway intercepts the request and validates the provided API key (`sk-oai-...`). Because the key was permanently bound to the user's OpenShift group membership and highest priority (or selected) subscription at the time it was created, the gateway immediately applies the correct token limits.
 
 ---
 == 🛠️ Day-2 Troubleshooting: Governance & Authentication
@@ -64,4 +64,4 @@ _Application Integration_
 |===
 
 [quote]
-**Next steps:** Your security perimeter is established, but the catalog is currently empty. In Module 3, you will deploy your first generative AI models (`llama-3-8b` and `nemotron-8b`). You will publish these models as MaaS endpoints (enabling the automatic generation of `MaaSModelRef` objects) and actively watch Kuadrant throttle traffic based on your Gold, Silver, and Bronze subscription limits.
+**Next steps:** Your security perimeter is established, but the catalog is currently empty. In Module 3, you will deploy your first generative AI models (`llama-3-8b` and `qwen-4b`). You will publish these models as MaaS endpoints (enabling the automatic generation of `MaaSModelRef` objects) and in Module 4 actively watch Kuadrant throttle traffic based on your Gold, Silver, and Bronze subscription limits.
