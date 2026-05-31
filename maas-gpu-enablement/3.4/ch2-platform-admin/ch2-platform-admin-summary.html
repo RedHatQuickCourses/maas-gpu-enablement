@@ -361,7 +361,7 @@
 <li>
 <p><strong>How does the system know which subscription limits to apply to a programmatic user&#8217;s request?</strong></p>
 <div class="paragraph">
-<p>The API gateway intercepts the request and validates the provided API key (<code>sk-oai-&#8230;&#8203;</code>). Because the key was permanently bound to the user&#8217;s OpenShift group membership and highest priority subscription at the time it was created, the gateway immediately applies the correct token limits.</p>
+<p>The API gateway intercepts the request and validates the provided API key (<code>sk-oai-&#8230;&#8203;</code>). Because the key was permanently bound to the user&#8217;s OpenShift group membership and highest priority (or selected) subscription at the time it was created, the gateway immediately applies the correct token limits.</p>
 </div>
 </li>
 </ol>
@@ -450,7 +450,7 @@
 </table>
 <div class="quoteblock">
 <blockquote>
-<strong>Next steps:</strong> Your security perimeter is established, but the catalog is currently empty. In Module 3, you will deploy your first generative AI models (<code>llama-3-8b</code> and <code>nemotron-8b</code>). You will publish these models as MaaS endpoints (enabling the automatic generation of <code>MaaSModelRef</code> objects) and actively watch Kuadrant throttle traffic based on your Gold, Silver, and Bronze subscription limits.
+<strong>Next steps:</strong> Your security perimeter is established, but the catalog is currently empty. In Module 3, you will deploy your first generative AI models (<code>llama-3-8b</code> and <code>qwen-4b</code>). You will publish these models as MaaS endpoints (enabling the automatic generation of <code>MaaSModelRef</code> objects) and in Module 4 actively watch Kuadrant throttle traffic based on your Gold, Silver, and Bronze subscription limits.
 </blockquote>
 </div>
 </div>

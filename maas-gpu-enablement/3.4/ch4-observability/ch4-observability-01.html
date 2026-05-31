@@ -500,12 +500,12 @@ EOF</code></pre>
 </div>
 <div class="paragraph">
 <p><strong>1. Patch the Subscription Limit</strong><br>
-Drop the token limit for <code>qwen3-4b</code> to 1000 tokens per minute:</p>
+Drop the token limit for <code>qwen3-4b</code> to 500 tokens per minute:</p>
 </div>
 <div class="listingblock execute">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-none hljs">oc patch maassubscription bronze-plan -n models-as-a-service --type=json -p='[
-  {"op": "replace", "path": "/spec/modelRefs/1/tokenRateLimits/0/limit", "value": 1000}
+  {"op": "replace", "path": "/spec/modelRefs/1/tokenRateLimits/0/limit", "value": 500}
 ]'</code></pre>
 </div>
 </div>

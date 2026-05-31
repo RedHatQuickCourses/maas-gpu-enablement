@@ -443,9 +443,6 @@ Checking <strong>Publish as MaaS</strong> automatically instructs OpenShift AI t
 </li>
 <li>
 <p><strong>Configuration Parameters:</strong> Select <strong>Add custom runtime arguments</strong>. This allows us to fine-tune the vLLM deployment. Add the following parameters:</p>
-</li>
-</ol>
-</div>
 <div class="listingblock execute">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-none hljs">--dtype=half
@@ -453,8 +450,7 @@ Checking <strong>Publish as MaaS</strong> automatically instructs OpenShift AI t
 --gpu-memory-utilization=0.95</code></pre>
 </div>
 </div>
-<div class="olist arabic">
-<ol class="arabic">
+</li>
 <li>
 <p><strong>Routing Settings:</strong> Leave the Rolling update selection and model route timeout selections set to their defaults.</p>
 </li>
@@ -525,7 +521,7 @@ spec:
     - name: qwen3-4b
       namespace: chocotech-models
       tokenRateLimits:
-        - limit: 2000
+        - limit: 1000
           window: 1m
 EOF</code></pre>
 </div>
@@ -639,7 +635,7 @@ curl -s -k -H "Authorization: Bearer $MAAS_API_KEY" \
 </div>
 </div>
 <div class="paragraph">
-<p><strong>Expected output showing both models</strong>:</p>
+<p><strong>Expected output showing only the qwen model</strong>:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -647,21 +643,29 @@ curl -s -k -H "Authorization: Bearer $MAAS_API_KEY" \
   "object": "list",
   "data": [
     {
-      "id": "llama-3-8b",
-      "object": "model",
-      "owned_by": "chocotech-models"
-    },
-    {
       "id": "qwen3-4b",
+      "created": 1780183661,
       "object": "model",
-      "owned_by": "chocotech-models"
+      "owned_by": "chocotech-models/qwen3-4b",
+      "kind": "LLMInferenceService",
+      "url": "http://maas-default-gateway-chocotech-models/qwen3-4b",
+      "ready": true,
+      "modelDetails": {
+        "displayName": "qwen3-4b"
+      },
+      "subscriptions": [
+        {
+          "name": "bronze-plan"
+        }
+      ]
     }
-  ]
-}</code></pre>
+  ],
+  "object": "list"</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p><strong>(Note: If you run this exact same API call using a Gold Plan API Key, the Gateway will dynamically filter the JSON response to only return <code>llama-3-8b</code>).</strong></p>
+<p><strong>(Note: If you run this exact same API call using a Gold Plan API Key, the Gateway will dynamically filter the JSON response to only return <code>llama-3-8b</code>).
+If you had multiple GPUs and both models are available ("Ready State"), then you will see two models returned in the list.</strong></p>
 </div>
 <div class="paragraph">
 <p>ChocoTech now operates a fully governed, multi-model AI factory. Quality Control relies on the universally available Llama-3 for factory logic, while Marketing and R&amp;D can utilize the specialized Qwen coder model without risking exposure to the Gold tier production environment.</p>
