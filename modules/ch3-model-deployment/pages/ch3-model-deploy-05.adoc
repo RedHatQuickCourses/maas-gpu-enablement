@@ -203,6 +203,7 @@ Because API keys capture a snapshot of user group memberships from when the key 
 
 **1. Generate a Test API Key** +
 To accurately test selective access, you must generate an API key tied specifically to the Bronze Plan (Marketing).
+
 * In the OpenShift AI dashboard, click **Gen AI studio** -> **API keys**.
 * Click **Create API key**.
 * Name it `marketing-qwen-test`.
@@ -211,6 +212,7 @@ To accurately test selective access, you must generate an API key tied specifica
 
 **2. The UI Payoff** +
 Refresh the Gen AI Studio Models tab in the OpenShift AI dashboard.
+
 * Since you are testing with Bronze/Silver access, you will now see both `llama-3-8b` and `qwen3-4b` listed with their respective subscription access controls.
 * If you switch to a user in the **Quality Control (Gold)** group, the Qwen model is entirely hidden from the catalog.
 
