@@ -1,6 +1,6 @@
 = 4.1: Application Integration & The Rate Limit Reality
 
-The platform is secure, and Finance is happy. Now, it is time to build apps. 
+The platform is secure, now it is time to build apps. 
 
 Because OpenShift AI's MaaS gateway is fully OpenAI-compatible, integrating ChocoTech's existing applications requires almost zero code refactoring. However, because we built strict Token Rate Limits into our Subscriptions in Module 2, developers *must* know how to handle API rejections.
 
@@ -157,7 +157,7 @@ You will see several `✅ Success` messages as the Marketing team consumes their
 
 In a real-world scenario, you may need to adjust a team's token quota up or down based on their workload. If your script finished all 20 requests without hitting a 429 rate limit, it means the Marketing team's token limit is too generous! 
 
-To force the rate limiter to trigger, you can dynamically patch the `MaaSSubscription` to severely restrict their limit (e.g., dropping it to 1,000 tokens per minute), and then redeploy the job to test the new boundaries.
+To force the rate limiter to trigger, you can dynamically patch the `MaaSSubscription` to severely restrict their limit (e.g., dropping it to 500 tokens per minute), and then redeploy the job to test the new boundaries.
 
 **1. Patch the Subscription Limit** +
 Drop the token limit for `qwen3-4b` to 500 tokens per minute:

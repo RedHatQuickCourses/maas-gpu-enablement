@@ -1,8 +1,5 @@
 = 3.2: Deploying the Governed Model via the OpenShift AI UI
 
-====
-WARNING: This section is under development
-====
 
 While advanced platform engineers often manage workloads via GitOps pipelines, OpenShift AI provides a cloud-native, wizard-driven user interface specifically designed for deploying models into a **Models-as-a-Service (MaaS)** fabric. Using the UI allows us to quickly configure inference runtimes, allocate dedicated GPU resources, and directly publish the model to the centralized MaaS gateway without writing complex Kubernetes Custom Resources by hand.
 

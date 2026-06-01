@@ -1,9 +1,5 @@
 = 3.6: Summary & troubleshooting
 
-====
-WARNING: This section is under development
-====
-
 You have successfully brought the ChocoTech AI Factory online. By deploying these models into the Models-as-a-Service (MaaS) architecture, you have transformed a raw, ungoverned infrastructure into a highly secure, multi-tenant enterprise platform.
 
 If ChocoTech had allowed teams to deploy standard standalone models, they would currently have zero internal cost control and no way to prioritize mission-critical workloads over experimental scripts. By utilizing the `LLMInferenceService` architecture and explicit `MaaSModelRef` registration, you have secured the company's hardware ROI and established absolute Quality of Service (QoS).
@@ -14,7 +10,6 @@ If ChocoTech had allowed teams to deploy standard standalone models, they would 
 * **Secure GitOps Deployment:** Bypassed inefficient public internet downloads by utilizing the OCI Modelcar format, and deployed `llama-3-8b` and `qwen3-4b` using the governed `LLMInferenceService` architecture.
 * **MaaS Registration:** Successfully registered the inference engines with the API Gateway by deploying `MaaSModelRef` custom resources.
 * **Selective Access Control:** Manually appended the new models to your existing `MaaSSubscription` and `MaaSAuthPolicy` resources to explicitly restrict the Qwen model to Silver and Bronze users, while keeping Gold production workloads isolated.
-* **Day-2 Operations:** Mastered the zero-downtime rolling update workflow, allowing you to hot-swap model versions by simply updating the storage URI in your Git repository.
 
 ---
 
@@ -24,7 +19,7 @@ Test your understanding of the MaaS deployment architecture before moving on:
 
 1. **Why must governed models be deployed using `LLMInferenceService` rather than the legacy deployment method?**
 +
-Models deployed for MaaS use the `LLMInferenceService` architecture, which is designed for large language models and integrates with the MaaS gateway for subscription-based quota enforcement. The legacy deployment method uses traditional KServe InferenceService resources with serving runtimes, which bypass the MaaS architecture entirely.
+Models deployed for MaaS use the `LLMInferenceService` architecture, which is designed for large language models and integrates with the MaaS gateway for subscription-based quota enforcement. The legacy deployment method uses traditional KServe `InferenceService` resources with serving runtimes, which bypass the MaaS architecture entirely.
 
 2. **What happens if a model is deployed and registered as a `MaaSModelRef`, but the user's group is not added to a `MaaSAuthPolicy`?**
 +
@@ -82,4 +77,4 @@ _Application Integration_
 |===
 
 [quote]
-**Next steps:** The AI Factory is fully operational. In Module 4, you will switch hats from Platform Engineer to Application Developer. You will use Python, LangChain, and your new API keys to connect ChocoTech's applications directly to the MaaS Gateway, and write the exponential backoff logic required to handle Kuadrant's rate limits!
+**Next steps:** The AI Factory is fully operational. In Module 4, you will switch hats from Platform Engineer to Application Developer. You will use Python and your new API keys to connect ChocoTech's applications directly to the MaaS Gateway, and experiment with the exponential backoff logic required to handle Kuadrant's rate limits.
