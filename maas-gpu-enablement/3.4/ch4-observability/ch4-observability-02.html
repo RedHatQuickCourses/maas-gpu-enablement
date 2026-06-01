@@ -309,7 +309,7 @@
 <p>The Marketing team&#8217;s batch script successfully ran, consumed its token quota, and gracefully handled the <code>429 Too Many Requests</code> errors. The infrastructure is protected.</p>
 </div>
 <div class="paragraph">
-<p>However, when you log into the OpenShift AI dashboard to pull the billing report for the Finance team, the data might be missing!</p>
+<p>However, when you log into the OpenShift AI dashboard to pull the billing report for the Finance team, the data might be missing.</p>
 </div>
 <div class="paragraph">
 <p>By default, to save space in the Prometheus database, OpenShift AI does not scrape high-cardinality rate-limiting or model-specific usage metrics. To satisfy Finance&#8217;s chargeback requirements, you must explicitly enable telemetry across the Kuadrant governance layer and the Models-as-a-Service (MaaS) Tenant.</p>
@@ -422,8 +422,79 @@ You should see a JSON response containing metric data labeled with <code>limitad
 <div class="paragraph">
 <p>The telemetry pipeline is officially flowing. Every token consumed and every rate limit enforced is now being permanently recorded.</p>
 </div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_exercise_4_deploy_the_batch_job_again"><a class="anchor" href="#_exercise_4_deploy_the_batch_job_again"></a>Exercise 4: Deploy the Batch Job Again</h2>
+<div class="sectionbody">
 <div class="paragraph">
-<p>In the next section of this course, you will navigate to the MaaS Observability Dashboard to visualize this telemetry data and export the definitive CSV chargeback report for ChocoTech&#8217;s Finance team!</p>
+<p>First delete previous completed Job if<br></p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">oc delete job marketing-chaos-job -n chocotech-models</code></pre>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_deploy_the_job_again_to_generate_metrics_now_that_we_are_scraping_the_usage_metric_data"><a class="anchor" href="#_deploy_the_job_again_to_generate_metrics_now_that_we_are_scraping_the_usage_metric_data"></a>Deploy the Job again to generate metrics now that we are scraping the usage metric data.</h3>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">export ROUTE_HOST=$(oc get route openshift-ai-inference -n openshift-ingress -o jsonpath='{.spec.host}')
+
+cat &lt;&lt;EOF | oc apply -f -
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: marketing-chaos-job
+  namespace: chocotech-models
+spec:
+  backoffLimit: 0
+  template:
+    spec:
+      containers:
+      - name: chaos-generator
+        image: registry.access.redhat.com/ubi9/python-311
+        command: ["/bin/bash", "-c"]
+        args:
+          - |
+            pip install --quiet requests urllib3
+            echo "Executing batch script against \$MAAS_URL..."
+            python /opt/scripts/marketing-batch-job.py
+        env:
+        - name: MAAS_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: marketing-api-key
+              key: key
+        - name: MAAS_URL
+          value: "https://${ROUTE_HOST}"
+        volumeMounts:
+        - name: script-volume
+          mountPath: /opt/scripts
+      volumes:
+      - name: script-volume
+        configMap:
+          name: marketing-batch-script
+      restartPolicy: Never
+EOF</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_this_time_is_not_necessary_to_view_the_throttling_but_you_can_if_want"><a class="anchor" href="#_this_time_is_not_necessary_to_view_the_throttling_but_you_can_if_want"></a>This time is not necessary to view the throttling, but you can if want.</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Tail the logs of the container to watch the Python script hit Kuadrant&#8217;s rate limits:</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">oc logs -f job/marketing-chaos-job -n chocotech-models</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>In the next section of this course, you will navigate to the Openshift Observability Dashboard to visualize MaaS telemetry data and export the definitive CSV chargeback report for ChocoTech&#8217;s Finance team.</p>
 </div>
 </div>
 </div>

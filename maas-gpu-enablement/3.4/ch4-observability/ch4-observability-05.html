@@ -349,7 +349,7 @@
 <li>
 <p><strong>Why is the <code>captureUser</code> telemetry flag set to <code>false</code> by default in the Tenant custom resource?</strong></p>
 <div class="paragraph">
-<p>Enabling user-level tracking on a cluster with hundreds or thousands of users exponentially increases metric cardinality. This can severely bloat the Prometheus database and impact cluster monitoring performance. (We used <code>app_id</code> to track API keys instead!)</p>
+<p>Enabling user-level tracking on a cluster with hundreds or thousands of users exponentially increases metric cardinality. This can severely bloat the Prometheus database and impact cluster monitoring performance. (We used <code>app_id</code> to track API keys instead.)</p>
 </div>
 </li>
 <li>
@@ -412,7 +412,7 @@
 <div class="ulist">
 <ul>
 <li>
-<p><strong>Prometheus is not a time machine:</strong> Metrics only appear <strong>after</strong> the <code>PodMonitor</code> and Tenant telemetry are enabled. If you ran the Python script before patching Kuadrant/Tenant, you must delete the old Kubernetes Job and redeploy it to generate fresh traffic!</p>
+<p><strong>Prometheus is not a time machine:</strong> Metrics only appear <strong>after</strong> the <code>PodMonitor</code> and Tenant telemetry are enabled. If you ran the Python script before patching Kuadrant/Tenant, you must delete the old Kubernetes Job and redeploy it to generate fresh traffic.</p>
 </li>
 </ul>
 </div>
@@ -454,7 +454,7 @@
 </table>
 <div class="quoteblock">
 <blockquote>
-<strong>Course Complete!</strong> You have successfully guided ChocoTech from a raw Kubernetes cluster to a fully governed, multi-tenant AI Factory. You possess the skills to deploy API gateways, configure token subscriptions, publish large language models, and visualize the advanced telemetry required to run AI at an enterprise scale.
+<strong>Course Complete.</strong> You have successfully guided ChocoTech from a raw Kubernetes cluster to a fully governed, multi-tenant AI Factory. You possess the skills to deploy API gateways, configure token subscriptions, publish large language models, and visualize the advanced telemetry required to run AI at an enterprise scale.
 </blockquote>
 </div>
 </div>
