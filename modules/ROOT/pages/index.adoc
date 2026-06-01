@@ -149,6 +149,14 @@ Special thanks to: +
 **Caitlyn Rymarchyk**, +
 **Shumaila Yaseen**.
 
+
+[CAUTION]
+====
+**AI-Assisted Content Disclaimer:** Please note that artificial intelligence was utilized in the creation of the images and content within this QuickCourse. As with any AI-assisted material, there is a possibility of minor errors. Additionally, as OpenShift and MaaS technologies rapidly evolve, there may be alternative or more optimized ways to configure certain components. 
+
+However, rest assured that the specific approaches, steps, and architecture outlined in this course have been double-checked and verified by our team as a proven path to getting a Models as a Service (MaaS) environment fully operational.
+====
+
 == Let's Get Started!
 
 Ready to dive in? You'll start by meeting **ChocoTech Industries**—a rapidly growing chocolate manufacturer looking for a solution to their GPU silo crisis. Let's help them build a better AI infrastructure!
