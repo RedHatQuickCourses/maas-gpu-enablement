@@ -601,18 +601,40 @@ oc adm groups add-users chocotech-marketing $(oc whoami)</code></pre>
 <div class="sectionbody">
 <div class="paragraph">
 <p><strong>1. Generate a Test API Key</strong><br>
-To accurately test selective access, you must generate an API key tied specifically to the Bronze Plan (Marketing).
-* In the OpenShift AI dashboard, click <strong>Gen AI studio</strong> &#8594; <strong>API keys</strong>.
-* Click <strong>Create API key</strong>.
-* Name it <code>marketing-qwen-test</code>.
-* Select <strong>Bronze</strong> from the Subscription dropdown.
-* Click <strong>Create</strong> and immediately copy the <code>sk-oai-&#8230;&#8203;</code> key.</p>
+To accurately test selective access, you must generate an API key tied specifically to the Bronze Plan (Marketing).</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>In the OpenShift AI dashboard, click <strong>Gen AI studio</strong> &#8594; <strong>API keys</strong>.</p>
+</li>
+<li>
+<p>Click <strong>Create API key</strong>.</p>
+</li>
+<li>
+<p>Name it <code>marketing-qwen-test</code>.</p>
+</li>
+<li>
+<p>Select <strong>Bronze</strong> from the Subscription dropdown.</p>
+</li>
+<li>
+<p>Click <strong>Create</strong> and immediately copy the <code>sk-oai-&#8230;&#8203;</code> key.</p>
+</li>
+</ul>
 </div>
 <div class="paragraph">
 <p><strong>2. The UI Payoff</strong><br>
-Refresh the Gen AI Studio Models tab in the OpenShift AI dashboard.
-* Since you are testing with Bronze/Silver access, you will now see both <code>llama-3-8b</code> and <code>qwen3-4b</code> listed with their respective subscription access controls.
-* If you switch to a user in the <strong>Quality Control (Gold)</strong> group, the Qwen model is entirely hidden from the catalog.</p>
+Refresh the Gen AI Studio Models tab in the OpenShift AI dashboard.</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Since you are testing with Bronze/Silver access, you will now see both <code>llama-3-8b</code> and <code>qwen3-4b</code> listed with their respective subscription access controls.</p>
+</li>
+<li>
+<p>If you switch to a user in the <strong>Quality Control (Gold)</strong> group, the Qwen model is entirely hidden from the catalog.</p>
+</li>
+</ul>
 </div>
 <div class="paragraph">
 <p><strong>3. API Discovery (The Developer View)</strong><br>
