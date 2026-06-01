@@ -18,9 +18,12 @@ Beyond token counting, a production-grade AI platform requires monitoring across
 
 == Exercise 1: Deploying the Grafana Instance
 
-Deploy the  Grafana Operator if not already installed on your cluster. Next, let's deploy a physical Grafana instance into the `chocotech-models` namespace. 
+[IMPORTANT]
+Deploy the  Grafana Operator if not already installed on your cluster. 
 
-Notice the `labels` section! The operator uses this label to automatically bind our Prometheus data source to this specific Grafana instance later.
+Next, let's deploy a physical Grafana instance into the `chocotech-models` namespace. 
+
+Notice the `labels` section. The operator uses this label to automatically bind our Prometheus data source to this specific Grafana instance later.
 
 [source,role="execute"]
 ----
@@ -90,29 +93,23 @@ EOF
 
 == Exercise 3: Accessing Grafana and Building Panels
 
-Your Grafana instance is now live and wired into the cluster's telemetry stream! Retrieve your secure Grafana URL:
+Your Grafana instance is now live and wired into the cluster's telemetry stream. Retrieve your secure Grafana URL:
 
 [source,role="execute"]
 ----
 oc get route chocotech-grafana -n chocotech-models -o jsonpath='{"https://"}{.spec.host}{"\n"}'
 ----
 
-Open that URL in a new browser tab. 
+=== Open the returned URL in a new browser tab. 
 
-=== Step 1: Import the NVIDIA Hardware Dashboard
-NVIDIA provides an excellent pre-built dashboard for DCGM metrics. 
+---
 
- . In Grafana, click the **+** (Create) icon in the left menu and select **Import**.
- . Type `12239` into the "Import via grafana.com" field and click **Load**.
- . Select `OpenShift-Prometheus` from the datasource dropdown at the bottom and click **Import**.
- . You now have a real-time view of your GPU Utilization, Temperature, and VRAM capacity!
-
-=== Step 2: Build the Custom MaaS Dashboard
+=== Step 1: Build the Custom MaaS Dashboard
 Now, let's create a custom dashboard for your finance and governance metrics. 
 
 1. Click the **+** icon and select **New Dashboard**.
 2. Click **Add visualization** and select `OpenShift-Prometheus` as your data source.
-3. **IMPORTANT:** By default, Grafana opens the query editor in "Builder" mode (using dropdown menus). To paste the exact PromQL queries below, look at the right side of the query row and click the **Code** button to switch to text mode!
+3. **IMPORTANT:** By default, Grafana opens the query editor in "Builder" mode (using dropdown menus). To paste the exact PromQL queries below, look at the right side of the query row and click the **Code** button to switch to text mode.
 
 Build the following panels:
 
@@ -124,7 +121,7 @@ sum(authorized_hits{model="qwen3-4b"})
 ----
 
 **Panel 2: Tokens Consumed by User (Chargeback)** +
-Set the visualization type to **Bar chart** or **Pie chart**. This query groups the token consumption by the specific API Key ID (`app_id`)!
+Set the visualization type to **Bar chart** or **Pie chart**. This query groups the token consumption by the specific API Key ID (`app_id`).
 [source,role="execute"]
 ----
 sum(authorized_hits{model="qwen3-4b"}) by (app_id)
@@ -144,6 +141,8 @@ Set the visualization type to **Time series**. This shows the 95th percentile lo
 histogram_quantile(0.95, sum(rate(vllm:time_to_first_token_seconds_bucket[5m])) by (le, model_name))
 ----
 
-Save your dashboard. You now have a unified view of your entire AI infrastructure!
+Save your dashboard. You now have a unified view of your entire AI infrastructure.  Run the load generator again to view usage in realtime. 
 
 ---
+
+

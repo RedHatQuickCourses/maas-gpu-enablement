@@ -83,11 +83,11 @@ data:
         response = requests.post(url, headers=headers, json=data, verify=False)
 
         if response.status_code == 200:
-            print("✅ Success! Consumed tokens.")
+            print("✅ Success. Consumed tokens.")
         elif response.status_code == 429:
-            # Kuadrant provides the exact wait time!
+            # Kuadrant provides the exact wait time.
             retry_after = int(response.headers.get("Retry-After", 10))
-            print(f"🛑 429 Rate Limit Hit! Sleeping for {retry_after} seconds...")
+            print(f"🛑 429 Rate Limit Hit. Sleeping for {retry_after} seconds...")
             time.sleep(retry_after)
         else:
             print(f"❌ Error: {response.status_code} - {response.text}")
@@ -155,7 +155,7 @@ You will see several `✅ Success` messages as the Marketing team consumes their
 
 == Exercise 3: Tuning Subscriptions (Finding the Sweet Spot)
 
-In a real-world scenario, you may need to adjust a team's token quota up or down based on their workload. If your script finished all 20 requests without hitting a 429 rate limit, it means the Marketing team's token limit is too generous! 
+In a real-world scenario, you may need to adjust a team's token quota up or down based on their workload. If your script finished all 20 requests without hitting a 429 rate limit, it means the Marketing team's token limit is too generous. 
 
 To force the rate limiter to trigger, you can dynamically patch the `MaaSSubscription` to severely restrict their limit (e.g., dropping it to 500 tokens per minute), and then redeploy the job to test the new boundaries.
 
@@ -178,6 +178,6 @@ oc delete job marketing-chaos-job -n chocotech-models
 ----
 
 **3. Redeploy and Watch** +
-Scroll back up to Exercise 1, re-copy the Job deployment block (`cat <<EOF | oc apply -f -`), and paste it into your terminal to deploy the batch job again. Tail the logs, and you will see Limitador aggressively block the traffic much earlier in the cycle!
+Scroll back up to Exercise 1, re-copy the Job deployment block (`cat <<EOF | oc apply -f -`), and paste it into your terminal to deploy the batch job again. Tail the logs, and you will see Limitador aggressively block the traffic much earlier in the cycle.
 
-Feel free to keep experimenting! You can delete the job, tweak the token limits up or down, and redeploy to see exactly how Kuadrant mathematically protects your cluster's GPU capacity in real-time.
+Feel free to keep experimenting. You can delete the job, tweak the token limits up or down, and redeploy to see exactly how Kuadrant mathematically protects your cluster's GPU capacity in real-time.

@@ -22,7 +22,7 @@ If applications ignore the header and aggressively retry, they waste network res
 
 2. **Why is the `captureUser` telemetry flag set to `false` by default in the Tenant custom resource?**
 +
-Enabling user-level tracking on a cluster with hundreds or thousands of users exponentially increases metric cardinality. This can severely bloat the Prometheus database and impact cluster monitoring performance. (We used `app_id` to track API keys instead!)
+Enabling user-level tracking on a cluster with hundreds or thousands of users exponentially increases metric cardinality. This can severely bloat the Prometheus database and impact cluster monitoring performance. (We used `app_id` to track API keys instead.)
 
 3. **What are the three pillars of AI Observability?**
 +
@@ -52,7 +52,7 @@ If you encountered any issues generating traffic or viewing metrics, check the f
 
 **Issue: No metrics are appearing in Grafana or OpenShift Console**
 
-* **Prometheus is not a time machine:** Metrics only appear *after* the `PodMonitor` and Tenant telemetry are enabled. If you ran the Python script before patching Kuadrant/Tenant, you must delete the old Kubernetes Job and redeploy it to generate fresh traffic!
+* **Prometheus is not a time machine:** Metrics only appear *after* the `PodMonitor` and Tenant telemetry are enabled. If you ran the Python script before patching Kuadrant/Tenant, you must delete the old Kubernetes Job and redeploy it to generate fresh traffic.
 ====
 
 ---
@@ -72,4 +72,4 @@ _Application Integration_
 |===
 
 [quote]
-**Course Complete!** You have successfully guided ChocoTech from a raw Kubernetes cluster to a fully governed, multi-tenant AI Factory. You possess the skills to deploy API gateways, configure token subscriptions, publish large language models, and visualize the advanced telemetry required to run AI at an enterprise scale.
+**Course Complete.** You have successfully guided ChocoTech from a raw Kubernetes cluster to a fully governed, multi-tenant AI Factory. You possess the skills to deploy API gateways, configure token subscriptions, publish large language models, and visualize the advanced telemetry required to run AI at an enterprise scale.

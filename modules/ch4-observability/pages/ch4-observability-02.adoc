@@ -2,7 +2,7 @@
 
 The Marketing team's batch script successfully ran, consumed its token quota, and gracefully handled the `429 Too Many Requests` errors. The infrastructure is protected. 
 
-However, when you log into the OpenShift AI dashboard to pull the billing report for the Finance team, the data might be missing! 
+However, when you log into the OpenShift AI dashboard to pull the billing report for the Finance team, the data might be missing. 
 
 By default, to save space in the Prometheus database, OpenShift AI does not scrape high-cardinality rate-limiting or model-specific usage metrics. To satisfy Finance's chargeback requirements, you must explicitly enable telemetry across the Kuadrant governance layer and the Models-as-a-Service (MaaS) Tenant.
 
@@ -86,4 +86,67 @@ You should see a JSON response containing metric data labeled with `limitador_na
 
 The telemetry pipeline is officially flowing. Every token consumed and every rate limit enforced is now being permanently recorded. 
 
-In the next section of this course, you will navigate to the MaaS Observability Dashboard to visualize this telemetry data and export the definitive CSV chargeback report for ChocoTech's Finance team!
+== Exercise 4: Deploy the Batch Job Again
+
+First delete previous completed Job if +
+
+[source,role="execute"]
+----
+oc delete job marketing-chaos-job -n chocotech-models
+----
+
+=== Deploy the Job again to generate metrics now that we are scraping the usage metric data.
+
+[source,role="execute"]
+----
+export ROUTE_HOST=$(oc get route openshift-ai-inference -n openshift-ingress -o jsonpath='{.spec.host}')
+
+cat <<EOF | oc apply -f -
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: marketing-chaos-job
+  namespace: chocotech-models
+spec:
+  backoffLimit: 0
+  template:
+    spec:
+      containers:
+      - name: chaos-generator
+        image: registry.access.redhat.com/ubi9/python-311
+        command: ["/bin/bash", "-c"]
+        args:
+          - |
+            pip install --quiet requests urllib3
+            echo "Executing batch script against \$MAAS_URL..."
+            python /opt/scripts/marketing-batch-job.py
+        env:
+        - name: MAAS_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: marketing-api-key
+              key: key
+        - name: MAAS_URL
+          value: "https://${ROUTE_HOST}"
+        volumeMounts:
+        - name: script-volume
+          mountPath: /opt/scripts
+      volumes:
+      - name: script-volume
+        configMap:
+          name: marketing-batch-script
+      restartPolicy: Never
+EOF
+----
+
+==  This time is not necessary to view the throttling, but you can if want.
+
+Tail the logs of the container to watch the Python script hit Kuadrant's rate limits:
+
+[source,role="execute"]
+----
+oc logs -f job/marketing-chaos-job -n chocotech-models
+----
+
+
+In the next section of this course, you will navigate to the Openshift Observability Dashboard to visualize MaaS telemetry data and export the definitive CSV chargeback report for ChocoTech's Finance team.

@@ -107,5 +107,5 @@ You can view in the OPenShift AI dashboard - Setting -Subscriptions and Authoriz
 You will also see
 ---
 
-In the next section, we will step out of the administrator interface and into the developer's shoes to verify that our newly deployed, UI-managed model is actively accepting authorized API traffic!
+In the next section, we will step out of the administrator interface and into the developer's shoes to verify that our newly deployed, UI-managed model is actively accepting authorized API traffic.
 

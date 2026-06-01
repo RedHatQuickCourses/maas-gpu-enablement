@@ -25,7 +25,7 @@ Run the following query:
 ----
 authorized_hits
 ----
-* **The Business Value:** This metric represents the absolute total number of tokens (input prompts + model responses) successfully consumed. Because rate-limited (HTTP 429) requests are physically blocked at the gateway, they consume zero tokens. This is the exact hard data Finance uses to bill the department!
+* **The Business Value:** This metric represents the absolute total number of tokens (input prompts + model responses) successfully consumed. Because rate-limited (HTTP 429) requests are physically blocked at the gateway, they consume zero tokens. This is the exact hard data Finance uses to bill the department.
 * **The Labels:** Notice the data is labeled by `subscription` (e.g., Bronze, Silver) and `model`, allowing you to see exactly how much the Marketing team consumed on `qwen3-4b`.
 
 **2. Querying Total Requests** +
@@ -42,7 +42,7 @@ Run the following query:
 ----
 limited_calls
 ----
-* **The Business Value:** This metric validates your governance policies! It reflects the total number of requests rejected due to rate limiting (HTTP 429 responses). This directly correlates to the moments when the Python script breached the Bronze token quota and Kuadrant intervened.
+* **The Business Value:** This metric validates your governance policies. It reflects the total number of requests rejected due to rate limiting (HTTP 429 responses). This directly correlates to the moments when the Python script breached the Bronze token quota and Kuadrant intervened.
 
 == Exercise 3: Exporting the Chargeback Report
 
@@ -52,6 +52,6 @@ Finance requires structured data to process inter-departmental billing. OpenShif
 2. In the Metrics UI, look for the **Export** or **Download CSV** icon (typically located near the top right of the query results table).
 3. Click to download the data to your local system.
 
-You can now email this file to the Finance team, providing them with the exact mathematical proof they need to attribute GPU costs to the Marketing department!
+You can now email this file to the Finance team, providing them with the exact mathematical proof they need to attribute GPU costs to the Marketing department.
 
 ---
