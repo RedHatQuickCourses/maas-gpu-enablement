@@ -170,31 +170,25 @@
   <li class="nav-item is-current-page" data-depth="2">
     <a class="nav-link" href="ch3-model-deploy-03.html" data-progress-path="/maas-gpu-enablement/3.4/ch3-model-deployment/ch3-model-deploy-03.html">
       <span class="nav-progress-mark" aria-hidden="true">✓</span>
-      3.2: Lab - Deploying with Serving Runtimes
+      3.2: Lab - Deploying llama-3-8b
     </a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="ch3-model-deploy-04.html" data-progress-path="/maas-gpu-enablement/3.4/ch3-model-deployment/ch3-model-deploy-04.html">
       <span class="nav-progress-mark" aria-hidden="true">✓</span>
-      3.3: Lab - Distributed Inference Configuration
+      3.3: Lab - Validate API Keys
     </a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="ch3-model-deploy-05.html" data-progress-path="/maas-gpu-enablement/3.4/ch3-model-deployment/ch3-model-deploy-05.html">
       <span class="nav-progress-mark" aria-hidden="true">✓</span>
-      3.4: Lab - Publishing to MaaS Catalog
-    </a>
-  </li>
-  <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="ch3-model-deploy-06.html" data-progress-path="/maas-gpu-enablement/3.4/ch3-model-deployment/ch3-model-deploy-06.html">
-      <span class="nav-progress-mark" aria-hidden="true">✓</span>
-      3.5: Lifecycle Management with GitOps
+      3.4: Lab - Deploying qwen3-4b
     </a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="ch3-model-deploy-summary.html" data-progress-path="/maas-gpu-enablement/3.4/ch3-model-deployment/ch3-model-deploy-summary.html">
       <span class="nav-progress-mark" aria-hidden="true">✓</span>
-      3.6: Summary and troubleshooting
+      3.5: Summary and troubleshooting
     </a>
   </li>
 </ul>
@@ -213,25 +207,25 @@
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../ch4-observability/ch4-observability-01.html" data-progress-path="/maas-gpu-enablement/3.4/ch4-observability/ch4-observability-01.html">
       <span class="nav-progress-mark" aria-hidden="true">✓</span>
-      4.1: Module Overview
+      4.1: Lab - Rate Limiting Challenges
     </a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../ch4-observability/ch4-observability-02.html" data-progress-path="/maas-gpu-enablement/3.4/ch4-observability/ch4-observability-02.html">
       <span class="nav-progress-mark" aria-hidden="true">✓</span>
-      4.2: Defining Governance Tiers
+      4.2: Enabling Metrics Collection
     </a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../ch4-observability/ch4-observability-03.html" data-progress-path="/maas-gpu-enablement/3.4/ch4-observability/ch4-observability-03.html">
       <span class="nav-progress-mark" aria-hidden="true">✓</span>
-      4.3: Rate Limits and Quotas
+      4.3: Metrics via OpenShift
     </a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../ch4-observability/ch4-observability-04.html" data-progress-path="/maas-gpu-enablement/3.4/ch4-observability/ch4-observability-04.html">
       <span class="nav-progress-mark" aria-hidden="true">✓</span>
-      4.4: Lab - Observability &amp; Automated Chargeback
+      4.4: Lab - Grafana Metric Dashboards
     </a>
   </li>
   <li class="nav-item" data-depth="2">
@@ -299,7 +293,7 @@
   <ul>
     <li><a href="../index.html">Models as a Service Breaking the GPU Silos on OpenShift AI 3.4</a></li>
     <li><a href="ch3-model-deploy-01.html">3. Model Deployment</a></li>
-    <li><a href="ch3-model-deploy-03.html">3.2: Lab - Deploying with Serving Runtimes</a></li>
+    <li><a href="ch3-model-deploy-03.html">3.2: Lab - Deploying llama-3-8b</a></li>
   </ul>
 </nav>
 </div>
@@ -311,22 +305,6 @@
 <h1 class="page">3.2: Deploying the Governed Model via the OpenShift AI UI</h1>
 <div id="preamble">
 <div class="sectionbody">
-<div class="exampleblock">
-<div class="content">
-<div class="admonitionblock warning">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-warning" title="Warning"></i>
-</td>
-<td class="content">
-This section is under development
-</td>
-</tr>
-</table>
-</div>
-</div>
-</div>
 <div class="paragraph">
 <p>While advanced platform engineers often manage workloads via GitOps pipelines, OpenShift AI provides a cloud-native, wizard-driven user interface specifically designed for deploying models into a <strong>Models-as-a-Service (MaaS)</strong> fabric. Using the UI allows us to quickly configure inference runtimes, allocate dedicated GPU resources, and directly publish the model to the centralized MaaS gateway without writing complex Kubernetes Custom Resources by hand.</p>
 </div>
@@ -532,7 +510,7 @@ EOF</code></pre>
 </div>
 <nav class="pagination">
   <span class="prev"><a href="ch3-model-deploy-02.html">3.1: Model Selection Strategy</a></span>
-  <span class="next"><a href="ch3-model-deploy-04.html">3.3: Lab - Distributed Inference Configuration</a></span>
+  <span class="next"><a href="ch3-model-deploy-04.html">3.3: Lab - Validate API Keys</a></span>
 </nav>
 </article>
   </div>

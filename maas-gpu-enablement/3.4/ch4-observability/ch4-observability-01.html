@@ -170,31 +170,25 @@
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../ch3-model-deployment/ch3-model-deploy-03.html" data-progress-path="/maas-gpu-enablement/3.4/ch3-model-deployment/ch3-model-deploy-03.html">
       <span class="nav-progress-mark" aria-hidden="true">✓</span>
-      3.2: Lab - Deploying with Serving Runtimes
+      3.2: Lab - Deploying llama-3-8b
     </a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../ch3-model-deployment/ch3-model-deploy-04.html" data-progress-path="/maas-gpu-enablement/3.4/ch3-model-deployment/ch3-model-deploy-04.html">
       <span class="nav-progress-mark" aria-hidden="true">✓</span>
-      3.3: Lab - Distributed Inference Configuration
+      3.3: Lab - Validate API Keys
     </a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../ch3-model-deployment/ch3-model-deploy-05.html" data-progress-path="/maas-gpu-enablement/3.4/ch3-model-deployment/ch3-model-deploy-05.html">
       <span class="nav-progress-mark" aria-hidden="true">✓</span>
-      3.4: Lab - Publishing to MaaS Catalog
-    </a>
-  </li>
-  <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../ch3-model-deployment/ch3-model-deploy-06.html" data-progress-path="/maas-gpu-enablement/3.4/ch3-model-deployment/ch3-model-deploy-06.html">
-      <span class="nav-progress-mark" aria-hidden="true">✓</span>
-      3.5: Lifecycle Management with GitOps
+      3.4: Lab - Deploying qwen3-4b
     </a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../ch3-model-deployment/ch3-model-deploy-summary.html" data-progress-path="/maas-gpu-enablement/3.4/ch3-model-deployment/ch3-model-deploy-summary.html">
       <span class="nav-progress-mark" aria-hidden="true">✓</span>
-      3.6: Summary and troubleshooting
+      3.5: Summary and troubleshooting
     </a>
   </li>
 </ul>
@@ -213,25 +207,25 @@
   <li class="nav-item is-current-page" data-depth="2">
     <a class="nav-link" href="ch4-observability-01.html" data-progress-path="/maas-gpu-enablement/3.4/ch4-observability/ch4-observability-01.html">
       <span class="nav-progress-mark" aria-hidden="true">✓</span>
-      4.1: Module Overview
+      4.1: Lab - Rate Limiting Challenges
     </a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="ch4-observability-02.html" data-progress-path="/maas-gpu-enablement/3.4/ch4-observability/ch4-observability-02.html">
       <span class="nav-progress-mark" aria-hidden="true">✓</span>
-      4.2: Defining Governance Tiers
+      4.2: Enabling Metrics Collection
     </a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="ch4-observability-03.html" data-progress-path="/maas-gpu-enablement/3.4/ch4-observability/ch4-observability-03.html">
       <span class="nav-progress-mark" aria-hidden="true">✓</span>
-      4.3: Rate Limits and Quotas
+      4.3: Metrics via OpenShift
     </a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="ch4-observability-04.html" data-progress-path="/maas-gpu-enablement/3.4/ch4-observability/ch4-observability-04.html">
       <span class="nav-progress-mark" aria-hidden="true">✓</span>
-      4.4: Lab - Observability &amp; Automated Chargeback
+      4.4: Lab - Grafana Metric Dashboards
     </a>
   </li>
   <li class="nav-item" data-depth="2">
@@ -299,7 +293,7 @@
   <ul>
     <li><a href="../index.html">Models as a Service Breaking the GPU Silos on OpenShift AI 3.4</a></li>
     <li><a href="ch4-observability-intro.html">4: Observability</a></li>
-    <li><a href="ch4-observability-01.html">4.1: Module Overview</a></li>
+    <li><a href="ch4-observability-01.html">4.1: Lab - Rate Limiting Challenges</a></li>
   </ul>
 </nav>
 </div>
@@ -312,7 +306,7 @@
 <div id="preamble">
 <div class="sectionbody">
 <div class="paragraph">
-<p>The platform is secure, and Finance is happy. Now, it is time to build apps.</p>
+<p>The platform is secure, now it is time to build apps.</p>
 </div>
 <div class="paragraph">
 <p>Because OpenShift AI&#8217;s MaaS gateway is fully OpenAI-compatible, integrating ChocoTech&#8217;s existing applications requires almost zero code refactoring. However, because we built strict Token Rate Limits into our Subscriptions in Module 2, developers <strong>must</strong> know how to handle API rejections.</p>
@@ -496,7 +490,7 @@ EOF</code></pre>
 <p>In a real-world scenario, you may need to adjust a team&#8217;s token quota up or down based on their workload. If your script finished all 20 requests without hitting a 429 rate limit, it means the Marketing team&#8217;s token limit is too generous!</p>
 </div>
 <div class="paragraph">
-<p>To force the rate limiter to trigger, you can dynamically patch the <code>MaaSSubscription</code> to severely restrict their limit (e.g., dropping it to 1,000 tokens per minute), and then redeploy the job to test the new boundaries.</p>
+<p>To force the rate limiter to trigger, you can dynamically patch the <code>MaaSSubscription</code> to severely restrict their limit (e.g., dropping it to 500 tokens per minute), and then redeploy the job to test the new boundaries.</p>
 </div>
 <div class="paragraph">
 <p><strong>1. Patch the Subscription Limit</strong><br>
@@ -529,7 +523,7 @@ Scroll back up to Exercise 1, re-copy the Job deployment block (<code>cat &lt;&l
 </div>
 <nav class="pagination">
   <span class="prev"><a href="ch4-observability-intro.html">4: Observability</a></span>
-  <span class="next"><a href="ch4-observability-02.html">4.2: Defining Governance Tiers</a></span>
+  <span class="next"><a href="ch4-observability-02.html">4.2: Enabling Metrics Collection</a></span>
 </nav>
 </article>
   </div>

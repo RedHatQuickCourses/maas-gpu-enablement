@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>3.4: Expanding the catalog via the UI :: Models as a Service Breaking the GPU Silos on OpenShift AI 3.4</title>
     <link rel="prev" href="ch3-model-deploy-04.html">
-    <link rel="next" href="ch3-model-deploy-06.html">
+    <link rel="next" href="ch3-model-deploy-summary.html">
     <meta name="generator" content="Antora 3.1.3">
 <link rel="stylesheet" href="../../../_/css/site.css">
 <link rel="stylesheet" href="../../../_/css/vendor/tabs.css">
@@ -170,31 +170,25 @@
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="ch3-model-deploy-03.html" data-progress-path="/maas-gpu-enablement/3.4/ch3-model-deployment/ch3-model-deploy-03.html">
       <span class="nav-progress-mark" aria-hidden="true">✓</span>
-      3.2: Lab - Deploying with Serving Runtimes
+      3.2: Lab - Deploying llama-3-8b
     </a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="ch3-model-deploy-04.html" data-progress-path="/maas-gpu-enablement/3.4/ch3-model-deployment/ch3-model-deploy-04.html">
       <span class="nav-progress-mark" aria-hidden="true">✓</span>
-      3.3: Lab - Distributed Inference Configuration
+      3.3: Lab - Validate API Keys
     </a>
   </li>
   <li class="nav-item is-current-page" data-depth="2">
     <a class="nav-link" href="ch3-model-deploy-05.html" data-progress-path="/maas-gpu-enablement/3.4/ch3-model-deployment/ch3-model-deploy-05.html">
       <span class="nav-progress-mark" aria-hidden="true">✓</span>
-      3.4: Lab - Publishing to MaaS Catalog
-    </a>
-  </li>
-  <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="ch3-model-deploy-06.html" data-progress-path="/maas-gpu-enablement/3.4/ch3-model-deployment/ch3-model-deploy-06.html">
-      <span class="nav-progress-mark" aria-hidden="true">✓</span>
-      3.5: Lifecycle Management with GitOps
+      3.4: Lab - Deploying qwen3-4b
     </a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="ch3-model-deploy-summary.html" data-progress-path="/maas-gpu-enablement/3.4/ch3-model-deployment/ch3-model-deploy-summary.html">
       <span class="nav-progress-mark" aria-hidden="true">✓</span>
-      3.6: Summary and troubleshooting
+      3.5: Summary and troubleshooting
     </a>
   </li>
 </ul>
@@ -213,25 +207,25 @@
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../ch4-observability/ch4-observability-01.html" data-progress-path="/maas-gpu-enablement/3.4/ch4-observability/ch4-observability-01.html">
       <span class="nav-progress-mark" aria-hidden="true">✓</span>
-      4.1: Module Overview
+      4.1: Lab - Rate Limiting Challenges
     </a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../ch4-observability/ch4-observability-02.html" data-progress-path="/maas-gpu-enablement/3.4/ch4-observability/ch4-observability-02.html">
       <span class="nav-progress-mark" aria-hidden="true">✓</span>
-      4.2: Defining Governance Tiers
+      4.2: Enabling Metrics Collection
     </a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../ch4-observability/ch4-observability-03.html" data-progress-path="/maas-gpu-enablement/3.4/ch4-observability/ch4-observability-03.html">
       <span class="nav-progress-mark" aria-hidden="true">✓</span>
-      4.3: Rate Limits and Quotas
+      4.3: Metrics via OpenShift
     </a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../ch4-observability/ch4-observability-04.html" data-progress-path="/maas-gpu-enablement/3.4/ch4-observability/ch4-observability-04.html">
       <span class="nav-progress-mark" aria-hidden="true">✓</span>
-      4.4: Lab - Observability &amp; Automated Chargeback
+      4.4: Lab - Grafana Metric Dashboards
     </a>
   </li>
   <li class="nav-item" data-depth="2">
@@ -299,7 +293,7 @@
   <ul>
     <li><a href="../index.html">Models as a Service Breaking the GPU Silos on OpenShift AI 3.4</a></li>
     <li><a href="ch3-model-deploy-01.html">3. Model Deployment</a></li>
-    <li><a href="ch3-model-deploy-05.html">3.4: Lab - Publishing to MaaS Catalog</a></li>
+    <li><a href="ch3-model-deploy-05.html">3.4: Lab - Deploying qwen3-4b</a></li>
   </ul>
 </nav>
 </div>
@@ -665,7 +659,7 @@ curl -s -k -H "Authorization: Bearer $MAAS_API_KEY" \
 </div>
 <div class="paragraph">
 <p><strong>(Note: If you run this exact same API call using a Gold Plan API Key, the Gateway will dynamically filter the JSON response to only return <code>llama-3-8b</code>).
-If you had multiple GPUs and both models are available ("Ready State"), then you will see two models returned in the list.</strong></p>
+<em>If you had multiple GPUs and both models are available ("Ready State"), then you will see two models returned in the list.</em></strong></p>
 </div>
 <div class="paragraph">
 <p>ChocoTech now operates a fully governed, multi-model AI factory. Quality Control relies on the universally available Llama-3 for factory logic, while Marketing and R&amp;D can utilize the specialized Qwen coder model without risking exposure to the Gold tier production environment.</p>
@@ -673,8 +667,8 @@ If you had multiple GPUs and both models are available ("Ready State"), then you
 </div>
 </div>
 <nav class="pagination">
-  <span class="prev"><a href="ch3-model-deploy-04.html">3.3: Lab - Distributed Inference Configuration</a></span>
-  <span class="next"><a href="ch3-model-deploy-06.html">3.5: Lifecycle Management with GitOps</a></span>
+  <span class="prev"><a href="ch3-model-deploy-04.html">3.3: Lab - Validate API Keys</a></span>
+  <span class="next"><a href="ch3-model-deploy-summary.html">3.5: Summary and troubleshooting</a></span>
 </nav>
 </article>
   </div>
