@@ -1,0 +1,19 @@
+# Assembler configuration for PDF generation using asciidoctor-pdf.js
+converter: asciidoctor-pdf
+
+catalog:
+  version: 3.4
+  component: maas-gpu-enablement
+
+pages:
+  # Automatically include all pages from nav files
+  - nav: modules/ROOT/nav.adoc
+  - nav: modules/ch1-mass-arch/nav.adoc
+  - nav: modules/ch2-platform-admin/nav.adoc
+  - nav: modules/ch3-model-deployment/nav.adoc
+  - nav: modules/ch4-observability/nav.adoc
+  - nav: modules/appendix/nav.adoc
+
+output:
+  filename: maas-gpu-enablement-v3.4.pdf
+  title: Models as a Service Breaking the GPU Silos on OpenShift AI 3.4
